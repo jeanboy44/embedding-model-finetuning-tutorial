@@ -1,0 +1,108 @@
+"""프로젝트 전역 설정 — pydantic-settings 기반."""
+
+from functools import lru_cache
+from pathlib import Path
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    """프로젝트 전역 설정.
+
+    환경 변수 또는 .env 파일에서 값을 로드한다.
+    PREFIX 없이 변수명 그대로 매핑 (예: GEMINI_API_KEY → gemini_api_key).
+
+    Attributes:
+        gemini_api_key: Gemini API 키.
+        embedding_model_name: 기본 임베딩 모델 이름.
+        embedding_dim: 임베딩 차원.
+        gemini_model_name: 기본 Gemini 모델 이름.
+        log_level: 로그 레벨.
+    """
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+    # API Keys
+    gemini_api_key: str = ""
+
+    # Model
+    embedding_model_name: str = "thenlper/gte-small"
+    embedding_dim: int = 384
+    gemini_model_name: str = "gemini-pro"
+
+    # Logging
+    log_level: str = "INFO"
+
+    # Paths (computed, not from env)
+    @property
+    def project_root(self) -> Path:
+        """프로젝트 루트 경로."""
+        return Path(__file__).parent.parent
+
+    @property
+    def data_dir(self) -> Path:
+        """데이터 디렉토리 경로."""
+        return self.project_root / "data"
+
+    @property
+    def experiments_dir(self) -> Path:
+        """실험 디렉토리 경로."""
+        return self.project_root / "experiments"
+
+    @property
+    def results_dir(self) -> Path:
+        """실험 결과 디렉토리 경로."""
+        return self.experiments_dir / "results"
+
+
+# Experiment name mapping
+EXPERIMENTS: dict[str, str] = {
+    "base": "exp_001_base_embedding",
+    "finetuned": "exp_002_finetuned_embedding",
+    "llm_expansion": "exp_003_llm_query_expansion",
+}
+
+
+@lru_cache
+def get_settings() -> Settings:
+    """싱글톤 Settings 인스턴스를 반환한다.
+
+    Returns:
+        캐싱된 Settings 인스턴스.
+
+    Example:
+        >>> settings = get_settings()
+        >>> settings.embedding_model_name
+        'thenlper/gte-small'
+    """
+    return Settings()
+
+
+def get_model_path(experiment_name: str) -> Path:
+    """저장된 모델 체크포인트 경로를 반환한다.
+
+    Args:
+        experiment_name: 실험 키 ("base", "finetuned", "llm_expansion").
+
+    Returns:
+        체크포인트 파일 경로.
+    """
+    settings = get_settings()
+    return settings.experiments_dir / EXPERIMENTS[experiment_name] / "model.pt"
+
+
+def get_results_path(experiment_name: str) -> Path:
+    """실험 결과 경로를 반환한다.
+
+    Args:
+        experiment_name: 실험 키.
+
+    Returns:
+        결과 JSON 파일 경로.
+    """
+    settings = get_settings()
+    return settings.results_dir / f"{experiment_name}_results.json"
