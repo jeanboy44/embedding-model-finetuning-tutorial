@@ -1,0 +1,4 @@
+name: "base_embedding"
+model_name: "thenlper/gte-small"
+checkpoint_path: null
+embedding_dim: 384

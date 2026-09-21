@@ -1,0 +1,4 @@
+name: "llm_query_expansion"
+model_name: "thenlper/gte-small"
+llm_model: "gemini-pro"
+embedding_dim: 384
