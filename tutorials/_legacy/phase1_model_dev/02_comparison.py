@@ -11,7 +11,7 @@ Phase 1-2: 임베딩 방식 비교 실험
 - 어떤 상황에서 어떤 방식이 유리한지 판단한다
 
 실행:
-    uv run python tutorials/phase1_model_dev/02_comparison.py
+    uv run python tutorials/_legacy/phase1_model_dev/02_comparison.py
 """
 
 import json

@@ -13,7 +13,7 @@ Phase 3-2: RAG 에이전트 구축
     (없어도 시뮬레이션 모드로 학습 가능)
 
 실행:
-    uv run python tutorials/phase3_agent/02_rag_agent.py
+    uv run python tutorials/_legacy/agent/02_rag_agent.py
 """
 
 import json

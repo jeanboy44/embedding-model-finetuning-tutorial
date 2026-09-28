@@ -9,7 +9,7 @@ Phase 1-1: 임베딩 모델 탐색
 - 임베딩 공간을 시각화하고 탐색한다
 
 실행:
-    uv run python tutorials/phase1_model_dev/01_exploration.py
+    uv run python tutorials/01_ds_core/appendix_exploration.py
 """
 
 import json

@@ -8,7 +8,7 @@ Phase 3-1: 검색 파이프라인 구축
 - 검색 파라미터(k, threshold)를 튜닝한다
 
 실행:
-    uv run python tutorials/phase3_agent/01_retrieval.py
+    uv run python tutorials/_legacy/agent/01_retrieval.py
 """
 
 import json

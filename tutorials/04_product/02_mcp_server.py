@@ -8,7 +8,7 @@ Phase 2-2: MCP 서버 이해
 - 도구(Tool) 함수를 설계하고 구현한다
 
 실행:
-    uv run python tutorials/phase2_cli_mcp/02_mcp_server.py
+    uv run python tutorials/04_product/02_mcp_server.py
 """
 
 import json
@@ -223,7 +223,7 @@ def main() -> None:
     print("실습 과제")
     print("=" * 60)
     print("""
-1. src/mcp/mcp_server.py의 코드를 읽고 구조를 파악하세요.
+1. apps/mcp/src/ragkit_mcp/server.py의 코드를 읽고 구조를 파악하세요.
 2. 새로운 도구 함수를 하나 만들어보세요:
    - category_search_tool: 특정 카테고리의 문서만 검색
 3. 도구 함수의 입출력을 Pydantic 모델로 정의해보세요.

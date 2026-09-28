@@ -9,7 +9,7 @@ Phase 4-2: 메트릭 수집과 분석
 - 알림 기준(threshold)을 설정한다
 
 실행:
-    uv run python tutorials/phase4_monitoring/02_metrics.py
+    uv run python tutorials/_legacy/monitoring/02_metrics.py
 """
 
 import json

@@ -9,7 +9,7 @@ Phase 4-1: 로깅과 관찰성
 - 로그를 분석하여 문제를 진단한다
 
 실행:
-    uv run python tutorials/phase4_monitoring/01_logging.py
+    uv run python tutorials/_legacy/monitoring/01_logging.py
 """
 
 import json

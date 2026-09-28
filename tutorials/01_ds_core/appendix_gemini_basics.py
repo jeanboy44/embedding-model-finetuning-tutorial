@@ -11,7 +11,7 @@ Phase 2-3: Gemini API 연동
     .env 파일에 GEMINI_API_KEY를 설정하세요.
 
 실행:
-    uv run python tutorials/phase2_cli_mcp/03_gemini_integration.py
+    uv run python tutorials/01_ds_core/appendix_gemini_basics.py
 """
 
 from ragkit.config import get_settings
@@ -230,7 +230,7 @@ def main() -> None:
 1. .env에 GEMINI_API_KEY를 설정하고 실제 API를 호출해보세요.
 2. 자신만의 프롬프트 템플릿을 만들어보세요.
 3. temperature를 바꿔가며 같은 질문에 대한 답변 변화를 관찰하세요.
-4. src/models/gemini_client.py의 generate_text 함수를 읽고
+4. src/ragkit/models/gemini_client.py의 generate_text 함수를 읽고
    새로운 파라미터(top_p, top_k)를 추가해보세요.
 """)
 

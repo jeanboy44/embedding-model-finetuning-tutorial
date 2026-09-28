@@ -8,7 +8,7 @@ Phase 2-1: CLI 도구 개발
 - 의존성 주입으로 테스트 가능한 CLI를 만든다
 
 실행:
-    uv run python tutorials/phase2_cli_mcp/01_cli_tool.py
+    uv run python tutorials/04_product/01_cli_tool.py
 """
 
 import json
@@ -133,13 +133,13 @@ def step3_demo_cli() -> None:
 
 
 def step4_code_walkthrough() -> None:
-    """src/cli/cli_tool.py의 구조를 설명한다."""
+    """src/ragkit/cli/cli_tool.py의 구조를 설명한다."""
     print("\n" + "=" * 60)
     print("4단계: CLI 코드 구조 분석")
     print("=" * 60)
 
     print("""
-src/cli/cli_tool.py 핵심 구조:
+src/ragkit/cli/cli_tool.py 핵심 구조:
 
     import cyclopts
     from ragkit.config import get_settings
@@ -181,7 +181,7 @@ def main() -> None:
     print("실습 과제")
     print("=" * 60)
     print("""
-1. src/cli/cli_tool.py를 읽고 구조를 파악하세요.
+1. src/ragkit/cli/cli_tool.py를 읽고 구조를 파악하세요.
 2. 새로운 CLI 커맨드 'stats'를 추가해보세요:
    - 인덱스된 문서 수, 임베딩 차원, 평균 문서 길이를 출력
 3. --output json 옵션을 추가하여 JSON 출력을 지원해보세요.
