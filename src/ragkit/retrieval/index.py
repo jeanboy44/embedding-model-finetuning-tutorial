@@ -10,6 +10,7 @@
 """
 
 import hashlib
+from collections import Counter
 import sqlite3
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -166,6 +167,11 @@ def build_index(
         열린 VectorIndex.
     """
     db_path = Path(db_path)
+    counts = Counter(d["id"] for d in docs)
+    dups = [doc_id for doc_id, n in counts.items() if n > 1]
+    if dups:
+        # 임베딩(수 분)을 시작하기 전에 멈춘다
+        raise ValueError(f"코퍼스에 중복 id {len(dups)}개가 있습니다 (예: {', '.join(dups[:3])})")
     corpus_hash = _corpus_hash(docs, text_fn)
     if db_path.exists():
         index = VectorIndex.open(db_path)
