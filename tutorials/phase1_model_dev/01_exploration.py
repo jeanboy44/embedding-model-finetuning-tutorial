@@ -19,8 +19,8 @@ from pathlib import Path
 import numpy as np
 from sklearn.decomposition import PCA
 
-from src.config import get_settings
-from src.embeddings import create_embedding_fn
+from ragkit.config import get_settings
+from ragkit.embeddings import create_embedding_fn
 
 # 타입 별칭
 EmbedFn = Callable[[list[str]], np.ndarray]

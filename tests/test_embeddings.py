@@ -2,7 +2,7 @@
 
 import torch
 
-from src.embeddings import format_passages, format_queries, mean_pool
+from ragkit.embeddings import format_passages, format_queries, mean_pool
 
 
 def test_mean_pool_ignores_padding() -> None:

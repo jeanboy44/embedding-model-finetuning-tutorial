@@ -3,12 +3,12 @@
 import time
 from pathlib import Path
 
-from src.agents import run_rag
-from src.config import get_settings
-from src.embeddings import create_embedding_fn
-from src.models import generate_text
-from src.monitoring.metrics import MetricsCollector
-from src.retrieval import DocumentStore
+from ragkit.rag import run_rag
+from ragkit.config import get_settings
+from ragkit.embeddings import create_embedding_fn
+from ragkit.models import generate_text
+from ragkit.monitoring.metrics import MetricsCollector
+from ragkit.retrieval import DocumentStore
 
 
 def main() -> None:

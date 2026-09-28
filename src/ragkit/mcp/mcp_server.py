@@ -4,9 +4,9 @@ from collections.abc import Callable
 
 import numpy as np
 
-from src.agents import run_rag
-from src.embeddings import format_queries
-from src.retrieval import DocumentStore, retrieve
+from ragkit.rag import run_rag
+from ragkit.embeddings import format_queries
+from ragkit.retrieval import DocumentStore, retrieve
 
 
 def embed_tool(

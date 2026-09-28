@@ -22,7 +22,7 @@ from pathlib import Path
 import yaml
 from cyclopts import run
 
-from src.config import get_settings
+from ragkit.config import get_settings
 
 REPO_URL = "https://github.com/legalize-kr/legalize-kr.git"
 

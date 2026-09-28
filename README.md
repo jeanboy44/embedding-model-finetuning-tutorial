@@ -34,7 +34,7 @@ uv run python scripts/download_model_gdrive.py  # 또는 Google Drive에서
 uv run python tutorials/phase1_model_dev/run_experiments.py
 
 # Phase 2: CLI 도구
-uv run python -m src.cli.cli_tool rag --query "질문"
+uv run ragkit rag --query "질문"
 
 # Phase 3: RAG 에이전트
 uv run python tutorials/phase3_agent/run_agent.py

@@ -6,7 +6,7 @@ HuggingFace Hub 접속이 어려운 환경(사내망, 프록시 등)을 위한 �
     uv run python scripts/download_model_gdrive.py
     uv run python scripts/download_model_gdrive.py --force
 
-저장된 모델은 src.models.load_embedding_model이 자동으로 찾아 사용한다.
+저장된 모델은 ragkit.models.load_embedding_model이 자동으로 찾아 사용한다.
 """
 
 import hashlib
@@ -18,7 +18,7 @@ from pathlib import Path
 import gdown
 from cyclopts import run
 
-from src.config import get_settings
+from ragkit.config import get_settings
 
 # 강사가 Drive에 올린 dist/multilingual-e5-small.zip ("링크가 있는 모든 사용자" 공유)
 DEFAULT_FILE_ID = "1q0q5-5g_hpVqUrTzy3-ccX22UjqI5K6c"

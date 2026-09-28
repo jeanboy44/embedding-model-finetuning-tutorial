@@ -17,10 +17,10 @@ import random
 import time
 from pathlib import Path
 
-from src.config import get_settings
-from src.embeddings import create_embedding_fn, format_passages, format_queries
-from src.monitoring.metrics import MetricsCollector
-from src.retrieval import DocumentStore, retrieve
+from ragkit.config import get_settings
+from ragkit.embeddings import create_embedding_fn, format_passages, format_queries
+from ragkit.monitoring.metrics import MetricsCollector
+from ragkit.retrieval import DocumentStore, retrieve
 
 # ============================================================
 # 1단계: ML 시스템의 핵심 메트릭

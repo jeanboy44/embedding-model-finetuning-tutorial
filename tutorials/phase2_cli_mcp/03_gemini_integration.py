@@ -14,7 +14,7 @@ Phase 2-3: Gemini API 연동
     uv run python tutorials/phase2_cli_mcp/03_gemini_integration.py
 """
 
-from src.config import get_settings
+from ragkit.config import get_settings
 
 # ============================================================
 # 1단계: API 키 확인
@@ -125,7 +125,7 @@ def step3_api_call(has_key: bool) -> None:
         print("\n  [시뮬레이션 모드 — API 키 없음]")
         print("\n  실제 호출 코드:")
         print("""
-    from src.models import generate_text
+    from ragkit.models import generate_text
 
     # 기본 호출
     answer = generate_text("임베딩이란 무엇인가?")
@@ -142,7 +142,7 @@ def step3_api_call(has_key: bool) -> None:
         print("   밀집 벡터로 변환하는 기법입니다...'")
         return
 
-    from src.models import generate_text
+    from ragkit.models import generate_text
 
     prompts = [
         ("기본 질문", "임베딩이란 무엇인가? 2문장으로 설명해주세요."),
@@ -197,7 +197,7 @@ RAG 시스템에서는 보통 0.1~0.3을 사용한다.
         print("  [API 키가 없어 실제 실험은 건너뜁니다]")
         return
 
-    from src.models import generate_text
+    from ragkit.models import generate_text
 
     prompt = "머신러닝을 한 문장으로 설명해주세요."
     temperatures = [0.0, 0.3, 0.7, 1.0]

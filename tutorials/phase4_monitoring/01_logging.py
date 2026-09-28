@@ -18,14 +18,14 @@ from pathlib import Path
 
 from loguru import logger
 
-from src.config import get_settings
-from src.embeddings import create_embedding_fn, format_passages, format_queries
-from src.monitoring.logger import (
+from ragkit.config import get_settings
+from ragkit.embeddings import create_embedding_fn, format_passages, format_queries
+from ragkit.monitoring.logger import (
     log_latency,
     log_query,
     log_retrieval_results,
 )
-from src.retrieval import DocumentStore, retrieve
+from ragkit.retrieval import DocumentStore, retrieve
 
 # ============================================================
 # 1단계: 왜 로깅이 필요한가?

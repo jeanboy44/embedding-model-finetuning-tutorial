@@ -19,9 +19,9 @@ Phase 3-2: RAG 에이전트 구축
 import json
 from pathlib import Path
 
-from src.config import get_settings
-from src.embeddings import create_embedding_fn, format_passages, format_queries
-from src.retrieval import DocumentStore, retrieve
+from ragkit.config import get_settings
+from ragkit.embeddings import create_embedding_fn, format_passages, format_queries
+from ragkit.retrieval import DocumentStore, retrieve
 
 # ============================================================
 # 1단계: RAG 파이프라인 단계별 분해
@@ -92,7 +92,7 @@ RAG = Retrieval + Augmented + Generation
     # Step 3: Generate
     print("\n[Step 3: Generate — LLM 응답]")
     if settings.gemini_api_key:
-        from src.models import generate_text
+        from ragkit.models import generate_text
 
         try:
             answer = generate_text(prompt, temperature=0.3, max_output_tokens=300)
@@ -158,7 +158,7 @@ def step2_prompt_variants(store: DocumentStore) -> None:
         print(f"  프롬프트 길이: {len(prompt)}자")
 
         if settings.gemini_api_key:
-            from src.models import generate_text
+            from ragkit.models import generate_text
 
             try:
                 answer = generate_text(prompt, temperature=0.3, max_output_tokens=200)
@@ -254,8 +254,8 @@ src/agents/rag_agent.py의 run_rag 함수:
     embed_fn = create_embedding_fn(settings.embedding_model_name)
 
     if settings.gemini_api_key:
-        from src.agents import run_rag
-        from src.models import generate_text
+        from ragkit.rag import run_rag
+        from ragkit.models import generate_text
 
         queries = [
             "임베딩 파인튜닝은 어떻게 하나요?",
@@ -280,11 +280,11 @@ src/agents/rag_agent.py의 run_rag 함수:
     def mock_generate(prompt: str) -> str:
         return f"[MOCK] 프롬프트 길이 {len(prompt)}자에 대한 응답"
 
-    from src.agents import run_rag
+    from ragkit.rag import run_rag
     result = run_rag("질문", store, embed_fn, mock_generate)
 """)
 
-        from src.agents import run_rag
+        from ragkit.rag import run_rag
 
         def mock_generate(prompt: str) -> str:
             return f"[MOCK] 프롬프트 길이 {len(prompt)}자에 대한 응답"

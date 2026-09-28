@@ -14,10 +14,10 @@ Phase 2-2: MCP 서버 이해
 import json
 from pathlib import Path
 
-from src.config import get_settings
-from src.embeddings import create_embedding_fn, format_passages
-from src.mcp.mcp_server import embed_tool, retrieve_tool
-from src.retrieval import DocumentStore
+from ragkit.config import get_settings
+from ragkit.embeddings import create_embedding_fn, format_passages
+from ragkit.mcp.mcp_server import embed_tool, retrieve_tool
+from ragkit.retrieval import DocumentStore
 
 # ============================================================
 # 1단계: MCP란?

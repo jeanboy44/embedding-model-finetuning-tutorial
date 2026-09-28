@@ -5,7 +5,7 @@ from pathlib import Path
 import torch
 from transformers import AutoModel, AutoTokenizer, PreTrainedTokenizerBase
 
-from src.config import get_settings
+from ragkit.config import get_settings
 
 
 def resolve_model_source(model_name: str) -> str:

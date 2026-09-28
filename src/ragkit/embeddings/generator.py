@@ -6,8 +6,8 @@ from typing import Protocol
 import numpy as np
 import torch
 
-from src.config import get_settings
-from src.models import load_embedding_model, load_tokenizer
+from ragkit.config import get_settings
+from ragkit.models import load_embedding_model, load_tokenizer
 
 
 class Tokenizer(Protocol):

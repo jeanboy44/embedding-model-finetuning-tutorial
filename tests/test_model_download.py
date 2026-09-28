@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from src.config import get_settings
-from src.models import resolve_model_source
+from ragkit.config import get_settings
+from ragkit.models import resolve_model_source
 
 SCRIPTS_DIR = Path(__file__).parent.parent / "scripts"
 

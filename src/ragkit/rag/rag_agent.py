@@ -4,8 +4,8 @@ from collections.abc import Callable
 
 import numpy as np
 
-from src.embeddings import format_queries
-from src.retrieval import DocumentStore, retrieve
+from ragkit.embeddings import format_queries
+from ragkit.retrieval import DocumentStore, retrieve
 
 
 def run_rag(
@@ -29,8 +29,8 @@ def run_rag(
         query, retrieved_documents, answer를 포함하는 딕셔너리.
 
     Example:
-        >>> from src.embeddings import create_embedding_fn
-        >>> from src.models import generate_text
+        >>> from ragkit.embeddings import create_embedding_fn
+        >>> from ragkit.models import generate_text
         >>> embed = create_embedding_fn("intfloat/multilingual-e5-small")
         >>> result = run_rag("질문", store, embed, generate_text)
     """

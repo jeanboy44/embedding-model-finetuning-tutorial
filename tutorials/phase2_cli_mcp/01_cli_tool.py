@@ -14,9 +14,9 @@ Phase 2-1: CLI 도구 개발
 import json
 from pathlib import Path
 
-from src.config import get_settings
-from src.embeddings import create_embedding_fn, format_passages, format_queries
-from src.retrieval import DocumentStore, retrieve
+from ragkit.config import get_settings
+from ragkit.embeddings import create_embedding_fn, format_passages, format_queries
+from ragkit.retrieval import DocumentStore, retrieve
 
 # ============================================================
 # 1단계: CLI가 왜 필요한가?
@@ -122,9 +122,9 @@ def step3_demo_cli() -> None:
 
     print("\n" + "-" * 60)
     print("실제 CLI 사용법:")
-    print("  uv run python -m src.cli.cli_tool search --query '임베딩이란?'")
-    print("  uv run python -m src.cli.cli_tool rag --query 'RAG 설명해줘'")
-    print("  uv run python -m src.cli.cli_tool embed --text '테스트 문장'")
+    print("  uv run ragkit search --query '임베딩이란?'")
+    print("  uv run ragkit rag --query 'RAG 설명해줘'")
+    print("  uv run ragkit embed --text '테스트 문장'")
 
 
 # ============================================================
@@ -142,8 +142,8 @@ def step4_code_walkthrough() -> None:
 src/cli/cli_tool.py 핵심 구조:
 
     import cyclopts
-    from src.config import get_settings
-    from src.embeddings import create_embedding_fn, format_queries
+    from ragkit.config import get_settings
+    from ragkit.embeddings import create_embedding_fn, format_queries
 
     app = cyclopts.App(name="slm")
 

@@ -4,7 +4,7 @@
     uv run python scripts/download_model_hf.py
     uv run python scripts/download_model_hf.py --force
 
-저장된 모델은 src.models.load_embedding_model이 자동으로 찾아 사용한다.
+저장된 모델은 ragkit.models.load_embedding_model이 자동으로 찾아 사용한다.
 """
 
 from pathlib import Path
@@ -12,7 +12,7 @@ from pathlib import Path
 from cyclopts import run
 from huggingface_hub import snapshot_download
 
-from src.config import get_settings
+from ragkit.config import get_settings
 
 # 추론에 필요한 파일만 받는다 (pytorch_model.bin, onnx/, openvino/ 등 중복 가중치 제외).
 MODEL_FILES = [

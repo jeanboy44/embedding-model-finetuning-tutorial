@@ -1,16 +1,16 @@
-"""SLM Fine-tuning CLI 도구 — cyclopts 기반."""
+"""ragkit CLI 도구 — cyclopts 기반."""
 
 from pathlib import Path
 
 import cyclopts
 
-from src.agents import run_rag
-from src.config import get_settings
-from src.embeddings import create_embedding_fn, format_queries
-from src.models import generate_text
-from src.retrieval import DocumentStore, retrieve
+from ragkit.rag import run_rag
+from ragkit.config import get_settings
+from ragkit.embeddings import create_embedding_fn, format_queries
+from ragkit.models import generate_text
+from ragkit.retrieval import DocumentStore, retrieve
 
-app = cyclopts.App(name="slm", help="SLM Fine-tuning CLI Tool")
+app = cyclopts.App(name="ragkit", help="ragkit: 임베딩 검색 기반 RAG CLI")
 
 
 @app.command

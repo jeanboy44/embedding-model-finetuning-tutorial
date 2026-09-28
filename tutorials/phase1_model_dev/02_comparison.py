@@ -20,9 +20,9 @@ from pathlib import Path
 
 import numpy as np
 
-from src.config import get_settings
-from src.embeddings import create_embedding_fn, format_passages, format_queries
-from src.retrieval import DocumentStore, retrieve
+from ragkit.config import get_settings
+from ragkit.embeddings import create_embedding_fn, format_passages, format_queries
+from ragkit.retrieval import DocumentStore, retrieve
 
 # ============================================================
 # 데이터 준비

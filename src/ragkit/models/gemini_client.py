@@ -2,7 +2,7 @@
 
 from google import genai
 
-from src.config import get_settings
+from ragkit.config import get_settings
 
 _client: genai.Client | None = None
 

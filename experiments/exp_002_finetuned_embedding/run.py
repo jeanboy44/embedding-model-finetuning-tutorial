@@ -8,8 +8,8 @@ import numpy as np
 import yaml
 
 from experiments.base_experiment import BaseExperiment
-from src.embeddings import create_embedding_fn, format_passages, format_queries
-from src.retrieval import DocumentStore, retrieve
+from ragkit.embeddings import create_embedding_fn, format_passages, format_queries
+from ragkit.retrieval import DocumentStore, retrieve
 
 TEST_DOCS = [
     "Machine learning is a subset of artificial intelligence.",
