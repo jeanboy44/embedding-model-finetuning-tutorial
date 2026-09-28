@@ -40,6 +40,10 @@ apps/
   web/                 # 4단계. React 검색 화면 (Node 프로젝트, workspace 멤버 아님, apps/api 호출)
 experiments/           # 코드 없음. 실험별 config.yaml + 결과
 tutorials/             # 단계별 해설. ragkit과 apps를 호출만 한다
+  01_ds_core/          # 1단계
+  02_api/              # 2단계
+  03_optimize/         # 3단계
+  04_product/          # 4단계
 scripts/               # 일회성 데이터 준비 (prepare_law_data, 질문 Drive 업로드·다운로드, 모델 다운로드)
 ```
 
