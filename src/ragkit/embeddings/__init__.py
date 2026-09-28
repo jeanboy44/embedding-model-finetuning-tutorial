@@ -19,16 +19,25 @@ def create_embedding_fn(
     checkpoint_path: Path | None = None,
     device: str | None = None,
     backend: str | None = None,
+    *,
+    sort_by_length: bool | None = None,
+    num_threads: int | None = None,
+    onnx_providers: list[str] | None = None,
 ):
     """모델을 로드하고 임베딩 생성 함수를 반환한다.
 
     팩토리 함수로, 모델 로드를 한 번만 수행하고 이후 호출에서 재사용한다.
+    속도 옵션의 기본값은 Settings(.env)에서 읽는다.
 
     Args:
         model_name: HuggingFace 모델 이름 또는 로컬 모델 폴더.
         checkpoint_path: 파인튜닝된 체크포인트 (파일 또는 모델 폴더).
-        device: torch 백엔드의 디바이스. None이면 자동 감지.
+        device: torch 백엔드의 장치 "auto" | "cuda" | "mps" | "cpu".
+            None이면 Settings.embedding_device (기본 auto: cuda → mps → cpu).
         backend: "onnx" 또는 "torch". None이면 Settings.embedding_backend.
+        sort_by_length: 길이순 배치로 패딩을 줄인다. None이면 Settings 값(기본 True).
+        num_threads: CPU 연산 스레드 수. None이면 Settings 값(기본: 라이브러리 기본값).
+        onnx_providers: onnx 실행 공급자 (예: ["CoreMLExecutionProvider", "CPUExecutionProvider"]).
 
     Returns:
         texts를 받아 L2 정규화된 np.ndarray를 반환하는 함수.
@@ -38,7 +47,10 @@ def create_embedding_fn(
         >>> doc_embeddings = embed(format_passages(["머신러닝은 AI의 한 분야이다."]))
         >>> query_embedding = embed(format_queries(["머신러닝이란?"]))
     """
-    backend = backend or get_settings().embedding_backend
+    settings = get_settings()
+    backend = backend or settings.embedding_backend
+    sort_by_length = settings.embedding_sort_by_length if sort_by_length is None else sort_by_length
+    num_threads = num_threads or settings.embedding_num_threads
     if backend == "onnx":
         from ragkit.embeddings.onnx_backend import create_onnx_embedding_fn
         from ragkit.models import resolve_model_source
@@ -47,11 +59,19 @@ def create_embedding_fn(
             model_dir = Path(checkpoint_path)
         else:
             model_dir = Path(resolve_model_source(model_name))
-        return create_onnx_embedding_fn(model_dir)
+        return create_onnx_embedding_fn(
+            model_dir, sort_by_length=sort_by_length, num_threads=num_threads, providers=onnx_providers
+        )
     if backend == "torch":
         from ragkit.embeddings.torch_backend import create_torch_embedding_fn
 
-        return create_torch_embedding_fn(model_name, checkpoint_path, device)
+        return create_torch_embedding_fn(
+            model_name,
+            checkpoint_path,
+            device or settings.embedding_device,
+            sort_by_length=sort_by_length,
+            num_threads=num_threads,
+        )
     raise ValueError(f"알 수 없는 임베딩 백엔드: {backend!r} (onnx | torch)")
 
 

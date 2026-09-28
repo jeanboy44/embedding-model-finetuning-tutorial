@@ -47,6 +47,21 @@ def _import_torch():
     return torch, AutoModel, AutoTokenizer
 
 
+def resolve_device(device: str | None) -> str:
+    """장치 이름을 정한다. None/"auto"면 cuda → mps(Apple GPU) → cpu 순으로 고른다."""
+    if device not in (None, "auto"):
+        return device
+    try:
+        import torch
+    except ImportError as e:
+        raise ImportError(TORCH_EXTRA_HINT) from e
+    if torch.cuda.is_available():
+        return "cuda"
+    if torch.backends.mps.is_available():
+        return "mps"
+    return "cpu"
+
+
 def load_embedding_model(
     model_name: str,
     checkpoint_path: Path | None = None,
@@ -58,14 +73,13 @@ def load_embedding_model(
         model_name: HuggingFace 모델 이름 (예: "intfloat/multilingual-e5-small").
         checkpoint_path: 파인튜닝된 체크포인트. 폴더(HF/sentence-transformers 형식)면
             그 폴더에서 모델을 읽고, 파일이면 state_dict로 덮어쓴다. None이면 기본 모델.
-        device: 디바이스 문자열 (예: "cuda", "cpu"). None이면 자동 감지.
+        device: 디바이스 문자열 (예: "cuda", "mps", "cpu"). None/"auto"면 자동 감지.
 
     Returns:
         평가 모드로 설정된 모델.
     """
     torch, AutoModel, _ = _import_torch()
-    if device is None:
-        device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = resolve_device(device)
 
     if checkpoint_path and Path(checkpoint_path).is_dir():
         model = AutoModel.from_pretrained(str(checkpoint_path))

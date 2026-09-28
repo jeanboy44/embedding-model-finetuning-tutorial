@@ -45,6 +45,10 @@ class Settings(BaseSettings):
 
     # 임베딩 추론 백엔드: onnx(배포 기본, torch 불필요) | torch(extra [torch])
     embedding_backend: Literal["onnx", "torch"] = "onnx"
+    # 임베딩 속도 옵션 (tutorials/03_optimize에서 비교)
+    embedding_device: str = "auto"  # torch: auto(cuda → mps → cpu) | cuda | mps | cpu
+    embedding_sort_by_length: bool = True  # 길이순 배치로 패딩 줄이기
+    embedding_num_threads: int | None = None  # CPU 스레드 수. None이면 라이브러리 기본값
 
     # Logging
     log_level: str = "INFO"

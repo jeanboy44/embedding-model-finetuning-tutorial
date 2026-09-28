@@ -6,7 +6,11 @@ from typing import Protocol
 import numpy as np
 import torch
 
+from ragkit.embeddings.batching import embed_in_batches
 from ragkit.models import load_embedding_model, load_tokenizer
+from ragkit.models.embedding_loader import resolve_device
+
+__all__ = ["create_torch_embedding_fn", "generate_embeddings", "mean_pool", "resolve_device"]
 
 
 class Tokenizer(Protocol):
@@ -44,6 +48,7 @@ def generate_embeddings(
     *,
     batch_size: int = 32,
     device: str | None = None,
+    sort_by_length: bool = True,
 ) -> np.ndarray:
     """텍스트 리스트에 대한 임베딩을 생성한다.
 
@@ -52,58 +57,62 @@ def generate_embeddings(
         model: 임베딩 모델 (이미 로드 및 평가 모드 설정됨).
         tokenizer: 토크나이저 인스턴스.
         batch_size: 배치 크기.
-        device: 디바이스 문자열. None이면 자동 감지.
+        device: 디바이스 문자열. None/"auto"면 cuda → mps → cpu.
+        sort_by_length: 길이가 비슷한 텍스트끼리 배치를 묶어 패딩을 줄인다.
 
     Returns:
-        (N, embedding_dim) 형태의 L2 정규화된 임베딩 배열.
+        (N, embedding_dim) 형태의 L2 정규화된 임베딩 배열 (texts 순서).
     """
-    if device is None:
-        device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = resolve_device(device)
 
-    embeddings: list[np.ndarray] = []
+    def embed_batch(batch: list[str]) -> np.ndarray:
+        encoded = tokenizer(batch, padding=True, truncation=True, return_tensors="pt")
+        encoded = {k: v.to(device) for k, v in encoded.items()}
+        outputs = model(**encoded)
+        pooled = mean_pool(outputs.last_hidden_state, encoded["attention_mask"])
+        return torch.nn.functional.normalize(pooled, p=2, dim=1).cpu().numpy()
 
     with torch.no_grad():
-        for i in range(0, len(texts), batch_size):
-            batch = texts[i : i + batch_size]
-            encoded = tokenizer(
-                batch,
-                padding=True,
-                truncation=True,
-                return_tensors="pt",
-            )
-            encoded = {k: v.to(device) for k, v in encoded.items()}
-            outputs = model(**encoded)
-            pooled = mean_pool(outputs.last_hidden_state, encoded["attention_mask"])
-            pooled = torch.nn.functional.normalize(pooled, p=2, dim=1)
-            embeddings.append(pooled.cpu().numpy())
-
-    return np.concatenate(embeddings, axis=0)
+        return embed_in_batches(
+            texts, embed_batch, batch_size=batch_size, sort_by_length=sort_by_length
+        )
 
 
 def create_torch_embedding_fn(
     model_name: str,
     checkpoint_path: Path | None = None,
     device: str | None = None,
+    *,
+    sort_by_length: bool = True,
+    num_threads: int | None = None,
 ):
     """PyTorch로 모델을 로드하고 임베딩 생성 함수를 반환한다.
 
     Args:
         model_name: HuggingFace 모델 이름 또는 로컬 모델 폴더.
         checkpoint_path: 파인튜닝된 체크포인트 (state_dict 파일 또는 모델 폴더).
-        device: 디바이스 문자열. None이면 자동 감지.
+        device: "auto" | "cuda" | "mps" | "cpu". None이면 auto.
+        sort_by_length: 길이순 배치로 패딩을 줄인다.
+        num_threads: CPU 연산 스레드 수. None이면 torch 기본값.
 
     Returns:
         texts를 받아 np.ndarray를 반환하는 함수.
     """
-    if device is None:
-        device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = resolve_device(device)
+    if num_threads:
+        torch.set_num_threads(num_threads)
 
     model = load_embedding_model(model_name, checkpoint_path, device)
     tokenizer = load_tokenizer(model_name, checkpoint_path)
 
     def _embed(texts: list[str], batch_size: int = 32) -> np.ndarray:
         return generate_embeddings(
-            texts, model, tokenizer, batch_size=batch_size, device=device
+            texts,
+            model,
+            tokenizer,
+            batch_size=batch_size,
+            device=device,
+            sort_by_length=sort_by_length,
         )
 
     return _embed

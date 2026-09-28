@@ -97,6 +97,10 @@ def index_command(
     checkpoint: Path | None = None,
     backend: str | None = None,
     out: Path | None = None,
+    device: str | None = None,
+    batch_size: int = 64,
+    sort_by_length: bool | None = None,
+    threads: int | None = None,
 ) -> None:
     """코퍼스를 임베딩해 SQLite(sqlite-vec) 인덱스 파일을 만든다.
 
@@ -108,6 +112,10 @@ def index_command(
         checkpoint: 파인튜닝한 모델 폴더. 주면 이 폴더 이름이 모델 키가 된다.
         backend: onnx | torch. 기본값 Settings.embedding_backend.
         out: 인덱스 파일. 기본값 data/processed/index/<모델 키>.sqlite.
+        device: torch 장치 auto | cuda | mps | cpu. 기본값 Settings.embedding_device.
+        batch_size: 임베딩 배치 크기.
+        sort_by_length: 길이순 배치 (--no-sort-by-length로 끔). 기본값 Settings 값.
+        threads: CPU 스레드 수. 기본값 라이브러리 기본값.
     """
     from ragkit.data import load_corpus
 
@@ -120,8 +128,15 @@ def index_command(
     out = out or settings.data_dir / "processed" / "index" / f"{model_key}.sqlite"
 
     docs = load_corpus(corpus)
-    embed_fn = create_embedding_fn(model, checkpoint_path=checkpoint, backend=backend)
-    index = build_index(docs, embed_fn, out, model_key=model_key)
+    embed_fn = create_embedding_fn(
+        model,
+        checkpoint_path=checkpoint,
+        device=device,
+        backend=backend,
+        sort_by_length=sort_by_length,
+        num_threads=threads,
+    )
+    index = build_index(docs, embed_fn, out, model_key=model_key, batch_size=batch_size)
     print(f"인덱스: {out} (문서 {len(index):,}개, 모델 {index.model_key})")
 
 

@@ -11,6 +11,8 @@ import numpy as np
 import onnxruntime as ort
 from tokenizers import Tokenizer
 
+from ragkit.embeddings.batching import embed_in_batches
+
 MAX_LENGTH = 512
 
 
@@ -33,11 +35,21 @@ def onnx_model_path(model_dir: Path) -> Path:
     return model_dir / "onnx" / "model.onnx"
 
 
-def create_onnx_embedding_fn(model_dir: Path):
+def create_onnx_embedding_fn(
+    model_dir: Path,
+    *,
+    sort_by_length: bool = True,
+    num_threads: int | None = None,
+    providers: list[str] | None = None,
+):
     """ONNX 모델을 로드하고 임베딩 생성 함수를 반환한다.
 
     Args:
         model_dir: tokenizer.json과 onnx/model.onnx가 있는 모델 폴더.
+        sort_by_length: 길이순 배치로 패딩을 줄인다.
+        num_threads: onnxruntime 연산 스레드 수 (intra_op). None이면 기본값.
+        providers: 실행 공급자. None이면 ["CPUExecutionProvider"].
+            Mac에서는 ["CoreMLExecutionProvider", "CPUExecutionProvider"]로 비교해 볼 수 있다.
 
     Returns:
         texts를 받아 L2 정규화된 (N, dim) np.ndarray를 반환하는 함수.
@@ -58,22 +70,27 @@ def create_onnx_embedding_fn(model_dir: Path):
     tokenizer = Tokenizer.from_file(str(tokenizer_path))
     tokenizer.enable_truncation(max_length=MAX_LENGTH)
     tokenizer.enable_padding()
-    session = ort.InferenceSession(str(onnx_path), providers=["CPUExecutionProvider"])
+    options = ort.SessionOptions()
+    if num_threads:
+        options.intra_op_num_threads = num_threads
+    session = ort.InferenceSession(
+        str(onnx_path), sess_options=options, providers=providers or ["CPUExecutionProvider"]
+    )
     input_names = {i.name for i in session.get_inputs()}
 
+    def embed_batch(batch: list[str]) -> np.ndarray:
+        encoded = tokenizer.encode_batch(batch)
+        input_ids = np.array([e.ids for e in encoded], dtype=np.int64)
+        attention_mask = np.array([e.attention_mask for e in encoded], dtype=np.int64)
+        feeds = {"input_ids": input_ids, "attention_mask": attention_mask}
+        if "token_type_ids" in input_names:
+            feeds["token_type_ids"] = np.zeros_like(input_ids)
+        hidden = session.run(None, feeds)[0]
+        pooled = mean_pool(hidden, attention_mask)
+        pooled /= np.clip(np.linalg.norm(pooled, axis=1, keepdims=True), 1e-12, None)
+        return pooled.astype(np.float32)
+
     def _embed(texts: list[str], batch_size: int = 32) -> np.ndarray:
-        embeddings: list[np.ndarray] = []
-        for i in range(0, len(texts), batch_size):
-            encoded = tokenizer.encode_batch(texts[i : i + batch_size])
-            input_ids = np.array([e.ids for e in encoded], dtype=np.int64)
-            attention_mask = np.array([e.attention_mask for e in encoded], dtype=np.int64)
-            feeds = {"input_ids": input_ids, "attention_mask": attention_mask}
-            if "token_type_ids" in input_names:
-                feeds["token_type_ids"] = np.zeros_like(input_ids)
-            hidden = session.run(None, feeds)[0]
-            pooled = mean_pool(hidden, attention_mask)
-            pooled /= np.clip(np.linalg.norm(pooled, axis=1, keepdims=True), 1e-12, None)
-            embeddings.append(pooled.astype(np.float32))
-        return np.concatenate(embeddings, axis=0)
+        return embed_in_batches(texts, embed_batch, batch_size=batch_size, sort_by_length=sort_by_length)
 
     return _embed
