@@ -25,16 +25,23 @@ def _fail(message: str) -> None:
     raise SystemExit(1)
 
 
-def _model_key(model_path: Path) -> str:
-    """인덱스 재사용 판단에 쓰는 모델 키.
+def _model_key(model_path: Path, backend: str) -> str:
+    """인덱스 재사용 판단에 쓰는 모델 키. 기본 인덱스 파일 이름으로도 쓴다.
 
-    학습한 모델 폴더는 다시 학습해도 이름이 같으므로, 가중치 파일 수정 시각을 붙여
-    예전 모델로 만든 인덱스를 재사용하지 않게 한다.
+    학습한 모델 폴더는 다시 학습해도 이름이 같으므로, 백엔드가 읽는 가중치 파일
+    (torch: model.safetensors, onnx: onnx/model.onnx)의 수정 시각을 붙여 예전 모델이나
+    다른 백엔드로 만든 인덱스를 재사용하지 않게 한다. 모델 이름(HF)이면 이름만 쓴다.
     """
-    weights = model_path / "model.safetensors"
+    weights = model_path / ("onnx/model.onnx" if backend == "onnx" else "model.safetensors")
     if weights.exists():
-        return f"{model_path.name}@{int(weights.stat().st_mtime)}"
+        return f"{model_path.name}@{backend}-{int(weights.stat().st_mtime)}"
     return model_path.name
+
+
+def _looks_like_path(model: str) -> bool:
+    """HF 모델 이름(조직/이름, 슬래시 하나)이 아니라 로컬 경로로 쓴 값인지."""
+    path = Path(model)
+    return path.is_absolute() or model.startswith(".") or model.count("/") >= 2
 
 
 def _load_corpus_or_fail(path: Path) -> list[dict]:
@@ -107,6 +114,7 @@ def train(
     model: str | None = None,
     max_steps: int | None = None,
     limit: int | None = None,
+    dev_eval: bool = True,
 ) -> None:
     """실험 설정(config.yaml)대로 임베딩 모델을 파인튜닝한다. [train] extra 필요.
 
@@ -117,13 +125,18 @@ def train(
         model: 설정의 base 모델 대신 쓸 모델 이름 또는 폴더.
         max_steps: 학습 step 수 제한 (강의에서 짧게 돌려 볼 때).
         limit: 학습 질문 수 제한.
+        dev_eval: 학습 전·후 dev 평가(전체 코퍼스 임베딩 2회). --no-dev-eval로 끈다.
     """
-    from ragkit.training.train import load_train_config
-    from ragkit.training.train import train as run_train
+    from ragkit.training import train as train_module
 
     corpus_path, splits_dir = _paths(corpus, splits)
-    train_config = load_train_config(config)
-    overrides = {"model": model, "max_steps": max_steps, "limit": limit}
+    train_config = train_module.load_train_config(config)
+    overrides = {
+        "model": model,
+        "max_steps": max_steps,
+        "limit": limit,
+        "dev_eval": None if dev_eval else False,
+    }
     train_config = train_config.model_copy(
         update={k: v for k, v in overrides.items() if v is not None}
     )
@@ -134,7 +147,7 @@ def train(
     docs = _load_corpus_or_fail(corpus_path)
 
     settings = get_settings()
-    meta = run_train(
+    meta = train_module.train(
         train_config,
         data["train"],
         data["dev"],
@@ -170,7 +183,8 @@ def evaluate(
         splits: ragkit split 출력 폴더. 기본값은 data/splits.
         corpus: 코퍼스 경로. 기본값은 data/processed/law_docs.json.
         backend: 임베딩 백엔드 (torch | onnx). onnx는 <모델 폴더>/onnx/model.onnx가 필요하다.
-        index: 인덱스 파일 경로. 기본값은 data/processed/index/<모델 이름>.sqlite.
+        index: 인덱스 파일 경로. 기본값은 data/processed/index/{모델 키}.sqlite
+            (학습한 폴더는 "exp_002@torch-수정시각", HF 모델 이름은 이름 그대로).
         out: 결과 JSON 경로. 기본값은 experiments/results/<모델 이름>_<split>.json.
     """
     from ragkit.evaluation import evaluate_index
@@ -186,11 +200,17 @@ def evaluate(
     docs = _load_corpus_or_fail(corpus_path)
 
     model_path = Path(model)
+    if not model_path.is_dir() and _looks_like_path(model):
+        _fail(
+            f"모델 폴더가 없습니다: {model}\n"
+            "  먼저 실행: ragkit train --config experiments/<실험>/config.yaml"
+        )
     checkpoint = model_path if model_path.is_dir() else None
     embed_fn = create_embedding_fn(model, checkpoint_path=checkpoint, backend=backend)
     settings = get_settings()
-    index = index or settings.data_dir / "processed" / "index" / f"{model_path.name}.sqlite"
-    vector_index = build_index(docs, embed_fn, index, model_key=_model_key(model_path))
+    key = _model_key(model_path, backend)
+    index = index or settings.data_dir / "processed" / "index" / f"{key}.sqlite"
+    vector_index = build_index(docs, embed_fn, index, model_key=key)
     try:
         result = evaluate_index(
             vector_index, embed_fn, docs, questions, query_prefix=settings.query_prefix

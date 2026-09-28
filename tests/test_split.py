@@ -63,6 +63,21 @@ def test_split_takes_smallest_law_when_all_overshoot(corpus_by_id) -> None:
         }
 
 
+def test_split_does_not_undershoot_ratio(corpus_by_id) -> None:
+    """작은 법령만 들어가 test가 목표보다 훨씬 작아지지 않는다 (법령 질문 수 500·400·300·10)."""
+    sizes = {"가법": 500, "나법": 400, "다법": 300, "라법": 10}
+    rows = [
+        {"query": f"{law} {i}", "positive_id": f"{law}_법률_제2조", "hard_negative_ids": []}
+        for law, n in sizes.items()
+        for i in range(n)
+    ]
+    for seed in range(10):
+        splits = split_by_law(rows, corpus_by_id, seed=seed)
+        test_share = len(splits["test"]) / len(rows)
+        assert 0.1 <= test_share <= 0.35, (seed, test_share)
+        assert splits["train"]
+
+
 def test_split_by_law_is_reproducible(questions, corpus_by_id) -> None:
     assert split_by_law(questions, corpus_by_id, seed=7) == split_by_law(
         questions, corpus_by_id, seed=7

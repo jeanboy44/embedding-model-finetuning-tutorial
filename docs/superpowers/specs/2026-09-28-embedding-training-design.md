@@ -45,9 +45,10 @@
 ### `ragkit/training/split.py` (core 의존성만)
 - `split_by_law(questions, corpus_by_id, *, test_ratio=0.2, dev_ratio=0.1, seed=42) -> dict[str, list[dict]]`
   - 질문의 법령·테마는 positive 문서의 `category`, `theme`.
-  - 테마마다 법령을 seed로 섞은 순서대로, 넣어도 test 질문 수가 `test_ratio` 목표를 넘지 않는 법령을 test에 넣는다.
+  - 테마마다 법령을 seed로 섞은 순서대로, 넣으면 test 질문 수가 `test_ratio` 목표에 더 가까워지는 법령을 test에 넣는다.
     하나도 못 넣으면 가장 작은 법령 하나를 넣는다. dev도 같은 방식, 나머지 train.
-    (목표에 닿을 때까지 넣는 방식은 큰 법령 하나로 test가 82%가 되는 경우가 있어 바꿈)
+    (목표에 닿을 때까지 넣는 방식은 큰 법령 하나로 test가 82%가 되고, 목표를 넘지 않는 법령만 넣는 방식은
+    법령 크기가 500·400·300·10일 때 test가 0.8%가 되어 바꿈)
   - 법령이 3개 미만인 테마들은 한 그룹으로 합쳐 같은 규칙을 적용한다.
   - 그룹마다 train에 법령이 최소 1개 남게 한다. 그래서 dev나 test가 빌 수 있고, 그러면 경고한다.
   - 분할 사이에 법령이 겹치지 않음을 검사한다.
@@ -88,9 +89,13 @@
 ### CLI (`ragkit/cli/cli_tool.py`의 `app`에 하위 명령 추가)
 - `ragkit split --questions <파일|폴더> [--corpus ...] [--out data/splits] [--seed 42] [--test-ratio 0.2] [--dev-ratio 0.1]`
 - `ragkit train --config experiments/exp_002_finetuned/config.yaml [--splits data/splits] [--corpus ...] [--max-steps N] [--limit N]`
-- `ragkit evaluate --model <모델 폴더|이름> [--split test] [--splits data/splits] [--corpus ...] [--out <결과 JSON>]`
-  - 모델은 이번 브랜치에서는 `sentence_transformers.SentenceTransformer`로 불러 `embed_fn`을 만든다([train] extra).
-    ragkit 세션의 onnx/torch 백엔드가 들어오면 `ragkit.embeddings.create_embedding_fn`으로 바꾼다.
+- `ragkit evaluate <모델 폴더|이름> [--split test] [--splits data/splits] [--corpus ...] [--backend torch] [--index ...] [--out <결과 JSON>]`
+  - `ragkit.embeddings.create_embedding_fn`으로 임베딩하고, 코퍼스 임베딩은 `ragkit.retrieval.build_index`로 SQLite 인덱스에 저장해
+    `evaluate_index`로 평가한다. 같은 모델 키·같은 코퍼스면 인덱스를 재사용한다.
+  - 모델 키 = 기본 인덱스 파일 이름: 학습한 폴더는 `<폴더 이름>@<backend>-<가중치 수정 시각>`(재학습·백엔드가 바뀌면 새 인덱스),
+    HF 모델 이름은 이름 그대로(`ragkit index`가 만든 base 인덱스와 공유). `ragkit index`의 `<폴더 이름>.sqlite`는 건드리지 않는다.
+  - 로컬 경로로 쓴 모델 폴더가 없으면 `ragkit train`을 안내하고 종료한다.
+- `ragkit train ... [--no-dev-eval]`: 학습 전·후 dev 평가(전체 코퍼스 임베딩 2회)를 끈다.
 - 경로 기본값: `get_settings().data_dir` 기준. 모두 인자로 바꿀 수 있다(워크트리처럼 `data/`가 없는 곳에서 `--corpus`로 지정).
 
 ### 실험 설정 (코드 없음)

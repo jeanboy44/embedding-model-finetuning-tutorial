@@ -41,6 +41,8 @@ class TrainConfig(BaseModel):
     seed: int = 42
     max_steps: int | None = None
     limit: int | None = None
+    # 학습 전·후 dev 평가. 전체 코퍼스를 두 번 임베딩하므로 짧게 돌려 볼 때는 끈다.
+    dev_eval: bool = True
     lora: LoraSettings | None = None
 
 
@@ -148,7 +150,9 @@ def train(
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
 
     evaluator = (
-        _dev_evaluator(dev_questions, corpus, query_prefix, passage_prefix) if dev_questions else None
+        _dev_evaluator(dev_questions, corpus, query_prefix, passage_prefix)
+        if dev_questions and config.dev_eval
+        else None
     )
     dev_before = evaluator(model) if evaluator else None
 
