@@ -102,16 +102,103 @@ CHAPTER_RE = re.compile(r"^## (제\d+장(?:의\d+)?.*?)(?:\s*<.*>)?\s*$")
 EMPTY_BODY_RE = re.compile(r"^(삭제\s*<[^>]*>|.*이를 폐지한다\.?)$")
 # 검색에 잡음인 개정 이력(<개정 2018.3.20>, <신설 …>, <2020.3.31>)과 이미지 태그를 본문에서 지운다.
 NOISE_RE = re.compile(r"\s*<(?:개정|신설|\d{4}\.)[^>]*>|<img[^>]*>|</img>")
+# 삭제된 항·호·목 줄(개정 태그를 지운 뒤 "② 삭제", "3. 삭제", "가. 삭제"만 남은 줄)은 본문에서 지운다.
+DELETED_LINE_RE = re.compile(r"^(?:[①-⑳㉑-㉟]|\d+(?:의\d+)?\.|[가-하]\.)\s*삭제\s*$")
+# 항 번호(①~㉟)와 호 번호(1. 2의3.)는 줄 맨 앞에 온다.
+PARAGRAPH_RE = re.compile(r"^[①-⑳㉑-㉟]", re.M)
+ITEM_RE = re.compile(r"^(\d+(?:의\d+)?)\.\s", re.M)
+# 조문 하나(제목 + 본문)의 최대 글자 수. 넘으면 항 단위로, 항도 넘으면 호 묶음으로 나눈다.
+# 임베딩 모델(multilingual-e5, 최대 512토큰)에서 잘리지 않게 잡은 값이다. 한국어 법령은 약 1.8자/토큰이다.
+MAX_CHARS = 800
+
+
+def _paragraph_no(mark: str) -> int:
+    """항 번호 기호(①, ⑪, ㉑)를 숫자로 바꾼다."""
+    code = ord(mark)
+    return code - 0x2460 + 1 if code <= 0x2473 else code - 0x3251 + 21
+
+
+def _split_items(text: str, heading_chars: int, max_chars: int) -> list[tuple[str, str]]:
+    """호 목록을 앞에서부터 한도 안으로 묶는다. 머리 문장(첫 호 앞)은 묶음마다 반복한다."""
+    matches = list(ITEM_RE.finditer(text))
+    if len(matches) < 2:
+        return [("", text)]
+    lead = text[: matches[0].start()].strip()
+    ends = [m.start() for m in matches[1:]] + [len(text)]
+    items = [(m.group(1), text[m.start() : end].strip()) for m, end in zip(matches, ends)]
+
+    groups: list[list[tuple[str, str]]] = [[]]
+    size = heading_chars + len(lead)
+    for item in items:
+        length = len(item[1]) + 1
+        if groups[-1] and size + length > max_chars:
+            groups.append([])
+            size = heading_chars + len(lead)
+        groups[-1].append(item)
+        size += length
+
+    chunks = []
+    for group in groups:
+        first, last = group[0][0], group[-1][0]
+        label = f"제{first}호" if first == last else f"제{first}~{last}호"
+        lines = [lead] if lead else []
+        chunks.append((label, "\n".join(lines + [item for _, item in group])))
+    return chunks
+
+
+def split_article(
+    text: str, heading_chars: int, max_chars: int | None = None
+) -> list[tuple[str, str]]:
+    """긴 조문을 항 단위로, 항이 여전히 길면 호 묶음으로 나눈다.
+
+    Args:
+        text: 조문 본문.
+        heading_chars: 조각마다 붙는 제목의 글자 수.
+        max_chars: 제목 + 본문의 최대 글자 수. 기본값은 MAX_CHARS.
+
+    Returns:
+        [(레이블, 본문), ...]. 나누지 않으면 레이블은 빈 문자열이다.
+        레이블 예: "제3항", "제1~12호", "제1항 제1~12호".
+    """
+    max_chars = max_chars or MAX_CHARS
+    if heading_chars + len(text) <= max_chars:
+        return [("", text)]
+
+    starts = [m.start() for m in PARAGRAPH_RE.finditer(text)]
+    if len(starts) >= 2:
+        # 첫 항 앞에 글이 있으면(드묾) 첫 항에 붙인다.
+        begins, ends = [0, *starts[1:]], [*starts[1:], len(text)]
+        paragraphs = [
+            (f"제{_paragraph_no(text[start])}항", text[begin:end].strip())
+            for start, begin, end in zip(starts, begins, ends)
+        ]
+    else:
+        paragraphs = [("", text)]
+
+    chunks: list[tuple[str, str]] = []
+    for label, body in paragraphs:
+        if heading_chars + len(label) + len(body) <= max_chars:
+            chunks.append((label, body))
+            continue
+        for item_label, item_body in _split_items(body, heading_chars + len(label), max_chars):
+            chunks.append((f"{label} {item_label}".strip(), item_body))
+    return chunks
 
 
 def clean_text(text: str) -> str:
-    """Markdown 강조·이스케이프, 개정 이력 태그, 이미지 태그를 지운다."""
-    return NOISE_RE.sub("", text.replace("**", "").replace("\\.", ".")).strip()
+    """Markdown 강조·이스케이프, 개정 이력 태그, 이미지 태그, 삭제된 항·호·목 줄을 지운다."""
+    text = NOISE_RE.sub("", text.replace("**", "").replace("\\.", "."))
+    lines = [line for line in text.splitlines() if not DELETED_LINE_RE.match(line.strip())]
+    return "\n".join(lines).strip()
 
 
 @dataclass
 class LawArticle:
-    """조문 하나. id/title/text/category는 data/sample_docs.json과 같은 형식이다."""
+    """조문 하나(긴 조문은 그 조각 하나). id/title/text/category는 data/sample_docs.json과 같은 형식이다.
+
+    긴 조문을 나눈 조각은 id와 title 끝에 paragraph 레이블(예: "제3항", "제1~12호")이 붙고,
+    parent_id가 원래 조문 id를 가리킨다. 나누지 않은 조문은 paragraph가 빈 문자열이고 parent_id == id다.
+    """
 
     id: str
     title: str
@@ -126,6 +213,8 @@ class LawArticle:
     promulgation_date: str
     effective_date: str
     source_url: str
+    parent_id: str
+    paragraph: str
 
 
 def _git(*args: str, cwd: Path | None = None) -> str:
@@ -210,8 +299,8 @@ def parse_law_file(path: Path) -> tuple[dict, list[tuple[str, str, str, str]]]:
         if current is None:
             return
         raw = "\n".join(line.strip() for line in lines if line.strip())
-        if raw and not EMPTY_BODY_RE.match(raw):
-            articles.append((*current, clean_text(raw)))
+        if raw and not EMPTY_BODY_RE.match(raw) and (text := clean_text(raw)):
+            articles.append((*current, text))
 
     for line in body.splitlines():
         if line.startswith("## 부칙"):
@@ -267,23 +356,30 @@ def build_corpus(repo_dir: Path, themes: dict[str, list[str]]) -> list[LawArticl
                         if article_title
                         else article_no
                     )
-                    corpus.append(
-                        LawArticle(
-                            id=f"{law_dir_name}_{law_type}_{article_no}",
-                            title=f"{meta['제목']} {heading}",
-                            text=text,
-                            category=law_dir_name,
-                            theme=theme,
-                            law_name=meta["제목"],
-                            law_type=law_type,
-                            article_no=article_no,
-                            article_title=article_title,
-                            chapter=chapter,
-                            promulgation_date=str(meta["공포일자"]),
-                            effective_date=str(meta["시행일자"]),
-                            source_url=meta["출처"],
+                    title = f"{meta['제목']} {heading}"
+                    parent_id = f"{law_dir_name}_{law_type}_{article_no}"
+                    for paragraph, chunk in split_article(text, len(title)):
+                        corpus.append(
+                            LawArticle(
+                                id=f"{parent_id}_{paragraph.replace(' ', '_')}"
+                                if paragraph
+                                else parent_id,
+                                title=f"{title} {paragraph}" if paragraph else title,
+                                text=chunk,
+                                category=law_dir_name,
+                                theme=theme,
+                                law_name=meta["제목"],
+                                law_type=law_type,
+                                article_no=article_no,
+                                article_title=article_title,
+                                chapter=chapter,
+                                promulgation_date=str(meta["공포일자"]),
+                                effective_date=str(meta["시행일자"]),
+                                source_url=meta["출처"],
+                                parent_id=parent_id,
+                                paragraph=paragraph,
+                            )
                         )
-                    )
     return corpus
 
 
@@ -320,8 +416,9 @@ def main(
 
     for theme in selected:
         count = sum(article.theme == theme for article in corpus)
-        print(f"  {theme}: {count}조")
-    print(f"완료: {len(corpus)}조 → {output}")
+        print(f"  {theme}: 문서 {count}개")
+    articles = len({article.parent_id for article in corpus})
+    print(f"완료: 조문 {articles}개 → 문서 {len(corpus)}개 (긴 조문은 항·호 단위로 나눔) → {output}")
 
 
 if __name__ == "__main__":

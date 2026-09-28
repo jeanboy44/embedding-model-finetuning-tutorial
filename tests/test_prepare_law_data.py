@@ -87,3 +87,71 @@ def test_build_corpus_ids_and_fields(tmp_path) -> None:
     assert corpus[0].title == "테스트법 제1조 (목적)"
     assert corpus[0].category == "테스트법"
     assert corpus[0].theme == "youth"
+
+
+def test_split_article_keeps_short_article_whole() -> None:
+    """한도 안의 조문은 나누지 않는다."""
+    text = "① 첫째 항이다.\n② 둘째 항이다."
+
+    assert law.split_article(text, heading_chars=10, max_chars=100) == [("", text)]
+
+
+def test_split_article_by_paragraph() -> None:
+    """긴 조문은 항 단위로 나누고, 항 번호를 레이블로 붙인다."""
+    text = "① 첫째 항이다.\n② 둘째 항이다.\n⑪ 열한째 항이다."
+
+    assert law.split_article(text, heading_chars=10, max_chars=30) == [
+        ("제1항", "① 첫째 항이다."),
+        ("제2항", "② 둘째 항이다."),
+        ("제11항", "⑪ 열한째 항이다."),
+    ]
+
+
+def test_split_article_by_item_group_repeats_lead() -> None:
+    """항이 없거나 항 하나가 여전히 길면 호를 묶어 나누고, 머리 문장을 조각마다 반복한다."""
+    lead = "용어의 뜻은 다음과 같다."
+    items = [f'{n}. "용어{n}"이란 어떤 것을 말한다.' for n in (1, 2, 3)] + [
+        '3의2. "용어3의2"란 어떤 것을 말한다.'
+    ]
+    text = "\n".join([lead, *items])
+
+    chunks = law.split_article(text, heading_chars=10, max_chars=80)
+
+    assert [label for label, _ in chunks] == ["제1~2호", "제3~3의2호"]
+    assert chunks[0][1] == "\n".join([lead, *items[:2]])
+    assert chunks[1][1] == "\n".join([lead, *items[2:]])
+
+
+def test_build_corpus_splits_long_article(tmp_path, monkeypatch) -> None:
+    """나눈 조각은 id에 레이블이 붙고 parent_id로 원래 조문을 가리킨다."""
+    monkeypatch.setattr(law, "MAX_CHARS", 40)
+    law_dir = tmp_path / "kr" / "테스트법"
+    law_dir.mkdir(parents=True)
+    body = "##### 제3조 (의무)\n\n**①** 사용자는 임금을 지급한다.\n**②** 근로자는 성실히 일한다.\n"
+    _write_law(law_dir / "법률(법률).md", "테스트법", "2024-01-01", body)
+
+    corpus = law.build_corpus(tmp_path, {"youth": ["테스트법"]})
+
+    assert [a.id for a in corpus] == ["테스트법_법률_제3조_제1항", "테스트법_법률_제3조_제2항"]
+    assert corpus[1].title == "테스트법 제3조 (의무) 제2항"
+    assert corpus[1].text == "② 근로자는 성실히 일한다."
+    assert corpus[1].parent_id == "테스트법_법률_제3조"
+    assert corpus[1].paragraph == "제2항"
+
+
+def test_parse_law_file_drops_deleted_paragraphs_and_items(tmp_path) -> None:
+    """본문 중 삭제된 항·호·목 줄("② 삭제 <2020.1.1>", "3. 삭제", "가. 삭제")은 지운다."""
+    body = (
+        "##### 제5조 (의무)\n\n"
+        "**①** 사용자는 다음을 지킨다.\n"
+        "1\\. 첫째\n"
+        "2\\. 삭제 <2019.1.1>\n"
+        "가\\. 삭제\n"
+        "**②** 삭제 <2020.1.1>\n"
+        "**③** 근로자는 성실히 일한다.\n"
+    )
+    path = _write_law(tmp_path / "법률.md", "테스트법", "2024-01-01", body)
+
+    _, articles = law.parse_law_file(path)
+
+    assert articles[0][3] == "① 사용자는 다음을 지킨다.\n1. 첫째\n③ 근로자는 성실히 일한다."
