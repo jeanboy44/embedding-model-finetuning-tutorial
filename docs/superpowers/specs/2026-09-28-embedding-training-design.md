@@ -79,7 +79,7 @@
     - `article`: 같은 조(`relevance_key`)의 조각이면 정답. 같은 조의 조각이 여러 개 나오면 첫 등장만 센다
   - `related_ids`는 두 판정 모두에서 순위에서 뺀다(오답으로도 정답으로도 치지 않음).
   - 결과: `{"n", "doc": {...}, "article": {...}, "by_query_type": {...}, "by_theme": {...}}`
-- 코퍼스 임베딩 캐시는 CLI에서만 한다(`experiments/<exp>/results/corpus_emb.npy`, 모델 폴더·코퍼스 파일 수정 시각이 바뀌면 다시 계산).
+- 코퍼스 임베딩 파일 캐시는 이번 범위 밖이다. 같은 모델로 여러 번 평가할 때는 `corpus_embeddings` 인자로 재사용한다.
 
 ### CLI (`ragkit/cli/cli_tool.py`의 `app`에 하위 명령 추가)
 - `ragkit split --questions <파일|폴더> [--corpus ...] [--out data/splits] [--seed 42] [--test-ratio 0.2] [--dev-ratio 0.1]`
