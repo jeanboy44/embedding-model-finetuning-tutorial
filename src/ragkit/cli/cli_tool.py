@@ -90,6 +90,24 @@ def rag(
     print(f"\nAnswer:\n{result['answer']}")
 
 
+@app.command(name="export-onnx")
+def export_onnx_command(
+    model_dir: Path,
+    out_dir: Path | None = None,
+) -> None:
+    """임베딩 모델 폴더를 ONNX로 변환한다 (extra [train] 필요).
+
+    Args:
+        model_dir: config.json과 가중치가 있는 모델 폴더 (base 또는 파인튜닝 결과).
+        out_dir: 출력 폴더. 없으면 model_dir/onnx/model.onnx에 쓴다.
+    """
+    from ragkit.models.onnx_export import export_onnx
+
+    onnx_path = export_onnx(model_dir, out_dir)
+    size_mb = onnx_path.stat().st_size / 1e6
+    print(f"ONNX 변환 완료: {onnx_path} ({size_mb:.1f} MB)")
+
+
 def _load_document_store() -> DocumentStore | None:
     """문서 저장소를 로드한다.
 

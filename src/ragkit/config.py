@@ -2,6 +2,7 @@
 
 from functools import lru_cache
 from pathlib import Path
+from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -19,7 +20,9 @@ class Settings(BaseSettings):
         query_prefix: 검색 쿼리 앞에 붙이는 문구.
         passage_prefix: 검색 대상 문서 앞에 붙이는 문구.
         gemini_model_name: 기본 Gemini 모델 이름.
+        embedding_backend: 임베딩 추론 백엔드 (onnx | torch).
         log_level: 로그 레벨.
+        ragkit_project_root: 데이터·모델 경로 기준 폴더 (RAGKIT_PROJECT_ROOT). 없으면 cwd.
     """
 
     model_config = SettingsConfigDict(
@@ -39,14 +42,20 @@ class Settings(BaseSettings):
     passage_prefix: str = "passage: "
     gemini_model_name: str = "gemini-pro"
 
+    # 임베딩 추론 백엔드: onnx(배포 기본, torch 불필요) | torch(extra [torch])
+    embedding_backend: Literal["onnx", "torch"] = "onnx"
+
     # Logging
     log_level: str = "INFO"
 
-    # Paths (computed, not from env)
+    # 데이터·모델 경로의 기준 폴더. 설치된 패키지 위치(__file__)는 저장소와 무관하므로
+    # 환경 변수 RAGKIT_PROJECT_ROOT가 없으면 명령을 실행한 폴더(cwd)를 쓴다.
+    ragkit_project_root: Path | None = None
+
     @property
     def project_root(self) -> Path:
         """프로젝트 루트 경로."""
-        return Path(__file__).parent.parent
+        return self.ragkit_project_root or Path.cwd()
 
     @property
     def data_dir(self) -> Path:

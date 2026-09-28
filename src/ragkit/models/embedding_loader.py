@@ -1,11 +1,21 @@
-"""임베딩 모델 로더."""
+"""임베딩 모델 로더 (PyTorch 경로, extra `[torch]` 필요).
+
+torch/transformers는 함수 안에서 import한다. core 배포(ONNX)에서도
+`import ragkit.models`가 깨지지 않게 하기 위함이다.
+"""
+
+from __future__ import annotations
 
 from pathlib import Path
-
-import torch
-from transformers import AutoModel, AutoTokenizer, PreTrainedTokenizerBase
+from typing import TYPE_CHECKING
 
 from ragkit.config import get_settings
+
+if TYPE_CHECKING:
+    import torch
+    from transformers import PreTrainedTokenizerBase
+
+TORCH_EXTRA_HINT = "PyTorch 백엔드에는 extra가 필요합니다: uv sync --extra torch"
 
 
 def resolve_model_source(model_name: str) -> str:
@@ -20,10 +30,21 @@ def resolve_model_source(model_name: str) -> str:
     Returns:
         from_pretrained에 넘길 로컬 경로 또는 모델 이름.
     """
+    if (Path(model_name) / "config.json").exists():
+        return model_name
     local_dir = get_settings().models_dir / model_name.split("/")[-1]
     if (local_dir / "config.json").exists():
         return str(local_dir)
     return model_name
+
+
+def _import_torch():
+    try:
+        import torch
+        from transformers import AutoModel, AutoTokenizer
+    except ImportError as e:
+        raise ImportError(TORCH_EXTRA_HINT) from e
+    return torch, AutoModel, AutoTokenizer
 
 
 def load_embedding_model(
@@ -35,33 +56,43 @@ def load_embedding_model(
 
     Args:
         model_name: HuggingFace 모델 이름 (예: "intfloat/multilingual-e5-small").
-        checkpoint_path: 파인튜닝된 체크포인트 경로. None이면 기본 모델 사용.
+        checkpoint_path: 파인튜닝된 체크포인트. 폴더(HF/sentence-transformers 형식)면
+            그 폴더에서 모델을 읽고, 파일이면 state_dict로 덮어쓴다. None이면 기본 모델.
         device: 디바이스 문자열 (예: "cuda", "cpu"). None이면 자동 감지.
 
     Returns:
         평가 모드로 설정된 모델.
     """
+    torch, AutoModel, _ = _import_torch()
     if device is None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    model = AutoModel.from_pretrained(resolve_model_source(model_name))
-
-    if checkpoint_path and checkpoint_path.exists():
-        checkpoint = torch.load(checkpoint_path, map_location=device)
-        model.load_state_dict(checkpoint, strict=False)
+    if checkpoint_path and Path(checkpoint_path).is_dir():
+        model = AutoModel.from_pretrained(str(checkpoint_path))
+    else:
+        model = AutoModel.from_pretrained(resolve_model_source(model_name))
+        if checkpoint_path and Path(checkpoint_path).exists():
+            checkpoint = torch.load(checkpoint_path, map_location=device)
+            model.load_state_dict(checkpoint, strict=False)
 
     model = model.to(device)
     model.eval()
     return model
 
 
-def load_tokenizer(model_name: str) -> PreTrainedTokenizerBase:
+def load_tokenizer(
+    model_name: str, checkpoint_path: Path | None = None
+) -> PreTrainedTokenizerBase:
     """임베딩 모델용 토크나이저를 로드한다.
 
     Args:
         model_name: HuggingFace 모델 이름 또는 로컬 경로.
+        checkpoint_path: 체크포인트 폴더에 토크나이저가 있으면 그것을 쓴다.
 
     Returns:
         로드된 토크나이저.
     """
+    _, _, AutoTokenizer = _import_torch()
+    if checkpoint_path and (Path(checkpoint_path) / "tokenizer.json").exists():
+        return AutoTokenizer.from_pretrained(str(checkpoint_path))
     return AutoTokenizer.from_pretrained(resolve_model_source(model_name))
