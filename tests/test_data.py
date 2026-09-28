@@ -39,14 +39,19 @@ def test_load_corpus_and_questions(tmp_path, corpus, questions) -> None:
 
 
 def test_filter_questions_drops_missing_and_bad_negatives(corpus_by_id) -> None:
-    """없는 positive는 질문째 빼고, negative에서는 없는 id·related·같은 조 조각을 지운다."""
+    """없는 positive는 질문째 빼고, negative에서는 없는 id·related·정답 자신·중복을 지운다.
+
+    같은 조의 다른 조각(예: 제6조 제1항 질문의 제6조 제2항)은 다른 질문에 답하는 진짜
+    hard negative라 남긴다.
+    """
     questions = [
         {"query": "없는 정답", "positive_id": "없는법_법률_제1조", "hard_negative_ids": []},
         {
             "query": "제1항 질문",
             "positive_id": "가법_법률_제1조_제1항",
             "hard_negative_ids": [
-                "가법_법률_제1조_제2항",  # 같은 조의 다른 조각 → 지움
+                "가법_법률_제1조_제2항",  # 같은 조의 다른 조각 → 남김
+                "가법_법률_제1조_제1항",  # 정답 자신 → 지움
                 "가법_법률_제2조",  # related → 지움
                 "없는법_법률_제9조",  # 코퍼스에 없음 → 지움
                 "가법_법률_제3조",  # 남김
@@ -59,7 +64,7 @@ def test_filter_questions_drops_missing_and_bad_negatives(corpus_by_id) -> None:
     kept, stats = filter_questions(questions, corpus_by_id)
 
     assert [q["query"] for q in kept] == ["제1항 질문"]
-    assert kept[0]["hard_negative_ids"] == ["가법_법률_제3조"]
+    assert kept[0]["hard_negative_ids"] == ["가법_법률_제1조_제2항", "가법_법률_제3조"]
     assert stats == {"missing_positive": 1, "dropped_negatives": 4}
     # 입력은 바꾸지 않는다
-    assert len(questions[1]["hard_negative_ids"]) == 5
+    assert len(questions[1]["hard_negative_ids"]) == 6

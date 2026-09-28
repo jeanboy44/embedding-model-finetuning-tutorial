@@ -55,8 +55,10 @@ def filter_questions(
     """코퍼스와 맞지 않는 질문과 negative를 걸러 낸다.
 
     - positive_id가 코퍼스에 없는 질문은 뺀다(옛 코퍼스 id를 쓰는 질문 등).
-    - hard_negative_ids에서 코퍼스에 없는 id, related_ids에 있는 id,
-      positive와 같은 조(relevance_key)의 조각, 중복을 지운다(가짜 negative 방지).
+    - hard_negative_ids에서 코퍼스에 없는 id, related_ids에 있는 id(정답을 부분적으로 담음),
+      정답 자신, 중복을 지운다.
+    - 같은 조의 다른 조각(제6조 제1항 질문의 제6조 제2항 등)은 다른 질문에 답하는 진짜
+      hard negative이므로 남긴다.
 
     Args:
         questions: 질문 목록. 바꾸지 않는다.
@@ -72,15 +74,10 @@ def filter_questions(
         if positive is None:
             missing += 1
             continue
-        related = set(question.get("related_ids") or [])
-        key = relevance_key(positive)
+        excluded = set(question.get("related_ids") or []) | {positive["id"]}
         original = question.get("hard_negative_ids") or []
         negatives = [
-            neg
-            for neg in dict.fromkeys(original)
-            if neg in corpus_by_id
-            and neg not in related
-            and relevance_key(corpus_by_id[neg]) != key
+            neg for neg in dict.fromkeys(original) if neg in corpus_by_id and neg not in excluded
         ]
         dropped += len(original) - len(negatives)
         kept.append({**question, "hard_negative_ids": negatives})

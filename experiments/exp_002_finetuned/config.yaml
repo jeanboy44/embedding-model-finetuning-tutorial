@@ -1,0 +1,14 @@
+# 실험 002: 전체 학습 (모든 파라미터를 학습)
+# 실행: ragkit train --config experiments/exp_002_finetuned/config.yaml
+#       ragkit evaluate models/finetuned/exp_002
+name: finetuned
+training:
+  model: intfloat/multilingual-e5-small
+  output_dir: models/finetuned/exp_002
+  batch_size: 32
+  epochs: 1
+  lr: 2.0e-5
+  warmup_ratio: 0.1
+  max_seq_length: 512
+  num_negatives: 1
+  seed: 42

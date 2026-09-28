@@ -34,6 +34,7 @@ env/
 # ML/Data specific
 /models/
 experiments/results/
+experiments/*/results/
 data/processed/
 data/raw/*
 !data/raw/.gitkeep
