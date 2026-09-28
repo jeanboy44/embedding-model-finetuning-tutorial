@@ -1,4 +1,4 @@
 name: "llm_query_expansion"
 model_name: "intfloat/multilingual-e5-small"
-llm_model: "gemini-pro"
+llm_model: "gemini-2.5-flash-lite"
 embedding_dim: 384

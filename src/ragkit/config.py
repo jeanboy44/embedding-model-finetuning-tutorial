@@ -40,7 +40,8 @@ class Settings(BaseSettings):
     # e5 계열은 쿼리/문서 앞에 역할 문구를 붙여야 한다. 문구가 없는 모델은 빈 문자열로 설정.
     query_prefix: str = "query: "
     passage_prefix: str = "passage: "
-    gemini_model_name: str = "gemini-pro"
+    # 무료 등급에서 쓸 수 있는 가벼운 모델 (2026-09 기준 동작 확인)
+    gemini_model_name: str = "gemini-2.5-flash-lite"
 
     # 임베딩 추론 백엔드: onnx(배포 기본, torch 불필요) | torch(extra [torch])
     embedding_backend: Literal["onnx", "torch"] = "onnx"

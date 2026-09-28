@@ -1,12 +1,35 @@
 """Gemini API 클라이언트."""
 
+import time
+from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TypeVar
 
 from google import genai
+from google.genai import errors
 
 from ragkit.config import get_settings
 
 _client: genai.Client | None = None
+
+# 무료 등급에서 흔한 일시 오류: 429(한도 초과), 500/503(서버 과부하)
+RETRY_CODES = {429, 500, 503}
+MAX_RETRIES = 4
+_sleep = time.sleep
+
+T = TypeVar("T")
+
+
+def _with_retry(call: Callable[[], T]) -> T:
+    """일시 오류면 2, 4, 8, 16초 기다리며 다시 시도한다. 그 밖의 오류는 바로 올린다."""
+    for attempt in range(MAX_RETRIES + 1):
+        try:
+            return call()
+        except errors.APIError as e:
+            if e.code not in RETRY_CODES or attempt == MAX_RETRIES:
+                raise
+            _sleep(2 ** (attempt + 1))
+    raise AssertionError("unreachable")
 
 
 def _get_client(api_key: str | None = None) -> genai.Client:
@@ -45,20 +68,13 @@ def generate_text(
     Returns:
         생성된 텍스트.
     """
-    client = _get_client(api_key)
-
-    if model_name is None:
-        model_name = get_settings().gemini_model_name
-
-    response = client.models.generate_content(
-        model=model_name,
-        contents=prompt,
-        config=genai.types.GenerateContentConfig(
-            temperature=temperature,
-            max_output_tokens=max_output_tokens,
-        ),
-    )
-    return response.text
+    return generate_with_usage(
+        prompt,
+        model_name=model_name,
+        temperature=temperature,
+        max_output_tokens=max_output_tokens,
+        api_key=api_key,
+    ).text
 
 
 @dataclass(frozen=True)
@@ -91,13 +107,19 @@ def generate_with_usage(
         답변 텍스트와 토큰 사용량.
     """
     client = _get_client(api_key)
-    response = client.models.generate_content(
-        model=model_name or get_settings().gemini_model_name,
-        contents=prompt,
-        config=genai.types.GenerateContentConfig(
-            temperature=temperature,
-            max_output_tokens=max_output_tokens,
-        ),
+    response = _with_retry(
+        lambda: client.models.generate_content(
+            model=model_name or get_settings().gemini_model_name,
+            contents=prompt,
+            config=genai.types.GenerateContentConfig(
+                temperature=temperature,
+                max_output_tokens=max_output_tokens,
+                # 도구 호출을 쓰지 않으므로 끈다 (SDK 경고 메시지도 사라진다)
+                automatic_function_calling=genai.types.AutomaticFunctionCallingConfig(
+                    disable=True
+                ),
+            ),
+        )
     )
     usage = response.usage_metadata
     return Generation(
@@ -121,7 +143,9 @@ def count_tokens(
         토큰 수.
     """
     client = _get_client(api_key)
-    response = client.models.count_tokens(
-        model=model_name or get_settings().gemini_model_name, contents=text
+    response = _with_retry(
+        lambda: client.models.count_tokens(
+            model=model_name or get_settings().gemini_model_name, contents=text
+        )
     )
     return response.total_tokens
