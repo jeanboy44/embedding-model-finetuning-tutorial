@@ -1,6 +1,6 @@
 """sentence-transformers 임베딩 백엔드 (extra `[train]` 필요).
 
-모델이 정의한 풀링·Dense·정규화·어댑터를 그대로 쓴다. 비교 모델(EmbeddingGemma, jina v5)처럼
+모델이 정의한 풀링·Dense·정규화·어댑터를 그대로 쓴다. 비교 모델(EmbeddingGemma)처럼
 transformers + 평균 풀링만으로는 맞는 값이 나오지 않는 모델에 쓴다.
 입력 형식(앞 문구)은 호출하는 쪽이 모델 프로필로 이미 붙여서 넘긴다.
 """
@@ -49,7 +49,7 @@ def create_st_embedding_fn(
     def _embed(texts: list[str], batch_size: int = 32) -> np.ndarray:
         vectors = model.encode(
             texts,
-            # 모델의 기본 프롬프트(jina: default_prompt_name="document")를 끈다.
+            # 모델의 기본 프롬프트(config의 default_prompt_name)를 끈다.
             # 형식은 프로필(format_query/format_doc)이 이미 붙였으므로, 켜 두면 "Document: Query: ..."가 된다.
             prompt="",
             batch_size=batch_size,

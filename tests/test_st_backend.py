@@ -26,7 +26,12 @@ def test_choose_backend_rejects_explicit_unsupported() -> None:
 
 
 def test_st_backend_disables_model_default_prompt(monkeypatch: pytest.MonkeyPatch) -> None:
-    """모델의 기본 프롬프트(jina: 'Document: ')를 끈다. 형식은 프로필이 이미 붙였다(이중 접두어 방지)."""
+    """모델의 기본 프롬프트(default_prompt_name)를 끄고 프로필의 encode 인자를 넘긴다.
+
+    형식은 프로필이 이미 붙였으므로, 켜 두면 "Document: Query: ..."처럼 이중 접두어가 된다.
+    """
+    from dataclasses import replace
+
     import numpy as np
     import sentence_transformers
 
@@ -43,10 +48,10 @@ def test_st_backend_disables_model_default_prompt(monkeypatch: pytest.MonkeyPatc
             return np.ones((len(texts), 2), dtype=np.float32)
 
     monkeypatch.setattr(sentence_transformers, "SentenceTransformer", FakeST)
-    embed = create_st_embedding_fn("jinaai/jina-embeddings-v5-text-small",
-                                   get_profile("jinaai/jina-embeddings-v5-text-small"), device="cpu")
+    profile = replace(get_profile("google/embeddinggemma-300m"), encode_kwargs={"task": "retrieval"})
+    embed = create_st_embedding_fn("some/model", profile, device="cpu")
 
-    embed(["Query: 주휴수당"])
+    embed(["task: search result | query: 주휴수당"])
 
     assert calls[0]["prompt"] == ""
     assert calls[0]["task"] == "retrieval"

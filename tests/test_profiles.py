@@ -30,17 +30,6 @@ def test_embeddinggemma_profile_uses_title_field() -> None:
     assert p.dtype == "float32"
 
 
-def test_jina_profile_is_comparison_only() -> None:
-    """jina v5는 비상업 라이선스라 배포 불가로 표시하고, 검색용 어댑터를 쓴다."""
-    p = get_profile("jinaai/jina-embeddings-v5-text-small")
-
-    assert p.format_query("주휴수당") == "Query: 주휴수당"
-    assert p.format_doc(DOC).startswith("Document: 근로기준법 제55조")
-    assert p.trust_remote_code
-    assert p.encode_kwargs == {"task": "retrieval"}
-    assert not p.deployable
-
-
 def test_unknown_model_falls_back_to_e5_style(tmp_path: Path) -> None:
     """파인튜닝 폴더처럼 모르는 이름은 e5 형식(Settings의 앞 문구)을 쓴다."""
     p = get_profile(str(tmp_path / "exp_002_finetuned"))

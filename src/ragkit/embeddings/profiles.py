@@ -58,18 +58,9 @@ PROFILES: dict[str, ModelProfile] = {
         dtype="float32",  # float16 미지원
         note="Gemma 라이선스(HF 동의 필요), 300M, 768차원",
     ),
-    "jina-embeddings-v5-text-small": ModelProfile(
-        name="jinaai/jina-embeddings-v5-text-small",
-        format_query=lambda q: f"Query: {q}",
-        format_doc=lambda d: f"Document: {doc_text(d)}",
-        backends=("st",),
-        dtype="bfloat16",
-        trust_remote_code=True,
-        encode_kwargs={"task": "retrieval"},  # 검색용 어댑터
-        deployable=False,
-        note="CC BY-NC(비상업) → 비교 전용, 677M, 1024차원",
-    ),
 }
+# jina-embeddings-v5-text-small은 비교에서 뺐다 (2026-09-29): 인덱싱이 e5(mps)의 약 27배 느리고
+# (전체 코퍼스 약 36분) CC BY-NC라 배포에 쓸 수 없다.
 
 
 def get_profile(model_name: str | Path) -> ModelProfile:
