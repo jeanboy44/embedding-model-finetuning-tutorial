@@ -32,7 +32,25 @@ uv sync
 
 ---
 
-## 3단계: 실행 확인
+## 3단계: 임베딩 모델 다운로드
+
+기본 임베딩 모델 [`intfloat/multilingual-e5-small`](https://huggingface.co/intfloat/multilingual-e5-small)(약 470MB, 한국어 지원)을 `models/` 폴더에 받습니다. 둘 중 하나만 실행하면 됩니다.
+
+```powershell
+# 방법 1: HuggingFace Hub에서 받기 (기본)
+uv run python scripts/download_model_hf.py
+
+# 방법 2: Google Drive에서 받기 (HuggingFace 접속이 막힌 환경)
+uv run python scripts/download_model_gdrive.py
+```
+
+한 번 받아두면 이후에는 인터넷 없이도 모델을 불러옵니다. 다시 받으려면 `--force`를 붙이세요.
+
+> 이 단계를 건너뛰어도 첫 실행 때 HuggingFace에서 자동으로 받아 캐시에 저장합니다.
+
+---
+
+## 4단계: 실행 확인
 
 ```powershell
 uv run python --version

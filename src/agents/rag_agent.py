@@ -4,6 +4,7 @@ from collections.abc import Callable
 
 import numpy as np
 
+from src.embeddings import format_queries
 from src.retrieval import DocumentStore, retrieve
 
 
@@ -30,10 +31,10 @@ def run_rag(
     Example:
         >>> from src.embeddings import create_embedding_fn
         >>> from src.models import generate_text
-        >>> embed = create_embedding_fn("thenlper/gte-small")
+        >>> embed = create_embedding_fn("intfloat/multilingual-e5-small")
         >>> result = run_rag("질문", store, embed, generate_text)
     """
-    query_embedding = embed_fn([query])
+    query_embedding = embed_fn(format_queries([query]))
 
     retrieved_docs = retrieve(store, query_embedding, k=k)
     doc_texts = [doc for doc, _ in retrieved_docs]

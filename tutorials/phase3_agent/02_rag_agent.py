@@ -20,7 +20,7 @@ import json
 from pathlib import Path
 
 from src.config import get_settings
-from src.embeddings import create_embedding_fn
+from src.embeddings import create_embedding_fn, format_passages, format_queries
 from src.retrieval import DocumentStore, retrieve
 
 # ============================================================
@@ -59,7 +59,7 @@ RAG = Retrieval + Augmented + Generation
 
     settings = get_settings()
     embed_fn = create_embedding_fn(settings.embedding_model_name)
-    embeddings = embed_fn([d["text"] for d in docs])
+    embeddings = embed_fn(format_passages([d["text"] for d in docs]))
 
     store = DocumentStore()
     store.add_documents([d["text"] for d in docs], embeddings)
@@ -69,7 +69,7 @@ RAG = Retrieval + Augmented + Generation
     # Step 1: Retrieval
     print(f"질문: '{query}'\n")
     print("[Step 1: Retrieval]")
-    query_emb = embed_fn([query])
+    query_emb = embed_fn(format_queries([query]))
     results = retrieve(store, query_emb, k=3)
     for i, (doc, score) in enumerate(results, 1):
         print(f"  {i}. [{score:.4f}] {doc[:60]}...")
@@ -127,7 +127,7 @@ def step2_prompt_variants(store: DocumentStore) -> None:
     embed_fn = create_embedding_fn(settings.embedding_model_name)
 
     query = "임베딩 모델을 파인튜닝하려면 어떻게 해야 하나요?"
-    query_emb = embed_fn([query])
+    query_emb = embed_fn(format_queries([query]))
     results = retrieve(store, query_emb, k=3)
     context = "\n".join([f"- {doc}" for doc, _ in results])
 

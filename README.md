@@ -18,6 +18,15 @@
 
 > Python venv 방식을 원하면 [`venv` 브랜치](https://github.com/your-repo/tree/venv)를 확인하세요.
 
+### 임베딩 모델 다운로드
+
+기본 모델은 한국어를 지원하는 [`intfloat/multilingual-e5-small`](https://huggingface.co/intfloat/multilingual-e5-small)(MIT 라이선스)입니다.
+
+```bash
+uv run python scripts/download_model_hf.py      # HuggingFace Hub에서
+uv run python scripts/download_model_gdrive.py  # 또는 Google Drive에서
+```
+
 ### 실행 예제
 
 ```bash

@@ -19,6 +19,8 @@ dependencies = [
     "cyclopts>=3.0.0",
     "loguru>=0.7.0",
     "pyyaml>=6.0",
+    "huggingface-hub>=0.24",
+    "gdown>=5.2",
 ]
 
 [dependency-groups]

@@ -16,6 +16,8 @@ class Settings(BaseSettings):
         gemini_api_key: Gemini API 키.
         embedding_model_name: 기본 임베딩 모델 이름.
         embedding_dim: 임베딩 차원.
+        query_prefix: 검색 쿼리 앞에 붙이는 문구.
+        passage_prefix: 검색 대상 문서 앞에 붙이는 문구.
         gemini_model_name: 기본 Gemini 모델 이름.
         log_level: 로그 레벨.
     """
@@ -30,8 +32,11 @@ class Settings(BaseSettings):
     gemini_api_key: str = ""
 
     # Model
-    embedding_model_name: str = "thenlper/gte-small"
+    embedding_model_name: str = "intfloat/multilingual-e5-small"
     embedding_dim: int = 384
+    # e5 계열은 쿼리/문서 앞에 역할 문구를 붙여야 한다. 문구가 없는 모델은 빈 문자열로 설정.
+    query_prefix: str = "query: "
+    passage_prefix: str = "passage: "
     gemini_model_name: str = "gemini-pro"
 
     # Logging
@@ -47,6 +52,11 @@ class Settings(BaseSettings):
     def data_dir(self) -> Path:
         """데이터 디렉토리 경로."""
         return self.project_root / "data"
+
+    @property
+    def models_dir(self) -> Path:
+        """로컬 모델 저장 디렉토리 경로."""
+        return self.project_root / "models"
 
     @property
     def experiments_dir(self) -> Path:
@@ -77,7 +87,7 @@ def get_settings() -> Settings:
     Example:
         >>> settings = get_settings()
         >>> settings.embedding_model_name
-        'thenlper/gte-small'
+        'intfloat/multilingual-e5-small'
     """
     return Settings()
 

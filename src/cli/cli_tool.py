@@ -6,7 +6,7 @@ import cyclopts
 
 from src.agents import run_rag
 from src.config import get_settings
-from src.embeddings import create_embedding_fn
+from src.embeddings import create_embedding_fn, format_queries
 from src.models import generate_text
 from src.retrieval import DocumentStore, retrieve
 
@@ -56,7 +56,7 @@ def search(
 
     settings = get_settings()
     embed_fn = create_embedding_fn(model or settings.embedding_model_name)
-    query_embedding = embed_fn([query])
+    query_embedding = embed_fn(format_queries([query]))
     results = retrieve(store, query_embedding, k=5)
 
     print(f"\nQuery: {query}\n")

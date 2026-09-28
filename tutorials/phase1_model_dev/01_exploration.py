@@ -104,8 +104,8 @@ def step2_similarity(embeddings: np.ndarray, sentences: list[str]) -> None:
             print(f"    B: '{sentences[j]}'")
 
     print("""
-참고: gte-small은 범용 모델이라 한국어 문장 간 유사도가
-전반적으로 높게 나올 수 있습니다. 도메인 특화 파인튜닝을 하면
+참고: multilingual-e5-small은 다국어 범용 모델이라 문장 간 유사도가
+전반적으로 높게(0.7 이상) 나오는 경향이 있습니다. 도메인 특화 파인튜닝을 하면
 유사/비유사 문장의 점수 차이가 더 벌어집니다.
 """)
 

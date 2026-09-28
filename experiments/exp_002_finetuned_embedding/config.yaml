@@ -1,4 +1,4 @@
 name: "finetuned_embedding"
-model_name: "thenlper/gte-small"
+model_name: "intfloat/multilingual-e5-small"
 checkpoint_path: "experiments/exp_002_finetuned_embedding/model.pt"
 embedding_dim: 384

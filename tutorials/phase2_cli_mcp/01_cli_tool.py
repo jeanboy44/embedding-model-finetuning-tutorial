@@ -15,7 +15,7 @@ import json
 from pathlib import Path
 
 from src.config import get_settings
-from src.embeddings import create_embedding_fn
+from src.embeddings import create_embedding_fn, format_passages, format_queries
 from src.retrieval import DocumentStore, retrieve
 
 # ============================================================
@@ -55,7 +55,7 @@ def build_index(
         docs = json.load(f)
 
     texts = [d["text"] for d in docs]
-    embeddings = embed_fn(texts)
+    embeddings = embed_fn(format_passages(texts))
 
     store = DocumentStore()
     store.add_documents(texts, embeddings)
@@ -79,7 +79,7 @@ def search_documents(
     Returns:
         (문서 텍스트, 유사도 점수) 튜플의 리스트.
     """
-    query_embedding = embed_fn([query])
+    query_embedding = embed_fn(format_queries([query]))
     return retrieve(store, query_embedding, k=k)
 
 
@@ -143,7 +143,7 @@ src/cli/cli_tool.py 핵심 구조:
 
     import cyclopts
     from src.config import get_settings
-    from src.embeddings import create_embedding_fn
+    from src.embeddings import create_embedding_fn, format_queries
 
     app = cyclopts.App(name="slm")
 
@@ -151,7 +151,7 @@ src/cli/cli_tool.py 핵심 구조:
     def search(query: str, model: str | None = None) -> None:
         settings = get_settings()                          # 설정 로드
         embed_fn = create_embedding_fn(model or settings.embedding_model_name)  # DI
-        results = retrieve(store, embed_fn([query]))       # 비즈니스 로직
+        results = retrieve(store, embed_fn(format_queries([query])))  # 비즈니스 로직
         for doc, score in results:
             print(f"[{score:.4f}] {doc}")                  # 출력
 

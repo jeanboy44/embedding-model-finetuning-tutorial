@@ -32,6 +32,7 @@ env/
 .env.*.local
 
 # ML/Data specific
+models/
 experiments/results/
 data/processed/
 *.pkl

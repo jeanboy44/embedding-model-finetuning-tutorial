@@ -8,7 +8,7 @@ import numpy as np
 import yaml
 
 from experiments.base_experiment import BaseExperiment
-from src.embeddings import create_embedding_fn
+from src.embeddings import create_embedding_fn, format_passages, format_queries
 from src.models import generate_text
 from src.retrieval import DocumentStore, retrieve
 
@@ -53,7 +53,7 @@ class LLMQueryExpansionExperiment(BaseExperiment):
         """
         print("Running LLM Query Expansion Experiment...")
 
-        embeddings = self.embed_fn(TEST_DOCS)
+        embeddings = self.embed_fn(format_passages(TEST_DOCS))
         store = DocumentStore()
         store.add_documents(TEST_DOCS, embeddings)
 
@@ -69,7 +69,7 @@ class LLMQueryExpansionExperiment(BaseExperiment):
         expanded_queries = [q.strip() for q in expanded_text.split("\n") if q.strip()]
 
         all_queries = [original_query] + expanded_queries[:3]
-        query_embeddings = self.embed_fn(all_queries)
+        query_embeddings = self.embed_fn(format_queries(all_queries))
 
         all_results: list[list[str]] = []
         for i, _query in enumerate(all_queries):

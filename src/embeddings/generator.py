@@ -6,6 +6,7 @@ from typing import Protocol
 import numpy as np
 import torch
 
+from src.config import get_settings
 from src.models import load_embedding_model, load_tokenizer
 
 
@@ -19,6 +20,48 @@ class Tokenizer(Protocol):
         truncation: bool = True,
         return_tensors: str = "pt",
     ) -> dict[str, torch.Tensor]: ...
+
+
+def format_queries(texts: list[str]) -> list[str]:
+    """검색 쿼리에 모델이 요구하는 앞 문구를 붙인다 (e5: "query: ").
+
+    Args:
+        texts: 쿼리 텍스트 리스트.
+
+    Returns:
+        앞 문구가 붙은 텍스트 리스트.
+    """
+    prefix = get_settings().query_prefix
+    return [f"{prefix}{t}" for t in texts]
+
+
+def format_passages(texts: list[str]) -> list[str]:
+    """검색 대상 문서에 모델이 요구하는 앞 문구를 붙인다 (e5: "passage: ").
+
+    Args:
+        texts: 문서 텍스트 리스트.
+
+    Returns:
+        앞 문구가 붙은 텍스트 리스트.
+    """
+    prefix = get_settings().passage_prefix
+    return [f"{prefix}{t}" for t in texts]
+
+
+def mean_pool(
+    hidden_states: torch.Tensor, attention_mask: torch.Tensor
+) -> torch.Tensor:
+    """패딩 토큰을 제외하고 토큰 임베딩의 평균을 구한다.
+
+    Args:
+        hidden_states: (batch, seq_len, dim) 형태의 마지막 은닉 상태.
+        attention_mask: (batch, seq_len) 형태의 어텐션 마스크 (패딩=0).
+
+    Returns:
+        (batch, dim) 형태의 문장 임베딩.
+    """
+    mask = attention_mask.unsqueeze(-1).to(hidden_states.dtype)
+    return (hidden_states * mask).sum(dim=1) / mask.sum(dim=1).clamp(min=1e-9)
 
 
 def generate_embeddings(
@@ -39,7 +82,7 @@ def generate_embeddings(
         device: 디바이스 문자열. None이면 자동 감지.
 
     Returns:
-        (N, embedding_dim) 형태의 임베딩 배열.
+        (N, embedding_dim) 형태의 L2 정규화된 임베딩 배열.
     """
     if device is None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -57,7 +100,9 @@ def generate_embeddings(
             )
             encoded = {k: v.to(device) for k, v in encoded.items()}
             outputs = model(**encoded)
-            embeddings.append(outputs.last_hidden_state.mean(dim=1).cpu().numpy())
+            pooled = mean_pool(outputs.last_hidden_state, encoded["attention_mask"])
+            pooled = torch.nn.functional.normalize(pooled, p=2, dim=1)
+            embeddings.append(pooled.cpu().numpy())
 
     return np.concatenate(embeddings, axis=0)
 
@@ -80,8 +125,9 @@ def create_embedding_fn(
         texts를 받아 np.ndarray를 반환하는 함수.
 
     Example:
-        >>> embed = create_embedding_fn("thenlper/gte-small")
-        >>> embeddings = embed(["hello world"])
+        >>> embed = create_embedding_fn("intfloat/multilingual-e5-small")
+        >>> doc_embeddings = embed(format_passages(["머신러닝은 AI의 한 분야이다."]))
+        >>> query_embedding = embed(format_queries(["머신러닝이란?"]))
     """
     if device is None:
         device = "cuda" if torch.cuda.is_available() else "cpu"

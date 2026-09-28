@@ -21,7 +21,7 @@ from pathlib import Path
 import numpy as np
 
 from src.config import get_settings
-from src.embeddings import create_embedding_fn
+from src.embeddings import create_embedding_fn, format_passages, format_queries
 from src.retrieval import DocumentStore, retrieve
 
 # ============================================================
@@ -97,7 +97,7 @@ def step1_base_retrieval() -> dict[str, float]:
     embed = create_embedding_fn(settings.embedding_model_name)
 
     start = time.time()
-    doc_embeddings = embed(texts)
+    doc_embeddings = embed(format_passages(texts))
     index_time = time.time() - start
 
     store = DocumentStore()
@@ -142,7 +142,7 @@ def step2_finetuned_simulation() -> dict[str, float]:
     settings = get_settings()
     embed = create_embedding_fn(settings.embedding_model_name)
 
-    doc_embeddings = embed(texts)
+    doc_embeddings = embed(format_passages(texts))
 
     # 시뮬레이션: 같은 카테고리 문서끼리 임베딩을 약간 가깝게 조정
     # (실제 파인튜닝의 효과를 간단히 흉내낸다)
@@ -204,7 +204,7 @@ def step3_query_expansion() -> dict[str, float]:
     settings = get_settings()
     embed = create_embedding_fn(settings.embedding_model_name)
 
-    doc_embeddings = embed(texts)
+    doc_embeddings = embed(format_passages(texts))
 
     store = DocumentStore()
     store.add_documents(texts, doc_embeddings)
@@ -248,7 +248,7 @@ def step3_query_expansion() -> dict[str, float]:
 
         # 원본 + 확장 쿼리 모두 검색
         all_queries = [query] + EXPANDED_QUERIES.get(query, [])
-        all_query_embs = embed(all_queries)
+        all_query_embs = embed(format_queries(all_queries))
 
         # 모든 쿼리의 검색 결과를 합산 (점수 평균)
         from sklearn.metrics.pairwise import cosine_similarity as cos_sim
@@ -356,7 +356,7 @@ def _evaluate_retrieval(
     n = len(EVAL_QUERIES)
 
     for eq in EVAL_QUERIES:
-        query_embedding = embed_fn([eq["query"]])
+        query_embedding = embed_fn(format_queries([eq["query"]]))
         results = retrieve(store, query_embedding, k=3)
 
         # 검색된 문서 인덱스

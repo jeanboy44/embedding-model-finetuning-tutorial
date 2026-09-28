@@ -15,7 +15,7 @@ import json
 from pathlib import Path
 
 from src.config import get_settings
-from src.embeddings import create_embedding_fn
+from src.embeddings import create_embedding_fn, format_passages
 from src.mcp.mcp_server import embed_tool, retrieve_tool
 from src.retrieval import DocumentStore
 
@@ -113,7 +113,7 @@ def step3_tool_demo() -> None:
         docs = json.load(f)
 
     texts = [d["text"] for d in docs]
-    embeddings = embed_fn(texts)
+    embeddings = embed_fn(format_passages(texts))
     store = DocumentStore()
     store.add_documents(texts, embeddings)
 
@@ -195,7 +195,7 @@ def step4_build_your_own() -> None:
         docs = json.load(f)
 
     texts = [d["text"] for d in docs]
-    embeddings = embed_fn(texts)
+    embeddings = embed_fn(format_passages(texts))
     store = DocumentStore()
     store.add_documents(texts, embeddings)
 

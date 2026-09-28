@@ -19,7 +19,7 @@ from pathlib import Path
 from loguru import logger
 
 from src.config import get_settings
-from src.embeddings import create_embedding_fn
+from src.embeddings import create_embedding_fn, format_passages, format_queries
 from src.monitoring.logger import (
     log_latency,
     log_query,
@@ -122,7 +122,7 @@ def step3_pipeline_logging() -> None:
 
     settings = get_settings()
     embed_fn = create_embedding_fn(settings.embedding_model_name)
-    embeddings = embed_fn([d["text"] for d in docs])
+    embeddings = embed_fn(format_passages([d["text"] for d in docs]))
 
     store = DocumentStore()
     store.add_documents([d["text"] for d in docs], embeddings)
@@ -138,7 +138,7 @@ def step3_pipeline_logging() -> None:
     for query in queries:
         # 1. 쿼리 로깅
         start = time.time()
-        query_emb = embed_fn([query])
+        query_emb = embed_fn(format_queries([query]))
         embed_time = (time.time() - start) * 1000
         log_query(query, query_emb.shape)
         log_latency("embedding", embed_time)

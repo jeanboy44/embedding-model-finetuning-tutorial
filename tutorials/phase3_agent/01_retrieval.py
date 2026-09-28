@@ -16,7 +16,7 @@ import time
 from pathlib import Path
 
 from src.config import get_settings
-from src.embeddings import create_embedding_fn
+from src.embeddings import create_embedding_fn, format_passages, format_queries
 from src.retrieval import DocumentStore, retrieve
 
 # ============================================================
@@ -53,7 +53,7 @@ def step1_build_pipeline() -> tuple[DocumentStore, list[dict]]:
 
     texts = [d["text"] for d in docs]
     start = time.time()
-    embeddings = embed_fn(texts)
+    embeddings = embed_fn(format_passages(texts))
     elapsed = time.time() - start
     print(f"  임베딩 생성: {embeddings.shape} ({elapsed:.2f}초)")
 
@@ -65,7 +65,7 @@ def step1_build_pipeline() -> tuple[DocumentStore, list[dict]]:
     # 4. 검색 테스트
     query = "임베딩이란 무엇인가?"
     start = time.time()
-    query_emb = embed_fn([query])
+    query_emb = embed_fn(format_queries([query]))
     results = retrieve(store, query_emb, k=3)
     search_time = (time.time() - start) * 1000
 
@@ -123,7 +123,7 @@ def step2_evaluate(store: DocumentStore, docs: list[dict]) -> None:
         total_p, total_r, total_mrr = 0.0, 0.0, 0.0
 
         for item in EVAL_SET:
-            query_emb = embed_fn([item["query"]])
+            query_emb = embed_fn(format_queries([item["query"]]))
             results = retrieve(store, query_emb, k=k)
 
             relevant_texts = {
@@ -168,7 +168,7 @@ def step3_parameter_tuning(store: DocumentStore, docs: list[dict]) -> None:
     embed_fn = create_embedding_fn(settings.embedding_model_name)
 
     query = "임베딩 모델을 파인튜닝하는 방법"
-    query_emb = embed_fn([query])
+    query_emb = embed_fn(format_queries([query]))
 
     # K 값에 따른 결과 비교
     print(f"\n쿼리: '{query}'")
@@ -226,7 +226,7 @@ def step4_failure_analysis(store: DocumentStore, docs: list[dict]) -> None:
     ]
 
     for category, query in hard_queries:
-        query_emb = embed_fn([query])
+        query_emb = embed_fn(format_queries([query]))
         results = retrieve(store, query_emb, k=3)
 
         print(f"\n  [{category}] '{query}'")

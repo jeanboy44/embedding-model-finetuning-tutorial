@@ -1,25 +1,34 @@
-# 001: 모델 선택 - EmbeddingGemma-300M
+# 001: 모델 선택 - multilingual-e5-small
 
 ## 배경
 
 교육 목적으로 임베딩 모델을 선택할 때 다음 조건이 필요했습니다:
-- 학생 컴퓨터에서 실행할 수 있을 정도로 가벼운 모델
-- 실습 및 시연에 효과적
-- 널리 이용 가능하고 잘 문서화된 모델
+- 학생 컴퓨터(CPU)에서 실행할 수 있을 정도로 가벼운 모델
+- 실습 데이터(`data/sample_docs.json`)가 한국어이므로 한국어 지원
+- 라이선스 동의나 계정 없이 받을 수 있는 공개 모델
 
 ## 결정
 
-EmbeddingGemma-300M (thenlper/gte-small)을 주요 임베딩 모델로 선택했습니다.
+[`intfloat/multilingual-e5-small`](https://huggingface.co/intfloat/multilingual-e5-small)을 기본 임베딩 모델로 선택했습니다.
+
+## 검토한 대안
+
+| 모델 | 파라미터 | 차원 | 한국어 | 라이선스 | 탈락 이유 |
+|---|---|---|---|---|---|
+| **multilingual-e5-small** | 118M | 384 | 지원 | MIT | - |
+| thenlper/gte-small | 33M | 384 | 약함 (영어 중심) | MIT | 한국어 실습 데이터에서 품질이 낮음 |
+| google/embeddinggemma-300m | 300M | 768 | 지원 | Gemma Terms (HF 동의 필요) | 용량(1.2GB)과 라이선스 동의 절차가 학생에게 부담 |
 
 ## 이유
 
-1. **모델 크기**: 300M 파라미터는 CPU/경량 GPU에서 추론 가능
-2. **성능**: 의미론적 유사도 계산에 좋은 품질의 임베딩 제공
-3. **가용성**: HuggingFace Hub에서 쉽게 이용 가능
-4. **학습**: 학생들이 이해하기 쉬운 구현 패턴
+1. **한국어 지원**: 다국어 학습 모델이라 한국어 문서 검색이 가능
+2. **모델 크기**: 118M 파라미터(약 470MB)로 CPU 추론 가능
+3. **호환성**: 384차원이라 기존 코드와 저장된 인덱스 구조를 그대로 사용
+4. **가용성**: MIT 라이선스로 동의 없이 받을 수 있고, Google Drive로 재배포도 가능
 
 ## 결과
 
-- 학생들이 일반적인 하드웨어에서 실험 수행 가능
-- 대화형 데모를 위해 충분히 빠른 추론 속도
-- 파인튜닝의 이점을 보여주는 좋은 기준점
+- 모델은 `scripts/download_model_hf.py` 또는 `scripts/download_model_gdrive.py`로 `models/`에 받는다.
+- e5 계열은 입력 앞에 역할 문구를 붙여야 한다: 쿼리는 `query: `, 문서는 `passage: `.
+  `src.embeddings.format_queries` / `format_passages`를 사용한다. 다른 모델로 바꾸면 `.env`에서 `QUERY_PREFIX`, `PASSAGE_PREFIX`를 조정한다.
+- 문장 임베딩은 패딩을 제외한 mean pooling 후 L2 정규화한다 (e5 공식 방식).

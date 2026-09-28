@@ -5,6 +5,7 @@ from collections.abc import Callable
 import numpy as np
 
 from src.agents import run_rag
+from src.embeddings import format_queries
 from src.retrieval import DocumentStore, retrieve
 
 
@@ -45,7 +46,7 @@ def retrieve_tool(
     Returns:
         query, results를 포함하는 딕셔너리.
     """
-    query_embedding = embed_fn([query])
+    query_embedding = embed_fn(format_queries([query]))
     results = retrieve(store, query_embedding, k=k)
     return {
         "query": query,

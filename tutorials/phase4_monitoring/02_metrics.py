@@ -18,7 +18,7 @@ import time
 from pathlib import Path
 
 from src.config import get_settings
-from src.embeddings import create_embedding_fn
+from src.embeddings import create_embedding_fn, format_passages, format_queries
 from src.monitoring.metrics import MetricsCollector
 from src.retrieval import DocumentStore, retrieve
 
@@ -82,7 +82,7 @@ def step2_collector_usage() -> MetricsCollector:
 
     settings = get_settings()
     embed_fn = create_embedding_fn(settings.embedding_model_name)
-    embeddings = embed_fn([d["text"] for d in docs])
+    embeddings = embed_fn(format_passages([d["text"] for d in docs]))
 
     store = DocumentStore()
     store.add_documents([d["text"] for d in docs], embeddings)
@@ -107,7 +107,7 @@ def step2_collector_usage() -> MetricsCollector:
     for query in queries:
         # 검색 실행 + 시간 측정
         start = time.time()
-        query_emb = embed_fn([query])
+        query_emb = embed_fn(format_queries([query]))
         results = retrieve(store, query_emb, k=3)
         latency_ms = (time.time() - start) * 1000
 

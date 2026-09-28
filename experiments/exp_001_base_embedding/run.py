@@ -8,7 +8,7 @@ import numpy as np
 import yaml
 
 from experiments.base_experiment import BaseExperiment
-from src.embeddings import create_embedding_fn
+from src.embeddings import create_embedding_fn, format_passages, format_queries
 from src.retrieval import DocumentStore, retrieve
 
 TEST_DOCS = [
@@ -46,13 +46,13 @@ class BaseEmbeddingExperiment(BaseExperiment):
         """
         print("Running Base Embedding Experiment...")
 
-        embeddings = self.embed_fn(TEST_DOCS)
+        embeddings = self.embed_fn(format_passages(TEST_DOCS))
 
         store = DocumentStore()
         store.add_documents(TEST_DOCS, embeddings)
 
         test_query = "What is machine learning?"
-        query_embedding = self.embed_fn([test_query])
+        query_embedding = self.embed_fn(format_queries([test_query]))
         results = retrieve(store, query_embedding, k=3)
 
         self.results = {

@@ -19,11 +19,15 @@
 ## 주요 컴포넌트
 
 ### src/models/
-- embedding_loader.py - HuggingFace에서 모델 로드
+- embedding_loader.py - 로컬 `models/` 또는 HuggingFace에서 모델 로드
 - gemini_client.py - Gemini API 래퍼
 
 ### src/embeddings/
-- generator.py - 텍스트 임베딩 생성
+- generator.py - 텍스트 임베딩 생성 (mean pooling + L2 정규화, query/passage 앞 문구)
+
+### scripts/
+- download_model_hf.py - HuggingFace Hub에서 모델 다운로드
+- download_model_gdrive.py - Google Drive에서 모델 zip 다운로드 및 압축 해제
 
 ### src/retrieval/
 - document_store.py - 문서와 임베딩 저장
