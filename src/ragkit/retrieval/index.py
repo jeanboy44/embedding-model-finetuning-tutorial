@@ -30,7 +30,9 @@ DOC_COLUMNS = (
     "id", "parent_id", "title", "text", "theme", "law_name", "law_type", "category",
     "article_no", "article_title", "chapter", "promulgation_date", "effective_date", "source_url",
 )
-# 벡터 검색과 한 쿼리에서 함께 거를 수 있는 컬럼
+# 벡터 검색과 한 쿼리에서 함께 거를 수 있는 컬럼.
+# 주의: law_docs.json의 effective_date는 조문별 시행일이 아니라 법령 파일의 최신 개정 시행일이다
+# (시행 예정 개정 포함). "시행일 <= 오늘"로 현행 조문을 가려낼 수 없다.
 FILTER_COLUMNS = ("theme", "law_type", "law_name", "effective_date")
 _OPS = {"=", "!=", "<", "<=", ">", ">="}
 
