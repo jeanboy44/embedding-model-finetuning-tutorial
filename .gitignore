@@ -35,6 +35,8 @@ env/
 models/
 experiments/results/
 data/processed/
+data/raw/*
+!data/raw/.gitkeep
 *.pkl
 *.pt
 *.pth
