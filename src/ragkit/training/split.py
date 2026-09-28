@@ -25,8 +25,9 @@ def split_by_law(
 ) -> dict[str, list[dict]]:
     """질문을 법령 단위로 train/dev/test에 나눈다.
 
-    테마마다 법령을 seed로 섞고, 질문 수가 test_ratio에 닿을 때까지 법령을 test에,
-    이어서 dev_ratio만큼 dev에 넣고, 나머지는 train에 넣는다. 그룹마다 train에 법령이
+    테마마다 법령을 seed로 섞은 순서대로 보면서, 넣어도 test 질문 수가 test_ratio 목표를
+    넘지 않는 법령을 test에 넣는다. 하나도 못 넣었으면 가장 작은 법령 하나를 넣는다.
+    dev도 같은 방법으로 채우고 나머지는 train에 넣는다. 그룹마다 train에 법령이
     최소 1개 남으므로 법령이 적으면 dev·test가 빌 수 있다.
 
     Args:
@@ -61,11 +62,18 @@ def split_by_law(
         rng.shuffle(remaining)
         total = sum(counts[law] for law in remaining)
         for name, ratio in (("test", test_ratio), ("dev", dev_ratio)):
+            target = ratio * total
+            chosen: list[str] = []
             taken = 0
-            while len(remaining) > 1 and taken < ratio * total:
-                law = remaining.pop(0)
+            for law in remaining:
+                if len(remaining) - len(chosen) > 1 and taken + counts[law] <= target:
+                    chosen.append(law)
+                    taken += counts[law]
+            if not chosen and target > 0 and len(remaining) > 1:
+                chosen.append(min(remaining, key=lambda law: (counts[law], law)))
+            for law in chosen:
                 assignment[law] = name
-                taken += counts[law]
+                remaining.remove(law)
         for law in remaining:
             assignment[law] = "train"
 

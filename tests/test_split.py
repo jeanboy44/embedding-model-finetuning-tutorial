@@ -29,6 +29,40 @@ def test_split_by_law_no_leak_and_sizes(questions, corpus_by_id) -> None:
     assert sum(len(s) for s in splits.values()) == len(questions)
 
 
+def test_split_skips_laws_that_overshoot_ratio(questions, corpus_by_id) -> None:
+    """질문 수가 크게 다른 법령: 목표를 크게 넘기는 법령은 test·dev에 넣지 않는다.
+
+    마법 질문을 40개로 늘린 그룹(마법 40, 바법 4, 사법 4, 총 48): test 목표 9.6 → 4개짜리 법령 둘(8),
+    dev는 마법만 남아(train에 최소 1개) 비고, 가장 큰 마법은 어떤 seed에서도 train.
+    """
+    small = [q for q in questions if corpus_by_id[q["positive_id"]]["theme"] != "youth"]
+    big = [q for q in small if q["positive_id"].startswith("마법_")] * 9  # 4 → 36개 추가
+    for seed in range(10):
+        splits = split_by_law(small + big, corpus_by_id, seed=seed)
+        assert {name: len(s) for name, s in splits.items()} == {"train": 40, "dev": 0, "test": 8}
+
+
+def test_split_takes_smallest_law_when_all_overshoot(corpus_by_id) -> None:
+    """모든 법령이 목표보다 크면 가장 작은 법령 하나를 넣는다 (실제 데이터: 169 · 46 · 44)."""
+    sizes = {"마법": 169, "바법": 46, "사법": 44}
+    rows = [
+        {"query": f"{law} {i}", "positive_id": f"{law}_법률_제2조", "hard_negative_ids": []}
+        for law, n in sizes.items()
+        for i in range(n)
+    ]
+    for seed in range(10):
+        splits = split_by_law(rows, corpus_by_id, seed=seed)
+        assert {name: len(s) for name, s in splits.items()} == {
+            "train": 169,
+            "dev": 44,
+            "test": 46,
+        } or {name: len(s) for name, s in splits.items()} == {
+            "train": 169,
+            "dev": 46,
+            "test": 44,
+        }
+
+
 def test_split_by_law_is_reproducible(questions, corpus_by_id) -> None:
     assert split_by_law(questions, corpus_by_id, seed=7) == split_by_law(
         questions, corpus_by_id, seed=7

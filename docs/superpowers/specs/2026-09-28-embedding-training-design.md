@@ -36,14 +36,18 @@
 - `doc_text(doc) -> str`: `title + "\n" + text`. 인덱스·학습·평가가 같은 문서 텍스트를 쓰도록 한 곳에서 정의
 - `filter_questions(questions, corpus_by_id) -> tuple[list[dict], dict]`
   - `positive_id`가 코퍼스에 없는 질문은 뺀다(옛 코퍼스 id를 쓰는 질문이 여기서 걸러진다).
-  - `hard_negative_ids`에서 코퍼스에 없는 id, `related_ids`에 있는 id, **positive와 같은 조(`relevance_key`)의 조각**은 지운다(가짜 negative 방지).
+  - `hard_negative_ids`에서 코퍼스에 없는 id, `related_ids`에 있는 id, 정답 자신, 중복은 지운다.
+  - 같은 조의 다른 조각(예: 최저임금법 제6조 제1항 질문의 제6조 제2항)은 **남긴다**. 다른 질문에 답하는 진짜 hard negative이고,
+    기본 지표(`doc`)와도 맞다. (처음에는 지웠으나 실제 질문 259개 중 129개 negative가 이 경우였고 44개 질문이 negative 0개가 되어 바꿈)
   - 두 번째 반환값은 건너뛴 수 통계(`missing_positive`, `dropped_negatives`).
   - `corpus` 필드로 거르지 않고 id 존재로 거른다(필드가 없는 스킬 출력에도 똑같이 동작).
 
 ### `ragkit/training/split.py` (core 의존성만)
 - `split_by_law(questions, corpus_by_id, *, test_ratio=0.2, dev_ratio=0.1, seed=42) -> dict[str, list[dict]]`
   - 질문의 법령·테마는 positive 문서의 `category`, `theme`.
-  - 테마마다 법령을 seed로 섞고, test 질문 수가 `test_ratio`에 닿을 때까지 법령을 test에 배정, 이어서 dev, 나머지 train.
+  - 테마마다 법령을 seed로 섞은 순서대로, 넣어도 test 질문 수가 `test_ratio` 목표를 넘지 않는 법령을 test에 넣는다.
+    하나도 못 넣으면 가장 작은 법령 하나를 넣는다. dev도 같은 방식, 나머지 train.
+    (목표에 닿을 때까지 넣는 방식은 큰 법령 하나로 test가 82%가 되는 경우가 있어 바꿈)
   - 법령이 3개 미만인 테마들은 한 그룹으로 합쳐 같은 규칙을 적용한다.
   - 그룹마다 train에 법령이 최소 1개 남게 한다. 그래서 dev나 test가 빌 수 있고, 그러면 경고한다.
   - 분할 사이에 법령이 겹치지 않음을 검사한다.
