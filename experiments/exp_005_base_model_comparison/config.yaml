@@ -1,4 +1,4 @@
-# 실험 005: 베이스 임베딩 모델 비교 (학습 없음)
+# 실험 005: 베이스 임베딩 모델 비교 (학습 없음). jina v5는 속도·라이선스 문제로 제외(2026-09-29)
 # 같은 질문·같은 코퍼스(전체 조문)로 검색 성능을 잰다. 모델별 입력 형식은 ragkit 모델 프로필이 정한다.
 # 실행: ragkit compare --config experiments/exp_005_base_model_comparison/config.yaml
 # 결과: experiments/exp_005_base_model_comparison/results/ (모델별 JSON, comparison.json, comparison.md)
@@ -7,4 +7,3 @@ questions: data/splits/test.jsonl  # 질문 파일 또는 폴더 (--questions로
 models:
   - intfloat/multilingual-e5-small        # 파인튜닝 대상. 118M, 384차원, MIT
   - google/embeddinggemma-300m            # 308M, 768차원. HF 라이선스 동의 필요
-  - jinaai/jina-embeddings-v5-text-small  # 677M, 1024차원. CC BY-NC → 비교 전용, 배포 금지

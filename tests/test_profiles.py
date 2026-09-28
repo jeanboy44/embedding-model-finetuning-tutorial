@@ -38,6 +38,12 @@ def test_unknown_model_falls_back_to_e5_style(tmp_path: Path) -> None:
     assert p.backends == ("onnx", "torch", "st")
 
 
+def test_unknown_hub_model_is_rejected() -> None:
+    """프로필이 없는 허브 모델은 형식을 모르므로 조용히 e5 형식으로 처리하지 않고 멈춘다."""
+    with pytest.raises(ValueError, match="jina.*프로필이 없습니다"):
+        get_profile("jinaai/jina-embeddings-v5-text-small")
+
+
 def test_model_key_for_hub_name_and_checkpoint(tmp_path: Path) -> None:
     """허브 모델은 이름 끝부분, 체크포인트 폴더는 폴더 이름 + 가중치 수정 시각."""
     ckpt = tmp_path / "exp_002_finetuned"

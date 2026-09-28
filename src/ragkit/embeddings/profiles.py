@@ -4,6 +4,7 @@
 모르는 모델(파인튜닝한 e5 폴더 등)은 e5 형식을 쓴다.
 """
 
+import re
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -64,5 +65,17 @@ PROFILES: dict[str, ModelProfile] = {
 
 
 def get_profile(model_name: str | Path) -> ModelProfile:
-    """모델 이름(허브 id 또는 로컬 폴더)으로 프로필을 찾는다. 없으면 e5 형식."""
-    return PROFILES.get(Path(str(model_name)).name, E5_STYLE)
+    """모델 이름(허브 id 또는 로컬 폴더)으로 프로필을 찾는다.
+
+    로컬 폴더(파인튜닝한 e5 등)는 등록되지 않았으면 e5 형식을 쓴다.
+    등록되지 않은 허브 모델은 입력 형식을 모르므로 오류를 낸다 (틀린 형식으로 조용히 평가되지 않게).
+    """
+    name = Path(str(model_name)).name
+    if name in PROFILES:
+        return PROFILES[name]
+    if re.fullmatch(r"[\w.-]+/[\w.-]+", str(model_name)) and not Path(str(model_name)).exists():
+        raise ValueError(
+            f"{model_name}: 모델 프로필이 없습니다. ragkit.embeddings.profiles.PROFILES에 입력 형식을 등록하세요 "
+            f"(등록됨: {', '.join(PROFILES)})"
+        )
+    return E5_STYLE
