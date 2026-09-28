@@ -104,8 +104,10 @@ EMPTY_BODY_RE = re.compile(r"^(삭제\s*<[^>]*>|.*이를 폐지한다\.?)$")
 NOISE_RE = re.compile(r"\s*<(?:개정|신설|\d{4}\.)[^>]*>|<img[^>]*>|</img>")
 # 삭제된 항·호·목 줄(개정 태그를 지운 뒤 "② 삭제", "3. 삭제", "가. 삭제"만 남은 줄)은 본문에서 지운다.
 DELETED_LINE_RE = re.compile(r"^(?:[①-⑳㉑-㉟]|\d+(?:의\d+)?\.|[가-하]\.)\s*삭제\s*$")
-# 항 번호(①~㉟)와 호 번호(1. 2의3.)는 줄 맨 앞에 온다.
-PARAGRAPH_RE = re.compile(r"^[①-⑳㉑-㉟]", re.M)
+# 제16항부터는 원문자 대신 `**<16>** <16> 본문`처럼 쓴다. 표기를 `<16> 본문` 하나로 줄인다.
+ANGLE_PARAGRAPH_RE = re.compile(r"^\*\*<(\d+)>\*\*\s*(?:<\1>\s*)?", re.M)
+# 항 번호(①~⑳, ㉑~㉟, <16> 등)와 호 번호(1. 2의3.)는 줄 맨 앞에 온다.
+PARAGRAPH_RE = re.compile(r"^(?:[①-⑳㉑-㉟]|<\d+>)", re.M)
 ITEM_RE = re.compile(r"^(\d+(?:의\d+)?)\.\s", re.M)
 # 조문 하나(제목 + 본문)의 최대 글자 수. 넘으면 항 단위로, 항도 넘으면 호 묶음으로 나눈다.
 # 임베딩 모델(multilingual-e5, 최대 512토큰)에서 잘리지 않게 잡은 값이다. 한국어 법령은 약 1.8자/토큰이다.
@@ -113,7 +115,9 @@ MAX_CHARS = 800
 
 
 def _paragraph_no(mark: str) -> int:
-    """항 번호 기호(①, ⑪, ㉑)를 숫자로 바꾼다."""
+    """항 번호 기호(①, ⑪, ㉑, <16>)를 숫자로 바꾼다."""
+    if mark.startswith("<"):
+        return int(mark[1:-1])
     code = ord(mark)
     return code - 0x2460 + 1 if code <= 0x2473 else code - 0x3251 + 21
 
@@ -164,13 +168,14 @@ def split_article(
     if heading_chars + len(text) <= max_chars:
         return [("", text)]
 
-    starts = [m.start() for m in PARAGRAPH_RE.finditer(text)]
+    matches = list(PARAGRAPH_RE.finditer(text))
+    starts, marks = [m.start() for m in matches], [m.group() for m in matches]
     if len(starts) >= 2:
         # 첫 항 앞에 글이 있으면(드묾) 첫 항에 붙인다.
         begins, ends = [0, *starts[1:]], [*starts[1:], len(text)]
         paragraphs = [
-            (f"제{_paragraph_no(text[start])}항", text[begin:end].strip())
-            for start, begin, end in zip(starts, begins, ends)
+            (f"제{_paragraph_no(mark)}항", text[begin:end].strip())
+            for mark, begin, end in zip(marks, begins, ends)
         ]
     else:
         paragraphs = [("", text)]
@@ -187,6 +192,7 @@ def split_article(
 
 def clean_text(text: str) -> str:
     """Markdown 강조·이스케이프, 개정 이력 태그, 이미지 태그, 삭제된 항·호·목 줄을 지운다."""
+    text = ANGLE_PARAGRAPH_RE.sub(r"<\1> ", text)
     text = NOISE_RE.sub("", text.replace("**", "").replace("\\.", "."))
     lines = [line for line in text.splitlines() if not DELETED_LINE_RE.match(line.strip())]
     return "\n".join(lines).strip()
@@ -380,6 +386,12 @@ def build_corpus(repo_dir: Path, themes: dict[str, list[str]]) -> list[LawArticl
                                 paragraph=paragraph,
                             )
                         )
+    # 검색 인덱스(예: SQLite UNIQUE id)는 id가 고유해야 한다. 조각 나누기 규칙이 어긋나면 여기서 잡는다.
+    counts: dict[str, int] = {}
+    for article in corpus:
+        counts[article.id] = counts.get(article.id, 0) + 1
+    if duplicates := sorted(i for i, n in counts.items() if n > 1):
+        raise ValueError(f"중복 id {len(duplicates)}개: {duplicates[:5]}")
     return corpus
 
 

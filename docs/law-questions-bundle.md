@@ -19,7 +19,7 @@ law-questions/
 │   ├── questions.jsonl
 │   └── raw/
 └── corpus/
-    ├── law_docs.json                # 현재 코퍼스: 긴 조문을 항·호 단위로 나눔 (문서 25,806개)
+    ├── law_docs.json                # 현재 코퍼스: 긴 조문을 항·호 단위로 나눔 (문서 25,967개)
     └── law_docs_article_level.json  # 나누기 전 코퍼스: 조 단위 (questions/의 iteration-1용)
 ```
 

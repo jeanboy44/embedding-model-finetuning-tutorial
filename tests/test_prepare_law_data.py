@@ -155,3 +155,38 @@ def test_parse_law_file_drops_deleted_paragraphs_and_items(tmp_path) -> None:
     _, articles = law.parse_law_file(path)
 
     assert articles[0][3] == "① 사용자는 다음을 지킨다.\n1. 첫째\n③ 근로자는 성실히 일한다."
+
+
+def test_paragraphs_from_16_use_angle_bracket_markers(tmp_path, monkeypatch) -> None:
+    """제16항부터는 원문자 대신 `**<16>** <16>` 표기를 쓴다. 이것도 항으로 나누고 표기는 한 번만 남긴다."""
+    monkeypatch.setattr(law, "MAX_CHARS", 40)
+    law_dir = tmp_path / "kr" / "테스트법"
+    law_dir.mkdir(parents=True)
+    body = (
+        "##### 제7조 (공제)\n\n"
+        "**⑮** 열다섯째 항이다.\n"
+        "**<16>** <16> 열여섯째 항이다.\n"
+        "**<17>** <17> 열일곱째 항이다.\n"
+    )
+    _write_law(law_dir / "법률(법률).md", "테스트법", "2024-01-01", body)
+
+    corpus = law.build_corpus(tmp_path, {"youth": ["테스트법"]})
+
+    assert [(a.paragraph, a.text) for a in corpus] == [
+        ("제15항", "⑮ 열다섯째 항이다."),
+        ("제16항", "<16> 열여섯째 항이다."),
+        ("제17항", "<17> 열일곱째 항이다."),
+    ]
+
+
+def test_build_corpus_rejects_duplicate_ids(tmp_path, monkeypatch) -> None:
+    """조각 id가 겹치면 코퍼스를 쓰기 전에 멈춘다(검색 인덱스는 id가 고유해야 한다)."""
+    monkeypatch.setattr(law, "split_article", lambda text, heading_chars: [("제1항", text), ("제1항", text)])
+    law_dir = tmp_path / "kr" / "테스트법"
+    law_dir.mkdir(parents=True)
+    _write_law(law_dir / "법률(법률).md", "테스트법", "2024-01-01", "##### 제1조\n\n① 본문\n")
+
+    import pytest
+
+    with pytest.raises(ValueError, match="중복 id"):
+        law.build_corpus(tmp_path, {"youth": ["테스트법"]})
