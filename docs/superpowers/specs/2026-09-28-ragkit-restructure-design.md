@@ -116,10 +116,11 @@ tests/
 - 평가 쿼리: `data/eval/youth_eval.jsonl` (커밋). 20개 초안, **LLM 초안이므로 강사 검수 필요**라고 파일 머리 설명(README 또는 별도 md)에 명시한다. 형식은 skill 출력과 같다(`query, positive_id, query_type, answer`).
 - 결과 JSON: `experiments/<exp>/results/`(gitignore).
 
-## 7. 미정 (사용자 결정 필요)
+## 7. 결정된 항목
 
-- **학습/평가 분할 방식:** 법령 단위(`feat/training-scripts` 설계) vs 같은 코퍼스 안에서 쿼리 단위 + 사람이 쓴 평가셋(에이전트 토론 권장). Phase 2 설계 때 결정.
-- Phase 2 평가 범위: youth 테마 vs 전체 코퍼스.
+- **학습/평가 분할 방식: 법령 단위** (테마마다 법령 약 20% test, 약 10% dev). "쿼리 단위 + 사람이 쓴 평가셋" 방식은 쓰지 않는다. 구현은 `feat/training-scripts`의 `ragkit.training.split`.
+- 따라서 6절의 `data/eval/youth_eval.jsonl`(LLM 초안 평가셋)은 만들지 않는다. 1단계 비교 실습도 skill로 생성한 질문의 test 분할을 평가 쿼리로 쓴다.
+- 평가 범위(youth 테마 vs 전체 코퍼스)는 1단계 튜토리얼 설계 때 정한다.
 
 ## 8. 작업 순서
 
