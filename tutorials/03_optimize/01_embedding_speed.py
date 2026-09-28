@@ -71,18 +71,22 @@ for name, backend, device, sort, threads, providers in CONFIGS:
     if not available(device, providers):
         print(f"{name:32s}  (이 컴퓨터에서 사용 불가, 건너뜀)")
         continue
-    embed = create_embedding_fn(
-        settings.embedding_model_name,
-        backend=backend,
-        device=device,
-        sort_by_length=sort,
-        num_threads=threads,
-        onnx_providers=providers,
-    )
-    embed(texts[:BATCH_SIZE], batch_size=BATCH_SIZE)  # 워밍업 (모델 로딩·첫 실행 비용 제외)
-    start = time.perf_counter()
-    vectors = embed(texts, batch_size=BATCH_SIZE)
-    elapsed = time.perf_counter() - start
+    try:
+        embed = create_embedding_fn(
+            settings.embedding_model_name,
+            backend=backend,
+            device=device,
+            sort_by_length=sort,
+            num_threads=threads,
+            onnx_providers=providers,
+        )
+        embed(texts[:BATCH_SIZE], batch_size=BATCH_SIZE)  # 워밍업 (모델 로딩·첫 실행 비용 제외)
+        start = time.perf_counter()
+        vectors = embed(texts, batch_size=BATCH_SIZE)
+        elapsed = time.perf_counter() - start
+    except Exception as e:  # noqa: BLE001 - 설정별로 실패 이유만 보여 주고 다음 설정으로 넘어간다
+        print(f"{name:32s}  실패: {type(e).__name__}: {str(e).splitlines()[0][:80]}")
+        continue
     if baseline is None:
         baseline = vectors
     same = float((vectors * baseline).sum(axis=1).min())
