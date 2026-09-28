@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-from ragkit.embeddings.prefix import format_queries
+from ragkit.embeddings.profiles import E5_STYLE
 from ragkit.models import Generation, generate_with_usage
 from ragkit.retrieval import SearchHit, VectorIndex
 
@@ -71,6 +71,7 @@ def answer_with_rag(
     generate: GenerateFn = generate_with_usage,
     k: int = 5,
     where: dict | None = None,
+    format_query: Callable[[str], str] | None = None,
 ) -> AnswerResult:
     """인덱스에서 상위 k개 조문을 찾아 그것만 근거로 답한다.
 
@@ -81,12 +82,14 @@ def answer_with_rag(
         generate: 프롬프트 → Generation. 기본값 Gemini.
         k: 프롬프트에 넣을 조문 수.
         where: 메타데이터 필터 (VectorIndex.search와 같음).
+        format_query: 모델 프로필의 쿼리 형식. None이면 e5 형식("query: ").
 
     Returns:
         답변, 검색 결과, LLM 호출 수·토큰 수·지연 시간 (검색 시간 포함).
     """
     start = time.perf_counter()
-    hits = index.search(embed_fn(format_queries([query]))[0], k=k, where=where)
+    format_query = format_query or E5_STYLE.format_query
+    hits = index.search(embed_fn([format_query(query)])[0], k=k, where=where)
     gen = generate(build_prompt(query, hits))
     return AnswerResult(
         query=query,

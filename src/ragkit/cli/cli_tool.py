@@ -119,13 +119,15 @@ def index_command(
     """
     from ragkit.data import load_corpus
 
-    from ragkit.retrieval import build_index
+    from ragkit.embeddings import get_profile
+    from ragkit.retrieval import build_index, default_index_path, model_key
 
     settings = get_settings()
     corpus = corpus or settings.data_dir / "processed" / "law_docs.json"
     model = model or settings.embedding_model_name
-    model_key = checkpoint.name if checkpoint else model.split("/")[-1]
-    out = out or settings.data_dir / "processed" / "index" / f"{model_key}.sqlite"
+    key = model_key(model, checkpoint)
+    out = out or default_index_path(key)
+    profile = get_profile(checkpoint or model)
 
     docs = load_corpus(corpus)
     embed_fn = create_embedding_fn(
@@ -136,7 +138,9 @@ def index_command(
         sort_by_length=sort_by_length,
         num_threads=threads,
     )
-    index = build_index(docs, embed_fn, out, model_key=model_key, batch_size=batch_size)
+    index = build_index(
+        docs, embed_fn, out, model_key=key, format_doc=profile.format_doc, batch_size=batch_size
+    )
     print(f"인덱스: {out} (문서 {len(index):,}개, 모델 {index.model_key})")
 
 

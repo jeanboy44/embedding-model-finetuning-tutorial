@@ -21,8 +21,7 @@ import numpy as np
 import sqlite_vec
 from loguru import logger
 
-from ragkit.data import doc_text
-from ragkit.embeddings.prefix import format_passages
+from ragkit.embeddings.profiles import E5_STYLE
 
 EmbedFn = Callable[..., np.ndarray]
 
@@ -37,6 +36,27 @@ FILTER_COLUMNS = ("theme", "law_type", "law_name", "effective_date")
 _OPS = {"=", "!=", "<", "<=", ">", ">="}
 
 
+def model_key(model_name: str, checkpoint_path: Path | None = None) -> str:
+    """인덱스 파일 이름에 쓰는 모델 키.
+
+    허브 모델은 이름 끝부분(예: multilingual-e5-small). 체크포인트 폴더는 폴더 이름과
+    가중치 파일 수정 시각을 붙여, 같은 폴더에 다시 학습하면 다른 키(= 새 인덱스)가 된다.
+    """
+    if checkpoint_path is None:
+        return Path(model_name).name
+    folder = Path(checkpoint_path)
+    weights = [p for p in folder.glob("*.safetensors")] + [p for p in folder.glob("*.bin")]
+    mtime = max((p.stat().st_mtime for p in weights), default=folder.stat().st_mtime)
+    return f"{folder.name}-{datetime.fromtimestamp(mtime, timezone.utc):%Y%m%d%H%M%S}"
+
+
+def default_index_path(key: str) -> Path:
+    """기본 인덱스 파일 경로: data/processed/index/<모델 키>.sqlite."""
+    from ragkit.config import get_settings
+
+    return get_settings().data_dir / "processed" / "index" / f"{key}.sqlite"
+
+
 @dataclass(frozen=True)
 class SearchHit:
     """검색 결과 한 건."""
@@ -47,10 +67,11 @@ class SearchHit:
     metadata: dict = field(default_factory=dict)
 
 
-def _corpus_hash(docs: list[dict], text_fn: Callable[[dict], str]) -> str:
+def _corpus_hash(docs: list[dict], format_doc: Callable[[dict], str]) -> str:
+    # 임베딩한 최종 문자열로 해시한다: 코퍼스나 모델 입력 형식이 바뀌면 인덱스를 새로 만든다
     h = hashlib.sha256()
     for doc in docs:
-        for part in (doc["id"], text_fn(doc), *(str(doc.get(c) or "") for c in FILTER_COLUMNS)):
+        for part in (doc["id"], format_doc(doc), *(str(doc.get(c) or "") for c in FILTER_COLUMNS)):
             h.update(part.encode())
             h.update(b"\0")
     return h.hexdigest()[:16]
@@ -146,7 +167,7 @@ def build_index(
     db_path: Path,
     *,
     model_key: str,
-    text_fn: Callable[[dict], str] = doc_text,
+    format_doc: Callable[[dict], str] | None = None,
     batch_size: int = 64,
     chunk_size: int = 1024,
 ) -> VectorIndex:
@@ -157,7 +178,8 @@ def build_index(
         embed_fn: 임베딩 함수 (ragkit.embeddings.create_embedding_fn의 반환값).
         db_path: 인덱스 파일 경로 (예: data/processed/index/multilingual-e5-small.sqlite).
         model_key: 모델을 구분하는 이름. 모델이 바뀌면 다른 값을 줘야 한다.
-        text_fn: 문서 → 임베딩할 텍스트. passage 앞 문구는 여기서 붙인다.
+        format_doc: 문서 → 임베딩할 최종 문자열 (모델 프로필의 format_doc).
+            None이면 e5 형식("passage: " + 제목 + 줄바꿈 + 본문).
         batch_size: 임베딩 배치 크기.
         chunk_size: 진행 상황을 기록하고 DB에 쓰는 단위.
 
@@ -170,7 +192,8 @@ def build_index(
     if dups:
         # 임베딩(수 분)을 시작하기 전에 멈춘다
         raise ValueError(f"코퍼스에 중복 id {len(dups)}개가 있습니다 (예: {', '.join(dups[:3])})")
-    corpus_hash = _corpus_hash(docs, text_fn)
+    format_doc = format_doc or E5_STYLE.format_doc
+    corpus_hash = _corpus_hash(docs, format_doc)
     if db_path.exists():
         try:
             index = VectorIndex.open(db_path)
@@ -195,7 +218,7 @@ def build_index(
     dim = None
     for start in range(0, len(docs), chunk_size):
         chunk = docs[start : start + chunk_size]
-        vectors = np.asarray(embed_fn(format_passages([text_fn(d) for d in chunk]), batch_size=batch_size), dtype=np.float32)
+        vectors = np.asarray(embed_fn([format_doc(d) for d in chunk], batch_size=batch_size), dtype=np.float32)
         if dim is None:
             dim = vectors.shape[1]
             conn.execute(

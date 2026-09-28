@@ -1,5 +1,5 @@
 from .document_store import DocumentStore
-from .index import FILTER_COLUMNS, SearchHit, VectorIndex, build_index
+from .index import FILTER_COLUMNS, SearchHit, VectorIndex, build_index, default_index_path, model_key
 from .retriever import retrieve
 
 __all__ = [
@@ -8,5 +8,7 @@ __all__ = [
     "SearchHit",
     "VectorIndex",
     "build_index",
+    "default_index_path",
+    "model_key",
     "retrieve",
 ]

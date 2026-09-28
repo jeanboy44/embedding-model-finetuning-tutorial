@@ -49,6 +49,17 @@ def test_build_index_embeds_title_and_text_with_passage_prefix(tmp_path: Path) -
     assert embed.seen[0] == "passage: a 제목\n가가가"
 
 
+def test_build_index_uses_model_specific_doc_format(tmp_path: Path) -> None:
+    """모델 프로필의 format_doc을 넘기면 그 문자열을 그대로 임베딩한다."""
+    from ragkit.embeddings.profiles import get_profile
+
+    embed = _CountingEmbed()
+    gemma = get_profile("google/embeddinggemma-300m")
+    build_index(DOCS, embed, tmp_path / "idx.sqlite", model_key="g", format_doc=gemma.format_doc)
+
+    assert embed.seen[0] == "title: a 제목 | text: 가가가"
+
+
 def test_search_returns_ids_scores_and_metadata(tmp_path: Path) -> None:
     """검색 결과는 점수 내림차순이고 id, 본문, 메타데이터를 담는다."""
     embed = _CountingEmbed()
