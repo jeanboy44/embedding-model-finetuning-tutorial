@@ -4,6 +4,7 @@ from pathlib import Path
 
 import cyclopts
 
+from ragkit.cli import train_cli
 from ragkit.rag import run_rag
 from ragkit.config import get_settings
 from ragkit.embeddings import create_embedding_fn, format_queries
@@ -11,6 +12,10 @@ from ragkit.models import generate_text
 from ragkit.retrieval import DocumentStore, retrieve
 
 app = cyclopts.App(name="ragkit", help="ragkit: 임베딩 검색 기반 RAG CLI")
+
+# DS용 학습·평가 명령
+for _command in (train_cli.split, train_cli.train, train_cli.evaluate):
+    app.command(_command)
 
 
 @app.command
