@@ -1,0 +1,13 @@
+[project]
+name = "ragkit-mcp"
+version = "0.1.0"
+description = "ragkit 검색을 LLM 도구로 제공하는 MCP 서버"
+requires-python = ">=3.10"
+dependencies = ["ragkit"]
+
+[tool.uv.sources]
+ragkit = { workspace = true }
+
+[build-system]
+requires = ["uv_build>=0.10,<0.11"]
+build-backend = "uv_build"

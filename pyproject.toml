@@ -52,6 +52,10 @@ tutorial = [
 [tool.uv]
 default-groups = ["dev", "tutorial"]
 
+# ragkit(1단계 라이브러리)을 가져다 쓰는 앱들. apps/web(React)은 Node 프로젝트라 제외.
+[tool.uv.workspace]
+members = ["apps/api", "apps/bench", "apps/search-cli", "apps/mcp"]
+
 [build-system]
 requires = ["uv_build>=0.10,<0.11"]
 build-backend = "uv_build"

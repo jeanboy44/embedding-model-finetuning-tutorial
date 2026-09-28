@@ -3,6 +3,22 @@
 브랜치: `feat/ragkit-phase01` (워크트리 `.claude/worktrees/ragkit`)
 관련 문서: `docs/handoff-law-question-gen.md`(코퍼스·질문 생성), `feat/training-scripts`의 `2026-09-28-embedding-training-design.md`(학습·평가)
 
+## 0. 변경: 4단계 강의 + apps/ (2026-09-28, 사용자 확정)
+
+아래 2·3절의 Phase 1~5 구성은 이 결정으로 대체한다.
+
+- 강의 흐름은 `docs/PLAN.md`(브랜치 `docs/lecture-plan`)를 따른다: 1) DS 본업(모델 비교·학습·평가) → 2) +α 업무(API 개발) → 3) AI 이후: 배포 최적화(ONNX 변환·양자화) → 4) AI 이후: CLI 도구 개발·배포 + React 프론트엔드.
+- 1절 스토리라인과 비교 실습(순수 LLM / RAG / RAG+쿼리 확장)은 1단계 도입부가 된다.
+- **ragkit = 1단계 라이브러리.** 모델·데이터를 "만드는" 것: data, training, evaluation, embeddings, retrieval, LLM 호출·쿼리 확장, export-onnx, 양자화 변환.
+- **apps/ = ragkit을 "쓰는" 앱** (uv workspace 멤버, 각자 `ragkit = { workspace = true }`):
+  - `apps/api` (ragkit-api): FastAPI 검색 API
+  - `apps/bench` (ragkit-bench): 원본/ONNX/양자화 속도·정확도 비교
+  - `apps/search-cli` (ragkit-search): 최종 사용자용 검색 CLI, ragkit core만, uvx 배포
+  - `apps/mcp` (ragkit-mcp): MCP 서버 (기존 `ragkit.mcp`를 옮김)
+  - `apps/web`: React. Node 프로젝트라 workspace 멤버 아님
+- 아직 ragkit에 남아 있는 "쓰는 쪽" 코드(`ragkit.rag` 에이전트, `ragkit.monitoring`, 사용자용 CLI `search/rag/embed`)는 해당 앱이 구현될 때 옮긴다. 기존 튜토리얼이 import하고 있어 지금 옮기면 깨진다.
+- 역할 분담: `ragkit.data/training/evaluation`과 CLI `split/train/evaluate`는 `feat/training-scripts` 세션 담당. 학습/평가 분할은 **법령 단위**로 확정(7절 해소).
+
 ## 1. 강의 스토리라인 (확정)
 
 1. **통째로 넣을 수 있는 문서는 그냥 LLM에 넘긴다.** 이 강의는 넣을 수 없는 경우(법령 코퍼스 약 700만 자)를 다룬다.

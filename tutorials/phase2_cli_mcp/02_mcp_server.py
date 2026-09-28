@@ -16,7 +16,7 @@ from pathlib import Path
 
 from ragkit.config import get_settings
 from ragkit.embeddings import create_embedding_fn, format_passages
-from ragkit.mcp.mcp_server import embed_tool, retrieve_tool
+from ragkit_mcp.server import embed_tool, retrieve_tool
 from ragkit.retrieval import DocumentStore
 
 # ============================================================

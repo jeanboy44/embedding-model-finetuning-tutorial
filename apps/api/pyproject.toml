@@ -1,0 +1,17 @@
+[project]
+name = "ragkit-api"
+version = "0.1.0"
+description = "ragkit 검색 API (FastAPI)"
+requires-python = ">=3.10"
+dependencies = [
+    "ragkit",
+    "fastapi>=0.100.0",
+    "uvicorn>=0.23.0",
+]
+
+[tool.uv.sources]
+ragkit = { workspace = true }
+
+[build-system]
+requires = ["uv_build>=0.10,<0.11"]
+build-backend = "uv_build"

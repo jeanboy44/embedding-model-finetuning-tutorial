@@ -1,0 +1,13 @@
+[project]
+name = "ragkit-bench"
+version = "0.1.0"
+description = "원본(torch) / ONNX / 양자화 모델의 속도·정확도 비교"
+requires-python = ">=3.10"
+dependencies = ["ragkit[torch]"]
+
+[tool.uv.sources]
+ragkit = { workspace = true }
+
+[build-system]
+requires = ["uv_build>=0.10,<0.11"]
+build-backend = "uv_build"

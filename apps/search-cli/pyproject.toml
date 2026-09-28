@@ -1,0 +1,16 @@
+[project]
+name = "ragkit-search"
+version = "0.1.0"
+description = "최종 사용자용 검색 CLI (ragkit core만 사용, uvx로 배포)"
+requires-python = ">=3.10"
+dependencies = ["ragkit"]
+
+[project.scripts]
+ragkit-search = "ragkit_search:main"
+
+[tool.uv.sources]
+ragkit = { workspace = true }
+
+[build-system]
+requires = ["uv_build>=0.10,<0.11"]
+build-backend = "uv_build"
