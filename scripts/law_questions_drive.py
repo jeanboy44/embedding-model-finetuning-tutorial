@@ -4,6 +4,8 @@
     uv run python scripts/law_questions_drive.py collect    # 스킬 테스트 질문 → data/questions_test/
     uv run python scripts/law_questions_drive.py bundle     # 질문 + 코퍼스 → dist/law-questions.zip
     uv run python scripts/law_questions_drive.py upload     # dist/의 zip을 Drive 폴더에 올림 (rclone)
+    uv run python scripts/law_questions_drive.py bundle-skill                       # 스킬 → dist/law-question-gen-skill.zip
+    uv run python scripts/law_questions_drive.py upload --zip-path dist/law-question-gen-skill.zip
     uv run python scripts/law_questions_drive.py download   # Drive 폴더에서 받아 data/law-questions/에 풂
 
 업로드는 rclone을 쓴다. 처음 한 번 설치하고 로그인해 둔다:
@@ -33,6 +35,7 @@ DEFAULT_FOLDER_URL = (
     "https://drive.google.com/drive/folders/1y30fzc21thrATVzwBa9vzBWbOSTJt-U1"
 )
 BUNDLE_NAME = "law-questions"
+SKILL_BUNDLE_NAME = "law-question-gen-skill"
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 WORKSPACE = PROJECT_ROOT / ".claude" / "skills" / "law-question-gen-workspace"
@@ -164,10 +167,45 @@ def bundle(
         for path in corpora:
             zf.write(path, f"{BUNDLE_NAME}/corpus/{path.name}")
 
-    digest = sha256sum(output)
-    output.with_suffix(".zip.sha256").write_text(f"{digest}  {output.name}\n", encoding="utf-8")
+    digest = write_sha256(output)
     print(f"생성 질문 파일 {len(generated)}개 포함")
     print(f"완료: {output} ({output.stat().st_size / 1e6:.1f}MB, sha256 {digest[:12]}…)")
+
+
+def write_sha256(path: Path) -> str:
+    """zip 옆에 `<이름>.zip.sha256` 파일을 쓰고 해시를 돌려준다."""
+    digest = sha256sum(path)
+    path.with_suffix(".zip.sha256").write_text(f"{digest}  {path.name}\n", encoding="utf-8")
+    return digest
+
+
+@app.command(name="bundle-skill")
+def bundle_skill(skills_dir: Path | None = None, output: Path | None = None) -> None:
+    """law-question-gen 스킬과 평가 워크스페이스를 zip 하나로 묶는다.
+
+    .claude/는 git에서 제외했으므로 스킬은 이 zip으로 Drive에 따로 보관한다.
+    zip 구조: law-question-gen-skill/{law-question-gen/, law-question-gen-workspace/}
+
+    Args:
+        skills_dir: 스킬 폴더들이 있는 곳. 기본값은 .claude/skills.
+        output: zip 경로. 기본값은 dist/law-question-gen-skill.zip.
+    """
+    skills_dir = skills_dir or PROJECT_ROOT / ".claude" / "skills"
+    output = output or PROJECT_ROOT / "dist" / f"{SKILL_BUNDLE_NAME}.zip"
+    folders = [skills_dir / "law-question-gen", skills_dir / "law-question-gen-workspace"]
+    if not (folders[0] / "SKILL.md").exists():
+        raise SystemExit(f"스킬이 없습니다: {folders[0] / 'SKILL.md'}")
+
+    output.parent.mkdir(parents=True, exist_ok=True)
+    count = 0
+    with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as zf:
+        for folder in folders:
+            for path in sorted(folder.rglob("*")):
+                if path.is_file() and "__pycache__" not in path.parts and path.suffix != ".log":
+                    zf.write(path, f"{SKILL_BUNDLE_NAME}/{path.relative_to(skills_dir)}")
+                    count += 1
+    digest = write_sha256(output)
+    print(f"완료: {output} (파일 {count}개, {output.stat().st_size / 1e6:.1f}MB, sha256 {digest[:12]}…)")
 
 
 @app.command

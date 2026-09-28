@@ -76,3 +76,22 @@ def test_bundle_layout(tmp_path) -> None:
             "law-questions/questions/raw/x.jsonl",
         ]
     assert output.with_suffix(".zip.sha256").read_text().split()[0] == drive.sha256sum(output)
+
+
+def test_bundle_skill_layout(tmp_path) -> None:
+    skills = tmp_path / "skills"
+    (skills / "law-question-gen" / "scripts" / "__pycache__").mkdir(parents=True)
+    (skills / "law-question-gen" / "SKILL.md").write_text("---\nname: x\n---", encoding="utf-8")
+    (skills / "law-question-gen" / "scripts" / "__pycache__" / "a.pyc").write_bytes(b"x")
+    (skills / "law-question-gen-workspace").mkdir()
+    (skills / "law-question-gen-workspace" / "grade.py").write_text("", encoding="utf-8")
+    (skills / "law-question-gen-workspace" / "viewer.log").write_text("", encoding="utf-8")
+    output = tmp_path / "skill.zip"
+
+    drive.bundle_skill(skills_dir=skills, output=output)
+
+    with zipfile.ZipFile(output) as zf:
+        assert sorted(zf.namelist()) == [
+            "law-question-gen-skill/law-question-gen-workspace/grade.py",
+            "law-question-gen-skill/law-question-gen/SKILL.md",
+        ]

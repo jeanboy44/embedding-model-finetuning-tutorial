@@ -106,6 +106,7 @@
 - 파일 사이 중복 질문 검사를 `validate_questions.py`에 추가했다. "청년 나이 기준"이 청년기본법과 청년고용촉진특별법에서 서로 다른 정답을 가리키는 것을 발견해 고쳤다.
 - Drive에 업로드했다(zip 안 `generated/`). 테스트 결과 중 iteration-2 with_skill 도로교통법 p01과 전기공사공제조합법 p01도 `data/questions/`로 옮겼다. 그래서 26/231 파트가 완료됐고 질문은 2,004개다.
 - `data/questions/`와 `data/questions_test/`는 모두 gitignore 대상이고 Drive에만 보관한다.
+- `.claude/` 전체를 git 이력에서 뺐다(2026-09-29). 스킬과 평가 워크스페이스는 `law_questions_drive.py bundle-skill` → `upload --zip-path dist/law-question-gen-skill.zip`으로 Drive에 따로 보관한다(`law-question-gen-skill.zip`). 나중에 사용자가 tutorials phase 폴더로 옮길 예정이다.
 
 ### C. 스킬 확정 후
 - 231개 파트 전체를 생성한다. 먼저 규모와 비용을 사용자와 확인한다. 조문 11,723개 × 평균 1~1.5개 ≈ 질문 1.2만~1.8만 개.
