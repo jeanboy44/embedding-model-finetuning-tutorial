@@ -120,7 +120,7 @@ ragkit-search show <doc_id> [--article]          # --article이면 같은 조 �
 
 ## 5. apps/mcp (ragkit_mcp)
 
-공식 `mcp` Python SDK의 FastMCP, stdio. 진입점 `ragkit-mcp`.
+공식 `mcp` Python SDK, stdio. 진입점 `ragkit-mcp`. (구현 메모: mcp 2.x에서 `FastMCP`가 `mcp.server.mcpserver.MCPServer`로 바뀌어 `mcp>=2.2`로 구현했다. 예상한 실패는 `ToolError`로 올려 한국어 메시지가 모델에 그대로 간다.)
 
 | 도구 | 입력 | 출력 |
 |---|---|---|
