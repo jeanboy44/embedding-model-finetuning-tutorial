@@ -2,7 +2,7 @@
 
 macOS에서 `uv`를 사용하여 개발 환경을 설정합니다.
 
-> **참고**: Python venv 방식을 원하면 [`venv` 브랜치](https://github.com/your-repo/tree/venv)를 확인하세요.
+> **참고**: Python venv 방식을 원하면 [`venv` 브랜치](https://github.com/jeanboy44/embedding-model-finetuning-tutorial/tree/venv)를 확인하세요.
 
 ---
 
@@ -22,8 +22,8 @@ uv --version
 ## 2단계: 프로젝트 설정
 
 ```bash
-git clone https://github.com/your-repo/slm-finetuning-example.git
-cd slm-finetuning-example
+git clone https://github.com/jeanboy44/embedding-model-finetuning-tutorial.git
+cd embedding-model-finetuning-tutorial
 uv sync
 ```
 

@@ -16,7 +16,7 @@
 - [macOS 설치 가이드](INSTALL_MAC.md)
 - [Windows 설치 가이드](INSTALL_WINDOWS.md)
 
-> Python venv 방식을 원하면 [`venv` 브랜치](https://github.com/your-repo/tree/venv)를 확인하세요.
+> Python venv 방식을 원하면 [`venv` 브랜치](https://github.com/jeanboy44/embedding-model-finetuning-tutorial/tree/venv)를 확인하세요.
 
 ### 임베딩 모델 다운로드
 
