@@ -32,7 +32,7 @@ env/
 .env.*.local
 
 # ML/Data specific
-models/
+/models/
 experiments/results/
 data/processed/
 data/raw/*
