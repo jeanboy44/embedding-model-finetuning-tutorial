@@ -92,8 +92,10 @@
 - `ragkit evaluate <모델 폴더|이름> [--split test] [--splits data/splits] [--corpus ...] [--backend torch] [--index ...] [--out <결과 JSON>]`
   - `ragkit.embeddings.create_embedding_fn`으로 임베딩하고, 코퍼스 임베딩은 `ragkit.retrieval.build_index`로 SQLite 인덱스에 저장해
     `evaluate_index`로 평가한다. 같은 모델 키·같은 코퍼스면 인덱스를 재사용한다.
-  - 모델 키 = 기본 인덱스 파일 이름: 학습한 폴더는 `<폴더 이름>@<backend>-<가중치 수정 시각>`(재학습·백엔드가 바뀌면 새 인덱스),
-    HF 모델 이름은 이름 그대로(`ragkit index`가 만든 base 인덱스와 공유). `ragkit index`의 `<폴더 이름>.sqlite`는 건드리지 않는다.
+  - 모델별 입력 형식은 `ragkit.embeddings.get_profile(model)`의 `format_query` / `format_doc`을 쓴다(e5·EmbeddingGemma·jina v5).
+    백엔드 기본값은 프로필이 정하고, 학습 폴더에 ONNX 파일이 없으면 torch로 바꾼다.
+  - 인덱스 키·경로는 `ragkit index`와 같은 `ragkit.retrieval.model_key` / `default_index_path`를 써서 파일을 공유한다
+    (학습 폴더는 `<폴더>-<가중치 수정 시각>`이라 재학습하면 새 인덱스).
   - 로컬 경로로 쓴 모델 폴더가 없으면 `ragkit train`을 안내하고 종료한다.
 - `ragkit train ... [--no-dev-eval]`: 학습 전·후 dev 평가(전체 코퍼스 임베딩 2회)를 끈다.
 - 경로 기본값: `get_settings().data_dir` 기준. 모두 인자로 바꿀 수 있다(워크트리처럼 `data/`가 없는 곳에서 `--corpus`로 지정).

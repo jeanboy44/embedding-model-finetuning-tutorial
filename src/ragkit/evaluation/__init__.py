@@ -50,6 +50,8 @@ def evaluate_retrieval(
     query_prefix: str = "query: ",
     passage_prefix: str = "passage: ",
     corpus_embeddings: np.ndarray | None = None,
+    format_query: Callable[[str], str] | None = None,
+    format_doc: Callable[[dict], str] | None = None,
 ) -> dict:
     """전체 코퍼스 대상 검색 성능을 잰다.
 
@@ -61,6 +63,8 @@ def evaluate_retrieval(
         query_prefix: 질문 앞 문구.
         passage_prefix: 문서 앞 문구.
         corpus_embeddings: 미리 계산한 코퍼스 임베딩 (corpus와 같은 순서). None이면 계산한다.
+        format_query: 질문 → 임베딩 입력 문자열 (모델 프로필의 format_query). 주면 query_prefix 대신 쓴다.
+        format_doc: 문서 → 임베딩 입력 문자열 (모델 프로필의 format_doc). 주면 passage_prefix 대신 쓴다.
 
     Returns:
         {"n", "doc": 지표, "article": 지표, "by_query_type": {유형: {"n", "doc", "article"}},
@@ -70,9 +74,11 @@ def evaluate_retrieval(
         ValueError: 질문이 없거나, positive_id가 코퍼스에 없는 질문이 있을 때.
     """
     by_id = _check(corpus, questions)
+    format_query = format_query or (lambda text: query_prefix + text)
+    format_doc = format_doc or (lambda doc: passage_prefix + doc_text(doc))
     if corpus_embeddings is None:
-        corpus_embeddings = embed_fn([passage_prefix + doc_text(doc) for doc in corpus])
-    query_embeddings = embed_fn([query_prefix + q["query"] for q in questions])
+        corpus_embeddings = embed_fn([format_doc(doc) for doc in corpus])
+    query_embeddings = embed_fn([format_query(q["query"]) for q in questions])
     scores = query_embeddings @ corpus_embeddings.T
     depth = min(CANDIDATES, len(corpus))
     top = np.argpartition(-scores, depth - 1, axis=1)[:, :depth]
@@ -93,6 +99,7 @@ def evaluate_index(
     *,
     ks: Sequence[int] = (1, 5, 10),
     query_prefix: str = "query: ",
+    format_query: Callable[[str], str] | None = None,
 ) -> dict:
     """만들어 둔 벡터 인덱스(ragkit.retrieval.VectorIndex)로 검색 성능을 잰다.
 
@@ -106,12 +113,15 @@ def evaluate_index(
         questions: 질문 목록.
         ks: Recall@k의 k 값들.
         query_prefix: 질문 앞 문구.
+        format_query: 질문 → 임베딩 입력 문자열 (모델 프로필). 주면 query_prefix 대신 쓴다.
+            문서 형식은 인덱스를 만들 때(build_index의 format_doc) 이미 정해졌다.
 
     Returns:
         evaluate_retrieval과 같은 형식의 딕셔너리.
     """
     by_id = _check(corpus, questions)
-    query_embeddings = embed_fn([query_prefix + q["query"] for q in questions])
+    format_query = format_query or (lambda text: query_prefix + text)
+    query_embeddings = embed_fn([format_query(q["query"]) for q in questions])
     depth = min(CANDIDATES, len(corpus))
     ranked = [[hit.id for hit in index.search(emb, k=depth)] for emb in query_embeddings]
     return _score(questions, by_id, ranked, ks)

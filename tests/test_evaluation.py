@@ -93,6 +93,35 @@ def test_evaluate_index_matches_numpy(tmp_path) -> None:
     assert by_index["article"] == pytest.approx(by_numpy["article"])
 
 
+def test_evaluate_uses_model_formatters(tmp_path) -> None:
+    """모델별 입력 형식(format_query / format_doc)을 주면 앞 문구 대신 그것으로 임베딩한다."""
+    from ragkit.retrieval import build_index
+
+    seen: list[str] = []
+
+    def embed(texts: list[str], batch_size: int | None = None) -> np.ndarray:
+        seen.extend(texts)
+        return np.array([[1.0, 0.0] if t.startswith("Q|") else [0.9, 0.1] for t in texts])
+
+    def fq(q: str) -> str:
+        return f"Q|{q}"
+
+    def fd(d: dict) -> str:
+        return f"D|{d['title']}"
+
+    corpus = [_doc("A", "A", "t"), _doc("B", "B", "t")]
+    questions = [{"query": "q", "positive_id": "A"}]
+
+    evaluate_retrieval(embed, corpus, questions, format_query=fq, format_doc=fd)
+    assert seen == ["D|A", "D|B", "Q|q"]
+
+    seen.clear()
+    index = build_index(corpus, embed, tmp_path / "f.sqlite", model_key="f", format_doc=fd)
+    seen.clear()
+    evaluate_index(index, embed, corpus, questions, format_query=fq)
+    assert seen == ["Q|q"]
+
+
 def test_evaluate_retrieval_reuses_corpus_embeddings() -> None:
     """corpus_embeddings를 주면 코퍼스를 다시 임베딩하지 않는다."""
     corpus = [_doc("A", "A", "t"), _doc("B", "B", "t")]

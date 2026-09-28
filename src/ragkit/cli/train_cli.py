@@ -1,6 +1,6 @@
 """DS용 학습·평가 CLI: ragkit split | train | evaluate.
 
-순서: ragkit split → ragkit train --config experiments/exp_00X/config.yaml → ragkit evaluate --model <폴더>
+순서: ragkit split → ragkit train --config experiments/exp_00X/config.yaml → ragkit evaluate <폴더>
 """
 
 import json
@@ -9,7 +9,7 @@ from typing import Literal
 
 from ragkit.config import get_settings
 from ragkit.data import filter_questions, load_corpus, load_questions
-from ragkit.embeddings import create_embedding_fn
+from ragkit.embeddings import choose_backend, create_embedding_fn, get_profile
 from ragkit.training.split import (
     SPLITS,
     load_splits,
@@ -30,19 +30,6 @@ def _paths(corpus: Path | None, splits: Path | None) -> tuple[Path, Path]:
 def _fail(message: str) -> None:
     print(f"오류: {message}")
     raise SystemExit(1)
-
-
-def _model_key(model_path: Path, backend: str) -> str:
-    """인덱스 재사용 판단에 쓰는 모델 키. 기본 인덱스 파일 이름으로도 쓴다.
-
-    학습한 모델 폴더는 다시 학습해도 이름이 같으므로, 백엔드가 읽는 가중치 파일
-    (torch: model.safetensors, onnx: onnx/model.onnx)의 수정 시각을 붙여 예전 모델이나
-    다른 백엔드로 만든 인덱스를 재사용하지 않게 한다. 모델 이름(HF)이면 이름만 쓴다.
-    """
-    weights = model_path / ("onnx/model.onnx" if backend == "onnx" else "model.safetensors")
-    if weights.exists():
-        return f"{model_path.name}@{backend}-{int(weights.stat().st_mtime)}"
-    return model_path.name
 
 
 def _looks_like_path(model: str) -> bool:
@@ -184,7 +171,7 @@ def evaluate(
     split: Literal["train", "dev", "test"] = "test",
     splits: Path | None = None,
     corpus: Path | None = None,
-    backend: Literal["torch", "onnx"] = "torch",
+    backend: Literal["onnx", "torch", "st"] | None = None,
     index: Path | None = None,
     out: Path | None = None,
 ) -> None:
@@ -198,13 +185,14 @@ def evaluate(
         split: 평가할 분할 (test | dev | train).
         splits: ragkit split 출력 폴더. 기본값은 data/splits.
         corpus: 코퍼스 경로. 기본값은 data/processed/law_docs.json.
-        backend: 임베딩 백엔드 (torch | onnx). onnx는 {모델 폴더}/onnx/model.onnx가 필요하다.
-        index: 인덱스 파일 경로. 기본값은 data/processed/index/{모델 키}.sqlite
-            (학습한 폴더는 "exp_002@torch-수정시각", HF 모델 이름은 이름 그대로).
+        backend: 임베딩 백엔드 (onnx | torch | st). 기본값은 모델 프로필이 정한다.
+            onnx는 {모델 폴더}/onnx/model.onnx가 필요하고, 없으면 torch로 바꾼다.
+        index: 인덱스 파일 경로. 기본값은 ragkit index와 같은 data/processed/index/{모델 키}.sqlite
+            (학습한 폴더는 "exp_002-가중치수정시각", 허브 모델은 이름 끝부분).
         out: 결과 JSON 경로. 기본값은 experiments/results/{모델 이름}_{split}.json.
     """
     from ragkit.evaluation import evaluate_index
-    from ragkit.retrieval import build_index
+    from ragkit.retrieval import build_index, default_index_path, model_key
 
     if split not in SPLITS:
         _fail(f"알 수 없는 분할: {split} (가능: {', '.join(SPLITS)})")
@@ -223,8 +211,14 @@ def evaluate(
             f"모델 폴더가 없습니다: {model}\n"
             "  먼저 실행: ragkit train --config experiments/<실험>/config.yaml"
         )
+    checkpoint = model_path if model_path.is_dir() else None
+    profile = get_profile(model)
+    backend = backend or choose_backend(profile, None)
     onnx_file = model_path / "onnx" / "model.onnx"
     weights = model_path / "model.safetensors"
+    if backend == "onnx" and checkpoint and not onnx_file.exists() and "torch" in profile.backends:
+        print(f"참고: {onnx_file}가 없어 torch 백엔드로 평가합니다 (ragkit export-onnx로 만들 수 있음).")
+        backend = "torch"
     if (
         backend == "onnx"
         and onnx_file.exists()
@@ -235,21 +229,19 @@ def evaluate(
             f"ONNX 파일이 학습한 가중치보다 오래됐습니다: {onnx_file}\n"
             f"  먼저 실행: ragkit export-onnx {model_path}"
         )
-    checkpoint = model_path if model_path.is_dir() else None
     embed_fn = create_embedding_fn(model, checkpoint_path=checkpoint, backend=backend)
-    settings = get_settings()
-    key = _model_key(model_path, backend)
-    index = index or settings.data_dir / "processed" / "index" / f"{key}.sqlite"
-    vector_index = build_index(docs, embed_fn, index, model_key=key)
+    key = model_key(model, checkpoint)
+    index = index or default_index_path(key)
+    vector_index = build_index(docs, embed_fn, index, model_key=key, format_doc=profile.format_doc)
     try:
         result = evaluate_index(
-            vector_index, embed_fn, docs, questions, query_prefix=settings.query_prefix
+            vector_index, embed_fn, docs, questions, format_query=profile.format_query
         )
     finally:
         vector_index.close()
     result = {"model": model, "split": split, "backend": backend, "index": str(index), **result}
 
-    out = out or settings.results_dir / f"{model_path.name}_{split}.json"
+    out = out or get_settings().results_dir / f"{model_path.name}_{split}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
 
