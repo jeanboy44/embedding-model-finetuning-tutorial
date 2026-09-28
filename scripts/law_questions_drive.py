@@ -126,6 +126,7 @@ def bundle(
     questions_dir: Path | None = None,
     generated_dir: Path | None = None,
     corpus_dir: Path | None = None,
+    readme: Path | None = None,
     output: Path | None = None,
 ) -> None:
     """질문 폴더와 코퍼스를 zip 하나로 묶고 sha256 파일을 만든다.
@@ -137,27 +138,26 @@ def bundle(
         generated_dir: 스킬로 파트별 생성한 질문 폴더(<법령>__pNN.jsonl). 기본값은 data/questions.
             없으면 건너뛴다.
         corpus_dir: 코퍼스 JSON이 있는 폴더. 기본값은 data/processed.
+        readme: zip 최상위에 넣을 설명서. 기본값은 docs/law-questions-bundle.md.
         output: zip 경로. 기본값은 dist/law-questions.zip.
     """
     settings = get_settings()
     questions_dir = questions_dir or settings.data_dir / "questions_test"
     generated_dir = generated_dir or settings.data_dir / "questions"
     corpus_dir = corpus_dir or settings.data_dir / "processed"
+    readme = readme or PROJECT_ROOT / "docs" / "law-questions-bundle.md"
     output = output or PROJECT_ROOT / "dist" / f"{BUNDLE_NAME}.zip"
 
     corpora = [corpus_dir / name for name in sorted(set(ITERATION_CORPUS.values()))]
-    if missing := [p for p in [questions_dir / "questions.jsonl", *corpora] if not p.exists()]:
+    if missing := [p for p in [readme, questions_dir / "questions.jsonl", *corpora] if not p.exists()]:
         raise SystemExit(f"파일이 없습니다: {[str(p) for p in missing]}")
 
     output.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as zf:
+        zf.write(readme, f"{BUNDLE_NAME}/README.md")
         for path in sorted(questions_dir.rglob("*")):
             if path.is_file():
-                arcname = path.relative_to(questions_dir)
-                if path.name == "README.md":
-                    zf.write(path, f"{BUNDLE_NAME}/README.md")
-                else:
-                    zf.write(path, f"{BUNDLE_NAME}/questions/{arcname}")
+                zf.write(path, f"{BUNDLE_NAME}/questions/{path.relative_to(questions_dir)}")
         generated = sorted(generated_dir.glob("*.jsonl")) if generated_dir.exists() else []
         for path in generated:
             zf.write(path, f"{BUNDLE_NAME}/generated/{path.name}")

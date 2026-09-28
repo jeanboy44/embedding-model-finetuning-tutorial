@@ -74,3 +74,4 @@ logs/
 # Claude Code worktrees
 .claude/worktrees/
 data/questions/
+data/questions_test/

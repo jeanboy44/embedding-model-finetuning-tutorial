@@ -51,7 +51,6 @@ def test_bundle_layout(tmp_path) -> None:
     questions = tmp_path / "questions_test"
     (questions / "raw").mkdir(parents=True)
     (questions / "questions.jsonl").write_text("{}\n", encoding="utf-8")
-    (questions / "README.md").write_text("# readme", encoding="utf-8")
     (questions / "raw" / "x.jsonl").write_text("{}\n", encoding="utf-8")
     corpus = tmp_path / "processed"
     corpus.mkdir()
@@ -62,7 +61,10 @@ def test_bundle_layout(tmp_path) -> None:
     (generated / "최저임금법__p01.jsonl").write_text("{}\n", encoding="utf-8")
     output = tmp_path / "dist" / "law-questions.zip"
 
-    drive.bundle(questions_dir=questions, generated_dir=generated, corpus_dir=corpus, output=output)
+    readme = tmp_path / "README.md"
+    readme.write_text("# readme", encoding="utf-8")
+
+    drive.bundle(questions_dir=questions, generated_dir=generated, corpus_dir=corpus, readme=readme, output=output)
 
     with zipfile.ZipFile(output) as zf:
         assert sorted(zf.namelist()) == [

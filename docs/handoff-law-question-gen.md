@@ -96,7 +96,7 @@
 ### B-3. 테스트 질문 모음과 Google Drive (2026-09-28, 완료)
 - `scripts/law_questions_drive.py`: `collect`(테스트 질문 → `data/questions_test/`), `bundle`(→ `dist/law-questions.zip` + sha256), `upload`(rclone, remote `gdrive`), `download`(gdown, 로그인 불필요 → `data/law-questions/`)
 - Drive 폴더: https://drive.google.com/drive/folders/1y30fzc21thrATVzwBa9vzBWbOSTJt-U1 (업로드·다운로드 왕복, sha256 확인 완료)
-- 질문 1,138개. 권장: iteration-2 with_skill 259개. 자세한 내용은 `data/questions_test/README.md`
+- 질문 1,138개. 권장: iteration-2 with_skill 259개. 자세한 내용은 `docs/law-questions-bundle.md`(zip README 원본)
 - rclone의 공용 client_id는 2026년 중 지원이 끝난다. 계속 쓰려면 자체 client_id를 만든다(https://rclone.org/drive/#making-your-own-client-id).
 
 ### B-4. youth 테마 본 생성 (2026-09-29, 완료)
@@ -104,7 +104,8 @@
 - 비용은 파트당 평균 약 9.7만 토큰, 전체 약 230만 토큰이다. 파트 하나는 1~7분 걸린다. 서브에이전트 12개를 병렬로 두 번 돌렸다.
 - 전체 231개 파트로 추정하면 약 2,200만 토큰, 질문 약 1.7만 개다(테마마다 편차가 있다).
 - 파일 사이 중복 질문 검사를 `validate_questions.py`에 추가했다. "청년 나이 기준"이 청년기본법과 청년고용촉진특별법에서 서로 다른 정답을 가리키는 것을 발견해 고쳤다.
-- Drive에 업로드했다(zip 안 `generated/`).
+- Drive에 업로드했다(zip 안 `generated/`). 테스트 결과 중 iteration-2 with_skill 도로교통법 p01과 전기공사공제조합법 p01도 `data/questions/`로 옮겼다. 그래서 26/231 파트가 완료됐고 질문은 2,004개다.
+- `data/questions/`와 `data/questions_test/`는 모두 gitignore 대상이고 Drive에만 보관한다.
 
 ### C. 스킬 확정 후
 - 231개 파트 전체를 생성한다. 먼저 규모와 비용을 사용자와 확인한다. 조문 11,723개 × 평균 1~1.5개 ≈ 질문 1.2만~1.8만 개.
