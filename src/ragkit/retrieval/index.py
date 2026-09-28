@@ -21,6 +21,7 @@ import numpy as np
 import sqlite_vec
 from loguru import logger
 
+from ragkit.data import doc_text
 from ragkit.embeddings.prefix import format_passages
 
 EmbedFn = Callable[..., np.ndarray]
@@ -42,11 +43,6 @@ class SearchHit:
     text: str
     score: float
     metadata: dict = field(default_factory=dict)
-
-
-def default_doc_text(doc: dict) -> str:
-    """임베딩할 문서 텍스트: 제목 + 줄바꿈 + 본문."""
-    return f"{doc['title']}\n{doc['text']}"
 
 
 def _corpus_hash(docs: list[dict], text_fn: Callable[[dict], str]) -> str:
@@ -148,7 +144,7 @@ def build_index(
     db_path: Path,
     *,
     model_key: str,
-    text_fn: Callable[[dict], str] = default_doc_text,
+    text_fn: Callable[[dict], str] = doc_text,
     batch_size: int = 64,
     chunk_size: int = 1024,
 ) -> VectorIndex:

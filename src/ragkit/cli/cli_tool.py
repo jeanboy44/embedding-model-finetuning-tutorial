@@ -109,7 +109,7 @@ def index_command(
         backend: onnx | torch. 기본값 Settings.embedding_backend.
         out: 인덱스 파일. 기본값 data/processed/index/<모델 키>.sqlite.
     """
-    import json
+    from ragkit.data import load_corpus
 
     from ragkit.retrieval import build_index
 
@@ -119,7 +119,7 @@ def index_command(
     model_key = checkpoint.name if checkpoint else model.split("/")[-1]
     out = out or settings.data_dir / "processed" / "index" / f"{model_key}.sqlite"
 
-    docs = json.loads(corpus.read_text())
+    docs = load_corpus(corpus)
     embed_fn = create_embedding_fn(model, checkpoint_path=checkpoint, backend=backend)
     index = build_index(docs, embed_fn, out, model_key=model_key)
     print(f"인덱스: {out} (문서 {len(index):,}개, 모델 {index.model_key})")
