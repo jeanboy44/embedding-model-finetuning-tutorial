@@ -124,20 +124,24 @@ def collect(workspace: Path = WORKSPACE, output: Path | None = None) -> None:
 @app.command
 def bundle(
     questions_dir: Path | None = None,
+    generated_dir: Path | None = None,
     corpus_dir: Path | None = None,
     output: Path | None = None,
 ) -> None:
     """질문 폴더와 코퍼스를 zip 하나로 묶고 sha256 파일을 만든다.
 
-    zip 구조: law-questions/{README.md, questions/, corpus/}
+    zip 구조: law-questions/{README.md, questions/, generated/, corpus/}
 
     Args:
-        questions_dir: collect로 만든 폴더. 기본값은 data/questions_test.
+        questions_dir: collect로 만든 스킬 테스트 질문 폴더. 기본값은 data/questions_test.
+        generated_dir: 스킬로 파트별 생성한 질문 폴더(<법령>__pNN.jsonl). 기본값은 data/questions.
+            없으면 건너뛴다.
         corpus_dir: 코퍼스 JSON이 있는 폴더. 기본값은 data/processed.
         output: zip 경로. 기본값은 dist/law-questions.zip.
     """
     settings = get_settings()
     questions_dir = questions_dir or settings.data_dir / "questions_test"
+    generated_dir = generated_dir or settings.data_dir / "questions"
     corpus_dir = corpus_dir or settings.data_dir / "processed"
     output = output or PROJECT_ROOT / "dist" / f"{BUNDLE_NAME}.zip"
 
@@ -154,11 +158,15 @@ def bundle(
                     zf.write(path, f"{BUNDLE_NAME}/README.md")
                 else:
                     zf.write(path, f"{BUNDLE_NAME}/questions/{arcname}")
+        generated = sorted(generated_dir.glob("*.jsonl")) if generated_dir.exists() else []
+        for path in generated:
+            zf.write(path, f"{BUNDLE_NAME}/generated/{path.name}")
         for path in corpora:
             zf.write(path, f"{BUNDLE_NAME}/corpus/{path.name}")
 
     digest = sha256sum(output)
     output.with_suffix(".zip.sha256").write_text(f"{digest}  {output.name}\n", encoding="utf-8")
+    print(f"생성 질문 파일 {len(generated)}개 포함")
     print(f"완료: {output} ({output.stat().st_size / 1e6:.1f}MB, sha256 {digest[:12]}…)")
 
 

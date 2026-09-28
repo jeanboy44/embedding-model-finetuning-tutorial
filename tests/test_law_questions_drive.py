@@ -57,15 +57,19 @@ def test_bundle_layout(tmp_path) -> None:
     corpus.mkdir()
     for name in ("law_docs.json", "law_docs_article_level.json"):
         (corpus / name).write_text("[]", encoding="utf-8")
+    generated = tmp_path / "questions"
+    generated.mkdir()
+    (generated / "최저임금법__p01.jsonl").write_text("{}\n", encoding="utf-8")
     output = tmp_path / "dist" / "law-questions.zip"
 
-    drive.bundle(questions_dir=questions, corpus_dir=corpus, output=output)
+    drive.bundle(questions_dir=questions, generated_dir=generated, corpus_dir=corpus, output=output)
 
     with zipfile.ZipFile(output) as zf:
         assert sorted(zf.namelist()) == [
             "law-questions/README.md",
             "law-questions/corpus/law_docs.json",
             "law-questions/corpus/law_docs_article_level.json",
+            "law-questions/generated/최저임금법__p01.jsonl",
             "law-questions/questions/questions.jsonl",
             "law-questions/questions/raw/x.jsonl",
         ]
