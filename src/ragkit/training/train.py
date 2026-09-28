@@ -6,8 +6,11 @@ LoRA는 학습 후 원래 가중치에 합쳐(merge) 같은 형식으로 저장�
 """
 
 import json
+import shutil
+import tempfile
 import time
 from pathlib import Path
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -57,6 +60,11 @@ def load_train_config(path: Path) -> TrainConfig:
 
 
 def _dev_evaluator(dev_questions, corpus, query_prefix, passage_prefix):
+    """학습 전·후 비교용 dev 평가기 (정답 = positive_id 하나).
+
+    ragkit.evaluation과 달리 related_ids를 순위에서 빼지 않고 article 판정도 없다.
+    학습이 좋아지는지 방향만 보는 용도이고, 최종 점수는 ragkit evaluate로 낸다.
+    """
     from sentence_transformers.sentence_transformer.evaluation import (
         InformationRetrievalEvaluator,
     )
@@ -134,12 +142,14 @@ def train(
     model.max_seq_length = config.max_seq_length
     total_params = sum(p.numel() for p in model.parameters())
 
+    transformer: Any = model[0]  # sentence-transformers Transformer 모듈
+    peft_model: Any = None
     if config.lora:
         from peft import LoraConfig, get_peft_model
 
         # auto_model은 읽기 전용 별칭이다. forward가 쓰는 실제 모듈(model)을 감싸야 LoRA가 적용된다.
-        model[0].model = get_peft_model(
-            model[0].model,
+        peft_model = get_peft_model(
+            transformer.model,
             LoraConfig(
                 r=config.lora.r,
                 lora_alpha=config.lora.alpha,
@@ -147,6 +157,7 @@ def train(
                 target_modules=config.lora.target_modules,
             ),
         )
+        transformer.model = peft_model
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
 
     evaluator = (
@@ -157,8 +168,12 @@ def train(
     dev_before = evaluator(model) if evaluator else None
 
     output_dir = Path(config.output_dir)
+    # 예전 LoRA 학습이 남긴 어댑터가 새 모델과 섞이지 않게 지운다.
+    shutil.rmtree(output_dir / "adapter", ignore_errors=True)
+    # Trainer 작업 폴더(save_strategy="no"라 비어 있음)는 모델 폴더 밖 임시 폴더에 둔다.
+    work_dir = tempfile.TemporaryDirectory(prefix="ragkit-train-")
     args = SentenceTransformerTrainingArguments(
-        output_dir=str(output_dir / "checkpoints"),
+        output_dir=work_dir.name,
         num_train_epochs=config.epochs,
         max_steps=config.max_steps or -1,
         per_device_train_batch_size=config.batch_size,
@@ -177,14 +192,15 @@ def train(
         loss=losses.MultipleNegativesRankingLoss(model),
     )
     start = time.perf_counter()
-    trainer.train()
+    with work_dir:
+        trainer.train()
     seconds = time.perf_counter() - start
     dev_after = evaluator(model) if evaluator else None
 
-    if config.lora:
+    if config.lora and peft_model is not None:
         if config.lora.save_adapter:
-            model[0].model.save_pretrained(str(output_dir / "adapter"))
-        model[0].model = model[0].model.merge_and_unload()
+            peft_model.save_pretrained(str(output_dir / "adapter"))
+        transformer.model = peft_model.merge_and_unload()
     model.save(str(output_dir))
 
     meta = {

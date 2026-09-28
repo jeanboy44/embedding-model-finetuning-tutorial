@@ -5,11 +5,18 @@
 
 import json
 from pathlib import Path
+from typing import Literal
 
 from ragkit.config import get_settings
 from ragkit.data import filter_questions, load_corpus, load_questions
 from ragkit.embeddings import create_embedding_fn
-from ragkit.training.split import load_splits, split_by_law, split_summary, write_splits
+from ragkit.training.split import (
+    SPLITS,
+    load_splits,
+    split_by_law,
+    split_summary,
+    write_splits,
+)
 
 
 def _paths(corpus: Path | None, splits: Path | None) -> tuple[Path, Path]:
@@ -145,12 +152,21 @@ def train(
     if not data["train"]:
         _fail(f"train 분할이 없습니다: {splits_dir}\n  먼저 실행: ragkit split <질문 파일|폴더>")
     docs = _load_corpus_or_fail(corpus_path)
+    # split 때와 다른 코퍼스일 수 있으므로 이 코퍼스 기준으로 한 번 더 거른다.
+    corpus_by_id = {doc["id"]: doc for doc in docs}
+    train_questions, train_stats = filter_questions(data["train"], corpus_by_id)
+    dev_questions, dev_stats = filter_questions(data["dev"], corpus_by_id)
+    missing = train_stats["missing_positive"] + dev_stats["missing_positive"]
+    if missing:
+        print(f"경고: 코퍼스에 없는 질문 {missing}개를 뺐습니다 (split 때와 코퍼스가 다름).")
+    if not train_questions:
+        _fail("이 코퍼스에 맞는 train 질문이 없습니다. 같은 코퍼스로 ragkit split을 다시 실행하세요.")
 
     settings = get_settings()
     meta = train_module.train(
         train_config,
-        data["train"],
-        data["dev"],
+        train_questions,
+        dev_questions,
         docs,
         query_prefix=settings.query_prefix,
         passage_prefix=settings.passage_prefix,
@@ -165,10 +181,10 @@ def train(
 def evaluate(
     model: str,
     *,
-    split: str = "test",
+    split: Literal["train", "dev", "test"] = "test",
     splits: Path | None = None,
     corpus: Path | None = None,
-    backend: str = "torch",
+    backend: Literal["torch", "onnx"] = "torch",
     index: Path | None = None,
     out: Path | None = None,
 ) -> None:
@@ -182,14 +198,16 @@ def evaluate(
         split: 평가할 분할 (test | dev | train).
         splits: ragkit split 출력 폴더. 기본값은 data/splits.
         corpus: 코퍼스 경로. 기본값은 data/processed/law_docs.json.
-        backend: 임베딩 백엔드 (torch | onnx). onnx는 <모델 폴더>/onnx/model.onnx가 필요하다.
+        backend: 임베딩 백엔드 (torch | onnx). onnx는 {모델 폴더}/onnx/model.onnx가 필요하다.
         index: 인덱스 파일 경로. 기본값은 data/processed/index/{모델 키}.sqlite
             (학습한 폴더는 "exp_002@torch-수정시각", HF 모델 이름은 이름 그대로).
-        out: 결과 JSON 경로. 기본값은 experiments/results/<모델 이름>_<split>.json.
+        out: 결과 JSON 경로. 기본값은 experiments/results/{모델 이름}_{split}.json.
     """
     from ragkit.evaluation import evaluate_index
     from ragkit.retrieval import build_index
 
+    if split not in SPLITS:
+        _fail(f"알 수 없는 분할: {split} (가능: {', '.join(SPLITS)})")
     corpus_path, splits_dir = _paths(corpus, splits)
     questions = load_splits(splits_dir)[split] if splits_dir.exists() else []
     if not questions:
@@ -204,6 +222,18 @@ def evaluate(
         _fail(
             f"모델 폴더가 없습니다: {model}\n"
             "  먼저 실행: ragkit train --config experiments/<실험>/config.yaml"
+        )
+    onnx_file = model_path / "onnx" / "model.onnx"
+    weights = model_path / "model.safetensors"
+    if (
+        backend == "onnx"
+        and onnx_file.exists()
+        and weights.exists()
+        and onnx_file.stat().st_mtime < weights.stat().st_mtime
+    ):
+        _fail(
+            f"ONNX 파일이 학습한 가중치보다 오래됐습니다: {onnx_file}\n"
+            f"  먼저 실행: ragkit export-onnx {model_path}"
         )
     checkpoint = model_path if model_path.is_dir() else None
     embed_fn = create_embedding_fn(model, checkpoint_path=checkpoint, backend=backend)

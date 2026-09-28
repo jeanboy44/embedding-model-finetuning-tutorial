@@ -33,9 +33,11 @@ def first_rank(ranked_keys: Sequence[str], positive_key: str) -> int | None:
 def question_metrics(rank: int | None, ks: Sequence[int]) -> dict[str, float]:
     """정답이 하나인 질문의 지표. Recall@k는 정답이 k위 안에 있으면 1."""
     metrics = {f"recall@{k}": float(rank is not None and rank <= k) for k in ks}
-    within = rank is not None and rank <= CUTOFF
-    metrics[f"mrr@{CUTOFF}"] = 1.0 / rank if within else 0.0
-    metrics[f"ndcg@{CUTOFF}"] = 1.0 / math.log2(rank + 1) if within else 0.0
+    if rank is not None and rank <= CUTOFF:
+        metrics[f"mrr@{CUTOFF}"] = 1.0 / rank
+        metrics[f"ndcg@{CUTOFF}"] = 1.0 / math.log2(rank + 1)
+    else:
+        metrics[f"mrr@{CUTOFF}"] = metrics[f"ndcg@{CUTOFF}"] = 0.0
     return metrics
 
 

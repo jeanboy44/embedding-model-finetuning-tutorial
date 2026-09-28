@@ -153,3 +153,75 @@ def test_train_command_can_skip_dev_eval(tmp_path, corpus, questions, monkeypatc
 def test_evaluate_command_missing_splits(tmp_path) -> None:
     with pytest.raises(SystemExit):
         train_cli.evaluate("m", splits=tmp_path / "없음", corpus=tmp_path / "law_docs.json")
+
+
+def _fake_create(model_name, checkpoint_path=None, device=None, backend=None):
+    return lambda texts, batch_size=None: np.ones((len(texts), 2)) / np.sqrt(2)
+
+
+def test_evaluate_rejects_unknown_split(tmp_path, corpus, questions, monkeypatch) -> None:
+    """--split 오타는 KeyError가 아니라 안내 후 종료."""
+    corpus_path, qpath = _write_inputs(tmp_path, corpus, questions)
+    train_cli.split(qpath, corpus=corpus_path, out=tmp_path / "splits")
+    monkeypatch.setattr(train_cli, "create_embedding_fn", _fake_create)
+    with pytest.raises(SystemExit):
+        train_cli.evaluate("m", split="tset", splits=tmp_path / "splits", corpus=corpus_path)
+
+
+def test_evaluate_onnx_fails_when_onnx_older_than_weights(
+    tmp_path, corpus, questions, monkeypatch
+) -> None:
+    """다시 학습한 뒤 ONNX를 다시 변환하지 않았으면 예전 모델로 평가하지 않고 안내한다."""
+    corpus_path, qpath = _write_inputs(tmp_path, corpus, questions)
+    train_cli.split(qpath, corpus=corpus_path, out=tmp_path / "splits")
+    model_dir = tmp_path / "exp_002"
+    (model_dir / "onnx").mkdir(parents=True)
+    (model_dir / "model.safetensors").write_bytes(b"w")
+    (model_dir / "onnx" / "model.onnx").write_bytes(b"o")
+    os.utime(model_dir / "onnx" / "model.onnx", (1_000, 1_000))
+    os.utime(model_dir / "model.safetensors", (2_000, 2_000))
+    monkeypatch.setattr(train_cli, "create_embedding_fn", _fake_create)
+
+    with pytest.raises(SystemExit):
+        train_cli.evaluate(
+            str(model_dir), backend="onnx", splits=tmp_path / "splits", corpus=corpus_path
+        )
+
+
+def test_train_command_refilters_questions_for_corpus(
+    tmp_path, corpus, questions, monkeypatch
+) -> None:
+    """split 때와 다른 코퍼스를 주면 없는 질문을 빼고 학습한다 (KeyError 없이)."""
+    import ragkit.training.train as train_module
+
+    corpus_path, qpath = _write_inputs(tmp_path, corpus, questions)
+    train_cli.split(qpath, corpus=corpus_path, out=tmp_path / "splits")
+    smaller = [d for d in corpus if not d["id"].startswith(("가법_", "나법_", "다법_", "라법_"))]
+    small_path = tmp_path / "small.json"
+    small_path.write_text(json.dumps(smaller, ensure_ascii=False), encoding="utf-8")
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text("training:\n  output_dir: out\n", encoding="utf-8")
+    seen = {}
+
+    def fake_train(config, train_q, dev_q, docs, **kwargs):
+        ids = {d["id"] for d in docs}
+        seen["ok"] = all(q["positive_id"] in ids for q in [*train_q, *dev_q])
+        return {"train_examples": 1, "seconds": 0.0, "trainable_params": 1, "total_params": 1}
+
+    monkeypatch.setattr(train_module, "train", fake_train)
+
+    train_cli.train(config_path, splits=tmp_path / "splits", corpus=small_path)
+
+    assert seen == {"ok": True}
+
+
+def test_cli_help_shows_placeholders(capsys) -> None:
+    """도움말에서 {모델 키}·{split} 같은 자리 표시가 rich markup으로 사라지지 않는다."""
+    from ragkit.cli.cli_tool import app
+
+    with pytest.raises(SystemExit):
+        app(["evaluate", "--help"])
+
+    out = capsys.readouterr().out  # 긴 설명은 줄바꿈되므로 줄 안에 남는 조각만 확인한다
+    assert "_{split}.json" in out
+    assert "}/onnx/model.onnx" in out
