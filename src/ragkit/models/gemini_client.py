@@ -1,7 +1,8 @@
 """Gemini API 클라이언트."""
 
+import itertools
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from typing import TypeVar
 
@@ -127,6 +128,59 @@ def generate_with_usage(
         input_tokens=usage.prompt_token_count or 0,
         output_tokens=usage.candidates_token_count or 0,
     )
+
+
+def stream_with_usage(
+    prompt: str,
+    *,
+    model_name: str | None = None,
+    temperature: float = 0.7,
+    max_output_tokens: int = 1024,
+    api_key: str | None = None,
+) -> Iterator[str | Generation]:
+    """Gemini 답변을 조각으로 받아 내보낸다 (화면에 글자가 흘러나오게).
+
+    요청은 첫 조각을 받을 때 실제로 나가므로, 일시 오류 재시도는 첫 조각 전까지만 한다.
+    조각을 내보낸 뒤 다시 시도하면 같은 글이 두 번 나오기 때문이다.
+
+    Args:
+        prompt: 입력 프롬프트.
+        model_name: Gemini 모델 이름. None이면 Settings 기본값 사용.
+        temperature: 생성 온도 (0.0~1.0).
+        max_output_tokens: 최대 출력 토큰 수.
+        api_key: Gemini API 키. None이면 Settings에서 로드.
+
+    Yields:
+        텍스트 조각(str)들, 마지막에 전체 텍스트와 토큰 수를 담은 Generation 하나.
+    """
+    client = _get_client(api_key)
+
+    def open_stream() -> tuple[Iterator, object]:
+        stream = iter(
+            client.models.generate_content_stream(
+                model=model_name or get_settings().gemini_model_name,
+                contents=prompt,
+                config=genai.types.GenerateContentConfig(
+                    temperature=temperature,
+                    max_output_tokens=max_output_tokens,
+                    automatic_function_calling=genai.types.AutomaticFunctionCallingConfig(disable=True),
+                ),
+            )
+        )
+        return stream, next(stream, None)
+
+    stream, first = _with_retry(open_stream)
+    pieces: list[str] = []
+    input_tokens = output_tokens = 0
+    for chunk in itertools.chain([first] if first is not None else [], stream):
+        usage = chunk.usage_metadata
+        if usage is not None:
+            input_tokens = usage.prompt_token_count or input_tokens
+            output_tokens = usage.candidates_token_count or output_tokens
+        if chunk.text:
+            pieces.append(chunk.text)
+            yield chunk.text
+    yield Generation(text="".join(pieces), input_tokens=input_tokens, output_tokens=output_tokens)
 
 
 def count_tokens(

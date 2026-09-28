@@ -23,7 +23,7 @@ PROMPT_TEMPLATE = """당신은 한국 법령 안내 도우미입니다.
 
 [조문]
 {context}
-
+{history}
 [질문]
 {query}"""
 
@@ -39,14 +39,28 @@ class AnswerResult:
     input_tokens: int = 0
     output_tokens: int = 0
     latency_s: float = 0.0
+    error: str | None = None  # LLM을 못 썼을 때 이유 (검색 결과 hits는 그대로 담는다)
 
 
-def build_prompt(query: str, hits: list[SearchHit]) -> str:
-    """검색한 조문을 번호를 붙여 프롬프트에 넣는다."""
+_ROLE_NAMES = {"user": "사용자", "assistant": "도우미"}
+
+
+def build_prompt(query: str, hits: list[SearchHit], history: list[dict] | None = None) -> str:
+    """검색한 조문을 번호를 붙여 프롬프트에 넣는다.
+
+    Args:
+        query: 현재 질문.
+        hits: 근거로 줄 조문. 번호 [1], [2]...는 이 순서다.
+        history: 이전 대화 [{"role": "user"|"assistant", "content": ...}]. 후속 질문의 맥락용.
+    """
     context = "\n\n".join(
         f"[{i}] {hit.metadata.get('title', hit.id)}\n{hit.text}" for i, hit in enumerate(hits, 1)
     )
-    return PROMPT_TEMPLATE.format(context=context, query=query)
+    block = ""
+    if history:
+        lines = "\n".join(f"{_ROLE_NAMES.get(m['role'], m['role'])}: {m['content']}" for m in history)
+        block = f"\n[이전 대화]\n{lines}\n"
+    return PROMPT_TEMPLATE.format(context=context, history=block, query=query)
 
 
 def answer_without_retrieval(query: str, *, generate: GenerateFn = generate_with_usage) -> AnswerResult:

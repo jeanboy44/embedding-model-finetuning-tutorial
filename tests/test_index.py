@@ -143,3 +143,63 @@ def test_open_missing_index_explains_how_to_build(tmp_path: Path) -> None:
     """인덱스 파일이 없으면 만드는 방법을 안내한다."""
     with pytest.raises(FileNotFoundError, match="ragkit index"):
         VectorIndex.open(tmp_path / "none.sqlite")
+
+
+def test_search_filters_by_value_list(tmp_path: Path) -> None:
+    """목록 값은 IN 조건: 여러 법령 중 하나에 속한 문서만 찾는다."""
+    embed = _CountingEmbed()
+    docs = [*DOCS, _doc("d", "가가가가", "traffic")]
+    index = build_index(docs, embed, tmp_path / "idx.sqlite", model_key="fake")
+    query = embed(["가가가가"])[0]
+
+    hits = index.search(query, k=4, where={"law_name": ["youth법", "tax법"]})
+
+    assert {h.id for h in hits} == {"a", "b", "c"}
+    with pytest.raises(ValueError, match="빈 목록"):
+        index.search(query, where={"law_name": []})
+
+
+def _piece(doc_id: str, parent: str, law: str, text: str) -> dict:
+    return {"id": doc_id, "parent_id": parent, "title": doc_id, "text": text, "law_name": law,
+            "law_type": "법률", "theme": "youth"}
+
+
+PIECES = [
+    _piece("가법_제1조", "가법_제1조", "가법", "가"),
+    _piece("가법_제2조_제1항", "가법_제2조", "가법", "가나"),
+    _piece("가법_제2조_제2항", "가법_제2조", "가법", "나"),
+    {**_piece("나법_제1조", "나법_제1조", "나법", "나나"), "law_type": "시행령", "theme": "tax"},
+]
+
+
+def test_get_and_get_article(tmp_path: Path) -> None:
+    """id로 조각 하나, parent_id로 같은 조의 조각 전체(원래 순서)를 가져온다."""
+    index = build_index(PIECES, _CountingEmbed(), tmp_path / "idx.sqlite", model_key="fake")
+
+    hit = index.get("가법_제2조_제2항")
+    assert hit is not None and hit.text == "나" and hit.metadata["parent_id"] == "가법_제2조"
+    assert index.get("없음") is None
+    assert [h.id for h in index.get_article("가법_제2조")] == ["가법_제2조_제1항", "가법_제2조_제2항"]
+    assert index.get_article("없음") == []
+
+
+def test_list_laws_counts_pieces(tmp_path: Path) -> None:
+    """법령마다 종류·테마·조각 수를 테마·이름순으로 돌려준다."""
+    from ragkit.retrieval import LawInfo
+
+    index = build_index(PIECES, _CountingEmbed(), tmp_path / "idx.sqlite", model_key="fake")
+
+    assert index.list_laws() == [
+        LawInfo(law_name="나법", law_type="시행령", theme="tax", doc_count=1),
+        LawInfo(law_name="가법", law_type="법률", theme="youth", doc_count=3),
+    ]
+
+
+def test_index_can_be_used_from_another_thread(tmp_path: Path) -> None:
+    """웹 서버 스레드풀에서 쓸 수 있게 연결을 스레드에 묶지 않는다."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    index = build_index(PIECES, _CountingEmbed(), tmp_path / "idx.sqlite", model_key="fake")
+
+    with ThreadPoolExecutor(1) as pool:
+        assert pool.submit(len, index).result() == 4
