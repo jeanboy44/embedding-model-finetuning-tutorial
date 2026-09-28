@@ -94,6 +94,19 @@ def test_build_index_rebuilds_when_corpus_or_model_changes(tmp_path: Path) -> No
     assert index.model_key == "other"
 
 
+def test_build_index_replaces_invalid_existing_file(tmp_path: Path) -> None:
+    """인덱스가 아닌 파일(빈 파일, 옛 형식)이 있으면 새로 만든다."""
+    import sqlite3
+
+    path = tmp_path / "idx.sqlite"
+    sqlite3.connect(str(path)).close()  # 빈 DB 파일
+    embed = _CountingEmbed()
+
+    index = build_index(DOCS, embed, path, model_key="fake")
+
+    assert len(index) == 3
+
+
 def test_build_index_rejects_duplicate_ids_before_embedding(tmp_path: Path) -> None:
     """id가 겹치면 임베딩을 시작하기 전에 어떤 id인지 알려 주고 멈춘다."""
     embed = _CountingEmbed()

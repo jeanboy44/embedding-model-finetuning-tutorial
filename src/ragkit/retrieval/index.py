@@ -170,10 +170,14 @@ def build_index(
         raise ValueError(f"코퍼스에 중복 id {len(dups)}개가 있습니다 (예: {', '.join(dups[:3])})")
     corpus_hash = _corpus_hash(docs, text_fn)
     if db_path.exists():
-        index = VectorIndex.open(db_path)
-        if index.model_key == model_key and index.corpus_hash == corpus_hash:
-            return index
-        index.close()
+        try:
+            index = VectorIndex.open(db_path)
+        except (sqlite3.DatabaseError, KeyError):
+            index = None  # 인덱스가 아닌 파일(빈 파일, 옛 형식) → 새로 만든다
+        if index is not None:
+            if index.model_key == model_key and index.corpus_hash == corpus_hash:
+                return index
+            index.close()
         db_path.unlink()
 
     db_path.parent.mkdir(parents=True, exist_ok=True)
