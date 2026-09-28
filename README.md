@@ -1,60 +1,69 @@
-# SLM 파인튜닝 & RAG 교육용 저장소
+# 임베딩 모델 파인튜닝 — AI 시대 생존법: 내 업무 확장편
 
-임베딩 모델, 검색 증강 생성(RAG), CLI 도구, MCP 서버, 모니터링을 통해 현대적인 ML 실무를 배우는 교육용 저장소입니다.
+같은 임베딩 모델 하나를 들고, 데이터 사이언티스트(DS)의 업무 범위가 모델 개발에서 API·배포 최적화·제품화까지 넓어지는 과정을 따라가는 8시간 실습 강의 저장소입니다. 주제 도메인은 대한민국 법령 조문 검색입니다.
 
-## 포함 내용
+## 강의 구성
 
-- **Phase 1: 모델 개발** - 임베딩 방식 비교 (Base vs Fine-tuned vs LLM 쿼리 확장)
-- **Phase 2: CLI & MCP** - 모델 접근 도구 개발
-- **Phase 3: RAG 에이전트** - 검색과 생성 통합
-- **Phase 4: 모니터링** - 시스템 품질 및 성능 추적
+| 단계 | 내용 | 코드 | 튜토리얼 |
+|---|---|---|---|
+| 1. DS 본업 | 왜 파인튜닝인가(RAG 비교) → 데이터 준비 → 학습 → 평가 | `src/ragkit/` | `tutorials/01_ds_core/` |
+| 2. +α 업무 | 모델을 검색 API로 감싸기 | `apps/api/` | `tutorials/02_api/` |
+| 3. 배포 최적화 | ONNX 변환 · 양자화 · 속도/정확도 비교 | `ragkit` + `apps/bench/` | `tutorials/03_optimize/` |
+| 4. 제품화 | 검색 CLI · MCP 서버 · React 화면 | `apps/search-cli/`, `apps/mcp/`, `apps/web/` | `tutorials/04_product/` |
+
+자세한 흐름과 결정 사항은 [강의 계획](docs/PLAN.md)을 참고하세요.
 
 ## 빠른 시작
 
-### OS별 설치 가이드
+### 설치
 
-- [macOS 설치 가이드](INSTALL_MAC.md)
-- [Windows 설치 가이드](INSTALL_WINDOWS.md)
+- [macOS 설치 가이드](INSTALL_MAC.md) · [Windows 설치 가이드](INSTALL_WINDOWS.md)
 
-> Python venv 방식을 원하면 [`venv` 브랜치](https://github.com/jeanboy44/embedding-model-finetuning-tutorial/tree/venv)를 확인하세요.
+```bash
+uv sync --all-packages --all-extras   # 강의용: ragkit + 모든 앱 + 학습 도구
+```
 
-### 임베딩 모델 다운로드
+배포용 최소 설치는 `ragkit` core(ONNX 추론)만 설치합니다. torch는 extra `[torch]`, 학습 도구는 extra `[train]`입니다.
+
+### 모델과 데이터 준비
 
 기본 모델은 한국어를 지원하는 [`intfloat/multilingual-e5-small`](https://huggingface.co/intfloat/multilingual-e5-small)(MIT 라이선스)입니다.
 
 ```bash
-uv run python scripts/download_model_hf.py      # HuggingFace Hub에서
-uv run python scripts/download_model_gdrive.py  # 또는 Google Drive에서
+uv run python scripts/download_model_hf.py          # 모델 (또는 scripts/download_model_gdrive.py)
+uv run ragkit export-onnx models/multilingual-e5-small   # ONNX 변환 (배포 기본 백엔드)
+uv run python scripts/prepare_law_data.py           # 법령 코퍼스 → data/processed/law_docs.json
+uv run ragkit index                                 # 검색 인덱스 → data/processed/index/<모델>.sqlite
 ```
+
+LLM 단계(답변 생성, 쿼리 확장)는 `.env`에 `GEMINI_API_KEY`가 필요합니다. [Google AI Studio](https://aistudio.google.com)의 무료 등급 키로 충분합니다. 키가 없으면 해당 단계만 건너뜁니다.
 
 ### 실행 예제
 
 ```bash
-# Phase 1: 모델 비교 실험
-uv run python tutorials/phase1_model_dev/run_experiments.py
+# 1단계: 법령 RAG 한 바퀴 (통째로 넣으면? → 인덱스 → 검색 → 답변)
+uv run python tutorials/01_ds_core/01_build_rag.py
 
-# Phase 2: CLI 도구
-uv run ragkit rag --query "질문"
+# 3단계: 임베딩 속도 옵션 비교 (장치, 길이순 배치, 스레드)
+uv run python tutorials/03_optimize/01_embedding_speed.py
 
-# Phase 3: RAG 에이전트
-uv run python tutorials/phase3_agent/run_agent.py
-
-# Phase 4: 모니터링
-uv run python tutorials/phase4_monitoring/run_monitoring.py
+# DS용 CLI
+uv run ragkit --help
 ```
 
-## 강의 계획
+## 저장소 구조
 
-강의 흐름(DS 본업 → API → 배포 최적화 → CLI·프론트엔드)은 [강의 계획](docs/PLAN.md)을 참고하세요.
+```
+src/ragkit/      # 1단계 라이브러리: data · embeddings · retrieval · rag · training · evaluation · CLI
+apps/            # 2~4단계: ragkit을 쓰는 앱 (uv workspace 멤버)
+experiments/     # 실험 설정(config.yaml)과 결과
+tutorials/       # 단계별 해설 (01_ds_core ~ 04_product, _legacy는 이전 구성 자료)
+scripts/         # 일회성 데이터·모델 준비
+docs/            # 강의 계획, 설계 문서, ADR
+```
 
-## 아키텍처
+## 문서
 
-시스템 설계는 [아키텍처 문서](docs/ARCHITECTURE.md)를 참고하세요.
-
-## 설계 결정 기록
-
-[ADR (Architecture Decision Records)](docs/adr/)에서 주요 결정사항을 확인하세요.
-
-## 강사용
-
-`/tutorials` 폴더의 자료를 통해 학생들을 각 Phase별로 가이드할 수 있습니다.
+- [강의 계획](docs/PLAN.md)
+- [ragkit 설계](docs/superpowers/specs/2026-09-28-ragkit-restructure-design.md)
+- [아키텍처](docs/ARCHITECTURE.md) · [ADR](docs/adr/)
