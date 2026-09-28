@@ -49,6 +49,9 @@ def create_st_embedding_fn(
     def _embed(texts: list[str], batch_size: int = 32) -> np.ndarray:
         vectors = model.encode(
             texts,
+            # 모델의 기본 프롬프트(jina: default_prompt_name="document")를 끈다.
+            # 형식은 프로필(format_query/format_doc)이 이미 붙였으므로, 켜 두면 "Document: Query: ..."가 된다.
+            prompt="",
             batch_size=batch_size,
             normalize_embeddings=True,
             convert_to_numpy=True,

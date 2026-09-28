@@ -25,6 +25,33 @@ def test_choose_backend_rejects_explicit_unsupported() -> None:
         choose_backend(get_profile("google/embeddinggemma-300m"), "torch")
 
 
+def test_st_backend_disables_model_default_prompt(monkeypatch: pytest.MonkeyPatch) -> None:
+    """모델의 기본 프롬프트(jina: 'Document: ')를 끈다. 형식은 프로필이 이미 붙였다(이중 접두어 방지)."""
+    import numpy as np
+    import sentence_transformers
+
+    from ragkit.embeddings.st_backend import create_st_embedding_fn
+
+    calls: list[dict] = []
+
+    class FakeST:
+        def __init__(self, *args, **kwargs) -> None:
+            pass
+
+        def encode(self, texts, **kwargs):
+            calls.append(kwargs)
+            return np.ones((len(texts), 2), dtype=np.float32)
+
+    monkeypatch.setattr(sentence_transformers, "SentenceTransformer", FakeST)
+    embed = create_st_embedding_fn("jinaai/jina-embeddings-v5-text-small",
+                                   get_profile("jinaai/jina-embeddings-v5-text-small"), device="cpu")
+
+    embed(["Query: 주휴수당"])
+
+    assert calls[0]["prompt"] == ""
+    assert calls[0]["task"] == "retrieval"
+
+
 @pytest.mark.skipif(not LOCAL_E5.exists(), reason="로컬 모델 없음")
 def test_st_backend_matches_torch_for_e5() -> None:
     """같은 e5 모델이면 st 백엔드와 torch 백엔드 결과가 같다."""
