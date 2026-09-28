@@ -33,6 +33,7 @@
 3. `related_ids`가 정답보다 위에 나온 질문 → 순위에서 빠져 정답 순위가 올라가야 한다. Task 4 테스트로 고정.
 4. 같은 조의 조각이 상위에 여러 개 나오는 경우 `article` 판정 → 첫 등장만 센다. Task 4 테스트로 고정.
 5. LoRA 병합 후 저장한 모델에 peft 흔적이 남아 ragkit torch 백엔드(`from_pretrained`)가 못 읽는 경우 → Task 5 smoke 테스트에서 `create_embedding_fn(..., backend="torch")`로 다시 읽어 확인.
+6. 같은 폴더에 모델을 다시 학습한 뒤 `ragkit evaluate` → 예전 인덱스를 재사용하면 안 된다(모델 키에 가중치 수정 시각 포함). Task 6 테스트 `test_model_key_changes_when_retrained`로 고정.
 
 ---
 
@@ -708,7 +709,9 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   - `first_rank(ranked_keys: Sequence[str], positive_key: str) -> int | None` — 중복 키는 첫 등장만 센다
   - `question_metrics(rank: int | None, ks: Sequence[int]) -> dict[str, float]` — `recall@{k}`, `mrr@10`, `ndcg@10`
   - `evaluate_retrieval(embed_fn, corpus, questions, *, ks=(1, 5, 10), query_prefix="query: ", passage_prefix="passage: ", corpus_embeddings=None) -> dict` — 키 `n`, `doc`, `article`, `by_query_type`, `by_theme`, `per_question`
-  - Phase 1 튜토리얼(ragkit 세션)도 이 시그니처를 쓴다. 바꾸지 않는다.
+  - `evaluate_index(index, embed_fn, corpus, questions, *, ks=(1, 5, 10), query_prefix="query: ") -> dict` — 결과 형식은 `evaluate_retrieval`과 같다. `index`는 `ragkit.retrieval.VectorIndex`(`.search(query_embedding, k) -> list[SearchHit]`, `SearchHit.id`). 코퍼스는 정답 문서의 조·테마 조회와 검증에만 쓴다.
+  - Phase 1 튜토리얼(ragkit 세션)도 `evaluate_retrieval` 시그니처를 쓴다. 바꾸지 않는다.
+  - `ragkit.evaluation`은 `ragkit.retrieval`을 import하지 않는다(`index`는 `.search`만 쓰는 덕 타이핑).
 
 - [ ] **Step 1: 실패하는 테스트 (`tests/test_evaluation.py`)**
 
@@ -721,7 +724,7 @@ import numpy as np
 import pytest
 
 from ragkit.data import doc_text
-from ragkit.evaluation import evaluate_retrieval, first_rank, question_metrics
+from ragkit.evaluation import evaluate_index, evaluate_retrieval, first_rank, question_metrics
 
 
 def test_first_rank_counts_first_occurrence() -> None:
@@ -744,35 +747,37 @@ def _doc(doc_id: str, parent: str, theme: str) -> dict:
     return {"id": doc_id, "title": doc_id, "text": "본문", "parent_id": parent, "theme": theme}
 
 
+CORPUS = [
+    _doc("A_1", "A", "youth"),
+    _doc("A_2", "A", "youth"),
+    _doc("B", "B", "youth"),
+    _doc("C", "C", "traffic"),
+]
+VECTORS = {
+    "passage: " + doc_text(CORPUS[0]): [1, 0, 0, 0],
+    "passage: " + doc_text(CORPUS[1]): [0, 1, 0, 0],
+    "passage: " + doc_text(CORPUS[2]): [0, 0, 1, 0],
+    "passage: " + doc_text(CORPUS[3]): [0, 0, 0, 1],
+    "query: q1": [0.1, 0.9, 0.5, 0.0],
+    "query: q2": [0.0, 0.0, 0.9, 0.4],
+}
+QUESTIONS = [
+    {"query": "q1", "positive_id": "A_1", "query_type": "situation"},
+    {"query": "q2", "positive_id": "C", "query_type": "keyword", "related_ids": ["B"]},
+]
+
+
+def fake_embed(texts: list[str], batch_size: int | None = None) -> np.ndarray:
+    """VECTORS에 적은 벡터를 L2 정규화해 돌려준다 (build_index가 batch_size를 넘긴다)."""
+    out = np.array([VECTORS[t] for t in texts], dtype=float)
+    return out / np.linalg.norm(out, axis=1, keepdims=True)
+
+
 def test_evaluate_retrieval_doc_article_and_related() -> None:
     """q1: 정답 A_1이 3위(doc)지만 같은 조 A_2가 1위라 article로는 1위.
     q2: related B가 1위지만 순위에서 빠져 정답 C가 1위.
     """
-    corpus = [
-        _doc("A_1", "A", "youth"),
-        _doc("A_2", "A", "youth"),
-        _doc("B", "B", "youth"),
-        _doc("C", "C", "traffic"),
-    ]
-    vectors = {
-        "passage: " + doc_text(corpus[0]): [1, 0, 0, 0],
-        "passage: " + doc_text(corpus[1]): [0, 1, 0, 0],
-        "passage: " + doc_text(corpus[2]): [0, 0, 1, 0],
-        "passage: " + doc_text(corpus[3]): [0, 0, 0, 1],
-        "query: q1": [0.1, 0.9, 0.5, 0.0],
-        "query: q2": [0.0, 0.0, 0.9, 0.4],
-    }
-
-    def embed(texts: list[str]) -> np.ndarray:
-        out = np.array([vectors[t] for t in texts], dtype=float)
-        return out / np.linalg.norm(out, axis=1, keepdims=True)
-
-    questions = [
-        {"query": "q1", "positive_id": "A_1", "query_type": "situation"},
-        {"query": "q2", "positive_id": "C", "query_type": "keyword", "related_ids": ["B"]},
-    ]
-
-    result = evaluate_retrieval(embed, corpus, questions, ks=(1, 5))
+    result = evaluate_retrieval(fake_embed, CORPUS, QUESTIONS, ks=(1, 5))
 
     assert result["n"] == 2
     assert result["doc"] == {
@@ -785,6 +790,20 @@ def test_evaluate_retrieval_doc_article_and_related() -> None:
     assert result["by_query_type"]["situation"]["doc"]["recall@1"] == 0.0
     assert result["by_theme"]["traffic"]["n"] == 1
     assert [(r["doc_rank"], r["article_rank"]) for r in result["per_question"]] == [(3, 1), (1, 1)]
+
+
+def test_evaluate_index_matches_numpy(tmp_path) -> None:
+    """SQLite 인덱스로 평가해도 numpy 평가와 결과가 같다."""
+    from ragkit.retrieval import build_index
+
+    index = build_index(CORPUS, fake_embed, tmp_path / "t.sqlite", model_key="fake")
+
+    by_index = evaluate_index(index, fake_embed, CORPUS, QUESTIONS, ks=(1, 5))
+    by_numpy = evaluate_retrieval(fake_embed, CORPUS, QUESTIONS, ks=(1, 5))
+
+    assert by_index["per_question"] == by_numpy["per_question"]
+    assert by_index["doc"] == pytest.approx(by_numpy["doc"])
+    assert by_index["article"] == pytest.approx(by_numpy["article"])
 
 
 def test_evaluate_retrieval_reuses_corpus_embeddings() -> None:
@@ -911,6 +930,56 @@ def evaluate_retrieval(
     Raises:
         ValueError: 질문이 없거나, positive_id가 코퍼스에 없는 질문이 있을 때.
     """
+    by_id = _check(corpus, questions)
+    if corpus_embeddings is None:
+        corpus_embeddings = embed_fn([passage_prefix + doc_text(doc) for doc in corpus])
+    query_embeddings = embed_fn([query_prefix + q["query"] for q in questions])
+    scores = query_embeddings @ corpus_embeddings.T
+    depth = min(CANDIDATES, len(corpus))
+    top = np.argpartition(-scores, depth - 1, axis=1)[:, :depth]
+
+    ids = [doc["id"] for doc in corpus]
+    ranked = [
+        [ids[i] for i in candidates[np.argsort(-row_scores[candidates], kind="stable")]]
+        for candidates, row_scores in zip(top, scores)
+    ]
+    return _score(questions, by_id, ranked, ks)
+
+
+def evaluate_index(
+    index,
+    embed_fn: Callable[[list[str]], np.ndarray],
+    corpus: list[dict],
+    questions: list[dict],
+    *,
+    ks: Sequence[int] = (1, 5, 10),
+    query_prefix: str = "query: ",
+) -> dict:
+    """만들어 둔 벡터 인덱스(ragkit.retrieval.VectorIndex)로 검색 성능을 잰다.
+
+    코퍼스를 다시 임베딩하지 않으므로 같은 모델을 여러 번 평가할 때 빠르고,
+    1단계 RAG 실습과 같은 인덱스 파일을 쓴다. 결과 형식은 evaluate_retrieval과 같다.
+
+    Args:
+        index: .search(query_embedding, k) -> [SearchHit]를 가진 인덱스.
+        embed_fn: 질문 임베딩 함수 (인덱스를 만든 모델과 같아야 한다).
+        corpus: 인덱스를 만든 코퍼스. 정답 문서의 조·테마 조회와 검증에만 쓴다.
+        questions: 질문 목록.
+        ks: Recall@k의 k 값들.
+        query_prefix: 질문 앞 문구.
+
+    Returns:
+        evaluate_retrieval과 같은 형식의 딕셔너리.
+    """
+    by_id = _check(corpus, questions)
+    query_embeddings = embed_fn([query_prefix + q["query"] for q in questions])
+    depth = min(CANDIDATES, len(corpus))
+    ranked = [[hit.id for hit in index.search(emb, k=depth)] for emb in query_embeddings]
+    return _score(questions, by_id, ranked, ks)
+
+
+def _check(corpus: list[dict], questions: list[dict]) -> dict[str, dict]:
+    """질문이 있고 모든 positive_id가 코퍼스에 있는지 확인하고 id → 문서를 돌려준다."""
     if not questions:
         raise ValueError("평가할 질문이 없습니다.")
     by_id = {doc["id"]: doc for doc in corpus}
@@ -920,24 +989,26 @@ def evaluate_retrieval(
             f"코퍼스에 없는 positive_id가 {len(missing)}개 있습니다 (예: {missing[0]}). "
             "ragkit.data.filter_questions로 먼저 거르세요."
         )
+    return by_id
 
-    if corpus_embeddings is None:
-        corpus_embeddings = embed_fn([passage_prefix + doc_text(doc) for doc in corpus])
-    query_embeddings = embed_fn([query_prefix + q["query"] for q in questions])
-    scores = query_embeddings @ corpus_embeddings.T
-    depth = min(CANDIDATES, len(corpus))
-    top = np.argpartition(-scores, depth - 1, axis=1)[:, :depth]
 
-    ids = [doc["id"] for doc in corpus]
-    keys = [relevance_key(doc) for doc in corpus]
+def _score(
+    questions: list[dict],
+    by_id: dict[str, dict],
+    ranked_ids: list[list[str]],
+    ks: Sequence[int],
+) -> dict:
+    """질문마다 순위가 매겨진 문서 id 목록으로 doc/article 지표를 계산하고 묶는다."""
     rows: list[dict] = []
-    for question, candidates, row_scores in zip(questions, top, scores):
-        order = candidates[np.argsort(-row_scores[candidates], kind="stable")]
+    for question, order in zip(questions, ranked_ids):
         ignore = set(question.get("related_ids") or [])
-        order = [i for i in order if ids[i] not in ignore]
+        order = [doc_id for doc_id in order if doc_id not in ignore]
         positive = by_id[question["positive_id"]]
-        doc_rank = first_rank([ids[i] for i in order], positive["id"])
-        article_rank = first_rank([keys[i] for i in order], relevance_key(positive))
+        doc_rank = first_rank(order, positive["id"])
+        article_rank = first_rank(
+            [relevance_key(by_id[doc_id]) if doc_id in by_id else doc_id for doc_id in order],
+            relevance_key(positive),
+        )
         rows.append(
             {
                 "query": question["query"],
@@ -964,7 +1035,7 @@ def evaluate_retrieval(
 - [ ] **Step 4: 통과 확인**
 
 Run: `uv run pytest tests/test_evaluation.py -v && uv run ruff check src/ragkit/evaluation tests/test_evaluation.py`
-Expected: 5 passed, `All checks passed!`
+Expected: 6 passed, `All checks passed!`
 
 - [ ] **Step 5: core만으로 import되는지 확인**
 
@@ -1311,7 +1382,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - Produces:
   - `split(questions: Path, *, corpus: Path | None = None, out: Path | None = None, seed: int = 42, test_ratio: float = 0.2, dev_ratio: float = 0.1, strict: bool = False) -> None`
   - `train(config: Path, *, splits: Path | None = None, corpus: Path | None = None, model: str | None = None, max_steps: int | None = None, limit: int | None = None) -> None`
-  - `evaluate(model: str, *, split: str = "test", splits: Path | None = None, corpus: Path | None = None, backend: str = "torch", out: Path | None = None) -> None`
+  - `evaluate(model: str, *, split: str = "test", splits: Path | None = None, corpus: Path | None = None, backend: str = "torch", index: Path | None = None, out: Path | None = None) -> None` — 인덱스 기본 경로 `data/processed/index/<Path(model).name>.sqlite`(ragkit 세션의 `ragkit index`와 같은 규칙), `build_index`가 같은 모델·코퍼스면 재사용
   - 오류 시 `SystemExit(1)`과 안내 메시지
 
 - [ ] **Step 1: 실패하는 테스트 (`tests/test_train_cli.py`)**
@@ -1359,17 +1430,37 @@ def test_evaluate_command_writes_result(tmp_path, corpus, questions, monkeypatch
     train_cli.split(qpath, corpus=corpus_path, out=tmp_path / "splits")
 
     def fake_create(model_name, checkpoint_path=None, device=None, backend=None):
-        return lambda texts: np.ones((len(texts), 2)) / np.sqrt(2)
+        return lambda texts, batch_size=None: np.ones((len(texts), 2)) / np.sqrt(2)
 
     monkeypatch.setattr(train_cli, "create_embedding_fn", fake_create)
     out = tmp_path / "result.json"
+    index_path = tmp_path / "index" / "base-model.sqlite"
 
-    train_cli.evaluate("base-model", splits=tmp_path / "splits", corpus=corpus_path, out=out)
+    train_cli.evaluate(
+        "base-model", splits=tmp_path / "splits", corpus=corpus_path, index=index_path, out=out
+    )
 
     result = json.loads(out.read_text(encoding="utf-8"))
     assert result["n"] == 8
     assert result["model"] == "base-model"
     assert result["split"] == "test"
+    assert result["index"] == str(index_path)
+    assert index_path.exists()  # 다음 평가 때 재사용된다
+
+
+def test_model_key_changes_when_retrained(tmp_path) -> None:
+    import os
+
+    folder = tmp_path / "exp_002"
+    folder.mkdir()
+    weights = folder / "model.safetensors"
+    weights.write_bytes(b"v1")
+    os.utime(weights, (1_000, 1_000))
+    first = train_cli._model_key(folder)
+    os.utime(weights, (2_000, 2_000))
+
+    assert first != train_cli._model_key(folder)
+    assert train_cli._model_key(tmp_path / "multilingual-e5-small") == "multilingual-e5-small"
 
 
 def test_evaluate_command_missing_splits(tmp_path) -> None:
@@ -1410,6 +1501,18 @@ def _paths(corpus: Path | None, splits: Path | None) -> tuple[Path, Path]:
 def _fail(message: str) -> None:
     print(f"오류: {message}")
     raise SystemExit(1)
+
+
+def _model_key(model_path: Path) -> str:
+    """인덱스 재사용 판단에 쓰는 모델 키.
+
+    학습한 모델 폴더는 다시 학습해도 이름이 같으므로, 가중치 파일 수정 시각을 붙여
+    예전 모델로 만든 인덱스를 재사용하지 않게 한다.
+    """
+    weights = model_path / "model.safetensors"
+    if weights.exists():
+        return f"{model_path.name}@{int(weights.stat().st_mtime)}"
+    return model_path.name
 
 
 def _load_corpus_or_fail(path: Path) -> list[dict]:
@@ -1528,9 +1631,13 @@ def evaluate(
     splits: Path | None = None,
     corpus: Path | None = None,
     backend: str = "torch",
+    index: Path | None = None,
     out: Path | None = None,
 ) -> None:
     """모델의 검색 성능을 전체 코퍼스 대상으로 잰다.
+
+    코퍼스 임베딩은 SQLite 인덱스(ragkit.retrieval.build_index)에 저장해 두고,
+    같은 모델·같은 코퍼스로 다시 평가하면 그 파일을 재사용한다(1단계 RAG 실습과 같은 파일).
 
     Args:
         model: 모델 이름(base) 또는 학습한 모델 폴더.
@@ -1538,9 +1645,11 @@ def evaluate(
         splits: ragkit split 출력 폴더. 기본값은 data/splits.
         corpus: 코퍼스 경로. 기본값은 data/processed/law_docs.json.
         backend: 임베딩 백엔드 (torch | onnx). onnx는 <모델 폴더>/onnx/model.onnx가 필요하다.
+        index: 인덱스 파일 경로. 기본값은 data/processed/index/<모델 이름>.sqlite.
         out: 결과 JSON 경로. 기본값은 experiments/results/<모델 이름>_<split>.json.
     """
-    from ragkit.evaluation import evaluate_retrieval
+    from ragkit.evaluation import evaluate_index
+    from ragkit.retrieval import build_index
 
     corpus_path, splits_dir = _paths(corpus, splits)
     questions = load_splits(splits_dir)[split] if splits_dir.exists() else []
@@ -1552,14 +1661,15 @@ def evaluate(
     checkpoint = model_path if model_path.is_dir() else None
     embed_fn = create_embedding_fn(model, checkpoint_path=checkpoint, backend=backend)
     settings = get_settings()
-    result = evaluate_retrieval(
-        embed_fn,
-        docs,
-        questions,
-        query_prefix=settings.query_prefix,
-        passage_prefix=settings.passage_prefix,
-    )
-    result = {"model": model, "split": split, "backend": backend, **result}
+    index = index or settings.data_dir / "processed" / "index" / f"{model_path.name}.sqlite"
+    vector_index = build_index(docs, embed_fn, index, model_key=_model_key(model_path))
+    try:
+        result = evaluate_index(
+            vector_index, embed_fn, docs, questions, query_prefix=settings.query_prefix
+        )
+    finally:
+        vector_index.close()
+    result = {"model": model, "split": split, "backend": backend, "index": str(index), **result}
 
     out = out or get_settings().results_dir / f"{model_path.name}_{split}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -1637,7 +1747,7 @@ training:
 - [ ] **Step 6: 통과 확인**
 
 Run: `uv run pytest tests/test_train_cli.py -v && uv run ragkit --help && uv run ruff check src/ragkit/cli tests/test_train_cli.py`
-Expected: 4 passed, 도움말에 `split`, `train`, `evaluate`가 보임, `All checks passed!`
+Expected: 5 passed, 도움말에 `split`, `train`, `evaluate`가 보임, `All checks passed!`
 
 - [ ] **Step 7: 전체 테스트**
 
@@ -1676,7 +1786,7 @@ Expected: 질문 259개 사용, train/dev/test에 법령이 1개씩(법령 3개�
 
 - [ ] **Step 3: base 평가**
 
-Run: `uv run ragkit evaluate $MAIN/models/multilingual-e5-small --splits $SP/splits --corpus $MAIN/data/processed/law_docs.json --out $SP/results/base_test.json`
+Run: `uv run ragkit evaluate $MAIN/models/multilingual-e5-small --splits $SP/splits --corpus $MAIN/data/processed/law_docs.json --index $SP/index/base.sqlite --out $SP/results/base_test.json`
 Expected: 지표 출력. 코퍼스 25,806개 임베딩에 수 분 걸릴 수 있다.
 
 - [ ] **Step 4: 전체 학습 / LoRA 짧게 학습 (설정 파일 복사 후 output_dir만 바꿈)**
@@ -1689,8 +1799,8 @@ Expected: 각각 `완료: ...개 예시, ...초, 학습 파라미터 ...` (LoRA�
 
 - [ ] **Step 5: 학습한 두 모델 평가**
 
-Run: `uv run ragkit evaluate $SP/models/exp_002 --splits $SP/splits --corpus $MAIN/data/processed/law_docs.json --out $SP/results/exp_002_test.json`
-Run: `uv run ragkit evaluate $SP/models/exp_004 --splits $SP/splits --corpus $MAIN/data/processed/law_docs.json --out $SP/results/exp_004_test.json`
+Run: `uv run ragkit evaluate $SP/models/exp_002 --splits $SP/splits --corpus $MAIN/data/processed/law_docs.json --index $SP/index/exp_002.sqlite --out $SP/results/exp_002_test.json`
+Run: `uv run ragkit evaluate $SP/models/exp_004 --splits $SP/splits --corpus $MAIN/data/processed/law_docs.json --index $SP/index/exp_004.sqlite --out $SP/results/exp_004_test.json`
 Expected: 지표 출력
 
 - [ ] **Step 6: 결과 표 보고**
