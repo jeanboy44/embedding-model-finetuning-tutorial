@@ -159,6 +159,7 @@ def _fake_create(model_name, checkpoint_path=None, device=None, backend=None):
 
 def test_evaluate_rejects_unknown_split(tmp_path, corpus, questions, monkeypatch) -> None:
     """--split 오타는 KeyError가 아니라 안내 후 종료."""
+    monkeypatch.chdir(tmp_path)  # 회귀로 끝까지 실행돼도 저장소에 결과를 남기지 않게
     corpus_path, qpath = _write_inputs(tmp_path, corpus, questions)
     train_cli.split(qpath, corpus=corpus_path, out=tmp_path / "splits")
     monkeypatch.setattr(train_cli, "create_embedding_fn", _fake_create)
@@ -170,6 +171,7 @@ def test_evaluate_onnx_fails_when_onnx_older_than_weights(
     tmp_path, corpus, questions, monkeypatch
 ) -> None:
     """다시 학습한 뒤 ONNX를 다시 변환하지 않았으면 예전 모델로 평가하지 않고 안내한다."""
+    monkeypatch.chdir(tmp_path)  # 회귀로 끝까지 실행돼도 저장소에 결과를 남기지 않게
     corpus_path, qpath = _write_inputs(tmp_path, corpus, questions)
     train_cli.split(qpath, corpus=corpus_path, out=tmp_path / "splits")
     model_dir = tmp_path / "exp_002"
@@ -223,3 +225,41 @@ def test_cli_help_shows_placeholders(capsys) -> None:
     out = capsys.readouterr().out  # 긴 설명은 줄바꿈되므로 줄 안에 남는 조각만 확인한다
     assert "_{split}.json" in out
     assert "}/onnx/model.onnx" in out
+
+
+def test_compare_command_writes_table(tmp_path, corpus, questions, monkeypatch) -> None:
+    """실험 설정의 모델마다 같은 질문으로 평가하고, 모델별 결과와 비교표를 results/에 쓴다."""
+    monkeypatch.chdir(tmp_path)
+    corpus_path, qpath = _write_inputs(tmp_path, corpus, questions)
+    exp = tmp_path / "experiments" / "exp_005_base_model_comparison"
+    exp.mkdir(parents=True)
+    config = exp / "config.yaml"
+    config.write_text(
+        f"name: base_model_comparison\nquestions: {qpath}\n"
+        "models:\n  - intfloat/multilingual-e5-small\n  - google/embeddinggemma-300m\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(train_cli, "create_embedding_fn", _fake_create)
+
+    train_cli.compare(config, corpus=corpus_path, index_dir=tmp_path / "index")
+
+    results = exp / "results"
+    table = json.loads((results / "comparison.json").read_text(encoding="utf-8"))
+    assert [row["model"] for row in table["models"]] == [
+        "intfloat/multilingual-e5-small",
+        "google/embeddinggemma-300m",
+    ]
+    assert table["n"] == 28  # 코퍼스에 없는 질문 1개는 빠진다
+    assert set(table["models"][0]["doc"]) >= {"recall@1", "recall@10", "mrr@10"}
+    assert (results / "multilingual-e5-small.json").exists()
+    markdown = (results / "comparison.md").read_text(encoding="utf-8")
+    assert "| google/embeddinggemma-300m |" in markdown
+    assert (tmp_path / "index" / "embeddinggemma-300m.sqlite").exists()
+
+
+def test_compare_command_requires_models(tmp_path, corpus, questions) -> None:
+    corpus_path, qpath = _write_inputs(tmp_path, corpus, questions)
+    config = tmp_path / "config.yaml"
+    config.write_text(f"questions: {qpath}\nmodels: []\n", encoding="utf-8")
+    with pytest.raises(SystemExit):
+        train_cli.compare(config, corpus=corpus_path, index_dir=tmp_path / "index")

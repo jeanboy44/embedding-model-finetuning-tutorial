@@ -4,6 +4,7 @@
 """
 
 import json
+import time
 from pathlib import Path
 from typing import Literal
 
@@ -191,9 +192,6 @@ def evaluate(
             (학습한 폴더는 "exp_002-가중치수정시각", 허브 모델은 이름 끝부분).
         out: 결과 JSON 경로. 기본값은 experiments/results/{모델 이름}_{split}.json.
     """
-    from ragkit.evaluation import evaluate_index
-    from ragkit.retrieval import build_index, default_index_path, model_key
-
     if split not in SPLITS:
         _fail(f"알 수 없는 분할: {split} (가능: {', '.join(SPLITS)})")
     corpus_path, splits_dir = _paths(corpus, splits)
@@ -204,6 +202,37 @@ def evaluate(
             "  먼저 실행: ragkit split <질문 파일|폴더>"
         )
     docs = _load_corpus_or_fail(corpus_path)
+
+    result = _evaluate_model(model, docs, questions, backend=backend, index=index)
+    result = {"split": split, **result}
+    model_path = Path(model)
+
+    out = out or get_settings().results_dir / f"{model_path.name}_{split}.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    print(f"{model} · {split} ({result['n']}개 질문)")
+    _print_metrics(result)
+    print(f"결과 → {out}")
+
+
+def _print_metrics(result: dict) -> None:
+    for judge in ("doc", "article"):
+        metrics = "  ".join(f"{k} {v:.3f}" for k, v in result[judge].items())
+        print(f"  [{judge}] {metrics}")
+
+
+def _evaluate_model(
+    model: str,
+    docs: list[dict],
+    questions: list[dict],
+    *,
+    backend: str | None,
+    index: Path | None,
+) -> dict:
+    """모델 하나를 모델 프로필의 입력 형식으로 인덱싱(또는 재사용)하고 평가한다."""
+    from ragkit.evaluation import evaluate_index
+    from ragkit.retrieval import build_index, default_index_path, model_key
 
     model_path = Path(model)
     if not model_path.is_dir() and _looks_like_path(model):
@@ -232,21 +261,121 @@ def evaluate(
     embed_fn = create_embedding_fn(model, checkpoint_path=checkpoint, backend=backend)
     key = model_key(model, checkpoint)
     index = index or default_index_path(key)
+    start = time.perf_counter()
     vector_index = build_index(docs, embed_fn, index, model_key=key, format_doc=profile.format_doc)
+    index_seconds = time.perf_counter() - start
     try:
+        dim = vector_index.dim
         result = evaluate_index(
             vector_index, embed_fn, docs, questions, format_query=profile.format_query
         )
     finally:
         vector_index.close()
-    result = {"model": model, "split": split, "backend": backend, "index": str(index), **result}
+    return {
+        "model": model,
+        "backend": backend,
+        "index": str(index),
+        "index_seconds": index_seconds,  # 기존 인덱스를 재사용하면 몇 초
+        "dim": dim,
+        "deployable": profile.deployable,
+        **result,
+    }
 
-    out = out or get_settings().results_dir / f"{model_path.name}_{split}.json"
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    print(f"{model} · {split} ({result['n']}개 질문)")
-    for judge in ("doc", "article"):
-        metrics = "  ".join(f"{k} {v:.3f}" for k, v in result[judge].items())
-        print(f"  [{judge}] {metrics}")
-    print(f"결과 → {out}")
+def compare(
+    config: Path,
+    *,
+    questions: Path | None = None,
+    corpus: Path | None = None,
+    backend: Literal["onnx", "torch", "st"] | None = None,
+    index_dir: Path | None = None,
+    out_dir: Path | None = None,
+) -> None:
+    """실험 설정의 모델들을 같은 질문·같은 코퍼스로 평가해 비교표를 만든다 (학습 없음).
+
+    Args:
+        config: 실험 설정 (예: experiments/exp_005_base_model_comparison/config.yaml).
+            models(모델 이름 또는 폴더 목록), questions(질문 파일 또는 폴더)를 적는다.
+        questions: 설정의 questions 대신 쓸 질문 파일 또는 폴더.
+        corpus: 코퍼스 경로. 기본값은 data/processed/law_docs.json.
+        backend: 모든 모델에 쓸 백엔드. 기본값은 모델마다 프로필이 정한다.
+        index_dir: 인덱스를 둘 폴더. 기본값은 ragkit index와 같은 data/processed/index/.
+        out_dir: 결과 폴더. 기본값은 {설정 폴더}/results/.
+    """
+    import yaml
+
+    settings = yaml.safe_load(Path(config).read_text(encoding="utf-8")) or {}
+    models = settings.get("models") or []
+    if not models:
+        _fail(f"비교할 모델이 없습니다: {config}의 models에 모델 이름을 적으세요.")
+    questions_path = questions or settings.get("questions")
+    if not questions_path or not Path(questions_path).exists():
+        _fail(f"질문 파일이 없습니다: {questions_path}\n  먼저 실행: ragkit split <질문 파일|폴더>")
+    corpus_path, _ = _paths(corpus, None)
+    docs = _load_corpus_or_fail(corpus_path)
+    kept, stats = filter_questions(load_questions(Path(questions_path)), {d["id"]: d for d in docs})
+    if not kept:
+        _fail("코퍼스에 맞는 질문이 없습니다.")
+    print(f"질문 {len(kept)}개 × 모델 {len(models)}개 (코퍼스에 없어 뺀 질문 {stats['missing_positive']}개)")
+
+    out_dir = out_dir or Path(config).parent / "results"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    rows = []
+    for model in models:
+        print(f"=== {model}")
+        from ragkit.retrieval import model_key
+
+        model_path = Path(model)
+        key = model_key(model, model_path if model_path.is_dir() else None)
+        index = index_dir / f"{key}.sqlite" if index_dir else None
+        result = _evaluate_model(model, docs, kept, backend=backend, index=index)
+        (out_dir / f"{key}.json").write_text(
+            json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+        _print_metrics(result)
+        rows.append({k: v for k, v in result.items() if k != "per_question"})
+
+    table = {
+        "name": settings.get("name"),
+        "questions": str(questions_path),
+        "corpus": str(corpus_path),
+        "n": len(kept),
+        "models": rows,
+    }
+    (out_dir / "comparison.json").write_text(
+        json.dumps(table, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    (out_dir / "comparison.md").write_text(_comparison_markdown(table), encoding="utf-8")
+    print(f"비교표 → {out_dir / 'comparison.md'}")
+
+
+def _comparison_markdown(table: dict) -> str:
+    """비교표 Markdown. 판정은 doc(정답 문서 일치)이 기본, article(같은 조 조각이면 정답)은 참고."""
+    lines = [
+        f"# {table.get('name') or '모델 비교'}",
+        "",
+        f"질문 {table['n']}개, 코퍼스 `{table['corpus']}` 전체 대상 검색.",
+        "",
+        "| 모델 | 백엔드 | 차원 | R@1 | R@5 | R@10 | MRR@10 | nDCG@10 | article R@10 | 배포 가능 |",
+        "|---|---|---|---|---|---|---|---|---|---|",
+    ]
+    for row in table["models"]:
+        doc, article = row["doc"], row["article"]
+        lines.append(
+            f"| {row['model']} | {row['backend']} | {row['dim']} "
+            f"| {doc.get('recall@1', 0):.3f} | {doc.get('recall@5', 0):.3f} "
+            f"| {doc.get('recall@10', 0):.3f} | {doc['mrr@10']:.3f} | {doc['ndcg@10']:.3f} "
+            f"| {article.get('recall@10', 0):.3f} | {'예' if row['deployable'] else '아니오'} |"
+        )
+    themes = sorted({theme for row in table["models"] for theme in row["by_theme"]})
+    if themes:
+        lines += ["", "## 테마별 R@10 (doc)", "", "| 모델 | " + " | ".join(themes) + " |",
+                  "|---|" + "---|" * len(themes)]
+        for row in table["models"]:
+            cells = [
+                f"{row['by_theme'][t]['doc'].get('recall@10', 0):.3f} (n={row['by_theme'][t]['n']})"
+                if t in row["by_theme"] else "-"
+                for t in themes
+            ]
+            lines.append(f"| {row['model']} | " + " | ".join(cells) + " |")
+    return "\n".join(lines) + "\n"

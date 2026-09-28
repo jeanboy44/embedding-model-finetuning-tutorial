@@ -14,7 +14,7 @@ from ragkit.retrieval import DocumentStore, retrieve
 app = cyclopts.App(name="ragkit", help="ragkit: 임베딩 검색 기반 RAG CLI")
 
 # DS용 학습·평가 명령
-for _command in (train_cli.split, train_cli.train, train_cli.evaluate):
+for _command in (train_cli.split, train_cli.train, train_cli.evaluate, train_cli.compare):
     app.command(_command)
 
 
