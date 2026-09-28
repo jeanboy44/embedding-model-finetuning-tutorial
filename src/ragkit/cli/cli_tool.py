@@ -90,6 +90,41 @@ def rag(
     print(f"\nAnswer:\n{result['answer']}")
 
 
+@app.command(name="index")
+def index_command(
+    corpus: Path | None = None,
+    model: str | None = None,
+    checkpoint: Path | None = None,
+    backend: str | None = None,
+    out: Path | None = None,
+) -> None:
+    """코퍼스를 임베딩해 SQLite(sqlite-vec) 인덱스 파일을 만든다.
+
+    같은 모델·같은 코퍼스의 파일이 이미 있으면 다시 만들지 않는다.
+
+    Args:
+        corpus: 코퍼스 JSON. 기본값 data/processed/law_docs.json.
+        model: 임베딩 모델 이름. 기본값 Settings.embedding_model_name.
+        checkpoint: 파인튜닝한 모델 폴더. 주면 이 폴더 이름이 모델 키가 된다.
+        backend: onnx | torch. 기본값 Settings.embedding_backend.
+        out: 인덱스 파일. 기본값 data/processed/index/<모델 키>.sqlite.
+    """
+    import json
+
+    from ragkit.retrieval import build_index
+
+    settings = get_settings()
+    corpus = corpus or settings.data_dir / "processed" / "law_docs.json"
+    model = model or settings.embedding_model_name
+    model_key = checkpoint.name if checkpoint else model.split("/")[-1]
+    out = out or settings.data_dir / "processed" / "index" / f"{model_key}.sqlite"
+
+    docs = json.loads(corpus.read_text())
+    embed_fn = create_embedding_fn(model, checkpoint_path=checkpoint, backend=backend)
+    index = build_index(docs, embed_fn, out, model_key=model_key)
+    print(f"인덱스: {out} (문서 {len(index):,}개, 모델 {index.model_key})")
+
+
 @app.command(name="export-onnx")
 def export_onnx_command(
     model_dir: Path,
