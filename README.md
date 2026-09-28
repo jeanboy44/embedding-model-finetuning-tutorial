@@ -43,6 +43,10 @@ uv run python tutorials/phase3_agent/run_agent.py
 uv run python tutorials/phase4_monitoring/run_monitoring.py
 ```
 
+## 강의 계획
+
+강의 흐름(DS 본업 → API → 배포 최적화 → CLI·프론트엔드)은 [강의 계획](docs/PLAN.md)을 참고하세요.
+
 ## 아키텍처
 
 시스템 설계는 [아키텍처 문서](docs/ARCHITECTURE.md)를 참고하세요.
