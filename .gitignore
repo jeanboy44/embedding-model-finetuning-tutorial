@@ -72,6 +72,6 @@ logs/
 .superpowers/
 
 # Claude Code worktrees
-.claude/worktrees/
+.claude/
 data/questions/
 data/questions_test/
