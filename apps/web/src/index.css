@@ -1,0 +1,142 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/*
+ * 법령 노트 — 관보(官報)와 법전의 인상: 누런 종이, 먹색 글씨, 인주색 도장.
+ * 조문과 제목은 명조(Noto Serif KR), 화면 요소는 IBM Plex Sans KR, 조문 id는 Plex Mono.
+ */
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: "IBM Plex Sans KR", ui-sans-serif, sans-serif;
+  --font-serif: "Noto Serif KR", ui-serif, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --font-heading: var(--font-serif);
+
+  --color-seal: var(--seal);
+  --color-seal-foreground: var(--seal-foreground);
+  --color-paper: var(--paper);
+  --color-ink-soft: var(--ink-soft);
+
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+
+  --animate-rise: rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-stamp: stamp 0.35s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+
+:root {
+  --background: oklch(0.952 0.014 82);     /* 누런 종이 */
+  --paper: oklch(0.982 0.008 85);          /* 밝은 지면 (패널) */
+  --foreground: oklch(0.2 0.012 60);       /* 먹 */
+  --ink-soft: oklch(0.36 0.014 60);
+  --card: oklch(0.982 0.008 85);
+  --card-foreground: oklch(0.2 0.012 60);
+  --popover: oklch(0.985 0.007 85);
+  --popover-foreground: oklch(0.2 0.012 60);
+  --primary: oklch(0.2 0.012 60);
+  --primary-foreground: oklch(0.975 0.01 85);
+  --secondary: oklch(0.915 0.02 80);
+  --secondary-foreground: oklch(0.25 0.012 60);
+  --muted: oklch(0.925 0.016 80);
+  --muted-foreground: oklch(0.5 0.02 65);
+  --accent: oklch(0.92 0.022 78);
+  --accent-foreground: oklch(0.2 0.012 60);
+  --seal: oklch(0.5 0.17 28);              /* 인주 */
+  --seal-foreground: oklch(0.975 0.01 85);
+  --destructive: oklch(0.5 0.17 28);
+  --border: oklch(0.86 0.022 78);
+  --input: oklch(0.84 0.022 78);
+  --ring: oklch(0.5 0.17 28 / 60%);
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans antialiased;
+    font-feature-settings: "palt";
+    word-break: keep-all; /* 한국어는 어절 단위로 줄바꿈 */
+    overflow-wrap: anywhere;
+  }
+  body {
+    @apply bg-background text-foreground;
+    /* 종이 결: 아주 옅은 잡티 */
+    background-image:
+      radial-gradient(oklch(0.5 0.03 70 / 5%) 0.6px, transparent 0.7px),
+      radial-gradient(oklch(0.5 0.03 70 / 4%) 0.6px, transparent 0.7px);
+    background-size: 7px 7px, 11px 11px;
+    background-position: 0 0, 3px 5px;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  ::selection {
+    background: oklch(0.5 0.17 28 / 18%);
+  }
+}
+
+@layer components {
+  /* 조문 본문: 명조, 넉넉한 행간 */
+  .statute {
+    @apply font-serif text-[0.95rem] leading-[1.9] whitespace-pre-wrap break-keep text-ink-soft;
+  }
+
+  /* 답변 markdown */
+  .answer {
+    @apply text-[0.95rem] leading-[1.85] break-keep;
+  }
+  .answer p { @apply my-2.5; }
+  .answer ul { @apply my-2 list-disc pl-5; }
+  .answer ol { @apply my-2 list-decimal pl-5; }
+  .answer li { @apply my-1; }
+  .answer strong { @apply font-semibold text-foreground; }
+  .answer h1, .answer h2, .answer h3 { @apply mt-4 mb-2 font-serif font-bold; }
+  .answer code { @apply rounded bg-muted px-1 font-mono text-[0.85em]; }
+
+  /* 스트리밍 중 커서 */
+  .answer.streaming > :last-child::after,
+  .answer.streaming:empty::after {
+    content: "";
+    @apply ml-0.5 inline-block h-[1.05em] w-[0.5ch] translate-y-[0.2em] bg-seal;
+    animation: blink 1s steps(2, start) infinite;
+  }
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes stamp {
+  from { opacity: 0; transform: scale(1.6) rotate(-8deg); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes blink {
+  to { visibility: hidden; }
+}

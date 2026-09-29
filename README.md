@@ -51,6 +51,32 @@ uv run python tutorials/03_optimize/01_embedding_speed.py
 uv run ragkit --help
 ```
 
+### 앱 (2·4단계)
+
+네 앱 모두 `ragkit.service.Searcher`로 같은 인덱스를 씁니다. 자세한 사용법은 각 앱의 README를 보세요.
+
+```bash
+# 검색 API (FastAPI, 답변은 SSE 스트리밍, 노트북 저장) → http://127.0.0.1:8000/docs
+uv run --package ragkit-api ragkit-api
+
+# NotebookLM형 웹앱 '법령 노트' (api를 띄운 뒤) → http://localhost:5173
+cd apps/web && pnpm install && pnpm dev
+
+# 최종 사용자용 검색 CLI
+uv run --package ragkit-search ragkit-search search "야간 근로 수당" --law 근로기준법
+uv run --package ragkit-search ragkit-search ask "주휴수당은 누가 받아?"
+
+# MCP 서버 (Claude Code 등록 예시는 apps/mcp/README.md)
+uv run --package ragkit-mcp ragkit-mcp
+```
+
+| 앱 | 설명 |
+|---|---|
+| [`apps/api`](apps/api) | `/api/search`, `/api/answer/stream`, `/api/notebooks/...` |
+| [`apps/web`](apps/web/README.md) | 노트북 = 법령 묶음, 인용 달린 답, 조문 보기, 노트 |
+| [`apps/search-cli`](apps/search-cli/README.md) | `search` · `ask` · `laws` · `show` |
+| [`apps/mcp`](apps/mcp/README.md) | `search_laws` · `get_article` · `list_laws` · `ask` |
+
 ## 저장소 구조
 
 ```

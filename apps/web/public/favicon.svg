@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect x="4" y="4" width="56" height="56" rx="10" fill="#b3261e"/>
+  <rect x="10" y="10" width="44" height="44" rx="6" fill="none" stroke="#fbf8f2" stroke-width="3"/>
+  <text x="32" y="43" text-anchor="middle" font-family="serif" font-weight="900" font-size="30" fill="#fbf8f2">法</text>
+</svg>

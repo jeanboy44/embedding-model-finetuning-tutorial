@@ -77,6 +77,49 @@ def test_generate_does_not_retry_bad_request(
         gemini_client.generate_with_usage("질문", model_name="m")
 
 
+def _chunk(text: str, prompt_tokens: int | None = None, out_tokens: int | None = None) -> SimpleNamespace:
+    usage = SimpleNamespace(prompt_token_count=prompt_tokens, candidates_token_count=out_tokens)
+    return SimpleNamespace(text=text, usage_metadata=usage)
+
+
+def test_stream_yields_text_pieces_then_generation(
+    fake_client: _FakeModels, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """텍스트 조각을 차례로 내보내고 마지막에 전체 텍스트와 토큰 수를 내보낸다."""
+    chunks = [_chunk("안녕"), _chunk(""), _chunk("하세요", 10, 4)]
+    monkeypatch.setattr(fake_client, "generate_content_stream", lambda **kw: iter(chunks), raising=False)
+
+    events = list(gemini_client.stream_with_usage("질문", model_name="m"))
+
+    assert events[:2] == ["안녕", "하세요"]
+    assert events[2] == gemini_client.Generation(text="안녕하세요", input_tokens=10, output_tokens=4)
+
+
+def test_stream_retries_only_before_first_piece(
+    fake_client: _FakeModels, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """첫 조각을 받기 전의 일시 오류는 다시 시도하고, 받은 뒤의 오류는 그대로 올린다."""
+    from google.genai import errors
+
+    monkeypatch.setattr(gemini_client, "_sleep", lambda s: None)
+    attempts = []
+
+    def flaky(**kwargs):
+        attempts.append(1)
+        if len(attempts) == 1:
+            raise errors.ServerError(503, {"error": {"message": "busy"}})
+        yield _chunk("가")
+        raise errors.ServerError(503, {"error": {"message": "busy"}})
+
+    monkeypatch.setattr(fake_client, "generate_content_stream", flaky, raising=False)
+
+    stream = gemini_client.stream_with_usage("질문", model_name="m")
+    assert next(stream) == "가"
+    with pytest.raises(errors.ServerError):
+        next(stream)
+    assert len(attempts) == 2
+
+
 def test_count_tokens_uses_api(fake_client: _FakeModels) -> None:
     """LLM 토크나이저 기준 토큰 수를 센다."""
     assert gemini_client.count_tokens("가나다라", model_name="m") == 4

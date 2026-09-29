@@ -37,7 +37,7 @@ apps/
   bench/               # 3단계. 원본 / ONNX / 양자화 모델 비교표
   search-cli/          # 4단계. 최종 사용자용 검색 CLI (ragkit core만, uvx 배포)
   mcp/                 # 4단계. MCP 서버 (Claude 등 에이전트가 조문 검색)
-  web/                 # 4단계. React 검색 화면 (Node 프로젝트, workspace 멤버 아님, apps/api 호출)
+  web/                 # 4단계. NotebookLM형 React 웹앱 '법령 노트' (Node 프로젝트, workspace 멤버 아님, apps/api만 호출)
 experiments/           # 코드 없음. 실험별 config.yaml + 결과
 tutorials/             # 단계별 해설. ragkit과 apps를 호출만 한다
   01_ds_core/          # 1단계
@@ -96,7 +96,8 @@ AI 도구 덕분에 DS가 직접 손대기 쉬워진 영역 ②. 모델을 "제�
 
 - `apps/search-cli`: 동료가 설치해서 바로 쓰는 검색 도구 (cyclopts, `uvx`로 실행, ragkit core + ONNX만)
 - `apps/mcp`: MCP 서버로 Claude 같은 에이전트가 조문을 검색하게 한다
-- `apps/web`: 질문을 넣으면 관련 조문을 보여 주는 React 검색 화면 (2단계 API 호출)
+- `apps/web`: NotebookLM형 '법령 노트'. 노트북 = 법령 묶음, 그 안에서 인용 달린 답을 스트리밍, 인용을 누르면 조문 원문, 답을 노트로 저장 (2단계 API만 호출). 스택: Vite + React + TS + Tailwind + shadcn/ui + TanStack Query (2026-09-29 확정)
+- 설계: `docs/superpowers/specs/2026-09-29-apps-design.md`. 네 앱 모두 ragkit의 `Searcher`(`ragkit.service`)를 입구로 쓴다
 - 메시지: DS 한 사람이 모델부터 사용자 화면까지 끝까지 만든다
 
 ## 기존 자료와의 관계
@@ -109,4 +110,4 @@ AI 도구 덕분에 DS가 직접 손대기 쉬워진 영역 ②. 모델을 "제�
 
 - 단계별 시간 배분 (전체 8시간 = 480분). 초안(제안, 미확정): 1단계 210분(도입 45 + 데이터·학습·평가 165) / 2단계 60분 / 3단계 90분 / 4단계 120분(CLI 40 · MCP 30 · React 50)
 - RAG 에이전트(`ragkit.rag`)와 모니터링: 1단계 도입에서만 쓸지, 부록으로 둘지, 뺄지
-- 2단계 API 세부(배포 방식: Docker 여부), 4단계 프론트엔드 스택(빌드 도구, UI 라이브러리)
+- 2단계 API 배포 방식(Docker 여부). 지금은 `ragkit-api --web-dist apps/web/dist`로 화면과 API를 한 프로세스에서 띄울 수 있다

@@ -9,6 +9,9 @@ dependencies = [
     "uvicorn>=0.23.0",
 ]
 
+[project.scripts]
+ragkit-api = "ragkit_api:main"
+
 [tool.uv.sources]
 ragkit = { workspace = true }
 

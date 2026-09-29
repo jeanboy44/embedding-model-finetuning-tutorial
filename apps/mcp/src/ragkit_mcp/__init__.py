@@ -1,3 +1,5 @@
-from .server import embed_tool, rag_tool, retrieve_tool
+"""ragkit 법령 검색을 LLM 도구로 제공하는 MCP 서버 (ragkit-mcp). 서버 객체는 ragkit_mcp.server.server."""
 
-__all__ = ["embed_tool", "rag_tool", "retrieve_tool"]
+from ragkit_mcp.server import main
+
+__all__ = ["main"]

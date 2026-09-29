@@ -76,3 +76,8 @@ logs/
 .claude/
 data/questions/
 data/questions_test/
+
+# 앱 데이터 (노트북 저장소) / web 빌드
+data/app/
+apps/web/node_modules/
+apps/web/dist/

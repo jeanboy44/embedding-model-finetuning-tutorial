@@ -16,7 +16,7 @@ from pathlib import Path
 
 from ragkit.config import get_settings
 from ragkit.embeddings import create_embedding_fn, format_passages
-from ragkit_mcp.server import embed_tool, retrieve_tool
+from ragkit_mcp.legacy import embed_tool, retrieve_tool
 from ragkit.retrieval import DocumentStore
 
 # ============================================================
@@ -223,11 +223,11 @@ def main() -> None:
     print("실습 과제")
     print("=" * 60)
     print("""
-1. apps/mcp/src/ragkit_mcp/server.py의 코드를 읽고 구조를 파악하세요.
+1. apps/mcp/src/ragkit_mcp/legacy.py의 코드를 읽고 구조를 파악하세요.
 2. 새로운 도구 함수를 하나 만들어보세요:
    - category_search_tool: 특정 카테고리의 문서만 검색
 3. 도구 함수의 입출력을 Pydantic 모델로 정의해보세요.
-4. (심화) FastMCP 라이브러리를 사용하여 실제 MCP 서버를 구동해보세요.
+4. (심화) 실제 MCP 서버 apps/mcp/src/ragkit_mcp/server.py(mcp SDK의 MCPServer)를 읽고 ragkit-mcp로 구동해보세요.
 """)
 
 

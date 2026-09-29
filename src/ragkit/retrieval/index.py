@@ -66,6 +66,20 @@ class SearchHit:
     score: float
     metadata: dict = field(default_factory=dict)
 
+    def to_dict(self) -> dict:
+        """JSON으로 보내기 좋은 평평한 딕셔너리 (id, text, score + 메타데이터)."""
+        return {"id": self.id, "text": self.text, "score": self.score, **self.metadata}
+
+
+@dataclass(frozen=True)
+class LawInfo:
+    """인덱스에 들어 있는 법령 하나 (소스 선택 화면용)."""
+
+    law_name: str
+    law_type: str
+    theme: str
+    doc_count: int
+
 
 def _corpus_hash(docs: list[dict], format_doc: Callable[[dict], str]) -> str:
     # 임베딩한 최종 문자열로 해시한다: 코퍼스나 모델 입력 형식이 바뀌면 인덱스를 새로 만든다
@@ -78,7 +92,8 @@ def _corpus_hash(docs: list[dict], format_doc: Callable[[dict], str]) -> str:
 
 
 def _connect(path: Path) -> sqlite3.Connection:
-    conn = sqlite3.connect(str(path))
+    # 웹 서버 스레드풀에서도 쓰도록 스레드에 묶지 않는다. 동시 접근은 호출 쪽(Searcher)이 직렬화한다.
+    conn = sqlite3.connect(str(path), check_same_thread=False)
     conn.enable_load_extension(True)
     sqlite_vec.load(conn)
     conn.enable_load_extension(False)
@@ -128,7 +143,8 @@ class VectorIndex:
             query_embedding: (dim,) 쿼리 임베딩 (query 앞 문구를 붙여 임베딩한 것).
             k: 반환할 문서 수.
             where: 메타데이터 조건. {"theme": "youth"}처럼 값이면 같음,
-                {"effective_date": ("<=", "2026-09-29")}처럼 (연산자, 값)이면 비교.
+                {"effective_date": ("<=", "2026-09-29")}처럼 (연산자, 값)이면 비교,
+                {"law_name": ["근로기준법", "최저임금법"]}처럼 목록이면 그중 하나(IN).
                 쓸 수 있는 컬럼: theme, law_type, law_name, effective_date.
 
         Returns:
@@ -138,6 +154,12 @@ class VectorIndex:
         for column, cond in (where or {}).items():
             if column not in FILTER_COLUMNS:
                 raise ValueError(f"필터할 수 없는 컬럼: {column} (가능: {', '.join(FILTER_COLUMNS)})")
+            if isinstance(cond, list):
+                if not cond:
+                    raise ValueError(f"{column} 조건이 빈 목록입니다 (조건 없이 찾으려면 빼세요)")
+                clauses.append(f"AND v.{column} IN ({', '.join('?' * len(cond))})")
+                params.extend(cond)
+                continue
             op, value = cond if isinstance(cond, tuple) else ("=", cond)
             if op not in _OPS:
                 raise ValueError(f"지원하지 않는 연산자: {op}")
@@ -151,14 +173,38 @@ class VectorIndex:
             """,
             params,
         )
-        names = [c[0] for c in rows.description]
-        hits = []
-        for row in rows:
-            record = dict(zip(names, row))
-            distance = record.pop("distance")
-            doc_id, text = record.pop("id"), record.pop("text")
-            hits.append(SearchHit(id=doc_id, text=text, score=1.0 - distance, metadata=record))
-        return hits
+        return [_to_hit(record, 1.0 - record.pop("distance")) for record in _records(rows)]
+
+    def get(self, doc_id: str) -> SearchHit | None:
+        """id로 문서(조문 조각) 하나를 가져온다. 없으면 None."""
+        rows = self._conn.execute("SELECT * FROM docs WHERE id = ?", (doc_id,))
+        return next((_to_hit(r, 0.0) for r in _records(rows)), None)
+
+    def get_article(self, parent_id: str) -> list[SearchHit]:
+        """같은 조(parent_id)의 조각을 코퍼스 순서대로 가져온다. 나뉘지 않은 조문은 자신 하나."""
+        rows = self._conn.execute("SELECT * FROM docs WHERE parent_id = ? ORDER BY rowid", (parent_id,))
+        return [_to_hit(r, 0.0) for r in _records(rows)]
+
+    def list_laws(self) -> list[LawInfo]:
+        """인덱스에 든 법령 목록 (테마·이름순)."""
+        rows = self._conn.execute(
+            """
+            SELECT law_name, law_type, theme, count(*) FROM docs
+            GROUP BY law_name ORDER BY theme, law_name
+            """
+        )
+        return [LawInfo(name, law_type or "", theme or "", n) for name, law_type, theme, n in rows]
+
+
+def _records(rows: sqlite3.Cursor) -> list[dict]:
+    names = [c[0] for c in rows.description]
+    return [dict(zip(names, row)) for row in rows]
+
+
+def _to_hit(record: dict, score: float) -> SearchHit:
+    record.pop("rowid", None)
+    doc_id, text = record.pop("id"), record.pop("text")
+    return SearchHit(id=doc_id, text=text, score=score, metadata=record)
 
 
 def build_index(
