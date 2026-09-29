@@ -167,6 +167,26 @@ def export_onnx_command(
     print(f"ONNX 변환 완료: {onnx_path} ({size_mb:.1f} MB)")
 
 
+@app.command(name="quantize")
+def quantize_command(
+    model_dir: Path,
+    out_dir: Path | None = None,
+) -> None:
+    """ONNX 모델을 동적 INT8로 양자화한다 (extra [train] 필요).
+
+    Args:
+        model_dir: export-onnx를 마친 모델 폴더.
+        out_dir: 출력 폴더. 기본값 <model_dir>-int8.
+    """
+    from ragkit.models.onnx_export import quantize_onnx
+
+    out_dir = out_dir or model_dir.with_name(f"{model_dir.name}-int8")
+    src = model_dir / "onnx" / "model.onnx"
+    dst = quantize_onnx(model_dir, out_dir)
+    print(f"INT8 양자화 완료: {dst} ({dst.stat().st_size / 1e6:.1f} MB, 원본 {src.stat().st_size / 1e6:.1f} MB)")
+    print(f"사용: create_embedding_fn('{out_dir}', backend='onnx') / uv run ragkit index --model {out_dir}")
+
+
 def _load_document_store() -> DocumentStore | None:
     """문서 저장소를 로드한다.
 

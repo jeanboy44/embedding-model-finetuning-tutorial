@@ -69,7 +69,43 @@ def export_onnx(model_dir: Path, out_dir: Path | None = None, opset: int = 17) -
         )
 
     if out_dir != model_dir:
-        for name in TOKENIZER_FILES:
-            if (model_dir / name).exists():
-                shutil.copy2(model_dir / name, out_dir / name)
+        _copy_tokenizer(model_dir, out_dir)
     return onnx_path
+
+
+def _copy_tokenizer(src: Path, dst: Path) -> None:
+    for name in TOKENIZER_FILES:
+        if (src / name).exists():
+            shutil.copy2(src / name, dst / name)
+
+
+def quantize_onnx(model_dir: Path, out_dir: Path) -> Path:
+    """ONNX 모델을 동적 INT8로 양자화해 별도 모델 폴더를 만든다 (extra `[train]` 필요).
+
+    가중치를 INT8로 저장하고 활성값은 실행 중에 양자화한다(동적). 보정 데이터가 필요 없다.
+    출력 폴더는 원본과 같은 구성(tokenizer.json + onnx/model.onnx)이라 onnx 백엔드로 그대로 쓴다:
+    create_embedding_fn(str(out_dir), backend="onnx"). 폴더 이름이 모델 키가 되어 인덱스도 따로 생긴다.
+
+    Args:
+        model_dir: export-onnx를 마친 모델 폴더 (onnx/model.onnx, tokenizer.json).
+        out_dir: 출력 폴더 (예: models/multilingual-e5-small-int8).
+
+    Returns:
+        양자화한 ONNX 파일 경로 (<out_dir>/onnx/model.onnx).
+    """
+    model_dir, out_dir = Path(model_dir), Path(out_dir)
+    src = onnx_model_path(model_dir)
+    if not src.exists():
+        raise FileNotFoundError(
+            f"ONNX 모델이 없습니다: {src}\n먼저 변환하세요: uv run ragkit export-onnx {model_dir}"
+        )
+    try:
+        from onnxruntime.quantization import QuantType, quantize_dynamic
+    except ImportError as e:
+        raise ImportError("양자화에는 extra가 필요합니다: uv sync --extra train") from e
+
+    dst = onnx_model_path(out_dir)
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    quantize_dynamic(str(src), str(dst), weight_type=QuantType.QInt8)
+    _copy_tokenizer(model_dir, out_dir)
+    return dst
