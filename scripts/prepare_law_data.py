@@ -10,7 +10,7 @@ legalize-kr(https://github.com/legalize-kr/legalize-kr)은 대한민국 법령�
 
 출력 (기본값):
     data/raw/legalize-kr/            Git 저장소 (sparse checkout)
-    data/processed/law_docs.json     조문 목록 (id/title/text/category + 메타데이터)
+    data/processed/law_docs.json     조문 목록 (sample_docs.json과 같은 id/title/text/category + 메타데이터)
 """
 
 import json
@@ -200,7 +200,7 @@ def clean_text(text: str) -> str:
 
 @dataclass
 class LawArticle:
-    """조문 하나(긴 조문은 그 조각 하나). id/title/text/category와 메타데이터를 담는다.
+    """조문 하나(긴 조문은 그 조각 하나). id/title/text/category는 data/sample_docs.json과 같은 형식이다.
 
     긴 조문을 나눈 조각은 id와 title 끝에 paragraph 레이블(예: "제3항", "제1~12호")이 붙고,
     parent_id가 원래 조문 id를 가리킨다. 나누지 않은 조문은 paragraph가 빈 문자열이고 parent_id == id다.
