@@ -1,4 +1,0 @@
-name: "base_embedding"
-model_name: "intfloat/multilingual-e5-small"
-checkpoint_path: null
-embedding_dim: 384

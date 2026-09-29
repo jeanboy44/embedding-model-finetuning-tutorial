@@ -65,4 +65,3 @@ Desktop은 PATH가 짧을 수 있으니 `command`에 `uv`의 절대 경로(`whic
 
 - `tools.py` — 도구 로직. `Searcher`를 첫 인자로 받는 순수 함수 (테스트는 가짜 Searcher로).
 - `server.py` — `MCPServer("ragkit-law")`에 도구를 등록하고 Searcher를 지연 로드한다. `main()`은 stdio.
-- `legacy.py` — 강의 04_product/02_mcp_server.py가 쓰는 예전 골격 (`DocumentStore` 기반).

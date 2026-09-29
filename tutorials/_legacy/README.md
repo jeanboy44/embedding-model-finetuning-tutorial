@@ -4,6 +4,5 @@
 
 | 폴더 | 상태 |
 |---|---|
-| `phase1_model_dev/` | 영어·16문서 예제. `01_ds_core/`의 새 비교 실습으로 대체 예정 |
 | `agent/` | RAG 에이전트. 자리 미정 (PLAN.md 미정 사항) |
 | `monitoring/` | 로깅·메트릭. 자리 미정 (PLAN.md 미정 사항) |
