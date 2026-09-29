@@ -97,17 +97,22 @@ AI 도구 덕분에 DS가 직접 손대기 쉬워진 영역 ②. 모델을 "제�
 - `apps/search-cli`: 동료가 설치해서 바로 쓰는 검색 도구 (cyclopts, `uvx`로 실행, ragkit core + ONNX만)
 - `apps/mcp`: MCP 서버로 Claude 같은 에이전트가 조문을 검색하게 한다
 - `apps/web`: NotebookLM형 '법령 노트'. 노트북 = 법령 묶음, 그 안에서 인용 달린 답을 스트리밍, 인용을 누르면 조문 원문, 답을 노트로 저장 (2단계 API만 호출). 스택: Vite + React + TS + Tailwind + shadcn/ui + TanStack Query (2026-09-29 확정)
-- 설계: `docs/superpowers/specs/2026-09-29-apps-design.md`. 네 앱 모두 ragkit의 `Searcher`(`ragkit.service`)를 입구로 쓴다
+- 네 앱 모두 ragkit의 `Searcher`(`ragkit.service`)를 입구로 쓴다 (구조는 `docs/ARCHITECTURE.md`)
 - 메시지: DS 한 사람이 모델부터 사용자 화면까지 끝까지 만든다
 
-## 기존 자료와의 관계
+## 진행 현황 (2026-09-30)
 
-- `README.md`의 Phase 1~4(모델 개발 / CLI & MCP / RAG 에이전트 / 모니터링)와 `tutorials/phase1_model_dev/` 등은 이 계획 이전의 구성이다.
-- 옮길 곳: 모델 개발 → 1단계, CLI & MCP → 4단계(`apps/search-cli`, `apps/mcp`). RAG 에이전트·모니터링은 미정(아래).
-- README 개편은 아직 하지 않았다.
+| 단계 | 소스 | 튜토리얼 | 확인 |
+|---|---|---|---|
+| 1 | ragkit(인덱스·분할·학습·평가·비교) | `01_build_rag.py`만 | 실험 005: e5-small R@5 0.535 / EmbeddingGemma 0.819. **학습(실험 002·004)은 아직 안 돌림**, 비교 실습 02~05와 학습·평가 튜토리얼 없음 |
+| 2 | apps/api | `01_search_api.py`, `02_streaming_and_notebooks.py` | 실행 확인 (torch 백엔드, SSE, 노트북) |
+| 3 | `ragkit quantize`(채널별 INT8), apps/bench, api Dockerfile | `01`~`03` | 실험 006: ONNX INT8이 torch 대비 설치 1/5·모델 1/4·로딩 1/8·메모리 0.77배, R@5 동일. **Docker 이미지 빌드는 아직 확인 못 함** |
+| 4 | apps/search-cli·mcp·web | `01_search_cli.py`, `02_mcp_server.py`, `03_web_app.py` | uvx(torch 없음), MCP stdio 도구 호출, 웹 흐름(Playwright) 확인 |
+
+- 이전 구성(Phase 1~4)의 자료: 대체된 것은 지웠다. RAG 에이전트·모니터링은 `tutorials/_legacy/`에 남겨 두었다(아래 미정).
 
 ## 미정 사항
 
 - 단계별 시간 배분 (전체 8시간 = 480분). 초안(제안, 미확정): 1단계 210분(도입 45 + 데이터·학습·평가 165) / 2단계 60분 / 3단계 90분 / 4단계 120분(CLI 40 · MCP 30 · React 50)
 - RAG 에이전트(`ragkit.rag`)와 모니터링: 1단계 도입에서만 쓸지, 부록으로 둘지, 뺄지
-- 2단계 API 배포 방식(Docker 여부). 지금은 `ragkit-api --web-dist apps/web/dist`로 화면과 API를 한 프로세스에서 띄울 수 있다
+- 2단계 API 배포 방식: Dockerfile(apps/api/Dockerfile, onnx/torch)을 만들었다. 강의에서 Docker를 쓸지, `ragkit-api --web-dist`(한 프로세스)로 충분한지 결정 필요
