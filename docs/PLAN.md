@@ -62,7 +62,6 @@ scripts/               # 일회성 데이터 준비 (prepare_law_data, 질문 Dr
 - 도입(왜 파인튜닝인가): 코퍼스(약 700만 자)는 LLM에 통째로 넣을 수 없다 → 에이전트형 탐색 vs 임베딩 RAG → 검색에서 놓친 조문은 답할 수 없으니 검색 누락이 정확도 상한이 된다 → 쿼리 확장으로 메우면 쿼리마다 LLM 비용이 늘어 주객이 바뀐다 → 파인튜닝으로 그 비용을 학습 1회로 옮긴다
   - 학습 데이터 생성: 운영이라면 저가 API, 개발은 SKILL.md, 강의에서는 skill 약식으로 한다
   - 비교 실습: 순수 LLM / RAG / RAG+쿼리 확장
-  - 전문은 ragkit 설계 문서(`docs/superpowers/specs/2026-09-28-ragkit-restructure-design.md`) 1절
 - 베이스 모델 비교: `intfloat/multilingual-e5-small` 등 후보를 같은 평가셋으로 비교 (`docs/adr/001-model-selection.md`)
 - 데이터 준비: legalize-kr 법령 코퍼스 (`scripts/prepare_law_data.py`, 긴 조문은 항·호 단위로 나눠 약 2.6만 문서), Claude 스킬로 질문·정답 조문·hard negative 생성 (`.claude/skills/law-question-gen/`), 질문 공유는 `scripts/law_questions_drive.py`
 - 분할: 법령 단위(확정). 테마마다 법령 ~20%는 test, ~10%는 dev. 학습 때 본 적 없는 법령에서도 좋아지는지 측정

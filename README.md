@@ -65,5 +65,4 @@ docs/            # 강의 계획, 설계 문서, ADR
 ## 문서
 
 - [강의 계획](docs/PLAN.md)
-- [ragkit 설계](docs/superpowers/specs/2026-09-28-ragkit-restructure-design.md)
 - [아키텍처](docs/ARCHITECTURE.md) · [ADR](docs/adr/)
