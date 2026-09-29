@@ -24,7 +24,7 @@ def test_quantize_makes_smaller_model_folder_with_similar_embeddings(tmp_path: P
     texts = ["query: 편의점 알바 주휴수당", "passage: 근로기준법 제55조 (휴일)\n유급휴일을 보장하여야 한다."]
     fp32 = create_embedding_fn(str(LOCAL), backend="onnx")(texts)
     int8 = create_embedding_fn(str(tmp_path / "e5-int8"), backend="onnx")(texts)
-    assert (fp32 * int8).sum(axis=1).min() >= 0.95
+    assert (fp32 * int8).sum(axis=1).min() >= 0.995  # 채널별 양자화: 텐서 단위(약 0.98)보다 원본에 가깝다
 
 
 def test_quantize_requires_exported_onnx(tmp_path: Path) -> None:

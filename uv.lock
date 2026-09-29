@@ -3380,23 +3380,36 @@ dependencies = [
     { name = "uvicorn" },
 ]
 
+[package.optional-dependencies]
+torch = [
+    { name = "ragkit", extra = ["torch"] },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "fastapi", specifier = ">=0.100.0" },
     { name = "ragkit", editable = "." },
+    { name = "ragkit", extras = ["torch"], marker = "extra == 'torch'", editable = "." },
     { name = "uvicorn", specifier = ">=0.23.0" },
 ]
+provides-extras = ["torch"]
 
 [[package]]
 name = "ragkit-bench"
 version = "0.1.0"
 source = { editable = "apps/bench" }
 dependencies = [
+    { name = "cyclopts" },
+    { name = "packaging" },
     { name = "ragkit", extra = ["torch"] },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "ragkit", extras = ["torch"], editable = "." }]
+requires-dist = [
+    { name = "cyclopts", specifier = ">=3.0.0" },
+    { name = "packaging", specifier = ">=23" },
+    { name = "ragkit", extras = ["torch"], editable = "." },
+]
 
 [[package]]
 name = "ragkit-mcp"

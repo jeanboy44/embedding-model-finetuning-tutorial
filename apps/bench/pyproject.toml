@@ -1,9 +1,16 @@
 [project]
 name = "ragkit-bench"
 version = "0.1.0"
-description = "원본(torch) / ONNX / 양자화 모델의 속도·정확도 비교"
+description = "원본(torch) / ONNX / INT8 모델의 속도·메모리·크기·정확도 비교 (3단계)"
 requires-python = ">=3.10"
-dependencies = ["ragkit[torch]"]
+dependencies = [
+    "ragkit[torch]",
+    "cyclopts>=3.0.0",
+    "packaging>=23",
+]
+
+[project.scripts]
+ragkit-bench = "ragkit_bench:main"
 
 [tool.uv.sources]
 ragkit = { workspace = true }

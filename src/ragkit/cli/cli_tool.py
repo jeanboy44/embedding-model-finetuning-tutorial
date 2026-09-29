@@ -171,18 +171,20 @@ def export_onnx_command(
 def quantize_command(
     model_dir: Path,
     out_dir: Path | None = None,
+    per_channel: bool = True,
 ) -> None:
     """ONNX 모델을 동적 INT8로 양자화한다 (extra [train] 필요).
 
     Args:
         model_dir: export-onnx를 마친 모델 폴더.
         out_dir: 출력 폴더. 기본값 <model_dir>-int8.
+        per_channel: 채널별 양자화 (--no-per-channel이면 텐서 단위, 정확도 비교용).
     """
     from ragkit.models.onnx_export import quantize_onnx
 
     out_dir = out_dir or model_dir.with_name(f"{model_dir.name}-int8")
     src = model_dir / "onnx" / "model.onnx"
-    dst = quantize_onnx(model_dir, out_dir)
+    dst = quantize_onnx(model_dir, out_dir, per_channel=per_channel)
     print(f"INT8 양자화 완료: {dst} ({dst.stat().st_size / 1e6:.1f} MB, 원본 {src.stat().st_size / 1e6:.1f} MB)")
     print(f"사용: create_embedding_fn('{out_dir}', backend='onnx') / uv run ragkit index --model {out_dir}")
 
