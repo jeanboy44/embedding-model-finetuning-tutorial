@@ -2,8 +2,9 @@
 
 from pathlib import Path
 
-from ragkit.retrieval import build_index
 from ragkit_bench import DEFAULT_VARIANTS, install_size, measure, to_markdown
+
+from ragkit.retrieval import build_index
 
 from .conftest import DOCS, fake_embed
 

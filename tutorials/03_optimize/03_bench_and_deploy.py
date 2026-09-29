@@ -101,14 +101,14 @@ def docker_ok() -> bool:
     if not shutil.which("docker"):
         return False
     try:
-        return subprocess.run(["docker", "info"], capture_output=True, timeout=10).returncode == 0
+        return subprocess.run(["docker", "info"], capture_output=True, timeout=10, check=False).returncode == 0
     except subprocess.TimeoutExpired:
         return False
 
 
 if docker_ok():
     out = subprocess.run(["docker", "images", "ragkit-api", "--format", "{{.Tag}}\t{{.Size}}"],
-                         capture_output=True, text=True).stdout.strip()
+                         capture_output=True, text=True, check=False).stdout.strip()
     print("\n이미지 크기:\n" + (out or "(아직 빌드한 이미지가 없다. 위 명령으로 빌드해 보자)"))
 else:
     print("\n(Docker 데몬에 연결할 수 없어 크기 확인을 건너뜀. Docker Desktop을 켠 뒤 다시 실행)")

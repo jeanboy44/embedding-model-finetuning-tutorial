@@ -23,8 +23,6 @@
 import tempfile
 from pathlib import Path
 
-import numpy as np
-
 from ragkit.config import get_settings
 from ragkit.data import doc_text, load_corpus
 from ragkit.embeddings import create_embedding_fn

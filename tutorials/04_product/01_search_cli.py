@@ -32,7 +32,7 @@ def section(title: str) -> None:
 def run(*args: str, show: bool = True) -> str:
     """ragkit-search 명령을 실행하고 출력을 보여 준다."""
     print(f"$ ragkit-search {' '.join(args)}")
-    out = subprocess.run(["ragkit-search", *args], capture_output=True, text=True, cwd=ROOT).stdout
+    out = subprocess.run(["ragkit-search", *args], capture_output=True, text=True, cwd=ROOT, check=False).stdout
     if show:
         print(out.rstrip())
     return out
@@ -71,7 +71,7 @@ check = subprocess.run(
     ["uvx", "--isolated", "--with", str(next(dist.glob("ragkit-*.whl"))),
      "--from", str(next(dist.glob("ragkit_search-*.whl"))),
      "python", "-c", "import importlib.util as u; print(u.find_spec('torch') is None)"],
-    capture_output=True, text=True,
+    capture_output=True, text=True, check=False,
 )
 print(f"uvx 격리 환경에 torch 없음: {check.stdout.strip() == 'True'}")
 print(f"""

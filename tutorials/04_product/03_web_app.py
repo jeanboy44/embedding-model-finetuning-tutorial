@@ -76,7 +76,8 @@ try:
         sys.exit("서버가 60초 안에 뜨지 않았습니다.")
     print(f"GET /api/health → {status} {body}")
     status, html = get("/")
-    print(f"GET /           → {status} (화면 index.html, {'<div id=\"root\">' in html and 'React 루트 있음'})")
+    has_root = 'id="root"' in html
+    print(f"GET /           → {status} (화면 index.html, React 루트 {'있음' if has_root else '없음'})")
     status, _ = get("/notebooks/any-id")
     print(f"GET /notebooks/… → {status} (화면 경로도 index.html로 → React Router가 처리)")
 
