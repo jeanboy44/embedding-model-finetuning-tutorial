@@ -1,0 +1,17 @@
+# 실험 003: LLM 쿼리 확장 vs 파인튜닝 (실습 3 최종 비교표)
+# 쿼리 확장은 질문마다 LLM을 한 번 불러 일상 말투를 법령 용어 검색어로 바꾼다(원문 + 확장어로 검색).
+# 파인튜닝은 그 비용을 학습 1회로 옮긴다 → "정확도 vs 질문당 LLM 비용"을 한 표로 비교한다.
+#
+# 준비: 확장 결과를 캐시에 미리 받는다 (무료 등급 분당 15회, 이미 받은 질문은 건너뜀)
+#   ragkit expand data/splits/test.jsonl --rpm 15
+#   → data/processed/query_expansion/{LLM}.jsonl (강의에서는 이 파일을 배포해 API 키 없이 평가)
+# 실행: ragkit compare experiments/exp_003_llm_query_expansion/config.yaml
+# 결과: experiments/exp_003_llm_query_expansion/results/
+name: llm_query_expansion
+questions: data/splits/test.jsonl
+models:
+  - intfloat/multilingual-e5-small
+  - model: intfloat/multilingual-e5-small
+    expand: true
+  - google/embeddinggemma-300m            # 참고: 더 큰 베이스 모델 (실험 005)
+  # 파인튜닝 모델은 feat/finetune-runs 결과가 나오면 추가한다 (예: models/finetuned/exp_002)

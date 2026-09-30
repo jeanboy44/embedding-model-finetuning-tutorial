@@ -263,3 +263,128 @@ def test_compare_command_requires_models(tmp_path, corpus, questions) -> None:
     config.write_text(f"questions: {qpath}\nmodels: []\n", encoding="utf-8")
     with pytest.raises(SystemExit):
         train_cli.compare(config, corpus=corpus_path, index_dir=tmp_path / "index")
+
+
+def _fake_expand(queries, cache_path, *, llm=None, min_interval_s=0.0, **_):
+    from ragkit.rag.query_expansion import Expansion
+
+    return {
+        q: Expansion(
+            query=q, expansion="확장어", llm=llm or "fake", input_tokens=10,
+            output_tokens=2, latency_s=0.5,
+        )
+        for q in queries
+    }
+
+
+def test_evaluate_with_expand_searches_expanded_query(tmp_path, corpus, questions, monkeypatch) -> None:
+    """--expand면 원문 + 확장어로 검색하고, 결과에 확장 비용과 원문 질문을 남긴다."""
+    corpus_path, qpath = _write_inputs(tmp_path, corpus, questions)
+    train_cli.split(qpath, corpus=corpus_path, out=tmp_path / "splits")
+    embedded: list[str] = []
+
+    def fake_create(model_name, checkpoint_path=None, device=None, backend=None):
+        def embed(texts, batch_size=None):
+            embedded.extend(texts)
+            return np.ones((len(texts), 2)) / np.sqrt(2)
+
+        return embed
+
+    monkeypatch.setattr(train_cli, "create_embedding_fn", fake_create)
+    monkeypatch.setattr(train_cli, "expand_queries", _fake_expand)
+    out = tmp_path / "result.json"
+
+    train_cli.evaluate(
+        "base-model",
+        splits=tmp_path / "splits",
+        corpus=corpus_path,
+        index=tmp_path / "index.sqlite",
+        out=out,
+        expand=True,
+    )
+
+    result = json.loads(out.read_text(encoding="utf-8"))
+    assert result["expansion"]["llm_calls_per_query"] == 1
+    assert result["expansion"]["latency_s_mean"] == 0.5
+    first = result["per_question"][0]
+    assert "확장어" not in first["query"]  # 원문 질문
+    assert first["expanded_query"].endswith("확장어")
+    assert any(text.endswith("확장어") for text in embedded)
+
+
+def test_evaluate_expand_default_out_has_suffix(tmp_path, corpus, questions, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    corpus_path, qpath = _write_inputs(tmp_path, corpus, questions)
+    train_cli.split(qpath, corpus=corpus_path, out=tmp_path / "splits")
+    monkeypatch.setattr(train_cli, "create_embedding_fn", _fake_create)
+    monkeypatch.setattr(train_cli, "expand_queries", _fake_expand)
+
+    train_cli.evaluate(
+        "intfloat/multilingual-e5-small", splits=tmp_path / "splits", corpus=corpus_path,
+        index=tmp_path / "index.sqlite", expand=True,
+    )
+
+    results = tmp_path / "experiments" / "results"
+    assert (results / "multilingual-e5-small_test_expand.json").exists()
+
+
+def test_evaluate_expand_fails_clearly_without_key(tmp_path, corpus, questions, monkeypatch) -> None:
+    from ragkit.rag.query_expansion import ExpansionUnavailable
+
+    corpus_path, qpath = _write_inputs(tmp_path, corpus, questions)
+    train_cli.split(qpath, corpus=corpus_path, out=tmp_path / "splits")
+    monkeypatch.setattr(train_cli, "create_embedding_fn", _fake_create)
+
+    def unavailable(*args, **kwargs):
+        raise ExpansionUnavailable("키 없음")
+
+    monkeypatch.setattr(train_cli, "expand_queries", unavailable)
+    with pytest.raises(SystemExit):
+        train_cli.evaluate(
+            "base-model", splits=tmp_path / "splits", corpus=corpus_path,
+            index=tmp_path / "index.sqlite", out=tmp_path / "r.json", expand=True,
+        )
+
+
+def test_compare_supports_expand_rows(tmp_path, corpus, questions, monkeypatch) -> None:
+    """설정의 models 항목에 {model, expand: true}를 쓰면 같은 모델을 쿼리 확장으로도 평가한다."""
+    monkeypatch.chdir(tmp_path)
+    corpus_path, qpath = _write_inputs(tmp_path, corpus, questions)
+    exp = tmp_path / "experiments" / "exp_003_llm_query_expansion"
+    exp.mkdir(parents=True)
+    config = exp / "config.yaml"
+    config.write_text(
+        f"name: llm_query_expansion\nquestions: {qpath}\n"
+        "models:\n  - intfloat/multilingual-e5-small\n"
+        "  - model: intfloat/multilingual-e5-small\n    expand: true\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(train_cli, "create_embedding_fn", _fake_create)
+    monkeypatch.setattr(train_cli, "expand_queries", _fake_expand)
+
+    train_cli.compare(config, corpus=corpus_path, index_dir=tmp_path / "index")
+
+    results = exp / "results"
+    table = json.loads((results / "comparison.json").read_text(encoding="utf-8"))
+    assert [row.get("expansion") is not None for row in table["models"]] == [False, True]
+    assert (results / "multilingual-e5-small.json").exists()
+    assert (results / "multilingual-e5-small_expand.json").exists()
+    markdown = (results / "comparison.md").read_text(encoding="utf-8")
+    assert "| intfloat/multilingual-e5-small + 쿼리 확장 |" in markdown
+    assert "LLM 호출/질문" in markdown
+
+
+def test_expand_command_builds_cache(tmp_path, corpus, questions, monkeypatch, capsys) -> None:
+    _, qpath = _write_inputs(tmp_path, corpus, questions)
+    seen = {}
+
+    def fake(queries, cache_path, *, llm=None, min_interval_s=0.0, **_):
+        seen.update(n=len(queries), cache=cache_path, interval=min_interval_s)
+        return _fake_expand(queries, cache_path, llm=llm)
+
+    monkeypatch.setattr(train_cli, "expand_queries", fake)
+
+    train_cli.expand(qpath, cache=tmp_path / "c.jsonl", rpm=15)
+
+    assert seen == {"n": 29, "cache": tmp_path / "c.jsonl", "interval": 4.0}
+    assert "29개" in capsys.readouterr().out
