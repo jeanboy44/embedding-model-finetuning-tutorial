@@ -9,6 +9,10 @@ dependencies = [
     "packaging>=23",
 ]
 
+[project.optional-dependencies]
+# MLflow 실험 추적 (MLFLOW_TRACKING_URI를 주면 변형마다 run을 남긴다)
+mlflow = ["ragkit[mlflow]"]
+
 [project.scripts]
 ragkit-bench = "ragkit_bench:main"
 

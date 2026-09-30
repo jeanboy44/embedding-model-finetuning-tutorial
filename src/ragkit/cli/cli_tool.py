@@ -160,5 +160,51 @@ def prune_vocab_command(
     print(f"다음: uv run ragkit export-onnx {out_dir} && uv run ragkit quantize {out_dir}")
 
 
+@app.command(name="register")
+def register_command(
+    model_dir: Path,
+    *,
+    name: str = "law-embedder",
+    alias: str | None = "champion",
+    index_key: str | None = None,
+    result: Path | None = None,
+) -> None:
+    """모델 폴더를 MLflow 모델 레지스트리에 새 버전으로 올리고 별칭을 붙인다 (extra [mlflow]).
+
+    앱은 RAGKIT 모델 자리에 models:/<name>@<alias>를 주면 이 버전을 내려받아 쓴다.
+    별칭만 다른 버전으로 옮기면(MLflow UI 또는 다시 register) 앱 코드 변경 없이 모델이 바뀐다.
+
+    Args:
+        model_dir: 등록할 모델 폴더 (토크나이저 + 가중치/ONNX, 예: models/e5-small-pruned).
+        name: 등록 모델 이름.
+        alias: 붙일 별칭. --alias ""이면 붙이지 않는다.
+        index_key: 이 모델로 만든 인덱스 키 (data/processed/index/<키>.sqlite).
+            기본값: 폴더에 맞는 인덱스 파일이 있으면 그 키, 없으면 폴더 이름.
+        result: 함께 남길 평가 결과 JSON (ragkit evaluate 출력). 지표를 버전 태그로 남긴다.
+    """
+    import json
+
+    from ragkit import tracking
+    from ragkit.retrieval import default_index_path, model_key
+
+    if not tracking.enabled():
+        raise SystemExit("MLFLOW_TRACKING_URI가 없습니다 (.env). 예: MLFLOW_TRACKING_URI=http://127.0.0.1:5000")
+    if not (model_dir / "tokenizer.json").exists():
+        raise SystemExit(f"모델 폴더가 아닙니다 (tokenizer.json 없음): {model_dir}")
+    if index_key is None:
+        candidates = [model_key(str(model_dir), model_dir), model_dir.name]
+        index_key = next((k for k in candidates if default_index_path(k).exists()), model_dir.name)
+    metrics = {}
+    if result:
+        metrics = tracking.flat_metrics(json.loads(result.read_text(encoding="utf-8")))
+    version = tracking.register_model(
+        model_dir, name=name, alias=alias or None, index_key=index_key, metrics=metrics
+    )
+    target = f"models:/{name}@{alias}" if alias else f"models:/{name}/{version}"
+    print(f"등록: {name} v{version} (인덱스 키 {index_key}) → {target}")
+    if not default_index_path(index_key).exists():
+        print(f"참고: 인덱스가 아직 없습니다. 먼저 실행: uv run ragkit index --model {model_dir}")
+
+
 if __name__ == "__main__":
     app()

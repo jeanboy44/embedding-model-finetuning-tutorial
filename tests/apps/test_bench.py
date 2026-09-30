@@ -64,3 +64,32 @@ def test_to_markdown_table() -> None:
 
     assert "| onnx-int8 | onnx | 118 |" in table
     assert "0.500" in table
+
+
+def test_log_to_mlflow_makes_run_per_variant(tmp_path: Path, monkeypatch) -> None:
+    """MLflow가 켜져 있으면 벤치 한 번 = 부모 run, 변형마다 자식 run(속도·메모리·크기·R@5)."""
+    import pytest
+
+    mlflow = pytest.importorskip("mlflow")
+    from ragkit_bench.cli import log_to_mlflow
+
+    from ragkit.config import get_settings
+
+    monkeypatch.setenv("MLFLOW_TRACKING_URI", f"sqlite:///{tmp_path / 'mlflow.db'}")
+    monkeypatch.setenv("MLFLOW_EXPERIMENT", "bench-test")
+    get_settings.cache_clear()
+    rows = [{"variant": name, "backend": "onnx", "model": f"models/{name}", "model_mb": 30.0,
+             "latency_ms_p50": 5.0, "peak_rss_mb": 400.0, "recall@5": 0.5, "n_questions": 2}
+            for name in ("onnx-int8", "onnx-int8-pruned")]
+    (tmp_path / "comparison.md").write_text("| 표 |", encoding="utf-8")
+
+    log_to_mlflow(rows, tmp_path, n_latency=10)
+
+    exp = mlflow.get_experiment_by_name("bench-test")
+    found = mlflow.search_runs([exp.experiment_id], output_format="list", order_by=["start_time ASC"])
+    parent, *children = found
+    assert parent.info.run_name == "deploy_bench"
+    assert [c.data.params["variant"] for c in children] == ["onnx-int8", "onnx-int8-pruned"]
+    assert children[0].data.metrics["recall_at_5"] == 0.5
+    assert children[0].data.metrics["peak_rss_mb"] == 400.0
+    get_settings.cache_clear()

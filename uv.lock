@@ -4667,12 +4667,19 @@ dependencies = [
     { name = "ragkit", extra = ["torch"] },
 ]
 
+[package.optional-dependencies]
+mlflow = [
+    { name = "ragkit", extra = ["mlflow"] },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "cyclopts", specifier = ">=3.0.0" },
     { name = "packaging", specifier = ">=23" },
+    { name = "ragkit", extras = ["mlflow"], marker = "extra == 'mlflow'", editable = "." },
     { name = "ragkit", extras = ["torch"], editable = "." },
 ]
+provides-extras = ["mlflow"]
 
 [[package]]
 name = "ragkit-mcp"
