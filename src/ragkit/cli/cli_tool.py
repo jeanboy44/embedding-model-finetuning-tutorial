@@ -14,7 +14,13 @@ from ragkit.embeddings import create_embedding_fn
 app = cyclopts.App(name="ragkit", help="ragkit: 임베딩 모델 인덱싱·학습·평가·최적화 (DS용)")
 
 # DS용 학습·평가 명령
-for _command in (train_cli.split, train_cli.train, train_cli.evaluate, train_cli.compare):
+for _command in (
+    train_cli.split,
+    train_cli.train,
+    train_cli.evaluate,
+    train_cli.compare,
+    train_cli.expand,
+):
     app.command(_command)
 
 

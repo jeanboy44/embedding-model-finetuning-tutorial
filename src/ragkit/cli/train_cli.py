@@ -11,6 +11,13 @@ from typing import Literal
 from ragkit.config import get_settings
 from ragkit.data import filter_questions, load_corpus, load_questions
 from ragkit.embeddings import choose_backend, create_embedding_fn, get_profile
+from ragkit.rag.query_expansion import (
+    ExpansionUnavailable,
+    default_cache_path,
+    expand_queries,
+    expansion_summary,
+    search_text,
+)
 from ragkit.training.split import (
     SPLITS,
     load_splits,
@@ -175,11 +182,15 @@ def evaluate(
     backend: Literal["onnx", "torch", "st"] | None = None,
     index: Path | None = None,
     out: Path | None = None,
+    expand: bool = False,
+    expansion_cache: Path | None = None,
+    rpm: float | None = None,
 ) -> None:
     """모델의 검색 성능을 전체 코퍼스 대상으로 잰다.
 
     코퍼스 임베딩은 SQLite 인덱스(ragkit.retrieval.build_index)에 저장해 두고,
     같은 모델·같은 코퍼스로 다시 평가하면 그 파일을 재사용한다(1단계 RAG 실습과 같은 파일).
+    --expand면 질문을 LLM으로 법령 용어 검색어로 확장해(원문 + 확장어) 검색한다.
 
     Args:
         model: 모델 이름(base) 또는 학습한 모델 폴더.
@@ -191,6 +202,9 @@ def evaluate(
         index: 인덱스 파일 경로. 기본값은 ragkit index와 같은 data/processed/index/{모델 키}.sqlite
             (학습한 폴더는 "exp_002-가중치수정시각", 허브 모델은 이름 끝부분).
         out: 결과 JSON 경로. 기본값은 experiments/results/{모델 이름}_{split}.json.
+        expand: LLM 쿼리 확장을 쓴다(결과 파일 이름 끝에 _expand). 확장은 캐시에 있으면 재사용한다.
+        expansion_cache: 확장 캐시 JSONL. 기본값은 data/processed/query_expansion/{LLM}.jsonl.
+        rpm: LLM 분당 호출 한도 (무료 등급이면 15). 캐시에 없는 질문을 받을 때만 쓴다.
     """
     if split not in SPLITS:
         _fail(f"알 수 없는 분할: {split} (가능: {', '.join(SPLITS)})")
@@ -203,17 +217,83 @@ def evaluate(
         )
     docs = _load_corpus_or_fail(corpus_path)
 
-    result = _evaluate_model(model, docs, questions, backend=backend, index=index)
+    queries = [q["query"] for q in questions]
+    expansions = _expansions(queries, expansion_cache, rpm) if expand else None
+    result = _evaluate_model(
+        model, docs, questions, backend=backend, index=index, expansions=expansions
+    )
     result = {"split": split, **result}
     model_path = Path(model)
 
-    out = out or get_settings().results_dir / f"{model_path.name}_{split}.json"
+    suffix = "_expand" if expand else ""
+    out = out or get_settings().results_dir / f"{model_path.name}_{split}{suffix}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    print(f"{model} · {split} ({result['n']}개 질문)")
+    print(f"{model}{' + 쿼리 확장' if expand else ''} · {split} ({result['n']}개 질문)")
     _print_metrics(result)
     print(f"결과 → {out}")
+
+
+def expand(
+    questions: Path,
+    *,
+    cache: Path | None = None,
+    llm: str | None = None,
+    rpm: float | None = None,
+) -> None:
+    """질문을 LLM으로 법령 용어 검색어로 확장해 캐시에 쌓는다 (evaluate --expand 전에 미리 받기).
+
+    이미 캐시에 있는 질문은 건너뛰므로, 한도에 걸려 멈추면 같은 명령을 다시 실행하면 된다.
+
+    Args:
+        questions: 질문 JSONL 파일 또는 폴더 (예: data/splits/test.jsonl).
+        cache: 확장 캐시 JSONL. 기본값은 data/processed/query_expansion/{LLM}.jsonl.
+        llm: Gemini 모델 이름. 기본값은 설정의 gemini_model_name.
+        rpm: 분당 호출 한도 (무료 등급이면 15).
+    """
+    if not Path(questions).exists():
+        _fail(f"질문 파일이 없습니다: {questions}")
+    queries = [q["query"] for q in load_questions(Path(questions))]
+    llm = llm or get_settings().gemini_model_name
+    cache = cache or default_cache_path(llm)
+    print(f"질문 {len(queries)}개 확장 ({llm}) → {cache}")
+    _expansions(queries, cache, rpm, llm)
+    print("완료")
+
+
+def _print_progress(done: int, total: int) -> None:
+    if done == total or done % 20 == 0:
+        print(f"  {done}/{total}")
+
+
+def _expansions(
+    queries: list[str], cache: Path | None, rpm: float | None, llm: str | None = None
+) -> dict:
+    """질문 → 확장 결과. 캐시에 없는 질문은 LLM으로 받는다."""
+    from google.genai import errors
+
+    llm = llm or get_settings().gemini_model_name
+    cache = cache or default_cache_path(llm)
+    try:
+        return expand_queries(
+            queries,
+            cache,
+            llm=llm,
+            min_interval_s=60 / rpm if rpm else 0.0,
+            on_progress=_print_progress,
+        )
+    except ExpansionUnavailable as e:
+        _fail(str(e))
+        raise
+    except errors.APIError as e:
+        if e.code != 429:
+            raise
+        _fail(
+            f"LLM 호출 한도를 넘었습니다 ({llm}). 지금까지 받은 확장은 {cache}에 저장됐으니 "
+            f"한도가 풀린 뒤 같은 명령을 다시 실행하세요.\n  {e.message}"
+        )
+        raise
 
 
 def _print_metrics(result: dict) -> None:
@@ -229,8 +309,12 @@ def _evaluate_model(
     *,
     backend: str | None,
     index: Path | None,
+    expansions: dict | None = None,
 ) -> dict:
-    """모델 하나를 모델 프로필의 입력 형식으로 인덱싱(또는 재사용)하고 평가한다."""
+    """모델 하나를 모델 프로필의 입력 형식으로 인덱싱(또는 재사용)하고 평가한다.
+
+    expansions(질문 → Expansion)를 주면 원문 + 확장어로 검색하고 확장 비용을 결과에 넣는다.
+    """
     from ragkit.evaluation import evaluate_index
     from ragkit.retrieval import build_index, default_index_path, model_key
 
@@ -264,13 +348,24 @@ def _evaluate_model(
     start = time.perf_counter()
     vector_index = build_index(docs, embed_fn, index, model_key=key, format_doc=profile.format_doc)
     index_seconds = time.perf_counter() - start
+    searched = questions
+    if expansions:
+        searched = [
+            {**q, "query": search_text(q["query"], expansions[q["query"]].expansion)}
+            for q in questions
+        ]
     try:
         dim = vector_index.dim
         result = evaluate_index(
-            vector_index, embed_fn, docs, questions, format_query=profile.format_query
+            vector_index, embed_fn, docs, searched, format_query=profile.format_query
         )
     finally:
         vector_index.close()
+    if expansions:
+        for row, question in zip(result["per_question"], questions):
+            row["expanded_query"] = row["query"]
+            row["query"] = question["query"]
+        result["expansion"] = expansion_summary([expansions[q["query"]] for q in questions])
     return {
         "model": model,
         "backend": backend,
@@ -290,19 +385,26 @@ def compare(
     backend: Literal["onnx", "torch", "st"] | None = None,
     index_dir: Path | None = None,
     out_dir: Path | None = None,
+    expansion_cache: Path | None = None,
+    rpm: float | None = None,
 ) -> None:
     """실험 설정의 모델들을 같은 질문·같은 코퍼스로 평가해 비교표를 만든다 (학습 없음).
 
     Args:
         config: 실험 설정 (예: experiments/exp_005_base_model_comparison/config.yaml).
             models(모델 이름 또는 폴더 목록), questions(질문 파일 또는 폴더)를 적는다.
+            models 항목을 {model: 이름, expand: true}로 쓰면 LLM 쿼리 확장으로 평가한다.
         questions: 설정의 questions 대신 쓸 질문 파일 또는 폴더.
         corpus: 코퍼스 경로. 기본값은 data/processed/law_docs.json.
         backend: 모든 모델에 쓸 백엔드. 기본값은 모델마다 프로필이 정한다.
         index_dir: 인덱스를 둘 폴더. 기본값은 ragkit index와 같은 data/processed/index/.
         out_dir: 결과 폴더. 기본값은 {설정 폴더}/results/.
+        expansion_cache: 쿼리 확장 캐시 JSONL. 기본값은 data/processed/query_expansion/{LLM}.jsonl.
+        rpm: LLM 분당 호출 한도 (무료 등급이면 15). 캐시에 없는 질문을 받을 때만 쓴다.
     """
     import yaml
+
+    from ragkit.retrieval import model_key
 
     settings = yaml.safe_load(Path(config).read_text(encoding="utf-8")) or {}
     models = settings.get("models") or []
@@ -321,15 +423,21 @@ def compare(
     out_dir = out_dir or Path(config).parent / "results"
     out_dir.mkdir(parents=True, exist_ok=True)
     rows = []
-    for model in models:
-        print(f"=== {model}")
-        from ragkit.retrieval import model_key
+    expansions = None
+    for entry in models:
+        model, expand = (entry["model"], bool(entry.get("expand"))) if isinstance(entry, dict) else (entry, False)
+        print(f"=== {model}{' + 쿼리 확장' if expand else ''}")
+        if expand and expansions is None:
+            expansions = _expansions([q["query"] for q in kept], expansion_cache, rpm)
 
         model_path = Path(model)
         key = model_key(model, model_path if model_path.is_dir() else None)
         index = index_dir / f"{key}.sqlite" if index_dir else None
-        result = _evaluate_model(model, docs, kept, backend=backend, index=index)
-        (out_dir / f"{key}.json").write_text(
+        result = _evaluate_model(
+            model, docs, kept, backend=backend, index=index,
+            expansions=expansions if expand else None,
+        )
+        (out_dir / f"{key}{'_expand' if expand else ''}.json").write_text(
             json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8"
         )
         _print_metrics(result)
@@ -349,6 +457,10 @@ def compare(
     print(f"비교표 → {out_dir / 'comparison.md'}")
 
 
+def _row_label(row: dict) -> str:
+    return f"{row['model']} + 쿼리 확장" if row.get("expansion") else row["model"]
+
+
 def _comparison_markdown(table: dict) -> str:
     """비교표 Markdown. 판정은 doc(정답 문서 일치)이 기본, article(같은 조 조각이면 정답)은 참고."""
     lines = [
@@ -356,16 +468,24 @@ def _comparison_markdown(table: dict) -> str:
         "",
         f"질문 {table['n']}개, 코퍼스 `{table['corpus']}` 전체 대상 검색.",
         "",
-        "| 모델 | 백엔드 | 차원 | R@1 | R@5 | R@10 | MRR@10 | nDCG@10 | article R@10 | 배포 가능 |",
-        "|---|---|---|---|---|---|---|---|---|---|",
+        (
+            "| 모델 | 백엔드 | 차원 | R@1 | R@5 | R@10 | MRR@10 | nDCG@10 | article R@10 "
+            "| LLM 호출/질문 | 확장 지연 s | 배포 가능 |"
+        ),
+        "|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     for row in table["models"]:
         doc, article = row["doc"], row["article"]
+        expansion = row.get("expansion")
+        cost = (
+            f"| {expansion['llm_calls_per_query']} | {expansion['latency_s_mean']:.2f} "
+            if expansion else "| 0 | - "
+        )
         lines.append(
-            f"| {row['model']} | {row['backend']} | {row['dim']} "
+            f"| {_row_label(row)} | {row['backend']} | {row['dim']} "
             f"| {doc.get('recall@1', 0):.3f} | {doc.get('recall@5', 0):.3f} "
             f"| {doc.get('recall@10', 0):.3f} | {doc['mrr@10']:.3f} | {doc['ndcg@10']:.3f} "
-            f"| {article.get('recall@10', 0):.3f} | {'예' if row['deployable'] else '아니오'} |"
+            f"| {article.get('recall@10', 0):.3f} {cost}| {'예' if row['deployable'] else '아니오'} |"
         )
     themes = sorted({theme for row in table["models"] for theme in row["by_theme"]})
     if themes:
@@ -377,5 +497,5 @@ def _comparison_markdown(table: dict) -> str:
                 if t in row["by_theme"] else "-"
                 for t in themes
             ]
-            lines.append(f"| {row['model']} | " + " | ".join(cells) + " |")
+            lines.append(f"| {_row_label(row)} | " + " | ".join(cells) + " |")
     return "\n".join(lines) + "\n"
