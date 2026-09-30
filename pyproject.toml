@@ -32,6 +32,10 @@ train = [
     "pyyaml>=6.0",
     "onnx>=1.16",
 ]
+# 서비스 트레이싱 (api·search-cli·mcp): 경량 SDK, 레지스트리 없음
+tracing = ["mlflow-tracing>=3.8"]
+# 실험 추적·모델 레지스트리 (DS 도구: train·evaluate·compare·bench·register)
+mlflow = ["mlflow>=3.8"]
 
 [project.scripts]
 ragkit = "ragkit.cli.cli_tool:app"
