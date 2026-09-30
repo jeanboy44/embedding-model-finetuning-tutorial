@@ -374,6 +374,23 @@ def test_compare_supports_expand_rows(tmp_path, corpus, questions, monkeypatch) 
     assert "LLM 호출/질문" in markdown
 
 
+def test_expand_command_explains_quota(tmp_path, corpus, questions, monkeypatch, capsys) -> None:
+    """무료 등급 한도(429)면 traceback 대신 받은 만큼은 캐시에 남았고 다시 실행하면 된다고 알린다."""
+    from google.genai import errors
+
+    _, qpath = _write_inputs(tmp_path, corpus, questions)
+
+    def quota(*args, **kwargs):
+        raise errors.ClientError(429, {"error": {"code": 429, "message": "limit: 20", "status": "RESOURCE_EXHAUSTED"}})
+
+    monkeypatch.setattr(train_cli, "expand_queries", quota)
+    with pytest.raises(SystemExit):
+        train_cli.expand(qpath, cache=tmp_path / "c.jsonl")
+
+    out = capsys.readouterr().out
+    assert "한도" in out and "다시 실행" in out and "limit: 20" in out
+
+
 def test_expand_command_builds_cache(tmp_path, corpus, questions, monkeypatch, capsys) -> None:
     _, qpath = _write_inputs(tmp_path, corpus, questions)
     seen = {}

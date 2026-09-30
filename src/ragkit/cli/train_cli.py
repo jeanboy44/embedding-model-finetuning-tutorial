@@ -271,17 +271,28 @@ def _expansions(
     queries: list[str], cache: Path | None, rpm: float | None, llm: str | None = None
 ) -> dict:
     """질문 → 확장 결과. 캐시에 없는 질문은 LLM으로 받는다."""
+    from google.genai import errors
+
     llm = llm or get_settings().gemini_model_name
+    cache = cache or default_cache_path(llm)
     try:
         return expand_queries(
             queries,
-            cache or default_cache_path(llm),
+            cache,
             llm=llm,
             min_interval_s=60 / rpm if rpm else 0.0,
             on_progress=_print_progress,
         )
     except ExpansionUnavailable as e:
         _fail(str(e))
+        raise
+    except errors.APIError as e:
+        if e.code != 429:
+            raise
+        _fail(
+            f"LLM 호출 한도를 넘었습니다 ({llm}). 지금까지 받은 확장은 {cache}에 저장됐으니 "
+            f"한도가 풀린 뒤 같은 명령을 다시 실행하세요.\n  {e.message}"
+        )
         raise
 
 
