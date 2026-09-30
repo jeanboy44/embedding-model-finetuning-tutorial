@@ -108,11 +108,19 @@
 - `data/questions/`와 `data/questions_test/`는 모두 gitignore 대상이고 Drive에만 보관한다.
 - `.claude/` 전체를 git 이력에서 뺐다(2026-09-29). 스킬과 평가 워크스페이스는 `law_questions_drive.py bundle-skill` → `upload --zip-path dist/law-question-gen-skill.zip`으로 Drive에 따로 보관한다(`law-question-gen-skill.zip`). 나중에 사용자가 tutorials phase 폴더로 옮길 예정이다.
 
+### B-5. 전체 파트 생성 (2026-09-30, 완료)
+- 남은 204개 파트를 생성해 230/230 파트가 완료됐다. 새 질문은 10,228개이고, 전체는 질문 12,232개, 정답 문서 9,704개다. 파일을 모두 함께 검증해 오류 0을 확인했다.
+- 파트당 목표는 평균 약 50개였다. 행정 조문 위주인 파트(조세특례제한법, 자본시장법)는 20개 안팎이고, 소비자·교통 파트는 60~80개다.
+- 유형 비율은 situation 41%, question 36%, keyword 23%다. 세금·금융 쪽 기업 대상 조문 때문에 situation이 목표(50%)보다 낮다.
+- 서브에이전트 23개(파트 9개씩)로 돌리다 세션 사용량 한도에 걸려 19개가 멈췄다. 남은 26개 파트는 묶음 7개로 다시 돌렸다.
+- 여신전문금융업법 p02는 뒷부분이 비어 있어(쓰다 끊긴 것으로 판단) 질문 14개를 덧붙였다.
+- 표본을 뽑아 질문과 답이 조문 내용에 맞는지 직접 읽는 검수는 아직 하지 않았다. 먼저 볼 곳은 조세특례제한법 p13~p21의 창업자금 특례 질문이다. 법률 본문이 파트에 없어 답을 넓게 썼다.
+- Drive에 다시 업로드했다(`law-questions.zip`, 9.7MB).
+
 ### C. 스킬 확정 후
-- 231개 파트 전체를 생성한다. 먼저 규모와 비용을 사용자와 확인한다. 조문 11,723개 × 평균 1~1.5개 ≈ 질문 1.2만~1.8만 개.
+- ~~231개 파트 전체를 생성한다.~~ 완료(B-5).
 - 학습/평가 분할 스크립트를 만든다. 제안은 법령 또는 테마 단위 분할(처음 보는 분야로 일반화하는지 확인)이다.
 - 생성한 질문(`data/questions/`)은 git에 넣지 않고(gitignore) Google Drive에 보관한다(사용자 결정, 2026-09-29). 생성한 뒤에는 `law_questions_drive.py bundle` → `upload`를 실행한다.
 
 ## 커밋 상태
-아무것도 커밋하지 않았다. 커밋되지 않은 변경:
-- `.gitignore`(수정), `scripts/prepare_law_data.py`, `tests/test_prepare_law_data.py`, `.claude/skills/law-question-gen/`, 이 문서
+코드와 문서는 main에 커밋돼 있다. `data/questions/`와 `.claude/`는 git에 넣지 않고 Drive에 보관한다.
