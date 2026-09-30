@@ -111,5 +111,48 @@ def quantize_command(
     print(f"사용: create_embedding_fn('{out_dir}', backend='onnx') / uv run ragkit index --model {out_dir}")
 
 
+@app.command(name="prune-vocab")
+def prune_vocab_command(
+    model_dir: Path,
+    out_dir: Path | None = None,
+    corpus: Path | None = None,
+    ascii_max_len: int = 3,
+    keep_hangul: bool = True,
+) -> None:
+    """어휘를 코퍼스에 필요한 토큰만 남겨 모델을 줄인다 (extra [torch] 필요).
+
+    남긴 어휘로 토큰화되는 문장은 원본과 같은 벡터가 나온다. 이어서 export-onnx → quantize.
+
+    Args:
+        model_dir: HF 모델 폴더 (예: models/multilingual-e5-small, 파인튜닝 결과 폴더).
+        out_dir: 출력 폴더. 기본값 <model_dir>-pruned.
+        corpus: 코퍼스 JSON. 기본값 data/processed/law_docs.json.
+        ascii_max_len: 이 길이 이하의 ASCII 조각을 남긴다 (영문 약어·숫자·기호).
+        keep_hangul: 한글 조각을 모두 남긴다 (--no-keep-hangul이면 코퍼스에 나온 것만).
+    """
+    from tokenizers import Tokenizer
+
+    from ragkit.data import load_corpus
+    from ragkit.embeddings import get_profile
+    from ragkit.models.vocab_prune import prune_vocab, vocab_keep_ids
+
+    out_dir = out_dir or model_dir.with_name(f"{model_dir.name}-pruned")
+    docs = load_corpus(corpus or get_settings().data_dir / "processed" / "law_docs.json")
+    profile = get_profile(model_dir)
+    tok = Tokenizer.from_file(str(model_dir / "tokenizer.json"))
+    keep = vocab_keep_ids(
+        tok,
+        (profile.format_doc(d) for d in docs),
+        prefixes=[profile.format_query(""), profile.format_doc({"title": "", "text": ""})],
+        keep_hangul=keep_hangul,
+        ascii_max_len=ascii_max_len,
+    )
+    prune_vocab(model_dir, out_dir, keep)
+    before = (model_dir / "model.safetensors").stat().st_size / 1e6
+    after = (out_dir / "model.safetensors").stat().st_size / 1e6
+    print(f"어휘 {tok.get_vocab_size():,} → {len(keep):,}개, 가중치 {before:.0f} → {after:.0f} MB: {out_dir}")
+    print(f"다음: uv run ragkit export-onnx {out_dir} && uv run ragkit quantize {out_dir}")
+
+
 if __name__ == "__main__":
     app()

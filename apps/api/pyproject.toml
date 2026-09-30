@@ -10,7 +10,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# 2단계: torch 백엔드로 띄우기 (3단계에서 ONNX 기본 설치와 이미지 크기를 비교한다)
+# 2단계: torch 백엔드로 띄우기 (3단계에서 ONNX 기본 설치와 크기·속도를 비교한다)
 torch = ["ragkit[torch]"]
 
 [project.scripts]

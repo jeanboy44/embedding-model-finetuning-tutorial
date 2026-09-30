@@ -4,6 +4,7 @@
 """
 
 import shutil
+import warnings
 from pathlib import Path
 
 from ragkit.embeddings.onnx_backend import onnx_model_path
@@ -56,7 +57,12 @@ def export_onnx(model_dir: Path, out_dir: Path | None = None, opset: int = 17) -
         def forward(self, *args: torch.Tensor) -> torch.Tensor:
             return self.inner(**dict(zip(input_names, args))).last_hidden_state
 
-    with torch.no_grad():
+    # 추적(trace) 경고는 입력 길이 비교·None 검사·음수 인덱스 안내라 결과와 무관하다
+    # (torch↔onnx 코사인 ≥ 0.999를 tests/test_onnx_backend.py가 확인한다). 화면만 어지럽혀 숨긴다.
+    with torch.no_grad(), warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=torch.jit.TracerWarning)
+        warnings.filterwarnings("ignore", message="Exporting aten::index operator")
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
         torch.onnx.export(
             _Wrapper(model),
             tuple(sample[n] for n in input_names),
