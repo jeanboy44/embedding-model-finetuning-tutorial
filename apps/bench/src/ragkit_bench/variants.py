@@ -28,4 +28,6 @@ DEFAULT_VARIANTS = (
     Variant("torch-fp32", BASE_MODEL, "torch", deps=("torch", "transformers")),
     Variant("onnx-fp32", BASE_MODEL, "onnx", deps=("onnxruntime", "tokenizers")),
     Variant("onnx-int8", f"{BASE_MODEL}-int8", "onnx", deps=("onnxruntime", "tokenizers")),
+    # 어휘 25만 → 약 2만 (ragkit prune-vocab) 후 INT8. 한국어 법령 전용으로 좁힌 모델
+    Variant("onnx-int8-pruned", f"{BASE_MODEL}-pruned-int8", "onnx", deps=("onnxruntime", "tokenizers")),
 )

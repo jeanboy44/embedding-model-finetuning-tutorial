@@ -73,7 +73,7 @@ def run(
     variants: list[str] | None = None,
     corpus: Path = Path("data/processed/law_docs.json"),
     questions: Path = Path("data/splits/test.jsonl"),
-    out_dir: Path = Path("experiments/exp_006_deploy_bench/results"),
+    out_dir: Path = Path("experiments/exp_008_deploy_bench/results"),
     n_latency: int = 100,
 ) -> None:
     """변형별로 측정하고 results.json과 comparison.md를 쓴다.
@@ -90,9 +90,12 @@ def run(
     if missing:
         names = ", ".join(v.name for v in missing)
         raise SystemExit(
-            f"모델 폴더가 없습니다: {names}\n"
-            "먼저 준비하세요: uv run ragkit export-onnx models/multilingual-e5-small && "
-            "uv run ragkit quantize models/multilingual-e5-small"
+            f"모델 폴더가 없습니다: {names}\n먼저 준비하세요:\n"
+            "  uv run ragkit export-onnx models/multilingual-e5-small\n"
+            "  uv run ragkit quantize models/multilingual-e5-small\n"
+            "  uv run ragkit prune-vocab models/multilingual-e5-small\n"
+            "  uv run ragkit export-onnx models/multilingual-e5-small-pruned\n"
+            "  uv run ragkit quantize models/multilingual-e5-small-pruned"
         )
 
     rows = []

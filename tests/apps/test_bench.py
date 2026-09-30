@@ -49,9 +49,9 @@ def test_install_size_counts_dependency_closure() -> None:
 
 
 def test_default_variants_cover_original_onnx_and_int8() -> None:
-    """기본 비교 대상: 원본(torch), ONNX(fp32), ONNX(INT8)."""
-    assert [v.name for v in DEFAULT_VARIANTS] == ["torch-fp32", "onnx-fp32", "onnx-int8"]
-    assert [v.backend for v in DEFAULT_VARIANTS] == ["torch", "onnx", "onnx"]
+    """기본 비교 대상: 원본(torch), ONNX(fp32), ONNX(INT8), ONNX(INT8 + 어휘 가지치기)."""
+    assert [v.name for v in DEFAULT_VARIANTS] == ["torch-fp32", "onnx-fp32", "onnx-int8", "onnx-int8-pruned"]
+    assert [v.backend for v in DEFAULT_VARIANTS] == ["torch", "onnx", "onnx", "onnx"]
 
 
 def test_to_markdown_table() -> None:

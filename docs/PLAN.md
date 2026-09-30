@@ -83,9 +83,10 @@ scripts/               # 일회성 데이터 준비 (prepare_law_data, 질문 Dr
 
 AI 도구 덕분에 DS가 직접 손대기 쉬워진 영역 ①.
 
-- `ragkit export-onnx`로 PyTorch → ONNX 변환, 양자화(동적 INT8 등)
-- `apps/bench`: 원본 / ONNX / 양자화 모델의 **지연 시간·메모리·모델 크기·설치 크기·검색 정확도(Recall@k)** 비교표
-- `apps/api`의 백엔드를 ONNX로 바꾸고 torch 없는 배포 이미지 크기를 비교한다
+- `ragkit export-onnx`로 PyTorch → ONNX 변환, 양자화(동적 INT8, 채널별)
+- 어휘 가지치기(`ragkit prune-vocab`): 용량의 82%인 다국어 어휘 임베딩 표를 한국어 법령에 필요한 토큰(25만 → 약 1.9만)만 남긴다
+- `apps/bench`: 원본 / ONNX / INT8 / 가지치기+INT8의 **지연 시간·메모리·모델 크기·설치 크기·검색 정확도(Recall@k)** 비교표
+- `apps/api`의 백엔드를 torch → ONNX로 바꿔 설치 크기·시작 시간을 비교한다 (Docker는 쓰지 않는다)
 - 메시지: "정확도를 얼마나 잃고 얼마나 빨라지는가"를 DS가 직접 재고 판단한다
 
 ### 4단계. AI가 오면서: CLI 도구, MCP, 프론트엔드 (apps/search-cli, apps/mcp, apps/web)
@@ -106,7 +107,7 @@ AI 도구 덕분에 DS가 직접 손대기 쉬워진 영역 ②. 모델을 "제�
 |---|---|---|---|
 | 1 | ragkit(인덱스·분할·학습·평가·비교) | `01_build_rag.py`만 | 실험 005: e5-small R@5 0.535 / EmbeddingGemma 0.819. **학습(실험 002·004)은 아직 안 돌림**, 비교 실습 02~05와 학습·평가 튜토리얼 없음 |
 | 2 | apps/api | `01_search_api.py`, `02_streaming_and_notebooks.py` | 실행 확인 (torch 백엔드, SSE, 노트북) |
-| 3 | `ragkit quantize`(채널별 INT8), apps/bench, api Dockerfile | `01`~`03` | 실험 006: ONNX INT8이 torch 대비 설치 1/5·모델 1/4·로딩 1/8·메모리 0.77배, R@5 동일. **Docker 이미지 빌드는 아직 확인 못 함** |
+| 3 | `ragkit quantize`(채널별 INT8), `ragkit prune-vocab`, apps/bench | `01`~`03` | 실험 008: 가지치기+INT8이 torch 대비 설치 669→127MB·모델 471→30MB·메모리 1000→378MB·로딩 4.7→0.4s, R@5 0.535 동일 |
 | 4 | apps/search-cli·mcp·web | `01_search_cli.py`, `02_mcp_server.py`, `03_web_app.py` | uvx(torch 없음), MCP stdio 도구 호출, 웹 흐름(Playwright) 확인 |
 
 - 이전 구성(Phase 1~4)의 자료: 대체된 것은 지웠다. RAG 에이전트·모니터링은 `tutorials/_legacy/`에 남겨 두었다(아래 미정).
@@ -115,4 +116,4 @@ AI 도구 덕분에 DS가 직접 손대기 쉬워진 영역 ②. 모델을 "제�
 
 - 단계별 시간 배분 (전체 8시간 = 480분). 초안(제안, 미확정): 1단계 210분(도입 45 + 데이터·학습·평가 165) / 2단계 60분 / 3단계 90분 / 4단계 120분(CLI 40 · MCP 30 · React 50)
 - RAG 에이전트(`ragkit.rag`)와 모니터링: 1단계 도입에서만 쓸지, 부록으로 둘지, 뺄지
-- 2단계 API 배포 방식: Dockerfile(apps/api/Dockerfile, onnx/torch)을 만들었다. 강의에서 Docker를 쓸지, `ragkit-api --web-dist`(한 프로세스)로 충분한지 결정 필요
+- (결정) 배포는 Docker 없이 `ragkit-api --web-dist apps/web/dist`(한 프로세스)로 한다 (2026-09-30)
