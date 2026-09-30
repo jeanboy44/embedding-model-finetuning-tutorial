@@ -105,9 +105,9 @@ AI 도구 덕분에 DS가 직접 손대기 쉬워진 영역 ②. 모델을 "제�
 
 | 단계 | 소스 | 튜토리얼 | 확인 |
 |---|---|---|---|
-| 1 | ragkit(인덱스·분할·학습·평가·비교) | `01_build_rag.py`만 | 실험 005: e5-small R@5 0.535 / EmbeddingGemma 0.819. **학습(실험 002·004)은 아직 안 돌림**, 비교 실습 02~05와 학습·평가 튜토리얼 없음 |
+| 1 | ragkit(인덱스·분할·학습·평가·비교) | `01_build_rag.py`만 | 질문 12,232개 → 법령 단위 분할 train 8,294 · dev 1,412 · test 2,526(법령 16개). 실험 005: e5-small R@5 0.513 / EmbeddingGemma 0.743. 파인튜닝은 `feat/finetune-runs`에서 진행 중(새 분할로 재학습 필요). 비교 실습 02~05와 학습·평가 튜토리얼 없음 |
 | 2 | apps/api | `01_search_api.py`, `02_streaming_and_notebooks.py` | 실행 확인 (torch 백엔드, SSE, 노트북) |
-| 3 | `ragkit quantize`(채널별 INT8), `ragkit prune-vocab`, apps/bench | `01`~`03` | 실험 008: 가지치기+INT8이 torch 대비 설치 669→127MB·모델 471→30MB·메모리 1000→378MB·로딩 4.7→0.4s, R@5 0.535 동일 |
+| 3 | `ragkit quantize`(채널별 INT8), `ragkit prune-vocab`, apps/bench | `01`~`03` | 실험 008(test 2,526개): 가지치기+INT8이 torch 대비 설치 669→127MB·모델 471→30MB·메모리 1133→403MB·로딩 3.6→0.3s, R@5 0.513→0.515(동일). 가지치기 어휘가 test 질문 100%를 원본과 같게 토큰화 |
 | 4 | apps/search-cli·mcp·web | `01_search_cli.py`, `02_mcp_server.py`, `03_web_app.py` | uvx(torch 없음), MCP stdio 도구 호출, 웹 흐름(Playwright) 확인 |
 
 - 이전 구성(Phase 1~4)의 자료: 대체된 것은 지웠다. RAG 에이전트·모니터링은 `tutorials/_legacy/`에 남겨 두었다(아래 미정).

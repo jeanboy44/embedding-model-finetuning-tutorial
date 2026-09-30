@@ -59,10 +59,10 @@ models/<모델> ─ ragkit export-onnx ─→ onnx/model.onnx ─ ragkit quantiz
 | `mcp` (ragkit-mcp) | 4 | 공식 mcp SDK(stdio). 도구: search_laws · get_article · list_laws · ask |
 | `web` | 4 | Vite + React + TS + Tailwind + shadcn/ui + TanStack Query. api만 호출 |
 
-## 실측 요약 (Mac, e5-small, test 질문 443개, 2026-09)
+## 실측 요약 (Mac, test 질문 2,526개·법령 16개, 2026-09-30)
 
 | | 값 |
 |---|---|
-| 베이스 모델 R@5 | e5-small 0.535 / EmbeddingGemma-300m 0.819 |
-| 배포 변형 (torch fp32 → ONNX INT8 → 가지치기+INT8) | 모델 471 → 118 → 30 MB, 설치 669 → 127 MB, 메모리 1000 → 871 → 378 MB, R@5 0.535 → 0.535 → 0.535 |
+| 베이스 모델 R@5 | e5-small 0.513 / EmbeddingGemma-300m 0.743 (일상어 상황 질문 0.403 / 0.685) |
+| 배포 변형 (e5-small: torch fp32 → ONNX INT8 → 가지치기+INT8) | 모델 471 → 118 → 30 MB, 설치 669 → 127 MB, 메모리 1133 → 874 → 403 MB, 로딩 3.6 → 0.5 → 0.3 s, R@5 0.513 → 0.514 → 0.515 |
 | 인덱싱 (전체 코퍼스) | e5 mps + 길이순 배치 약 1.3분 / EmbeddingGemma 약 16분 |
