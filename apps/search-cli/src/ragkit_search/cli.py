@@ -89,7 +89,7 @@ def search(
         json_: 결과를 JSON으로 출력한다.
     """
     try:
-        hits = _open_searcher(options or SearcherOptions()).search(query, k=k, laws=law)
+        hits = _open_searcher(options or SearcherOptions()).search(query, k=k, laws=law, source="search-cli")
     except (FileNotFoundError, ValueError) as e:
         return _fail(str(e))
     if json_:
@@ -122,7 +122,7 @@ def ask(
     hits: list[SearchHit] = []
     error: str | None = None
     try:
-        for event in _open_searcher(options or SearcherOptions()).answer_stream(question, k=k, laws=law):
+        for event in _open_searcher(options or SearcherOptions()).answer_stream(question, k=k, laws=law, source="search-cli"):
             if isinstance(event, HitsEvent):
                 hits = event.hits
             elif isinstance(event, DeltaEvent):

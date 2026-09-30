@@ -61,6 +61,24 @@ def test_answer_trace_links_search_and_llm_with_session(searcher, fake_stream, t
     assert trace.info.request_metadata["mlflow.trace.user"] == "kim"
 
 
+def test_notebook_chat_turns_share_one_session(searcher, traces, tmp_path: Path) -> None:
+    """노트북 채팅: 질문마다 트레이스 하나, 같은 노트북이면 같은 세션."""
+    from fastapi.testclient import TestClient
+    from ragkit_api import create_app
+    from ragkit_api.store import NotebookStore
+
+    client = TestClient(create_app(searcher=searcher, store=NotebookStore(tmp_path / "nb.sqlite")))
+    nb = client.post("/api/notebooks", json={"title": "휴일", "laws": ["근로기준법"]}).json()
+    for query in ("휴일 수당", "더 알려줘"):
+        with client.stream("POST", f"/api/notebooks/{nb['id']}/chat", json={"query": query}) as res:
+            res.read()
+
+    found = traces()
+    assert len(found) == 2
+    assert {t.info.request_metadata["mlflow.trace.session"] for t in found} == {nb["id"]}
+    assert {t.info.tags["source"] for t in found} == {"api"}
+
+
 def test_tracing_off_leaves_no_trace(searcher, monkeypatch: pytest.MonkeyPatch) -> None:
     """추적 주소가 없으면 검색·답변이 그대로 동작한다."""
     monkeypatch.delenv("MLFLOW_TRACKING_URI", raising=False)

@@ -12,6 +12,8 @@ dependencies = [
 [project.optional-dependencies]
 # 2단계: torch 백엔드로 띄우기 (3단계에서 ONNX 기본 설치와 크기·속도를 비교한다)
 torch = ["ragkit[torch]"]
+# 4단계: MLflow 트레이싱 (MLFLOW_TRACKING_URI를 주면 요청마다 트레이스를 남긴다)
+tracing = ["ragkit[tracing]"]
 
 [project.scripts]
 ragkit-api = "ragkit_api:main"

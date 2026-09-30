@@ -33,7 +33,7 @@ def search_laws(searcher: Searcher, query: str, k: int = 5, laws: list[str] | No
             "text": hit.text,
             "source_url": hit.metadata.get("source_url", ""),
         }
-        for hit in searcher.search(query, k=k, laws=laws)
+        for hit in searcher.search(query, k=k, laws=laws, source="mcp")
     ]
 
 
@@ -84,7 +84,7 @@ def ask(searcher: Searcher, question: str, laws: list[str] | None = None, k: int
     Returns:
         {answer, sources: [{n, id, title}], error}. LLM을 못 쓰면 answer는 비고 error에 이유가 담긴다.
     """
-    result = searcher.answer(question, k=k, laws=laws)
+    result = searcher.answer(question, k=k, laws=laws, source="mcp")
     return {
         "answer": result.answer,
         "sources": [

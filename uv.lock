@@ -4643,15 +4643,19 @@ dependencies = [
 torch = [
     { name = "ragkit", extra = ["torch"] },
 ]
+tracing = [
+    { name = "ragkit", extra = ["tracing"] },
+]
 
 [package.metadata]
 requires-dist = [
     { name = "fastapi", specifier = ">=0.100.0" },
     { name = "ragkit", editable = "." },
     { name = "ragkit", extras = ["torch"], marker = "extra == 'torch'", editable = "." },
+    { name = "ragkit", extras = ["tracing"], marker = "extra == 'tracing'", editable = "." },
     { name = "uvicorn", specifier = ">=0.23.0" },
 ]
-provides-extras = ["torch"]
+provides-extras = ["torch", "tracing"]
 
 [[package]]
 name = "ragkit-bench"
@@ -4679,11 +4683,18 @@ dependencies = [
     { name = "ragkit" },
 ]
 
+[package.optional-dependencies]
+tracing = [
+    { name = "ragkit", extra = ["tracing"] },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "mcp", specifier = ">=2.2" },
     { name = "ragkit", editable = "." },
+    { name = "ragkit", extras = ["tracing"], marker = "extra == 'tracing'", editable = "." },
 ]
+provides-extras = ["tracing"]
 
 [[package]]
 name = "ragkit-search"
@@ -4693,8 +4704,17 @@ dependencies = [
     { name = "ragkit" },
 ]
 
+[package.optional-dependencies]
+tracing = [
+    { name = "ragkit", extra = ["tracing"] },
+]
+
 [package.metadata]
-requires-dist = [{ name = "ragkit", editable = "." }]
+requires-dist = [
+    { name = "ragkit", editable = "." },
+    { name = "ragkit", extras = ["tracing"], marker = "extra == 'tracing'", editable = "." },
+]
+provides-extras = ["tracing"]
 
 [[package]]
 name = "referencing"
