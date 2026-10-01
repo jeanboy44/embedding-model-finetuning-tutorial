@@ -5,10 +5,10 @@
   const slides = [...stage.querySelectorAll(".slide")];
   const pager = Object.assign(document.createElement("div"), { className: "pager" });
   const progress = Object.assign(document.createElement("div"), { className: "progress" });
-  stage.append(pager, progress);
+  stage.parentElement.append(pager, progress); // 무대 밖(화면 가장자리)에 붙인다
   let index = 0;
 
-  const fit = () => { stage.style.transform = `scale(${Math.min(innerWidth / 1600, innerHeight / 900)})`; };
+  const fit = () => { stage.style.transform = `translate(-50%, -50%) scale(${Math.min(innerWidth / 1600, innerHeight / 900)})`; };
   addEventListener("resize", fit);
   fit();
 

@@ -18,10 +18,12 @@
 html, body { margin: 0; height: 100%; overflow: hidden; }
 body { background: #f2f3ef; color: var(--text); font-family: "Pretendard", system-ui, sans-serif; }
 
-.viewport { position: fixed; inset: 0; display: grid; place-items: center; }
+/* 그라데이션은 화면 전체에 깔아서, 화면 비율이 16:9가 아니어도 무대 가장자리가 보이지 않게 한다 */
+.viewport { position: fixed; inset: 0; background: linear-gradient(135deg, #eef3e9 0%, #fbfbf8 55%, #f8f5e3 100%); }
+/* 화면 가운데에 놓고 deck.js가 translate(-50%,-50%) scale()로 맞춘다.
+   grid 가운데 정렬은 무대가 화면보다 클 때 왼쪽에 붙은 채로 줄어 오른쪽으로 밀린다. */
 .stage {
-  width: 1600px; height: 900px; position: relative; overflow: hidden; transform-origin: center;
-  background: linear-gradient(135deg, #eef3e9 0%, #fbfbf8 55%, #f8f5e3 100%);
+  width: 1600px; height: 900px; position: absolute; left: 50%; top: 50%; overflow: hidden; transform-origin: center;
 }
 .slide {
   position: absolute; inset: 0; padding: 110px 140px;
@@ -69,5 +71,22 @@ code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .9em; 
 .bar .track { height: 12px; border-radius: 6px; background: var(--line); overflow: hidden; }
 .bar .fill { height: 100%; width: 0; border-radius: 6px; background: var(--c); transition: width .8s ease; }
 
-.pager { position: absolute; right: 56px; bottom: 40px; font-size: 18px; color: var(--muted); font-variant-numeric: tabular-nums; }
-.progress { position: absolute; left: 0; bottom: 0; height: 4px; width: 0; background: linear-gradient(90deg, var(--orange), var(--blue)); transition: width .3s; }
+.pager { position: fixed; right: 32px; bottom: 24px; font-size: 18px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.progress { position: fixed; left: 0; bottom: 0; height: 4px; width: 0; background: linear-gradient(90deg, var(--orange), var(--blue)); transition: width .3s; }
+
+/* 숫자 강조 */
+.big { font-size: 64px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; font-variant-numeric: tabular-nums; }
+
+/* 표: 선만, 숫자는 오른쪽 정렬 */
+.tbl { width: 100%; border-collapse: collapse; font-size: 24px; font-variant-numeric: tabular-nums; }
+.tbl th { text-align: left; font-size: 19px; font-weight: 600; color: var(--muted); padding: 0 20px 14px 0; border-bottom: 2px solid var(--line); }
+.tbl td { padding: 14px 20px 14px 0; border-bottom: 1px solid var(--line); }
+.tbl .num { text-align: right; }
+.tbl tr.hl td { font-weight: 700; }
+.tbl .empty { color: var(--muted); font-weight: 400; }
+
+/* 질문과 조문 나란히 */
+.quote { font-size: 30px; line-height: 1.55; font-weight: 600; }
+.law { font-size: 21px; line-height: 1.75; color: var(--muted); }
+.law b { color: var(--text); font-weight: 600; }
+.cols.c5 { grid-template-columns: repeat(5, 1fr); gap: 32px; }
