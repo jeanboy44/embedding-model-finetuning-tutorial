@@ -12,6 +12,7 @@ mlflow = pytest.importorskip("mlflow")
 @pytest.fixture
 def traces(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     """임시 SQLite 저장소로 MLflow를 켜고, 기록된 트레이스를 돌려주는 함수를 준다."""
+    monkeypatch.chdir(tmp_path)  # 아티팩트 기본 위치(cwd/mlruns)
     monkeypatch.setenv("MLFLOW_TRACKING_URI", f"sqlite:///{tmp_path / 'mlflow.db'}")
     monkeypatch.setenv("MLFLOW_TRACE_EXPERIMENT", "svc")
     get_settings.cache_clear()

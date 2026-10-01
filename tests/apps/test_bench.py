@@ -75,6 +75,7 @@ def test_log_to_mlflow_makes_run_per_variant(tmp_path: Path, monkeypatch) -> Non
 
     from ragkit.config import get_settings
 
+    monkeypatch.chdir(tmp_path)  # 아티팩트 기본 위치(cwd/mlruns)
     monkeypatch.setenv("MLFLOW_TRACKING_URI", f"sqlite:///{tmp_path / 'mlflow.db'}")
     monkeypatch.setenv("MLFLOW_EXPERIMENT", "bench-test")
     get_settings.cache_clear()
