@@ -83,7 +83,17 @@ uv sync --extra mlflow
 uv run mlflow server --backend-store-uri sqlite:///mlruns/mlflow.db --artifacts-destination mlruns/artifacts
 uv run ragkit register models/multilingual-e5-small-pruned-int8 --alias champion   # → models:/law-embedder@champion
 uv run --package ragkit-api ragkit-api --model models:/law-embedder@champion
+
+# 데이터 버전: 코퍼스 + 분할 + 원본 질문을 v1, v2, …로 고정한다.
+# 파일은 Drive의 law-data-<버전>.zip, git에는 manifest(data/versions/<버전>.json)만 둔다.
+uv run python scripts/data_version.py pull v1        # Drive에서 받아 data/에 풂 (로그인 불필요)
+uv run python scripts/data_version.py status         # 지금 data/가 어느 버전과 같은지
+# 새 버전 만들기 (강사): create → upload(rclone) → register(MLflow law-data 실험)
+uv run python scripts/data_version.py create v2 --description "무엇이 바뀌었는지"
 ```
+
+train·evaluate·compare run에는 입력 파일과 내용이 같은 버전이 데이터셋(`law-retrieval/train` 등)과
+`data_version` 태그로 남는다. 버전에 없는 파일로 돌리면 `data_version=unversioned`.
 
 | 앱 | 설명 |
 |---|---|

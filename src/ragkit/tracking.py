@@ -8,6 +8,7 @@
     span = tracking.start_span("answer", "CHAIN", inputs=..., session_id=nb_id)   # 트레이싱 ([tracing])
     span.end(outputs=...)
     tracking.register_model("models/e5-pruned-int8", name="law-embedder", alias="champion")  # 레지스트리 ([mlflow])
+    run.log_data({"corpus": corpus_path, "train": train_path})   # 입력 데이터 버전 (data/versions/v1.json)
 
 트레이스는 스트리밍 답변처럼 여러 스레드를 오가는 흐름도 끊기지 않도록
 컨텍스트에 기대지 않는 스팬(start_span_no_context)으로 부모-자식을 직접 잇는다.
@@ -82,6 +83,22 @@ class Run:
         if self._mlflow and tags:
             self._mlflow.set_tags({k: str(v) for k, v in tags.items()})
 
+    def log_data(self, paths: dict[str, Path]) -> None:
+        """입력 파일이 어느 데이터 버전인지 찾아 run 입력(Datasets)과 data_version 태그로 남긴다.
+
+        Args:
+            paths: 입력 이름(context) → 파일. 예: {"corpus": law_docs.json, "train": train.jsonl}.
+        """
+        if not self._mlflow:
+            return
+        from ragkit.config import get_settings
+        from ragkit.training import data_version
+
+        found, unmatched = data_version.match_files(paths, data_version.versions_dir(get_settings().data_dir))
+        contexts = [c for c in paths if c not in unmatched]
+        _log_inputs(self._mlflow, found, contexts)
+        self.set_tags({"data_version": data_version.version_tag(found, unmatched)})
+
 
 @contextmanager
 def run(
@@ -116,6 +133,66 @@ def flat_metrics(result: dict, prefix: str = "") -> dict[str, float]:
             if "recall@5" in sub.get("doc", {}):
                 out[f"{prefix}{group}/{name}/recall@5"] = sub["doc"]["recall@5"]
     return out
+
+
+# ============================================================
+# 데이터 버전 (extra [mlflow])
+# ============================================================
+DATA_EXPERIMENT = "law-data"
+
+
+def _log_inputs(mlflow, refs: list, contexts: list[str]) -> None:
+    """DatasetRef를 MLflow 데이터셋(메타데이터만: 이름·digest·Drive 주소)으로 run 입력에 단다."""
+    if not refs:
+        return
+    from mlflow.data.http_dataset_source import HTTPDatasetSource
+    from mlflow.data.meta_dataset import MetaDataset
+
+    mlflow.log_inputs(
+        datasets=[MetaDataset(HTTPDatasetSource(r.source), name=r.name, digest=r.digest) for r in refs],
+        contexts=contexts,
+        tags_list=[{"data_version": r.version} for r in refs],
+    )
+
+
+def find_data_run(version: str) -> str | None:
+    """law-data 실험에서 이 버전을 등록한 run id (없으면 None)."""
+    mlflow = _mlflow(DATA_EXPERIMENT)
+    found = mlflow.search_runs(
+        experiment_names=[DATA_EXPERIMENT], filter_string=f"tags.data_version = '{version}'",
+        output_format="list",
+    )
+    return found[0].info.run_id if found else None
+
+
+def register_dataset(manifest: dict, manifest_path: Path) -> str | None:
+    """데이터 버전 하나를 law-data 실험의 run(data/<버전>)으로 남긴다.
+
+    역할(corpus·train·dev·test·questions)마다 데이터셋을 run 입력으로 달고,
+    행 수는 파라미터, manifest는 아티팩트로 남긴다. 파일 자체는 올리지 않는다(Drive zip).
+
+    Returns:
+        run id. MLflow가 꺼져 있으면 None.
+    """
+    if not enabled():
+        return None
+    from ragkit.training import data_version
+
+    mlflow = _mlflow(DATA_EXPERIMENT)
+    version = manifest["version"]
+    roles = [role for role in manifest["files"] if role != "split_meta"]
+    with mlflow.start_run(run_name=f"data/{version}", description=manifest.get("description") or None) as active:
+        current = Run(mlflow, active.info.run_id)
+        _log_inputs(mlflow, [data_version.to_ref(manifest, r) for r in roles], roles)
+        current.log_params({f"{r}.rows": manifest["files"][r].get("rows") for r in roles})
+        current.set_tags({
+            "data_version": version,
+            "dataset": manifest["name"],
+            "source": data_version.source_url(manifest),
+            "zip_sha256": (manifest.get("zip") or {}).get("sha256") or "",
+        })
+        current.log_artifact(manifest_path)
+    return active.info.run_id
 
 
 # ============================================================

@@ -29,6 +29,8 @@ models/<모델> ─ ragkit export-onnx ─→ onnx/model.onnx ─ ragkit quantiz
 
 [모니터링 · 4단계] (MLFLOW_TRACKING_URI가 있을 때만, ragkit.tracking)
 ragkit train · evaluate · compare · ragkit-bench ─→ MLflow 실험 "ragkit" (run: 파라미터·지표·결과 파일)
+        └ 입력 파일 sha256이 data/versions/vN.json과 같으면 run 입력 law-retrieval/<역할> + 태그 data_version=vN
+scripts/data_version.py create·upload·register vN ─→ Drive law-data-vN.zip + MLflow 실험 "law-data" (run data/vN)
 ragkit register <모델 폴더> ─→ 레지스트리 law-embedder vN + 별칭 champion (태그 index_key)
         └ Searcher.open("models:/law-embedder@champion") → models/registry/<이름>-v<N>/ + 같은 인덱스
 Searcher.search / answer_stream ─→ MLflow 실험 "ragkit-service" (질문 한 번 = 트레이스 하나)
