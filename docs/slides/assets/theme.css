@@ -1,0 +1,73 @@
+/* 강의 슬라이드 공용 테마
+   팔레트: 세이지 #d6e0cc · 파랑 #4f93d8 · 연노랑 #e3dd9b · 살구 #e89c6c · 주황 #ec9a3e
+   2022 = 주황, 2026 = 파랑. 글자색으로 쓸 때는 대비를 위해 진한 톤(-ink)을 쓴다.
+   무대는 1600x900 고정이고 deck.js가 화면 크기에 맞춰 늘리고 줄인다. */
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+
+:root {
+  --text: #1f2a37;
+  --muted: #6b7480;
+  --line: rgba(31, 42, 55, .12);
+  --blue: #4f93d8;   --blue-ink: #2d6db0;
+  --orange: #ec9a3e; --orange-ink: #b8650f;
+  --sage: #d6e0cc;
+  --apricot: #e89c6c;
+  --yellow: #e3dd9b;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; }
+body { background: #f2f3ef; color: var(--text); font-family: "Pretendard", system-ui, sans-serif; }
+
+.viewport { position: fixed; inset: 0; display: grid; place-items: center; }
+.stage {
+  width: 1600px; height: 900px; position: relative; overflow: hidden; transform-origin: center;
+  background: linear-gradient(135deg, #eef3e9 0%, #fbfbf8 55%, #f8f5e3 100%);
+}
+.slide {
+  position: absolute; inset: 0; padding: 110px 140px;
+  display: flex; flex-direction: column; justify-content: center;
+  opacity: 0; visibility: hidden; transition: opacity .3s, visibility 0s .3s;
+}
+.slide.active { opacity: 1; visibility: visible; transition: opacity .3s; }
+
+.label { font-size: 20px; font-weight: 600; color: var(--muted); margin-bottom: 18px; }
+h1 { font-size: 84px; line-height: 1.15; letter-spacing: -0.03em; margin: 0 0 28px; font-weight: 800; }
+h2 { font-size: 56px; letter-spacing: -0.02em; margin: 0 0 48px; font-weight: 800; }
+h3 { font-size: 32px; margin: 10px 0 10px; }
+p { margin: 0; }
+ul { margin: 0; padding-left: 1.1em; }
+li { margin: 6px 0; }
+.lead { font-size: 28px; line-height: 1.6; color: var(--muted); max-width: 30em; }
+.muted { color: var(--muted); }
+code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .9em; }
+
+.y22 { color: var(--orange-ink); }
+.y26 { color: var(--blue-ink); }
+
+/* 단 나누기: 위에 얇은 선, 시대색이면 그 색 */
+.cols { display: grid; gap: 48px; }
+.cols.c2 { grid-template-columns: repeat(2, 1fr); }
+.cols.c3 { grid-template-columns: repeat(3, 1fr); }
+.cols.c4 { grid-template-columns: repeat(4, 1fr); gap: 40px; }
+.col { border-top: 3px solid var(--line); padding-top: 22px; font-size: 24px; line-height: 1.55; }
+.col.y22-top { border-color: var(--orange); }
+.col.y26-top { border-color: var(--blue); }
+.col.th-top { border-color: var(--apricot); }
+.col.s0-top { border-color: var(--sage); }
+.col .when { font-size: 19px; font-weight: 600; color: var(--muted); }
+.col .meta { margin-top: 14px; font-size: 18px; color: var(--muted); }
+.col .warn { color: var(--orange-ink); }
+
+/* 2022 vs 2026 */
+.year { font-size: 22px; font-weight: 700; padding-bottom: 14px; border-bottom: 3px solid currentColor; margin-bottom: 22px; }
+
+/* 명령과 막대 */
+.cmd { font: 24px/1.8 ui-monospace, "SF Mono", Menlo, monospace; padding: 32px 36px; border-radius: 14px; background: rgba(255, 255, 255, .7); border: 1px solid var(--line); }
+.cmd .c { color: var(--muted); }
+.bars { display: grid; gap: 30px; }
+.bar .row { display: flex; justify-content: space-between; font-size: 24px; margin-bottom: 10px; }
+.bar .track { height: 12px; border-radius: 6px; background: var(--line); overflow: hidden; }
+.bar .fill { height: 100%; width: 0; border-radius: 6px; background: var(--c); transition: width .8s ease; }
+
+.pager { position: absolute; right: 56px; bottom: 40px; font-size: 18px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.progress { position: absolute; left: 0; bottom: 0; height: 4px; width: 0; background: linear-gradient(90deg, var(--orange), var(--blue)); transition: width .3s; }
