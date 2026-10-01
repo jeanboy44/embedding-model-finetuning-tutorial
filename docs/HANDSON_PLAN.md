@@ -33,7 +33,7 @@ handson/
 | `05_product` | 8 | CLI · MCP · 웹, 운영 모니터링(MLflow), 마무리 | `01_search_cli.py` ← `tutorials/04_product/01_search_cli.py`<br>`02_mcp_server.py` ← `tutorials/04_product/02_mcp_server.py`<br>`03_web_app.py` ← `tutorials/04_product/03_web_app.py`<br>`04_monitoring.py` (신규: MLflow Tracing으로 대화 흐름 추적, 아래) | f7 |
 | `appendix` | — | 선택 실습 | `embedding_speed.py` ← `tutorials/03_optimize/01_embedding_speed.py`<br>`embedding_exploration.py` ← `tutorials/01_ds_core/appendix_exploration.py`<br>`gemini_basics.py` ← `tutorials/01_ds_core/appendix_gemini_basics.py` | f7 |
 
-- `tutorials/_legacy/agent`: PLAN 미정 사항이 정해질 때까지 유지하다가 옮기거나 지운다. 옛 모니터링은 지웠다(2026-10-01, MLflow로 대체).
+- 이전 구성 자료(`tutorials/_legacy`: 에이전트·모니터링)는 모두 지웠다(2026-10-01). 모니터링은 MLflow(05)가, 에이전트 흐름은 MCP(05)가 대신 보여 준다.
 - 교시는 50분 수업 + 10분 휴식이다. 스크립트 실행 시간은 교시당 합계 30분 안쪽을 목표로 한다.
 - 옮길 때 `git mv`로 이력을 남기고, README·PLAN·ARCHITECTURE·각 앱 README의 경로를 함께 고친다.
 

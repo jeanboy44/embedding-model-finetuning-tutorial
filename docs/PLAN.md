@@ -148,11 +148,11 @@ AI 도구 덕분에 DS가 직접 손대기 쉬워진 영역 ②. 모델을 "제�
 | 3 | `ragkit quantize`(채널별 INT8), `ragkit prune-vocab`, apps/bench | `01`~`03` | 실험 008(test 2,526개): 가지치기+INT8이 torch 대비 설치 669→127MB·모델 471→30MB·메모리 1133→403MB·로딩 3.6→0.3s, R@5 0.513→0.515(동일). 가지치기 어휘가 test 질문 100%를 원본과 같게 토큰화 |
 | 4 | apps/search-cli·mcp·web | `01_search_cli.py`, `02_mcp_server.py`, `03_web_app.py` | uvx(torch 없음), MCP stdio 도구 호출, 웹 흐름(Playwright) 확인 |
 
-- 이전 구성(Phase 1~4)의 자료: 대체된 것은 지웠다. RAG 에이전트는 `tutorials/_legacy/agent`에 남겨 두었다(아래 미정). 옛 모니터링(`ragkit.monitoring`, `_legacy/monitoring`)은 MLflow로 대체하기로 하고 지웠다(2026-10-01).
+- 이전 구성(Phase 1~4)의 자료는 모두 지웠다(2026-10-01). `tutorials/_legacy`(에이전트·모니터링)와 그것만 쓰던 `ragkit.monitoring`, `DocumentStore`·`retrieve`, `run_rag`, `config.EXPERIMENTS`까지 정리했다.
 
 ## 미정 사항
 
 - (결정) 시간 배분은 위 "교시 구성"을 따르고, 교시마다 50분 수업 + 10분 휴식 (2026-10-01)
-- RAG 에이전트(`_legacy/agent`): 지울지 미정 (제안: 지우고 2교시에 "에이전트형 탐색 vs 임베딩 RAG" 한 줄, 에이전트 흐름은 실습 5의 MCP가 보여 준다)
+- (결정) RAG 에이전트는 지웠다 (2026-10-01). 2교시에 "에이전트형 탐색 vs 임베딩 RAG"를 한 줄로 넣고, 에이전트 흐름은 실습 5의 MCP가 보여 준다
 - (결정) 옛 모니터링은 지우고 MLflow(실습 5)로 대체 (2026-10-01)
 - (결정) 배포는 Docker 없이 `ragkit-api --web-dist apps/web/dist`(한 프로세스)로 한다 (2026-09-30)

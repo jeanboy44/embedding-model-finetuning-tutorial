@@ -91,7 +91,7 @@ cd apps/web && pnpm install && pnpm dev                     # 개발 모드 (api
 src/ragkit/      # 1단계 라이브러리: data · embeddings · retrieval · rag · service · training · evaluation · CLI
 apps/            # 2~4단계: ragkit을 쓰는 앱 (api·bench·search-cli·mcp는 uv workspace 멤버, web은 pnpm)
 experiments/     # 실험 설정(config.yaml)과 결과(results/, git 제외)
-tutorials/       # 단계별 실습 (01_ds_core ~ 04_product, _legacy는 이전 구성 자료)
+tutorials/       # 단계별 실습 (01_ds_core ~ 04_product)
 scripts/         # 일회성 데이터·모델 준비
 docs/            # 강의 계획, 아키텍처, ADR
 ```

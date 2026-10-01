@@ -83,14 +83,6 @@ class Settings(BaseSettings):
         return self.experiments_dir / "results"
 
 
-# Experiment name mapping
-EXPERIMENTS: dict[str, str] = {
-    "base": "exp_001_base_embedding",
-    "finetuned": "exp_002_finetuned_embedding",
-    "llm_expansion": "exp_003_llm_query_expansion",
-}
-
-
 @lru_cache
 def get_settings() -> Settings:
     """싱글톤 Settings 인스턴스를 반환한다.
@@ -104,29 +96,3 @@ def get_settings() -> Settings:
         'intfloat/multilingual-e5-small'
     """
     return Settings()
-
-
-def get_model_path(experiment_name: str) -> Path:
-    """저장된 모델 체크포인트 경로를 반환한다.
-
-    Args:
-        experiment_name: 실험 키 ("base", "finetuned", "llm_expansion").
-
-    Returns:
-        체크포인트 파일 경로.
-    """
-    settings = get_settings()
-    return settings.experiments_dir / EXPERIMENTS[experiment_name] / "model.pt"
-
-
-def get_results_path(experiment_name: str) -> Path:
-    """실험 결과 경로를 반환한다.
-
-    Args:
-        experiment_name: 실험 키.
-
-    Returns:
-        결과 JSON 파일 경로.
-    """
-    settings = get_settings()
-    return settings.results_dir / f"{experiment_name}_results.json"
