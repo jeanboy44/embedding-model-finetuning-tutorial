@@ -106,7 +106,7 @@
 - 파일 사이 중복 질문 검사를 `validate_questions.py`에 추가했다. "청년 나이 기준"이 청년기본법과 청년고용촉진특별법에서 서로 다른 정답을 가리키는 것을 발견해 고쳤다.
 - Drive에 업로드했다(zip 안 `generated/`). 테스트 결과 중 iteration-2 with_skill 도로교통법 p01과 전기공사공제조합법 p01도 `data/questions/`로 옮겼다. 그래서 26/231 파트가 완료됐고 질문은 2,004개다.
 - `data/questions/`와 `data/questions_test/`는 모두 gitignore 대상이고 Drive에만 보관한다.
-- `.claude/` 전체를 git 이력에서 뺐다(2026-09-29). 스킬과 평가 워크스페이스는 `law_questions_drive.py bundle-skill` → `upload --zip-path dist/law-question-gen-skill.zip`으로 Drive에 따로 보관한다(`law-question-gen-skill.zip`). 나중에 사용자가 tutorials phase 폴더로 옮길 예정이다.
+- `.claude/` 전체를 git 이력에서 뺐다(2026-09-29). 스킬과 평가 워크스페이스는 `law_questions_drive.py bundle-skill` → `upload --zip-path dist/law-question-gen-skill.zip`으로 Drive에 따로 보관한다(`law-question-gen-skill.zip`). 나중에 `lecture/01_data`로 옮길 예정이다.
 
 ### B-5. 전체 파트 생성 (2026-09-30, 완료)
 - 남은 204개 파트를 생성해 230/230 파트가 완료됐다. 새 질문은 10,228개이고, 전체는 질문 12,232개, 정답 문서 9,704개다. 파일을 모두 함께 검증해 오류 0을 확인했다.

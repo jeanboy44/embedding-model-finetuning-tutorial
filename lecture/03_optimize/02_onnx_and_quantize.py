@@ -14,7 +14,7 @@
     (uv sync --all-packages --all-extras: 변환·양자화에는 extra [train]이 필요)
 
 실행:
-    uv run python tutorials/03_optimize/02_onnx_and_quantize.py
+    uv run python lecture/03_optimize/02_onnx_and_quantize.py
 
 같은 작업을 CLI로:
     uv run ragkit export-onnx models/multilingual-e5-small

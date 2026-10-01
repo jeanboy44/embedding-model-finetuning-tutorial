@@ -12,7 +12,7 @@
     .env에 GEMINI_API_KEY (ask만 필요)
 
 실행:
-    uv run python tutorials/04_product/01_search_cli.py
+    uv run python lecture/04_product/01_search_cli.py
 """
 
 import json

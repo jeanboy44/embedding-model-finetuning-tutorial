@@ -1,11 +1,11 @@
-# 실습 자료 재구성 계획 (tutorials → handson)
+# 강의 자료 재구성 계획 (lecture/)
 
-상태: **계획** (2026-09-30). 아직 옮기지 않았다. 교시 구성은 `docs/PLAN.md` "교시 구성"을 따른다.
+상태: **계획** (2026-09-30). 2026-10-01에 `tutorials/` → `lecture/`로 이름만 바꿨고(안의 01_ds_core~04_product는 그대로), 교시 폴더로 재배치는 아직이다. 교시 구성은 `docs/PLAN.md` "교시 구성"을 따른다.
 
 ## 폴더 규칙
 
 ```
-handson/
+lecture/
   00_setup/      # 실습 0 (3교시)
   01_data/       # 실습 1 (4교시)
   02_evaluate/   # 실습 2 (5교시)
@@ -13,27 +13,29 @@ handson/
   04_optimize/   # 실습 4 (7교시)
   05_product/    # 실습 5 (8교시)
   appendix/      # 선택 실습 (교시 밖)
+  slides/        # HTML 슬라이드 (교시마다 한 파일 + assets/theme.css · deck.js)
 ```
 
-- 폴더마다 `SLIDE.md` 1개 + 번호 붙은 실행 스크립트 `01_*.py`, `02_*.py` …
-- `SLIDE.md`: 그 교시에 하는 업무를 설명하는 장표 내용. 맨 위에 **2022년의 이 업무 / 2026년의 이 업무**를 한 줄씩, 이어서 목표·흐름·실행할 스크립트·확인할 결과
+- 교시 폴더에는 번호 붙은 실행 스크립트 `01_*.py`, `02_*.py` …를 둔다
+- 장표는 `lecture/slides/`에 교시마다 HTML 한 파일로 둔다(예: `03_train.html`, 2026-10-01 결정, 처음 계획의 `SLIDE.md`를 대신함). 공용 `assets/theme.css`·`deck.js`를 불러 쓰고, 맨 앞에 **2022년의 이 업무 / 2026년의 이 업무**를 한 줄씩, 이어서 목표·흐름·실행할 스크립트·확인할 결과
+- 슬라이드 모양: 최대한 심플, 옅은 그라데이션 배경, Pretendard, **2022 = 주황 · 2026 = 파랑**, 1600x900 무대를 한 장씩 넘김(←→·스페이스·클릭, F 전체 화면). 예시는 `lecture/slides/course-scope.html`
 - 스크립트는 두 모드를 둔다: 기본은 **"받은 산출물로 확인"**(Drive로 배포한 모델·인덱스·질문·split 사용), `--run`이면 **"작은 부분집합으로 직접 실행"**
 - 스크립트 머리 docstring 형식은 지금 튜토리얼과 같다(학습 목표 · 사전 준비 · 실행)
-- 실행은 저장소 루트에서 `uv run python handson/<폴더>/<파일>.py`
+- 실행은 저장소 루트에서 `uv run python lecture/<폴더>/<파일>.py`
 
 ## 교시별 내용과 기존 파일 매핑
 
 | 폴더 | 교시 | 업무 | 스크립트 (← 기존 파일) | 담당 |
 |---|---|---|---|---|
-| `00_setup` | 3 | 환경 설정, 완성품 먼저 써 보기, RAG 필요성 | `01_check_env.py` (신규: 설치·모델·인덱스·API 키 점검)<br>`02_try_product.py` (신규: 웹·CLI·MCP를 base vs 파인튜닝으로 나란히)<br>`03_why_rag.py` ← `tutorials/01_ds_core/01_build_rag.py` | f7 |
+| `00_setup` | 3 | 환경 설정, 완성품 먼저 써 보기, RAG 필요성 | `01_check_env.py` (신규: 설치·모델·인덱스·API 키 점검)<br>`02_try_product.py` (신규: 웹·CLI·MCP를 base vs 파인튜닝으로 나란히)<br>`03_why_rag.py` ← `lecture/01_ds_core/01_build_rag.py` | f7 |
 | `01_data` | 4 | 코퍼스, 질문 생성(Claude 스킬), 법령 단위 분할 | (신규) | 42 |
 | `02_evaluate` | 5 | 평가셋·지표, 학습 없는 선택지 비교: 베이스 모델(실험 005) + LLM 쿼리 확장(실험 003) | (신규) `01_metrics.py` · `02_base_models.py` · `03_query_expansion.py`(확장 캐시 사용) | 42 |
 | `03_train` | 6 | DS 관점 실험 iteration과 분석(실험 간 비교, 유형·테마별, 실패 사례, 한계) + AI 시대에 더 쉽게 하는 법. 학습은 원리 짧게 + 맛보기, 받은 모델 사용 | (신규, `feat/finetune-runs` 결과 사용) `01_train_taste.py` · `02_compare_runs.py`(실험 007) · `03_error_analysis.py` | 42 |
-| `04_optimize` | 7 | API 짧은 복습 → ONNX · INT8 · 어휘 가지치기 · 비교표 | `01_api_review.py` ← `tutorials/02_api/01_search_api.py` + `02_streaming_and_notebooks.py` (한 파일로 압축)<br>`02_onnx_quantize_prune.py` ← `tutorials/03_optimize/02_onnx_and_quantize.py`<br>`03_bench_and_serve.py` ← `tutorials/03_optimize/03_bench_and_deploy.py` | f7 |
-| `05_product` | 8 | CLI · MCP · 웹, 운영 모니터링(MLflow), 마무리 | `01_search_cli.py` ← `tutorials/04_product/01_search_cli.py`<br>`02_mcp_server.py` ← `tutorials/04_product/02_mcp_server.py`<br>`03_web_app.py` ← `tutorials/04_product/03_web_app.py`<br>`04_monitoring.py` (신규: MLflow Tracing으로 대화 흐름 추적, 아래) | f7 |
-| `appendix` | — | 선택 실습 | `embedding_speed.py` ← `tutorials/03_optimize/01_embedding_speed.py`<br>`embedding_exploration.py` ← `tutorials/01_ds_core/appendix_exploration.py`<br>`gemini_basics.py` ← `tutorials/01_ds_core/appendix_gemini_basics.py` | f7 |
+| `04_optimize` | 7 | API 짧은 복습 → ONNX · INT8 · 어휘 가지치기 · 비교표 | `01_api_review.py` ← `lecture/02_api/01_search_api.py` + `02_streaming_and_notebooks.py` (한 파일로 압축)<br>`02_onnx_quantize_prune.py` ← `lecture/03_optimize/02_onnx_and_quantize.py`<br>`03_bench_and_serve.py` ← `lecture/03_optimize/03_bench_and_deploy.py` | f7 |
+| `05_product` | 8 | CLI · MCP · 웹, 운영 모니터링(MLflow), 마무리 | `01_search_cli.py` ← `lecture/04_product/01_search_cli.py`<br>`02_mcp_server.py` ← `lecture/04_product/02_mcp_server.py`<br>`03_web_app.py` ← `lecture/04_product/03_web_app.py`<br>`04_monitoring.py` (신규: MLflow Tracing으로 대화 흐름 추적, 아래) | f7 |
+| `appendix` | — | 선택 실습 | `embedding_speed.py` ← `lecture/03_optimize/01_embedding_speed.py`<br>`embedding_exploration.py` ← `lecture/01_ds_core/appendix_exploration.py`<br>`gemini_basics.py` ← `lecture/01_ds_core/appendix_gemini_basics.py` | f7 |
 
-- 이전 구성 자료(`tutorials/_legacy`: 에이전트·모니터링)는 모두 지웠다(2026-10-01). 모니터링은 MLflow(05)가, 에이전트 흐름은 MCP(05)가 대신 보여 준다.
+- 이전 구성 자료(옛 `tutorials/_legacy`: 에이전트·모니터링)는 모두 지웠다(2026-10-01). 모니터링은 MLflow(05)가, 에이전트 흐름은 MCP(05)가 대신 보여 준다.
 - 교시는 50분 수업 + 10분 휴식이다. 스크립트 실행 시간은 교시당 합계 30분 안쪽을 목표로 한다.
 - 옮길 때 `git mv`로 이력을 남기고, README·PLAN·ARCHITECTURE·각 앱 README의 경로를 함께 고친다.
 

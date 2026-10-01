@@ -11,7 +11,7 @@ Phase 2-3: Gemini API 연동
     .env 파일에 GEMINI_API_KEY를 설정하세요.
 
 실행:
-    uv run python tutorials/01_ds_core/appendix_gemini_basics.py
+    uv run python lecture/01_ds_core/appendix_gemini_basics.py
 """
 
 from ragkit.config import get_settings

@@ -61,7 +61,7 @@ AI 코딩 도구가 오면서 DS 한 사람이 그 범위까지 직접, 빠르�
 1. 파인튜닝 재학습 — 지금 `models/finetuned/exp_002`는 옛 split으로 학습해 새 test(2,526개)와 겹칠 수 있다. 새 split으로 002·004·006 재학습 후 실험 007 (`feat/finetune-runs`)
 2. 쿼리 확장 평가 — 코드 완료(`ragkit expand`, `evaluate --expand`, 실험 003 설정). gemini-2.5-flash-lite 무료 등급은 하루 20회라 실행 보류(2026-09-30), 캐시 17/2,526. 데이터 확보는 사용자 결정으로 미룸(2026-10-01). 실습 2 자료는 확장 행을 비워 두고 만든다
 3. 위 두 비교표 채우기
-4. 교시 기준으로 `handson/` 재구성 (`docs/HANDSON_PLAN.md`)
+4. 교시 기준으로 `lecture/` 재구성 (`docs/HANDSON_PLAN.md`). 폴더 이름은 `tutorials` → `lecture`로 바꿨다(2026-10-01)
 
 ## 저장소 구조
 
@@ -77,7 +77,7 @@ apps/
   mcp/                 # 4단계. MCP 서버 (Claude 등 에이전트가 조문 검색)
   web/                 # 4단계. NotebookLM형 React 웹앱 '법령 노트' (Node 프로젝트, workspace 멤버 아님, apps/api만 호출)
 experiments/           # 코드 없음. 실험별 config.yaml + 결과
-tutorials/             # 단계별 해설. ragkit과 apps를 호출만 한다
+lecture/               # 강의 자료. 실습 스크립트(ragkit과 apps를 호출만 한다) + slides/(HTML 슬라이드)
   01_ds_core/          # 1단계
   02_api/              # 2단계
   03_optimize/         # 3단계
@@ -148,7 +148,7 @@ AI 도구 덕분에 DS가 직접 손대기 쉬워진 영역 ②. 모델을 "제�
 | 3 | `ragkit quantize`(채널별 INT8), `ragkit prune-vocab`, apps/bench | `01`~`03` | 실험 008(test 2,526개): 가지치기+INT8이 torch 대비 설치 669→127MB·모델 471→30MB·메모리 1133→403MB·로딩 3.6→0.3s, R@5 0.513→0.515(동일). 가지치기 어휘가 test 질문 100%를 원본과 같게 토큰화 |
 | 4 | apps/search-cli·mcp·web | `01_search_cli.py`, `02_mcp_server.py`, `03_web_app.py` | uvx(torch 없음), MCP stdio 도구 호출, 웹 흐름(Playwright) 확인 |
 
-- 이전 구성(Phase 1~4)의 자료는 모두 지웠다(2026-10-01). `tutorials/_legacy`(에이전트·모니터링)와 그것만 쓰던 `ragkit.monitoring`, `DocumentStore`·`retrieve`, `run_rag`, `config.EXPERIMENTS`까지 정리했다.
+- 이전 구성(Phase 1~4)의 자료는 모두 지웠다(2026-10-01). 옛 `tutorials/_legacy`(에이전트·모니터링)와 그것만 쓰던 `ragkit.monitoring`, `DocumentStore`·`retrieve`, `run_rag`, `config.EXPERIMENTS`까지 정리했다.
 
 ## 미정 사항
 

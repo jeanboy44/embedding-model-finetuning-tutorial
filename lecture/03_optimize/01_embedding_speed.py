@@ -12,7 +12,7 @@
 - 속도를 바꿔도 결과(임베딩)는 같아야 한다 → 기준 대비 코사인 유사도로 확인
 
 실행:
-    uv run python tutorials/03_optimize/01_embedding_speed.py
+    uv run python lecture/03_optimize/01_embedding_speed.py
 
 직접 바꿔 볼 것:
     SAMPLE_SIZE, BATCH_SIZE, CONFIGS (아래 상수)

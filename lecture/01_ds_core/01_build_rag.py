@@ -13,7 +13,7 @@
     .env에 GEMINI_API_KEY (없으면 LLM 단계만 건너뜀)
 
 실행:
-    uv run python tutorials/01_ds_core/01_build_rag.py
+    uv run python lecture/01_ds_core/01_build_rag.py
 """
 
 import time

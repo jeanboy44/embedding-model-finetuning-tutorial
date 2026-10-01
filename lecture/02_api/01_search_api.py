@@ -18,7 +18,7 @@
     uv run ragkit index            # data/processed/index/multilingual-e5-small.sqlite
 
 실행:
-    uv run python tutorials/02_api/01_search_api.py
+    uv run python lecture/02_api/01_search_api.py
 """
 
 import json

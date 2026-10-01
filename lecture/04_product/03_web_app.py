@@ -15,8 +15,8 @@
     Node.js 20+, pnpm (corepack enable)
 
 실행:
-    uv run python tutorials/04_product/03_web_app.py            # 빌드 후 서버 실행 → 브라우저로 접속
-    uv run python tutorials/04_product/03_web_app.py --check    # 화면·API 응답만 확인하고 종료
+    uv run python lecture/04_product/03_web_app.py            # 빌드 후 서버 실행 → 브라우저로 접속
+    uv run python lecture/04_product/03_web_app.py --check    # 화면·API 응답만 확인하고 종료
 
 개발 모드 (화면 코드를 고치며 바로 보기):
     uv run --package ragkit-api ragkit-api            # 터미널 1: API :8000

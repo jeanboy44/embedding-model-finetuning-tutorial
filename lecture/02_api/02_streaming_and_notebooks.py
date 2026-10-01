@@ -15,7 +15,7 @@
     .env에 GEMINI_API_KEY (없으면 hits 뒤 done에 오류가 온다)
 
 실행:
-    uv run python tutorials/02_api/02_streaming_and_notebooks.py
+    uv run python lecture/02_api/02_streaming_and_notebooks.py
 """
 
 import json

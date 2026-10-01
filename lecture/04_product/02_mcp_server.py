@@ -12,7 +12,7 @@
     uv run ragkit index
 
 실행:
-    uv run python tutorials/04_product/02_mcp_server.py
+    uv run python lecture/04_product/02_mcp_server.py
 """
 
 import asyncio

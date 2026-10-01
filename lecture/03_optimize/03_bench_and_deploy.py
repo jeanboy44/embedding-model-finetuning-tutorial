@@ -18,8 +18,8 @@
     uv run ragkit quantize models/multilingual-e5-small-pruned
 
 실행:
-    uv run python tutorials/03_optimize/03_bench_and_deploy.py            # 저장된 결과가 있으면 재사용
-    uv run python tutorials/03_optimize/03_bench_and_deploy.py --rerun    # 다시 측정 (수 분)
+    uv run python lecture/03_optimize/03_bench_and_deploy.py            # 저장된 결과가 있으면 재사용
+    uv run python lecture/03_optimize/03_bench_and_deploy.py --rerun    # 다시 측정 (수 분)
 """
 
 import json
