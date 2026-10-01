@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>강의 범위</title>
+<style>
+  :root {
+    --bg: #f7f6f2;
+    --surface: #ffffff;
+    --text: #1f1d1a;
+    --muted: #6b665e;
+    --line: #e3dfd6;
+    --theory: #7a5c2e;
+    --theory-bg: #f4ecdf;
+    --y2022: #2f5d8a;
+    --y2022-bg: #e6eef6;
+    --y2026: #2f7a55;
+    --y2026-bg: #e3f2ea;
+    --warn: #a14a1f;
+    --warn-bg: #fbeadf;
+    --ok: #2f7a55;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #161513;
+      --surface: #201f1c;
+      --text: #ece9e3;
+      --muted: #a39d93;
+      --line: #36332e;
+      --theory: #d9b67d;
+      --theory-bg: #2c2519;
+      --y2022: #8cb6e0;
+      --y2022-bg: #1b2633;
+      --y2026: #86cfa8;
+      --y2026-bg: #18291f;
+      --warn: #f0a77d;
+      --warn-bg: #33221a;
+      --ok: #86cfa8;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.6 "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+  }
+  main { max-width: 960px; margin: 0 auto; padding: 40px 16px 64px; }
+  h1 { font-size: 28px; margin: 0 0 4px; letter-spacing: -0.02em; }
+  .sub { color: var(--muted); margin: 0 0 28px; }
+  h2 { font-size: 18px; margin: 40px 0 12px; }
+  .rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+  .rule { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .rule b { display: block; margin-bottom: 4px; }
+  .rule span { color: var(--muted); font-size: 14px; }
+
+  .part { margin-top: 28px; }
+  .part-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+  .part-head h3 { margin: 0; font-size: 16px; }
+  .part-head p { margin: 0; color: var(--muted); font-size: 14px; }
+  .tag { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
+  .theory .tag { color: var(--theory); background: var(--theory-bg); }
+  .y2022 .tag { color: var(--y2022); background: var(--y2022-bg); }
+  .y2026 .tag { color: var(--y2026); background: var(--y2026-bg); }
+
+  .period {
+    display: grid; grid-template-columns: 64px 1fr; gap: 16px;
+    background: var(--surface); border: 1px solid var(--line); border-left-width: 4px;
+    border-radius: 10px; padding: 16px; margin-bottom: 10px;
+  }
+  .theory .period { border-left-color: var(--theory); }
+  .y2022 .period { border-left-color: var(--y2022); }
+  .y2026 .period { border-left-color: var(--y2026); }
+  .num { font-size: 26px; font-weight: 700; line-height: 1; }
+  .num small { display: block; font-size: 12px; font-weight: 500; color: var(--muted); margin-top: 6px; }
+  .period h4 { margin: 0 0 6px; font-size: 16px; }
+  .period h4 code { font-size: 13px; color: var(--muted); font-weight: 500; margin-left: 6px; }
+  .period ul { margin: 0; padding-left: 18px; }
+  .period li { margin: 2px 0; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; font-size: 13px; }
+  .meta span { border: 1px solid var(--line); border-radius: 6px; padding: 2px 8px; color: var(--muted); }
+  .meta .who { color: var(--text); }
+  .meta .block { color: var(--warn); background: var(--warn-bg); border-color: transparent; }
+  .meta .ready { color: var(--ok); }
+
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+  .box { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .box h3 { margin: 0 0 8px; font-size: 15px; }
+  .box ul, .box ol { margin: 0; padding-left: 18px; }
+  .box li { margin: 3px 0; }
+  .muted { color: var(--muted); }
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.92em; }
+  footer { margin-top: 40px; color: var(--muted); font-size: 13px; }
+
+  @media (max-width: 560px) {
+    .period { grid-template-columns: 1fr; gap: 8px; }
+    .num { font-size: 20px; }
+    .num small { display: inline; margin-left: 6px; }
+    .part-head { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>강의 범위</h1>
+  <p class="sub">임베딩 모델 파인튜닝 — AI 시대 생존법: 내 업무 확장편 · 2026-10-01 기준</p>
+
+  <div class="rules">
+    <div class="rule"><b>8교시</b><span>교시마다 50분 수업 + 10분 휴식</span></div>
+    <div class="rule"><b>장표 + 스크립트</b><span>교시마다 <code>SLIDE.md</code> 1개와 실행 스크립트가 짝</span></div>
+    <div class="rule"><b>두 가지 실행 모드</b><span>기본은 받은 산출물로 확인, <code>--run</code>이면 부분집합으로 직접 실행</span></div>
+    <div class="rule"><b>실습의 설정</b><span>2026년의 내 업무를 같이 해 보며 전체 흐름을 이해한다</span></div>
+  </div>
+
+  <h2>교시 구성</h2>
+
+  <section class="part theory">
+    <div class="part-head"><span class="tag">이론</span><h3>왜 이 과제인가</h3></div>
+
+    <div class="period">
+      <div class="num">1<small>이론</small></div>
+      <div>
+        <h4>내 소개</h4>
+        <ul><li>DS가 하는 일, 2022 vs 2026 현업 변화</li></ul>
+        <div class="meta"><span class="who">사용자</span><span>미작성</span></div>
+      </div>
+    </div>
+
+    <div class="period">
+      <div class="num">2<small>이론</small></div>
+      <div>
+        <h4>과제 정의</h4>
+        <ul>
+          <li>용어: ML/DL, 임베딩, 파인튜닝, API, CLI, MCP, 프론트엔드</li>
+          <li>강의 의도: 왜 임베딩 파인튜닝인가</li>
+          <li>필요성: 검색 누락이 RAG 정확도의 상한, 에이전트형 탐색 vs 임베딩 RAG, 쿼리 확장의 질문당 비용</li>
+          <li>주제: 법령이 적절한 이유 (일상어 vs 법률 용어, 통째로 못 넣는 코퍼스)</li>
+          <li>실습 지도</li>
+        </ul>
+        <div class="meta"><span class="who">사용자</span><span>미작성</span></div>
+      </div>
+    </div>
+
+    <div class="period">
+      <div class="num">3<small>실습 0</small></div>
+      <div>
+        <h4>환경 설정 + 완성품 먼저 써 보기<code>00_setup</code></h4>
+        <ul>
+          <li>환경 점검</li>
+          <li>웹·CLI·MCP 체험, base vs 파인튜닝 결과 비교</li>
+          <li>RAG 필요성</li>
+        </ul>
+        <div class="meta"><span class="who">f7</span><span>계획</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="part y2022">
+    <div class="part-head"><span class="tag">2022 파트</span><h3>모델을 만든다</h3><p>DS 본업</p></div>
+
+    <div class="period">
+      <div class="num">4<small>실습 1</small></div>
+      <div>
+        <h4>데이터<code>01_data</code></h4>
+        <ul>
+          <li>법령 코퍼스</li>
+          <li>질문 생성 (Claude 스킬 — 같은 일도 방식이 바뀌었다)</li>
+          <li>법령 단위 분할</li>
+        </ul>
+        <div class="meta"><span class="who">42</span><span>코드 있음, 자료 없음</span></div>
+      </div>
+    </div>
+
+    <div class="period">
+      <div class="num">5<small>실습 2</small></div>
+      <div>
+        <h4>평가<code>02_evaluate</code></h4>
+        <ul>
+          <li>평가셋과 지표</li>
+          <li>학습 없이 쓸 수 있는 선택지 비교: 베이스 모델(e5 vs Gemma), LLM 쿼리 확장</li>
+        </ul>
+        <div class="meta"><span class="who">42</span><span class="ready">베이스 비교 수치 있음</span><span class="block">쿼리 확장 데이터는 미룸</span></div>
+      </div>
+    </div>
+
+    <div class="period">
+      <div class="num">6<small>실습 3</small></div>
+      <div>
+        <h4>학습 실험과 분석<code>03_train</code></h4>
+        <ul>
+          <li>DS 관점의 실험 반복: 가설 → 파일럿 → 학습 → dev로 고르기 → test 1회 → 분석</li>
+          <li>실험 간 비교, 실패 사례, 파인튜닝의 한계</li>
+          <li>AI 시대에 더 쉽게 하는 법</li>
+          <li>학습 원리는 짧게, 학습은 맛보기만 하고 모델은 나눠 준다</li>
+        </ul>
+        <div class="meta"><span class="who">42</span><span class="block">새 split으로 재학습 필요</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="part y2026">
+    <div class="part-head"><span class="tag">2026 파트</span><h3>모델을 전달한다</h3><p>AI 덕분에 넓어진 범위</p></div>
+
+    <div class="period">
+      <div class="num">7<small>실습 4</small></div>
+      <div>
+        <h4>서빙과 배포 최적화<code>04_optimize</code></h4>
+        <ul>
+          <li>API 짧은 복습</li>
+          <li>ONNX · INT8 · 어휘 가지치기 · 비교표</li>
+        </ul>
+        <div class="meta"><span class="who">f7</span><span class="ready">자료 있음 (옮기기만 하면 됨)</span></div>
+      </div>
+    </div>
+
+    <div class="period">
+      <div class="num">8<small>실습 5</small></div>
+      <div>
+        <h4>제품화<code>05_product</code></h4>
+        <ul>
+          <li>CLI · MCP · 웹</li>
+          <li>MLflow 모니터링</li>
+          <li>마무리: 다시 2022 vs 2026</li>
+        </ul>
+        <div class="meta"><span class="who">f7</span><span class="ready">앱 있음</span><span class="block">MLflow는 설계 전</span></div>
+      </div>
+    </div>
+  </section>
+
+  <p class="muted">부록 <code>appendix</code>: 임베딩 속도, 임베딩 탐색, Gemini 기초 (f7, 자료 있음)</p>
+
+  <h2>함께 정리할 것</h2>
+  <div class="cols">
+    <div class="box">
+      <h3>MLflow를 쓰는 곳</h3>
+      <ul>
+        <li>실험 추적: 실습 2·3</li>
+        <li>모델 레지스트리: 실습 3 → 4</li>
+        <li>서비스 모니터링(Tracing): 실습 5</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>범위에서 뺀 것</h3>
+      <ul>
+        <li>Docker</li>
+        <li>옛 모니터링, RAG 에이전트</li>
+        <li>수강생이 직접 하는 학습</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>담당이 아직 없는 일</h3>
+      <ol>
+        <li>산출물 배포 묶음과 내려받기 스크립트 <span class="muted">→ 42 제안</span></li>
+        <li>질문 생성 스킬을 <code>handson/01_data</code>로 <span class="muted">→ 42 제안</span></li>
+        <li>수강생 사전 안내와 설치 가이드 <span class="muted">→ f7 제안</span></li>
+      </ol>
+    </div>
+    <div class="box">
+      <h3>강의 전에 끝낼 오래 걸리는 일</h3>
+      <ul>
+        <li>파인튜닝 재학습과 실험 007 비교표</li>
+        <li>MLflow 설계와 구현</li>
+        <li><code>tutorials</code> → <code>handson</code> 폴더 이동</li>
+      </ul>
+    </div>
+  </div>
+
+  <footer>출처: <code>docs/PLAN.md</code> "교시 구성", <code>docs/HANDSON_PLAN.md</code>. 담당 42·f7은 작업 중인 Claude 세션 이름이다.</footer>
+</main>
+</body>
+</html>
