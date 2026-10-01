@@ -206,7 +206,7 @@ try:  # 레지스트리 저장용 빈 모델 (추론은 ragkit이 폴더를 직�
     import mlflow.pyfunc as _pyfunc
 
     class _ModelFolder(_pyfunc.PythonModel):
-        def predict(self, context, model_input, params=None):
+        def predict(self, context, model_input: list[str], params=None) -> list[list[float]]:
             raise NotImplementedError("ragkit.embeddings.create_embedding_fn(모델 폴더)로 쓴다")
 except ImportError:  # mlflow-tracing만 있거나 mlflow가 없을 때
     _ModelFolder = None  # type: ignore[assignment,misc]
