@@ -26,6 +26,15 @@ models/<모델> ─ ragkit export-onnx ─→ onnx/model.onnx ─ ragkit quantiz
         └ Gemini(조문만 근거, [n] 인용) → SSE: hits → delta… → done
    ↑ apps/api (FastAPI) ← apps/web (React)
    ↑ apps/search-cli (터미널) · apps/mcp (Claude 등 에이전트)
+
+[모니터링 · 4단계] (MLFLOW_TRACKING_URI가 있을 때만, ragkit.tracking)
+ragkit train · evaluate · compare · ragkit-bench ─→ MLflow 실험 "ragkit" (run: 파라미터·지표·결과 파일)
+ragkit register <모델 폴더> ─→ 레지스트리 law-embedder vN + 별칭 champion (태그 index_key)
+        └ Searcher.open("models:/law-embedder@champion") → models/registry/<이름>-v<N>/ + 같은 인덱스
+Searcher.search / answer_stream ─→ MLflow 실험 "ragkit-service" (질문 한 번 = 트레이스 하나)
+        answer(CHAIN) ├ search(RETRIEVER, 찾은 조문 본문) └ embed_query(EMBEDDING)
+                      └ llm(CHAT_MODEL, 프롬프트·답·토큰 수)
+        태그 source=api|search-cli|mcp, 세션 = 노트북 id
 ```
 
 ## ragkit (`src/ragkit/`)
@@ -41,12 +50,13 @@ models/<모델> ─ ragkit export-onnx ─→ onnx/model.onnx ─ ragkit quantiz
 | `models` | 모델 로더, Gemini 클라이언트(토큰 사용량·재시도·스트리밍), `export_onnx`, `quantize_onnx`(채널별 INT8), `prune_vocab`(어휘 가지치기) |
 | `retrieval` | `build_index`/`VectorIndex`(SQLite + sqlite-vec, 메타데이터 필터), `model_key`, `default_index_path` |
 | `rag` | 조문 근거 프롬프트, 순수 LLM / RAG 답변 (1단계 비교 실습) |
-| `service` | `Searcher`: 앱들의 입구. 검색·조문 조회·법령 목록·스트리밍 답변 |
+| `service` | `Searcher`: 앱들의 입구. 검색·조문 조회·법령 목록·스트리밍 답변 (트레이스 포함) |
+| `tracking` | MLflow 연동: 실험 run, 모델 레지스트리(`register_model`·`resolve_model`), 서비스 트레이스(`start_span`). 주소가 없으면 모두 no-op |
 | `training` | 법령 단위 분할, 대조 학습 예시, sentence-transformers 학습(전체 / LoRA) |
 | `evaluation` | 전체 코퍼스 대상 Recall@k·MRR·nDCG (doc / article 판정) |
-| `cli` | `ragkit`: index · split · train · evaluate · compare · export-onnx · quantize · prune-vocab |
+| `cli` | `ragkit`: index · split · train · evaluate · compare · export-onnx · quantize · prune-vocab · register |
 
-의존성: core(onnxruntime, tokenizers, sqlite-vec, numpy, google-genai, cyclopts…) / extra `[torch]` / extra `[train]`.
+의존성: core(onnxruntime, tokenizers, sqlite-vec, numpy, google-genai, cyclopts…) / extra `[torch]` / extra `[train]` / extra `[tracing]`(mlflow-tracing, 배포 앱용 경량 SDK) / extra `[mlflow]`(서버·레지스트리, DS 도구용).
 
 ## 앱 (`apps/`)
 

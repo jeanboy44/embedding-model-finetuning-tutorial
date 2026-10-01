@@ -137,6 +137,7 @@ AI 도구 덕분에 DS가 직접 손대기 쉬워진 영역 ②. 모델을 "제�
 - `apps/mcp`: MCP 서버로 Claude 같은 에이전트가 조문을 검색하게 한다
 - `apps/web`: NotebookLM형 '법령 노트'. 노트북 = 법령 묶음, 그 안에서 인용 달린 답을 스트리밍, 인용을 누르면 조문 원문, 답을 노트로 저장 (2단계 API만 호출). 스택: Vite + React + TS + Tailwind + shadcn/ui + TanStack Query (2026-09-29 확정)
 - 네 앱 모두 ragkit의 `Searcher`(`ragkit.service`)를 입구로 쓴다 (구조는 `docs/ARCHITECTURE.md`)
+- MLflow 3 모니터링 (`ragkit.tracking`, 2026-10-01): 실험 추적(train·evaluate·compare·bench run) → 모델 레지스트리(`ragkit register`, 앱은 `models:/law-embedder@champion`) → 서비스 트레이싱(질문 한 번 = 트레이스, 검색 조문·프롬프트·토큰, 노트북 = 세션)
 - 메시지: DS 한 사람이 모델부터 사용자 화면까지 끝까지 만든다
 
 ## 진행 현황 (2026-09-30)
@@ -146,7 +147,7 @@ AI 도구 덕분에 DS가 직접 손대기 쉬워진 영역 ②. 모델을 "제�
 | 1 | ragkit(인덱스·분할·학습·평가·비교) | `01_build_rag.py`만 | 질문 12,232개 → 법령 단위 분할 train 8,294 · dev 1,412 · test 2,526(법령 16개). 실험 005: e5-small R@5 0.513 / EmbeddingGemma 0.743. 파인튜닝은 `feat/finetune-runs`에서 진행 중(새 분할로 재학습 필요). 비교 실습 02~05와 학습·평가 튜토리얼 없음 |
 | 2 | apps/api | `01_search_api.py`, `02_streaming_and_notebooks.py` | 실행 확인 (torch 백엔드, SSE, 노트북) |
 | 3 | `ragkit quantize`(채널별 INT8), `ragkit prune-vocab`, apps/bench | `01`~`03` | 실험 008(test 2,526개): 가지치기+INT8이 torch 대비 설치 669→127MB·모델 471→30MB·메모리 1133→403MB·로딩 3.6→0.3s, R@5 0.513→0.515(동일). 가지치기 어휘가 test 질문 100%를 원본과 같게 토큰화 |
-| 4 | apps/search-cli·mcp·web | `01_search_cli.py`, `02_mcp_server.py`, `03_web_app.py` | uvx(torch 없음), MCP stdio 도구 호출, 웹 흐름(Playwright) 확인 |
+| 4 | apps/search-cli·mcp·web, `ragkit.tracking`(MLflow) | `01_search_cli.py`, `02_mcp_server.py`, `03_web_app.py`, `04_monitoring.py` | uvx(torch 없음), MCP stdio 도구 호출, 웹 흐름(Playwright) 확인. MLflow(`feat/mlflow`): bench run 2개 → 레지스트리 champion으로 API 기동 → 노트북 대화 2턴이 세션 하나의 트레이스 2개(검색 조문·토큰 수)로 남는 것 확인 |
 
 - 이전 구성(Phase 1~4)의 자료는 모두 지웠다(2026-10-01). `tutorials/_legacy`(에이전트·모니터링)와 그것만 쓰던 `ragkit.monitoring`, `DocumentStore`·`retrieve`, `run_rag`, `config.EXPERIMENTS`까지 정리했다.
 

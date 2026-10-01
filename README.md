@@ -9,7 +9,7 @@
 | 1. DS 본업 | 왜 파인튜닝인가(RAG 비교) → 데이터 준비 → 학습 → 평가 | `src/ragkit/` | `tutorials/01_ds_core/` |
 | 2. +α 업무 | 모델을 검색 API로 감싸기 | `apps/api/` | `tutorials/02_api/` |
 | 3. 배포 최적화 | ONNX 변환 · INT8 양자화 · 어휘 가지치기 · 속도/메모리/정확도 비교 | `ragkit` + `apps/bench/` | `tutorials/03_optimize/` |
-| 4. 제품화 | 검색 CLI · MCP 서버 · React 화면 | `apps/search-cli/`, `apps/mcp/`, `apps/web/` | `tutorials/04_product/` |
+| 4. 제품화 | 검색 CLI · MCP 서버 · React 화면 · MLflow 모니터링 | `apps/search-cli/`, `apps/mcp/`, `apps/web/`, `ragkit.tracking` | `tutorials/04_product/` |
 
 자세한 흐름과 결정 사항은 [강의 계획](docs/PLAN.md)을 참고하세요.
 
@@ -56,6 +56,7 @@ LLM 단계(답변 생성)는 `.env`에 `GEMINI_API_KEY`가 필요합니다. [Goo
 | 4 | `tutorials/04_product/01_search_cli.py` | 검색 CLI, `--json`, uvx 배포 |
 | 4 | `tutorials/04_product/02_mcp_server.py` | MCP: 연결 → 도구 목록 → 호출, Claude 등록 |
 | 4 | `tutorials/04_product/03_web_app.py` | 웹앱 빌드와 API 서버 한 주소 배포 |
+| 4 | `tutorials/04_product/04_monitoring.py` | MLflow: 실험 run 비교 → 모델 레지스트리(champion) → 서비스 트레이스·세션 |
 
 ## 도구와 앱
 
@@ -75,6 +76,13 @@ uv run --package ragkit-api ragkit-api --web-dist apps/web/dist                 
 uv run --package ragkit-search ragkit-search search "야간 근로 수당" --law 근로기준법
 uv run --package ragkit-mcp ragkit-mcp                      # Claude 등록은 apps/mcp/README.md
 cd apps/web && pnpm install && pnpm dev                     # 개발 모드 (api를 먼저 띄운다)
+
+# MLflow (4단계): .env에 MLFLOW_TRACKING_URI가 있으면 train·evaluate·compare·bench가 run을,
+# api·search-cli·mcp가 질문마다 트레이스를 남긴다 (없으면 아무것도 기록하지 않음)
+uv sync --extra mlflow
+uv run mlflow server --backend-store-uri sqlite:///mlruns/mlflow.db --artifacts-destination mlruns/artifacts
+uv run ragkit register models/multilingual-e5-small-pruned-int8 --alias champion   # → models:/law-embedder@champion
+uv run --package ragkit-api ragkit-api --model models:/law-embedder@champion
 ```
 
 | 앱 | 설명 |
