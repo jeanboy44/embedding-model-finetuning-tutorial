@@ -16,10 +16,10 @@
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; overflow: hidden; }
-body { background: #f2f3ef; color: var(--text); font-family: "Pretendard", system-ui, sans-serif; }
+body { background: #eeeff1; color: var(--text); font-family: "Pretendard", system-ui, sans-serif; }
 
 /* 그라데이션은 화면 전체에 깔아서, 화면 비율이 16:9가 아니어도 무대 가장자리가 보이지 않게 한다 */
-.viewport { position: fixed; inset: 0; background: linear-gradient(135deg, #eef3e9 0%, #fbfbf8 55%, #f8f5e3 100%); }
+.viewport { position: fixed; inset: 0; background: linear-gradient(160deg, #f5f6f7 0%, #eeeff1 60%, #e8eaed 100%); }
 /* 화면 가운데에 놓고 deck.js가 translate(-50%,-50%) scale()로 맞춘다.
    grid 가운데 정렬은 무대가 화면보다 클 때 왼쪽에 붙은 채로 줄어 오른쪽으로 밀린다. */
 .stage {
