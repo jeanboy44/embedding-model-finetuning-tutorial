@@ -5,11 +5,16 @@
   const slides = [...stage.querySelectorAll(".slide")];
   const pager = Object.assign(document.createElement("div"), { className: "pager" });
   const progress = Object.assign(document.createElement("div"), { className: "progress" });
-  stage.parentElement.append(pager, progress); // 무대 밖(화면 가장자리)에 붙인다
+  stage.append(pager, progress);
   let index = 0;
 
-  const fit = () => { stage.style.transform = `translate(-50%, -50%) scale(${Math.min(innerWidth / 1600, innerHeight / 900)})`; };
+  // 평소에는 화면의 92%로 줄여 슬라이드 한 장처럼 띄우고, 전체 화면에서는 꽉 채운다
+  const fit = () => {
+    const room = document.fullscreenElement ? 1 : 0.92;
+    stage.style.transform = `translate(-50%, -50%) scale(${Math.min(innerWidth / 1600, innerHeight / 900) * room})`;
+  };
   addEventListener("resize", fit);
+  document.addEventListener("fullscreenchange", fit);
   fit();
 
   const show = (i) => {
