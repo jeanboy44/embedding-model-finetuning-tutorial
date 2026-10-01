@@ -80,7 +80,7 @@ cd apps/web && pnpm install && pnpm dev                     # 개발 모드 (api
 # MLflow (4단계): .env에 MLFLOW_TRACKING_URI가 있으면 train·evaluate·compare·bench가 run을,
 # api·search-cli·mcp가 질문마다 트레이스를 남긴다 (없으면 아무것도 기록하지 않음)
 uv sync --extra mlflow
-uv run mlflow server --backend-store-uri sqlite:///mlruns/mlflow.db --artifacts-destination mlruns/artifacts
+uv run mlflow server --backend-store-uri sqlite:///mlruns/mlflow.db --artifacts-destination mlruns/artifacts --port 5050  # .env: MLFLOW_TRACKING_URI=http://127.0.0.1:5050 (macOS는 5000을 AirPlay가 씀)
 uv run ragkit register models/multilingual-e5-small-pruned-int8 --alias champion   # → models:/law-embedder@champion
 uv run --package ragkit-api ragkit-api --model models:/law-embedder@champion
 

@@ -38,7 +38,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 STORE = ROOT / "mlruns"
-MLFLOW_PORT = 5000
+MLFLOW_PORT = 5050  # macOS는 5000을 AirPlay 수신이 쓴다
 API_PORT = 8766
 TRACKING_URI = f"http://127.0.0.1:{MLFLOW_PORT}"
 MODEL_DIR = ROOT / "models" / "multilingual-e5-small-pruned-int8"
@@ -93,7 +93,7 @@ server_cmd = [
     "--artifacts-destination", str(STORE / "artifacts"),
     "--host", "127.0.0.1", "--port", str(MLFLOW_PORT),
 ]
-print("$ mlflow server --backend-store-uri sqlite:///mlruns/mlflow.db --artifacts-destination mlruns/artifacts")
+print(f"$ mlflow server --backend-store-uri sqlite:///mlruns/mlflow.db --artifacts-destination mlruns/artifacts --port {MLFLOW_PORT}")
 mlflow_server = subprocess.Popen(server_cmd, cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 api_server = None
 try:

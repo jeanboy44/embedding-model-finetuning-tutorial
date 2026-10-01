@@ -50,7 +50,7 @@ class Settings(BaseSettings):
     embedding_sort_by_length: bool = True  # 길이순 배치로 패딩 줄이기
     embedding_num_threads: int | None = None  # CPU 스레드 수. None이면 라이브러리 기본값
 
-    # MLflow (비어 있으면 기록하지 않는다). 예: http://127.0.0.1:5000
+    # MLflow (비어 있으면 기록하지 않는다). 예: http://127.0.0.1:5050
     mlflow_tracking_uri: str = ""
     mlflow_experiment: str = "ragkit"  # 실험 추적(train·evaluate·compare·bench)
     mlflow_trace_experiment: str = "ragkit-service"  # 서비스 트레이스(api·search-cli·mcp)

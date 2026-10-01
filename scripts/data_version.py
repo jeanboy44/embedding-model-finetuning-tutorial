@@ -153,7 +153,7 @@ def register(version: str, *, force: bool = False) -> None:
         force: 같은 버전 run이 이미 있어도 하나 더 남긴다.
     """
     if not tracking.enabled():
-        raise SystemExit("MLFLOW_TRACKING_URI가 없습니다 (.env). 예: MLFLOW_TRACKING_URI=http://127.0.0.1:5000")
+        raise SystemExit("MLFLOW_TRACKING_URI가 없습니다 (.env). 예: MLFLOW_TRACKING_URI=http://127.0.0.1:5050")
     manifest, path = _load(version)
     if not manifest["zip"].get("drive_file_id"):
         print(f"경고: {version}을 아직 Drive에 올리지 않았습니다. 데이터셋 주소가 Drive 폴더가 됩니다.")
