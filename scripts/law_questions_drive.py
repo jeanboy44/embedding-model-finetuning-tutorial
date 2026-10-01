@@ -183,8 +183,7 @@ def write_sha256(path: Path) -> str:
 def bundle_skill(skills_dir: Path | None = None, output: Path | None = None) -> None:
     """law-question-gen 스킬의 평가 워크스페이스를 zip으로 묶는다.
 
-    스킬 자체는 `lecture/01_data/law-question-gen/`에서 git으로 관리한다
-    (`.claude/skills/law-question-gen`은 그 폴더를 가리키는 링크).
+    스킬 자체(`.claude/skills/law-question-gen/`)는 git으로 관리한다.
     평가 워크스페이스는 실행 결과물이라 git에서 빼고 이 zip으로 Drive에 보관한다.
     zip 구조: law-question-gen-skill/law-question-gen-workspace/
 

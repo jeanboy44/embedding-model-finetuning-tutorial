@@ -72,8 +72,11 @@ logs/
 # Superpowers artifacts
 .superpowers/
 
-# Claude Code worktrees
-.claude/
+# Claude Code: worktrees 등은 무시하고 프로젝트 스킬만 관리
+.claude/*
+!.claude/skills/
+.claude/skills/*
+!.claude/skills/law-question-gen/
 data/questions/
 data/questions_test/
 data/splits/
