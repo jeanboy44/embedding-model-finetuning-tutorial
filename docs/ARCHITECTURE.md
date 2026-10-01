@@ -45,7 +45,7 @@ models/<모델> ─ ragkit export-onnx ─→ onnx/model.onnx ─ ragkit quantiz
 | `training` | 법령 단위 분할, 대조 학습 예시, sentence-transformers 학습(전체 / LoRA) |
 | `evaluation` | 전체 코퍼스 대상 Recall@k·MRR·nDCG (doc / article 판정) |
 | `cli` | `ragkit`: index · split · train · evaluate · compare · export-onnx · quantize · prune-vocab |
-| `retrieval.document_store`, `rag.rag_agent`, `monitoring` | 이전 구성 자료(`tutorials/_legacy`)용. 새 코드는 쓰지 않는다 |
+| `retrieval.document_store`, `rag.rag_agent` | 이전 구성 자료(`tutorials/_legacy/agent`)용. 새 코드는 쓰지 않는다 |
 
 의존성: core(onnxruntime, tokenizers, sqlite-vec, numpy, google-genai, cyclopts…) / extra `[torch]` / extra `[train]`.
 

@@ -75,12 +75,6 @@ uv run python -m src.cli.cli_tool rag --query "질문"
 uv run python tutorials/phase3_agent/run_agent.py
 ```
 
-### Phase 4: 모니터링
-
-```bash
-uv run python tutorials/phase4_monitoring/run_monitoring.py
-```
-
 ---
 
 ## 자주 사용하는 명령어
