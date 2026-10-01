@@ -162,6 +162,7 @@ def train(
     params = _flat_params(train_config.model_dump(mode="json"))
     with tracking.run(f"train/{Path(train_config.output_dir).name}", params=params,
                       tags={"stage": "train", "config": str(config)}) as run:
+        run.log_data({"corpus": corpus_path, "train": splits_dir / "train.jsonl", "dev": splits_dir / "dev.jsonl"})
         meta = train_module.train(
             train_config,
             train_questions,
@@ -237,6 +238,7 @@ def evaluate(
 
     with tracking.run(f"evaluate/{model_path.name}/{split}{suffix}", params=_eval_params(result, expand),
                       tags={"stage": "evaluate"}) as run:
+        run.log_data({"corpus": corpus_path, split: splits_dir / f"{split}.jsonl"})
         _log_eval(run, result, out)
 
     print(f"{model}{' + 쿼리 확장' if expand else ''} · {split} ({result['n']}개 질문)")
@@ -437,6 +439,7 @@ def compare(
         tags={"stage": "compare"},
     )
     with parent as parent_run:
+        parent_run.log_data({"corpus": corpus_path, "questions": Path(questions_path)})
         rows = _compare_models(models, docs, kept, out_dir, backend, index_dir, expansion_cache, rpm)
         table = {
             "name": settings.get("name"),

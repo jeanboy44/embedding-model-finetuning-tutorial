@@ -188,7 +188,7 @@ def register_command(
     from ragkit.retrieval import default_index_path, model_key
 
     if not tracking.enabled():
-        raise SystemExit("MLFLOW_TRACKING_URI가 없습니다 (.env). 예: MLFLOW_TRACKING_URI=http://127.0.0.1:5000")
+        raise SystemExit("MLFLOW_TRACKING_URI가 없습니다 (.env). 예: MLFLOW_TRACKING_URI=http://127.0.0.1:5050")
     if not (model_dir / "tokenizer.json").exists():
         raise SystemExit(f"모델 폴더가 아닙니다 (tokenizer.json 없음): {model_dir}")
     if index_key is None:
