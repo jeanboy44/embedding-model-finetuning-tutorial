@@ -1,0 +1,56 @@
+{
+  "skill_name": "law-question-gen",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "최저임금법 질문 데이터 만들어줘",
+      "expected_output": "최저임금법__p01.jsonl: youth 말투 질문, 조문당 0~3개, 검증 통과",
+      "files": [],
+      "assertions": [
+        "validate_questions.py 오류 0",
+        "질문에 조문 번호(제N조) 누설 0",
+        "모든 레코드에 hard_negative_ids가 있고 전부 실제 코퍼스 id",
+        "모든 positive_id가 대상 파트의 조문",
+        "situation 유형 비율 30% 이상", "keyword 유형 비율 25% 이상",
+        "LOW-VALUE 조문 질문 비율 5% 이하",
+        "모든 레코드에 answer 필드",
+        "질문에 법령 이름 포함 비율 25% 이하",
+        "정답 문서가 512토큰 이하인 비율 95% 이상"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "도로교통법 파트 1 질문 생성해줘",
+      "expected_output": "도로교통법__p01.jsonl: 운전자·킥보드 이용자 말투, 파트 1 조문만 정답, 검증 통과",
+      "files": [],
+      "assertions": [
+        "validate_questions.py 오류 0",
+        "질문에 조문 번호(제N조) 누설 0",
+        "모든 레코드에 hard_negative_ids가 있고 전부 실제 코퍼스 id",
+        "모든 positive_id가 대상 파트의 조문",
+        "situation 유형 비율 30% 이상", "keyword 유형 비율 25% 이상",
+        "LOW-VALUE 조문 질문 비율 5% 이하",
+        "모든 레코드에 answer 필드",
+        "질문에 법령 이름 포함 비율 25% 이하",
+        "정답 문서가 512토큰 이하인 비율 95% 이상"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "전기공사공제조합법으로 학습용 쿼리 만들어",
+      "expected_output": "전기공사공제조합법__p01.jsonl: 행정 조문은 건너뛰어 질문 수가 적음, 검증 통과",
+      "files": [],
+      "assertions": [
+        "validate_questions.py 오류 0",
+        "질문에 조문 번호(제N조) 누설 0",
+        "모든 레코드에 hard_negative_ids가 있고 전부 실제 코퍼스 id",
+        "모든 positive_id가 대상 파트의 조문",
+        "situation 유형 비율 30% 이상", "keyword 유형 비율 25% 이상",
+        "LOW-VALUE 조문 질문 비율 5% 이하",
+        "모든 레코드에 answer 필드",
+        "질문에 법령 이름 포함 비율 25% 이하",
+        "정답 문서가 512토큰 이하인 비율 95% 이상"
+      ]
+    }
+  ]
+}

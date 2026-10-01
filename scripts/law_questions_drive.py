@@ -4,7 +4,7 @@
     uv run python scripts/law_questions_drive.py collect    # 스킬 테스트 질문 → data/questions_test/
     uv run python scripts/law_questions_drive.py bundle     # 질문 + 코퍼스 → dist/law-questions.zip
     uv run python scripts/law_questions_drive.py upload     # dist/의 zip을 Drive 폴더에 올림 (rclone)
-    uv run python scripts/law_questions_drive.py bundle-skill                       # 스킬 → dist/law-question-gen-skill.zip
+    uv run python scripts/law_questions_drive.py bundle-skill                       # 스킬 평가 워크스페이스 → dist/law-question-gen-skill.zip
     uv run python scripts/law_questions_drive.py upload --zip-path dist/law-question-gen-skill.zip
     uv run python scripts/law_questions_drive.py download   # Drive 폴더에서 받아 data/law-questions/에 풂
 
@@ -181,29 +181,30 @@ def write_sha256(path: Path) -> str:
 
 @app.command(name="bundle-skill")
 def bundle_skill(skills_dir: Path | None = None, output: Path | None = None) -> None:
-    """law-question-gen 스킬과 평가 워크스페이스를 zip 하나로 묶는다.
+    """law-question-gen 스킬의 평가 워크스페이스를 zip으로 묶는다.
 
-    .claude/는 git에서 제외했으므로 스킬은 이 zip으로 Drive에 따로 보관한다.
-    zip 구조: law-question-gen-skill/{law-question-gen/, law-question-gen-workspace/}
+    스킬 자체는 `lecture/01_data/law-question-gen/`에서 git으로 관리한다
+    (`.claude/skills/law-question-gen`은 그 폴더를 가리키는 링크).
+    평가 워크스페이스는 실행 결과물이라 git에서 빼고 이 zip으로 Drive에 보관한다.
+    zip 구조: law-question-gen-skill/law-question-gen-workspace/
 
     Args:
-        skills_dir: 스킬 폴더들이 있는 곳. 기본값은 .claude/skills.
+        skills_dir: 워크스페이스가 있는 곳. 기본값은 .claude/skills.
         output: zip 경로. 기본값은 dist/law-question-gen-skill.zip.
     """
     skills_dir = skills_dir or PROJECT_ROOT / ".claude" / "skills"
     output = output or PROJECT_ROOT / "dist" / f"{SKILL_BUNDLE_NAME}.zip"
-    folders = [skills_dir / "law-question-gen", skills_dir / "law-question-gen-workspace"]
-    if not (folders[0] / "SKILL.md").exists():
-        raise SystemExit(f"스킬이 없습니다: {folders[0] / 'SKILL.md'}")
+    folder = skills_dir / "law-question-gen-workspace"
+    if not folder.is_dir():
+        raise SystemExit(f"워크스페이스가 없습니다: {folder}")
 
     output.parent.mkdir(parents=True, exist_ok=True)
     count = 0
     with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as zf:
-        for folder in folders:
-            for path in sorted(folder.rglob("*")):
-                if path.is_file() and "__pycache__" not in path.parts and path.suffix != ".log":
-                    zf.write(path, f"{SKILL_BUNDLE_NAME}/{path.relative_to(skills_dir)}")
-                    count += 1
+        for path in sorted(folder.rglob("*")):
+            if path.is_file() and "__pycache__" not in path.parts and path.suffix != ".log":
+                zf.write(path, f"{SKILL_BUNDLE_NAME}/{path.relative_to(skills_dir)}")
+                count += 1
     digest = write_sha256(output)
     print(f"완료: {output} (파일 {count}개, {output.stat().st_size / 1e6:.1f}MB, sha256 {digest[:12]}…)")
 
