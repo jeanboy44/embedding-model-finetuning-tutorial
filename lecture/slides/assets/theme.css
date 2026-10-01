@@ -18,13 +18,16 @@
 html, body { margin: 0; height: 100%; overflow: hidden; }
 body { background: #eeeff1; color: var(--text); font-family: "Pretendard", system-ui, sans-serif; }
 
-/* 그라데이션은 화면 전체에 깔아서, 화면 비율이 16:9가 아니어도 무대 가장자리가 보이지 않게 한다 */
+/* 회색 배경 위에 흰 슬라이드 한 장을 띄운다. 전체 화면(F)에서는 여백 없이 꽉 채운다 */
 .viewport { position: fixed; inset: 0; background: linear-gradient(160deg, #f5f6f7 0%, #eeeff1 60%, #e8eaed 100%); }
 /* 화면 가운데에 놓고 deck.js가 translate(-50%,-50%) scale()로 맞춘다.
    grid 가운데 정렬은 무대가 화면보다 클 때 왼쪽에 붙은 채로 줄어 오른쪽으로 밀린다. */
 .stage {
   width: 1600px; height: 900px; position: absolute; left: 50%; top: 50%; overflow: hidden; transform-origin: center;
+  background: linear-gradient(160deg, #ffffff 0%, #fcfcfb 100%);
+  border-radius: 20px; box-shadow: 0 1px 3px rgba(31, 42, 55, .06), 0 18px 50px rgba(31, 42, 55, .10);
 }
+:fullscreen .stage { border-radius: 0; box-shadow: none; }
 .slide {
   position: absolute; inset: 0; padding: 110px 140px;
   display: flex; flex-direction: column; justify-content: center;
@@ -71,8 +74,8 @@ code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .9em; 
 .bar .track { height: 12px; border-radius: 6px; background: var(--line); overflow: hidden; }
 .bar .fill { height: 100%; width: 0; border-radius: 6px; background: var(--c); transition: width .8s ease; }
 
-.pager { position: fixed; right: 32px; bottom: 24px; font-size: 18px; color: var(--muted); font-variant-numeric: tabular-nums; }
-.progress { position: fixed; left: 0; bottom: 0; height: 4px; width: 0; background: linear-gradient(90deg, var(--orange), var(--blue)); transition: width .3s; }
+.pager { position: absolute; right: 56px; bottom: 40px; font-size: 18px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.progress { position: absolute; left: 0; bottom: 0; height: 4px; width: 0; background: linear-gradient(90deg, var(--orange), var(--blue)); transition: width .3s; }
 
 /* 숫자 강조 */
 .big { font-size: 64px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; font-variant-numeric: tabular-nums; }
