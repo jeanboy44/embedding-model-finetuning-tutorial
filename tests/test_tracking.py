@@ -70,9 +70,24 @@ def test_register_and_resolve_model(mlflow_on) -> None:
     version = tracking.register_model(
         model_dir, name="law-embedder", alias="champion", index_key="e5-int8", metrics={"recall@5": 0.515}
     )
-    local, index_key = tracking.resolve_model("models:/law-embedder@champion")
+    local, index_key = tracking.resolve_model("models:/law-embedder@champion", cache_dir=mlflow_on / "registry")
 
     assert version == "1"
     assert index_key == "e5-int8"
     assert (Path(local) / "onnx" / "model.onnx").read_bytes() == b"onnx"
     assert (Path(local) / "tokenizer.json").exists()
+
+
+def test_resolve_ignores_cache_from_another_registry(mlflow_on) -> None:
+    """같은 이름·버전이라도 다른 등록(다른 run)에서 받은 캐시면 다시 내려받는다."""
+    model_dir = mlflow_on / "e5-int8"
+    model_dir.mkdir()
+    (model_dir / "tokenizer.json").write_text('{"real": true}')
+    stale = mlflow_on / "registry" / "law-embedder-v1"
+    stale.mkdir(parents=True)
+    (stale / "tokenizer.json").write_text("{}")
+
+    tracking.register_model(model_dir, name="law-embedder", alias="champion")
+    local, _ = tracking.resolve_model("models:/law-embedder@champion", cache_dir=mlflow_on / "registry")
+
+    assert (Path(local) / "tokenizer.json").read_text() == '{"real": true}'
