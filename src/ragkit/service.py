@@ -17,6 +17,7 @@ from pathlib import Path
 
 import numpy as np
 
+from ragkit import tracking
 from ragkit.config import get_settings
 from ragkit.embeddings.profiles import E5_STYLE, ModelProfile, get_profile
 from ragkit.models.gemini_client import Generation
@@ -103,7 +104,8 @@ class Searcher:
         """Settings 기본값으로 모델·인덱스를 연다 (`ragkit index`와 같은 파일 규칙).
 
         Args:
-            model: 임베딩 모델 이름. 기본값 Settings.embedding_model_name.
+            model: 임베딩 모델 이름 또는 폴더. 기본값 Settings.embedding_model_name.
+                MLflow 레지스트리 주소(models:/law-embedder@champion)도 받는다 (extra [mlflow]).
             checkpoint: 파인튜닝한 모델 폴더.
             backend: onnx | torch | st. 기본값 Settings.embedding_backend.
             index_path: 인덱스 파일. 기본값 data/processed/index/<모델 키>.sqlite.
@@ -114,7 +116,10 @@ class Searcher:
         from ragkit.embeddings import create_embedding_fn
 
         model = model or get_settings().embedding_model_name
-        index = VectorIndex.open(index_path or default_index_path(model_key(model, checkpoint)))
+        key = model_key(model, checkpoint)
+        if model.startswith("models:/"):
+            model, key = tracking.resolve_model(model)  # 등록 버전의 폴더 + 그 모델로 만든 인덱스 키
+        index = VectorIndex.open(index_path or default_index_path(key))
         embed_fn = create_embedding_fn(model, checkpoint_path=checkpoint, backend=backend)
         return cls(index, embed_fn, profile=get_profile(checkpoint or model))
 
@@ -145,12 +150,41 @@ class Searcher:
                 raise ValueError(f"모르는 법령: {name}{hint}")
         return list(names)
 
-    def search(self, query: str, k: int = 5, laws: list[str] | None = None) -> list[SearchHit]:
-        """질문과 가까운 조문 상위 k개. laws를 주면 그 법령들 안에서만 찾는다."""
-        where = {"law_name": self.resolve_laws(laws)} if laws else None
-        with self._lock:
-            vector = self.embed_fn([self.profile.format_query(query)])[0]
-            return self.index.search(vector, k=k, where=where)
+    def search(
+        self,
+        query: str,
+        k: int = 5,
+        laws: list[str] | None = None,
+        *,
+        session_id: str | None = None,
+        user: str | None = None,
+        source: str | None = None,
+    ) -> list[SearchHit]:
+        """질문과 가까운 조문 상위 k개. laws를 주면 그 법령들 안에서만 찾는다.
+
+        MLflow가 켜져 있으면 검색 한 번이 트레이스 하나로 남는다 (source: 어느 앱에서 왔는지).
+        """
+        span = tracking.start_span(
+            "search", "RETRIEVER", inputs={"query": query, "k": k, "laws": laws},
+            session_id=session_id, user=user, tags=_source_tags(source),
+        )
+        return self._search(query, k, laws, span)
+
+    def _search(self, query: str, k: int, laws: list[str] | None, span: tracking.Span) -> list[SearchHit]:
+        """검색하고 span을 닫는다: 질문 임베딩(EMBEDDING) 스팬 + 찾은 조문 본문을 출력으로."""
+        try:
+            where = {"law_name": self.resolve_laws(laws)} if laws else None
+            with self._lock:
+                text = self.profile.format_query(query)
+                embed_span = tracking.start_span("embed_query", "EMBEDDING", parent=span, inputs={"text": text})
+                vector = self.embed_fn([text])[0]
+                embed_span.end(outputs={"dim": int(vector.shape[-1])})
+                hits = self.index.search(vector, k=k, where=where)
+        except Exception as e:
+            span.end(error=str(e))
+            raise
+        span.end(outputs=_documents(hits))
+        return hits
 
     def get(self, doc_id: str) -> SearchHit | None:
         """id로 조문 조각 하나. 없으면 None."""
@@ -168,43 +202,83 @@ class Searcher:
         k: int = 5,
         laws: list[str] | None = None,
         history: list[dict] | None = None,
+        *,
+        session_id: str | None = None,
+        user: str | None = None,
+        source: str | None = None,
     ) -> Iterator[AnswerEvent]:
         """검색한 조문만 근거로 LLM 답변을 스트리밍한다.
+
+        MLflow가 켜져 있으면 답변 한 번이 트레이스 하나로 남는다:
+        answer(CHAIN) 아래 search(RETRIEVER, 찾은 조문)와 llm(CHAT_MODEL, 프롬프트·답·토큰 수).
+        session_id로 같은 대화(노트북)의 트레이스를 묶는다.
 
         Args:
             query: 질문. 검색에는 이것만 쓴다.
             k: 근거로 줄 조문 수.
             laws: 검색할 법령. None이면 전체.
             history: 이전 대화. 최근 HISTORY_TURNS개만 프롬프트에 넣는다.
+            session_id: 대화 세션 (예: 노트북 id).
+            user: 사용자.
+            source: 어느 앱에서 왔는지 (api · search-cli · mcp).
 
         Yields:
             HitsEvent 하나 → DeltaEvent 여러 개 → DoneEvent 하나.
         """
         start = time.perf_counter()
-        hits = self.search(query, k=k, laws=laws)
-        yield HitsEvent(hits)
-        if not self.llm_available:
-            yield DoneEvent(error=NO_LLM_MESSAGE, latency_s=time.perf_counter() - start)
-            return
-        prompt = build_prompt(query, hits, history[-HISTORY_TURNS:] if history else None)
-        pieces: list[str] = []
+        recent = history[-HISTORY_TURNS:] if history else None
+        root = tracking.start_span(
+            "answer", "CHAIN", inputs={"query": query, "k": k, "laws": laws, "history": recent},
+            session_id=session_id, user=user, tags=_source_tags(source),
+        )
+        llm = tracking.Span()
+        done: DoneEvent | None = None
         try:
-            for item in self.stream(prompt):
-                if isinstance(item, Generation):
-                    yield DoneEvent(
-                        answer=item.text or "".join(pieces),
-                        input_tokens=item.input_tokens,
-                        output_tokens=item.output_tokens,
-                        latency_s=time.perf_counter() - start,
-                    )
-                    return
-                pieces.append(item)
-                yield DeltaEvent(item)
-        except Exception as e:  # noqa: BLE001 — LLM 오류로 검색 결과까지 잃지 않게 이벤트로 알린다
-            yield DoneEvent(answer="".join(pieces), error=f"답변 생성 실패: {e}",
-                            latency_s=time.perf_counter() - start)
-            return
-        yield DoneEvent(answer="".join(pieces), latency_s=time.perf_counter() - start)
+            search_span = tracking.start_span("search", "RETRIEVER", parent=root,
+                                              inputs={"query": query, "k": k, "laws": laws})
+            hits = self._search(query, k, laws, search_span)
+            yield HitsEvent(hits)
+            if not self.llm_available:
+                done = DoneEvent(error=NO_LLM_MESSAGE, latency_s=time.perf_counter() - start)
+                yield done
+                return
+            prompt = build_prompt(query, hits, recent)
+            llm = tracking.start_span("llm", "CHAT_MODEL", parent=root,
+                                      inputs={"messages": [{"role": "user", "content": prompt}]})
+            pieces: list[str] = []
+            try:
+                for item in self.stream(prompt):
+                    if isinstance(item, Generation):
+                        done = DoneEvent(
+                            answer=item.text or "".join(pieces),
+                            input_tokens=item.input_tokens,
+                            output_tokens=item.output_tokens,
+                            latency_s=time.perf_counter() - start,
+                        )
+                        break
+                    pieces.append(item)
+                    yield DeltaEvent(item)
+            except Exception as e:  # noqa: BLE001 — LLM 오류로 검색 결과까지 잃지 않게 이벤트로 알린다
+                done = DoneEvent(answer="".join(pieces), error=f"답변 생성 실패: {e}",
+                                 latency_s=time.perf_counter() - start)
+            if done is None:
+                done = DoneEvent(answer="".join(pieces), latency_s=time.perf_counter() - start)
+            llm.end(
+                outputs=done.answer,
+                attributes={"mlflow.chat.tokenUsage": {
+                    "input_tokens": done.input_tokens, "output_tokens": done.output_tokens,
+                    "total_tokens": done.input_tokens + done.output_tokens,
+                }},
+                error=done.error,
+            )
+            yield done
+        finally:
+            # 끝까지 갔으면 결과로, 도중에 끊겼으면(클라이언트 연결 종료 등) 오류로 루트를 닫는다
+            if done is not None:
+                root.end(outputs={"answer": done.answer, "latency_s": done.latency_s}, error=done.error)
+            else:
+                llm.end(error="중단됨")
+                root.end(error="중단됨")
 
     def answer(
         self,
@@ -212,11 +286,17 @@ class Searcher:
         k: int = 5,
         laws: list[str] | None = None,
         history: list[dict] | None = None,
+        *,
+        session_id: str | None = None,
+        user: str | None = None,
+        source: str | None = None,
     ) -> AnswerResult:
         """answer_stream을 끝까지 모은 결과 (스트리밍이 필요 없는 CLI·MCP·API용)."""
         hits: list[SearchHit] = []
         done = DoneEvent()
-        for event in self.answer_stream(query, k=k, laws=laws, history=history):
+        events = self.answer_stream(query, k=k, laws=laws, history=history,
+                                    session_id=session_id, user=user, source=source)
+        for event in events:
             if isinstance(event, HitsEvent):
                 hits = event.hits
             elif isinstance(event, DoneEvent):
@@ -231,3 +311,20 @@ class Searcher:
             latency_s=done.latency_s,
             error=done.error,
         )
+
+
+def _source_tags(source: str | None) -> dict[str, str] | None:
+    return {"source": source} if source else None
+
+
+def _documents(hits: list[SearchHit]) -> list[dict]:
+    """RETRIEVER 스팬 출력: MLflow 문서 형식(id·page_content·metadata)으로 찾은 조문 본문 전체."""
+    return [
+        {
+            "id": hit.id,
+            "page_content": hit.text,
+            "metadata": {"title": hit.metadata.get("title"), "law_name": hit.metadata.get("law_name"),
+                         "score": round(float(hit.score), 4)},
+        }
+        for hit in hits
+    ]

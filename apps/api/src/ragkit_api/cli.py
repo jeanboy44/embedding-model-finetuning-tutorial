@@ -24,7 +24,8 @@ def serve(
     Args:
         host: 바인딩 주소. 다른 기기에서 접속하려면 0.0.0.0.
         port: 포트.
-        model: 임베딩 모델 이름. 기본값 Settings.embedding_model_name.
+        model: 임베딩 모델 이름·폴더 또는 MLflow 레지스트리 주소(models:/law-embedder@champion).
+            기본값 Settings.embedding_model_name.
         checkpoint: 파인튜닝한 모델 폴더.
         backend: onnx | torch | st. 기본값 Settings.embedding_backend.
         index: 인덱스 파일. 기본값 data/processed/index/<모델 키>.sqlite.

@@ -135,13 +135,14 @@ def create_app(
 
     @app.post("/api/search", response_model=SearchResponse)
     def search(req: SearchRequest) -> SearchResponse:
-        hits = get_searcher().search(req.query, k=req.k, laws=check_laws(req.laws))
+        hits = get_searcher().search(req.query, k=req.k, laws=check_laws(req.laws), source="api")
         return SearchResponse(hits=[Hit.from_hit(h) for h in hits])
 
     @app.post("/api/answer", response_model=AnswerResponse)
     def answer(req: AnswerRequest) -> AnswerResponse:
         history = [t.model_dump() for t in req.history] if req.history else None
-        result = get_searcher().answer(req.query, k=req.k, laws=check_laws(req.laws), history=history)
+        result = get_searcher().answer(req.query, k=req.k, laws=check_laws(req.laws), history=history,
+                                       source="api")
         return AnswerResponse(
             answer=result.answer, hits=[Hit.from_hit(h) for h in result.hits],
             input_tokens=result.input_tokens, output_tokens=result.output_tokens,
@@ -154,7 +155,8 @@ def create_app(
         history = [t.model_dump() for t in req.history] if req.history else None
 
         def events() -> Iterator[str]:
-            for event in get_searcher().answer_stream(req.query, k=req.k, laws=laws, history=history):
+            stream = get_searcher().answer_stream(req.query, k=req.k, laws=laws, history=history, source="api")
+            for event in stream:
                 yield sse(*_event_payload(event))
 
         return StreamingResponse(events(), media_type="text/event-stream")
@@ -205,7 +207,10 @@ def create_app(
 
         def events() -> Iterator[str]:
             hits: list[dict] = []
-            for event in get_searcher().answer_stream(req.query, k=req.k, laws=laws, history=history):
+            # 노트북 = 대화 세션: MLflow에서 같은 노트북의 질문들이 한 세션으로 묶인다
+            stream = get_searcher().answer_stream(req.query, k=req.k, laws=laws, history=history,
+                                                  session_id=notebook_id, source="api")
+            for event in stream:
                 name, data = _event_payload(event)
                 if isinstance(event, HitsEvent):
                     hits = data["hits"]

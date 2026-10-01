@@ -8,6 +8,10 @@ dependencies = [
     "mcp>=2.2",  # 2.x: FastMCP → MCPServer (mcp.server.mcpserver)
 ]
 
+[project.optional-dependencies]
+# MLflow 트레이싱 (MLFLOW_TRACKING_URI를 주면 검색·답변마다 트레이스를 남긴다)
+tracing = ["ragkit[tracing]"]
+
 [project.scripts]
 ragkit-mcp = "ragkit_mcp:main"
 

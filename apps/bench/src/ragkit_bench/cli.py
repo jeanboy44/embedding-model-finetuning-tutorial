@@ -118,6 +118,21 @@ def run(
     (out_dir / "comparison.md").write_text(f"# 배포 최적화 비교 (질문 {rows[0]['n_questions']}개, CPU)\n\n{table}\n")
     print("\n" + table)
     print(f"\n결과 → {out_dir}/comparison.md")
+    log_to_mlflow(rows, out_dir, n_latency=n_latency)
+
+
+def log_to_mlflow(rows: list[dict], out_dir: Path, *, n_latency: int) -> None:
+    """MLflow가 켜져 있으면 벤치 한 번 = 부모 run, 변형마다 자식 run으로 남긴다 (없으면 아무 일도 안 함)."""
+    from ragkit import tracking
+
+    with tracking.run("deploy_bench", params={"n_questions": rows[0]["n_questions"], "n_latency": n_latency},
+                      tags={"stage": "bench"}) as parent:
+        for row in rows:
+            params = {k: row.get(k) for k in ("variant", "backend", "model")}
+            with tracking.run(row["variant"], params=params, nested=True) as run:
+                run.log_metrics({k: v for k, v in row.items() if k not in params})
+        parent.log_artifact(out_dir / "comparison.md")
+        parent.log_artifact(out_dir / "results.json")
 
 
 if __name__ == "__main__":

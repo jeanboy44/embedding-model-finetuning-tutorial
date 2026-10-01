@@ -5,6 +5,10 @@ description = "최종 사용자용 검색 CLI (ragkit core만 사용, uvx로 배
 requires-python = ">=3.10"
 dependencies = ["ragkit"]
 
+[project.optional-dependencies]
+# MLflow 트레이싱 (MLFLOW_TRACKING_URI를 주면 검색·답변마다 트레이스를 남긴다)
+tracing = ["ragkit[tracing]"]
+
 [project.scripts]
 ragkit-search = "ragkit_search:main"
 

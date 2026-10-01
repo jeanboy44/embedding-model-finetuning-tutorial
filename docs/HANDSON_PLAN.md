@@ -39,7 +39,7 @@ lecture/
 - 교시는 50분 수업 + 10분 휴식이다. 스크립트 실행 시간은 교시당 합계 30분 안쪽을 목표로 한다.
 - 옮길 때 `git mv`로 이력을 남기고, README·PLAN·ARCHITECTURE·각 앱 README의 경로를 함께 고친다.
 
-## MLflow를 어디에 붙이나 (구현은 별도 설계 후)
+## MLflow를 어디에 붙이나 (2026-10-01 구현, `feat/mlflow`)
 
 사용자 요청(2026-09-30): MLflow 3.x로 실험 추적 · 모델 레지스트리 · 서비스 모니터링(Tracing으로 대화 흐름까지).
 
@@ -49,9 +49,11 @@ lecture/
 | 모델 레지스트리 | 파인튜닝 · ONNX · INT8 · 가지치기 모델을 버전 등록, API·CLI가 별칭(예: `champion`)으로 불러옴 | 03 → 04 |
 | Tracing / 서비스 모니터링 | api·search-cli·mcp의 요청 한 건 = 트레이스(검색 → LLM 스팬, 토큰·지연), 노트북 대화 = 세션으로 묶음 | 05 |
 
+쓰는 법: `.env`에 `MLFLOW_TRACKING_URI`만 넣으면 위 명령들이 코드 변경 없이 기록한다(없으면 no-op). 실습 02·03에서 쓰려면 `uv sync --extra mlflow` 후 `mlflow server`를 띄우고 같은 명령을 실행하면 된다. 05의 `04_monitoring.py`가 서버 기동 → bench run → `ragkit register` → 레지스트리 모델로 API → 노트북 대화 트레이스까지 한 번에 보여 준다(`--check`, 몇 분).
+
 ## 순서
 
-1. MLflow 설계 확정 → 구현 (f7)
+1. ~~MLflow 설계 확정 → 구현 (f7)~~ 완료 (`feat/mlflow`, 2026-10-01)
 2. 폴더 이동과 경로 수정 (f7), 42 세션에 알림
 3. 00·04·05 `SLIDE.md` 작성과 스크립트 두 모드 정리 (f7) / 01~03 (42)
 4. 1~2교시 이론 장표 (사용자)

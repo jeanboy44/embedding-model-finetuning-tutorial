@@ -8,6 +8,7 @@ import time
 from pathlib import Path
 from typing import Literal
 
+from ragkit import tracking
 from ragkit.config import get_settings
 from ragkit.data import filter_questions, load_corpus, load_questions
 from ragkit.embeddings import choose_backend, create_embedding_fn, get_profile
@@ -158,14 +159,18 @@ def train(
         _fail("이 코퍼스에 맞는 train 질문이 없습니다. 같은 코퍼스로 ragkit split을 다시 실행하세요.")
 
     settings = get_settings()
-    meta = train_module.train(
-        train_config,
-        train_questions,
-        dev_questions,
-        docs,
-        query_prefix=settings.query_prefix,
-        passage_prefix=settings.passage_prefix,
-    )
+    params = _flat_params(train_config.model_dump(mode="json"))
+    with tracking.run(f"train/{Path(train_config.output_dir).name}", params=params,
+                      tags={"stage": "train", "config": str(config)}) as run:
+        meta = train_module.train(
+            train_config,
+            train_questions,
+            dev_questions,
+            docs,
+            query_prefix=settings.query_prefix,
+            passage_prefix=settings.passage_prefix,
+        )
+        _log_train(run, meta, Path(train_config.output_dir))
     print(
         f"완료: {meta['train_examples']}개 예시, {meta['seconds']:.0f}초, "
         f"학습 파라미터 {meta['trainable_params']:,} / {meta['total_params']:,}"
@@ -229,6 +234,10 @@ def evaluate(
     out = out or get_settings().results_dir / f"{model_path.name}_{split}{suffix}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    with tracking.run(f"evaluate/{model_path.name}/{split}{suffix}", params=_eval_params(result, expand),
+                      tags={"stage": "evaluate"}) as run:
+        _log_eval(run, result, out)
 
     print(f"{model}{' + 쿼리 확장' if expand else ''} · {split} ({result['n']}개 질문)")
     _print_metrics(result)
@@ -404,7 +413,6 @@ def compare(
     """
     import yaml
 
-    from ragkit.retrieval import model_key
 
     settings = yaml.safe_load(Path(config).read_text(encoding="utf-8")) or {}
     models = settings.get("models") or []
@@ -422,6 +430,43 @@ def compare(
 
     out_dir = out_dir or Path(config).parent / "results"
     out_dir.mkdir(parents=True, exist_ok=True)
+    # 비교 한 번 = 부모 run, 모델마다 자식 run (MLflow UI에서 자식끼리 지표를 나란히 비교)
+    parent = tracking.run(
+        settings.get("name") or Path(config).parent.name,
+        params={"config": str(config), "questions": str(questions_path), "n": len(kept)},
+        tags={"stage": "compare"},
+    )
+    with parent as parent_run:
+        rows = _compare_models(models, docs, kept, out_dir, backend, index_dir, expansion_cache, rpm)
+        table = {
+            "name": settings.get("name"),
+            "questions": str(questions_path),
+            "corpus": str(corpus_path),
+            "n": len(kept),
+            "models": rows,
+        }
+        (out_dir / "comparison.json").write_text(
+            json.dumps(table, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+        (out_dir / "comparison.md").write_text(_comparison_markdown(table), encoding="utf-8")
+        parent_run.log_artifact(out_dir / "comparison.md")
+        parent_run.log_artifact(out_dir / "comparison.json")
+    print(f"비교표 → {out_dir / 'comparison.md'}")
+
+
+def _compare_models(
+    models: list,
+    docs: list[dict],
+    kept: list[dict],
+    out_dir: Path,
+    backend: str | None,
+    index_dir: Path | None,
+    expansion_cache: Path | None,
+    rpm: float | None,
+) -> list[dict]:
+    """compare의 모델별 평가: 결과 파일 + 자식 run을 남기고 비교표 행을 돌려준다."""
+    from ragkit.retrieval import model_key
+
     rows = []
     expansions = None
     for entry in models:
@@ -437,24 +482,63 @@ def compare(
             model, docs, kept, backend=backend, index=index,
             expansions=expansions if expand else None,
         )
-        (out_dir / f"{key}{'_expand' if expand else ''}.json").write_text(
-            json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8"
-        )
+        result_path = out_dir / f"{key}{'_expand' if expand else ''}.json"
+        result_path.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
         _print_metrics(result)
-        rows.append({k: v for k, v in result.items() if k != "per_question"})
+        row = {k: v for k, v in result.items() if k != "per_question"}
+        with tracking.run(f"{key}{' + expand' if expand else ''}", params=_eval_params(result, expand),
+                          nested=True) as run:
+            _log_eval(run, result, result_path)
+        rows.append(row)
+    return rows
 
-    table = {
-        "name": settings.get("name"),
-        "questions": str(questions_path),
-        "corpus": str(corpus_path),
-        "n": len(kept),
-        "models": rows,
+
+# ============================================================
+# MLflow 기록 (MLFLOW_TRACKING_URI가 없으면 아무 일도 하지 않는다)
+# ============================================================
+def _flat_params(config: dict, prefix: str = "") -> dict:
+    """중첩 설정(lora: {r: 8})을 MLflow 파라미터(lora.r)로 편다."""
+    out = {}
+    for key, value in config.items():
+        if isinstance(value, dict):
+            out |= _flat_params(value, f"{prefix}{key}.")
+        else:
+            out[f"{prefix}{key}"] = value
+    return out
+
+
+def _log_train(run: tracking.Run, meta: dict, output_dir: Path) -> None:
+    """학습 결과: 학습 전(step 0)·epoch별 dev 지표를 step으로, 시간·파라미터 수, train_meta.json."""
+    if meta.get("dev_before"):
+        run.log_metrics(meta["dev_before"], step=0)
+    for row in meta.get("dev_history") or []:
+        run.log_metrics({k: v for k, v in row.items() if k != "epoch"}, step=round(row["epoch"]))
+    run.log_metrics({
+        "train_seconds": meta.get("seconds"),
+        "train_examples": meta.get("train_examples"),
+        "trainable_params": meta.get("trainable_params"),
+        "best_epoch": meta.get("best_epoch"),
+    })
+    run.log_artifact(output_dir / "train_meta.json")
+
+
+def _eval_params(result: dict, expand: bool) -> dict:
+    return {
+        "model": result["model"],
+        "split": result.get("split"),
+        "backend": result.get("backend"),
+        "dim": result.get("dim"),
+        "n": result.get("n"),
+        "expand": expand,
     }
-    (out_dir / "comparison.json").write_text(
-        json.dumps(table, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
-    (out_dir / "comparison.md").write_text(_comparison_markdown(table), encoding="utf-8")
-    print(f"비교표 → {out_dir / 'comparison.md'}")
+
+
+def _log_eval(run: tracking.Run, result: dict, result_path: Path) -> None:
+    """평가 결과: 지표(doc·article·유형별 R@5), 인덱싱 시간, 확장 비용, 결과 JSON."""
+    run.log_metrics(tracking.flat_metrics(result))
+    run.log_metrics({"index_seconds": result.get("index_seconds")})
+    run.log_metrics({f"expansion/{k}": v for k, v in (result.get("expansion") or {}).items()})
+    run.log_artifact(result_path)
 
 
 def _row_label(row: dict) -> str:
