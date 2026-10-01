@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>실습 3 학습</title>
+<link rel="stylesheet" href="assets/theme.css">
+</head>
+<body>
+<div class="viewport"><div class="stage">
+
+  <section class="slide">
+    <div class="label y22">6교시 · 실습 3 · 2022 파트</div>
+    <h1>학습 실험과 분석</h1>
+    <p class="lead">작은 모델을 법령 질문으로 파인튜닝하고, 실험 결과를 DS의 눈으로 읽습니다. 학습은 맛보기만 하고, 강사가 학습한 모델을 나눠 씁니다.</p>
+  </section>
+
+  <section class="slide">
+    <div class="label">이 업무의 어제와 오늘</div>
+    <h2>같은 일, 다른 방식</h2>
+    <div class="cols c2">
+      <div class="col y22-top"><div class="year y22">2022</div>실험 설정 · 학습 · 평가 스크립트를 직접 짜고, 오답을 하나씩 열어 손으로 분류한다. 실험 하나 돌리고 읽는 데 며칠</div>
+      <div class="col y26-top"><div class="year y26">2026</div>설정 · 분석 스크립트 · 오답 분류 · 리포트는 AI에게 맡긴다. DS는 <b>가설을 세우고 숫자를 판단</b>하는 데 시간을 쓴다</div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="label">실험의 흐름</div>
+    <h2>한 바퀴가 실험 하나</h2>
+    <div class="cols c4">
+      <div class="col y22-top"><div class="when">1</div><h3>가설</h3>"배치를 키우면 오른다"처럼 틀릴 수 있는 문장으로</div>
+      <div class="col y22-top"><div class="when">2</div><h3>파일럿 → 학습</h3>작은 데이터로 돌아가는지 본 뒤 전체 학습</div>
+      <div class="col y22-top"><div class="when">3</div><h3>dev로 고르고 test 1회</h3>epoch · 설정은 dev로만 고른다. test는 마지막에 한 번</div>
+      <div class="col y22-top"><div class="when">4</div><h3>분석 → 다음 가설</h3>어디서 틀렸는지가 다음 실험을 정한다</div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="label">학습 원리 · 짧게</div>
+    <h2>질문을 정답 가까이, 오답에서 멀리</h2>
+    <div class="cols c2">
+      <div class="col">
+        <h3>MNRL</h3>
+        배치 안의 다른 질문의 정답을 모두 오답으로 쓴다. 배치 32면 질문 하나에 오답 31개 + hard negative
+        <p class="meta">NO_DUPLICATES: 같은 조문이 한 배치에 두 번 들어가 "정답을 오답으로" 가르치는 일을 막는다</p>
+      </div>
+      <div class="col">
+        <h3>전체 학습 vs LoRA</h3>
+        전체 학습은 가중치 1.18억 개를 모두 바꾼다. LoRA는 0.4%만 덧붙여 학습한다
+        <p class="meta">e5 접두어("query: " · "passage: ")는 데이터가 아니라 코드에서 붙인다</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="label">이번 실험</div>
+    <h2>가설 셋</h2>
+    <table class="tbl">
+      <tr><th>실험</th><th>설정</th><th>가설</th><th class="num">학습 시간</th></tr>
+      <tr><td>002</td><td>전체 학습 · 배치 32 · 3 epoch</td><td>기준 실험</td><td class="num">40분</td></tr>
+      <tr><td>004</td><td>LoRA</td><td>파라미터 0.4%로도 대부분 따라간다</td><td class="num">34분</td></tr>
+      <tr><td>006</td><td>전체 학습 · 배치 128</td><td>in-batch 오답이 많을수록 오른다</td><td class="num">35분</td></tr>
+    </table>
+    <p class="meta muted" style="margin-top:36px;font-size:20px">train 8,294 질문. 분할 → 세 실험 → 비교표를 명령 하나(just finetune-suite)로 약 2시간</p>
+  </section>
+
+  <section class="slide">
+    <div class="label">결과 · test 2,526 질문</div>
+    <h2>격차의 3분의 2를 메웠다</h2>
+    <div class="bars" style="max-width:1150px;gap:22px">
+      <div class="bar"><div class="row"><span>e5-small (학습 전)</span><b>0.513</b></div><div class="track"><div class="fill" data-w="51.3" style="--c:var(--line)"></div></div></div>
+      <div class="bar"><div class="row"><span>004 LoRA</span><b>0.641</b></div><div class="track"><div class="fill" data-w="64.1" style="--c:var(--orange)"></div></div></div>
+      <div class="bar"><div class="row"><span>006 배치 128</span><b>0.659</b></div><div class="track"><div class="fill" data-w="65.9" style="--c:var(--orange)"></div></div></div>
+      <div class="bar"><div class="row"><span>002 전체 학습</span><b>0.669</b></div><div class="track"><div class="fill" data-w="66.9" style="--c:var(--orange)"></div></div></div>
+      <div class="bar"><div class="row"><span>EmbeddingGemma (학습 없음, 2.6배 크기)</span><b>0.743</b></div><div class="track"><div class="fill" data-w="74.3" style="--c:var(--apricot)"></div></div></div>
+    </div>
+    <p class="meta muted" style="margin-top:28px;font-size:20px">R@5. 학습 전과 Gemma 사이 0.230 중 0.156(68%)을 메웠다. Gemma까지는 0.074가 남았다</p>
+  </section>
+
+  <section class="slide">
+    <div class="label">가설은 맞았나</div>
+    <h2>숫자가 말해 준 것</h2>
+    <div class="cols c3">
+      <div class="col y22-top"><h3>파인튜닝</h3>+0.156. 6개 테마, 3개 질문 유형 모두에서 올랐다. situation은 0.403 → 0.589</div>
+      <div class="col y22-top"><h3>LoRA</h3>파라미터 0.4%로 전체 학습의 96%(0.641 대 0.669). 가설대로</div>
+      <div class="col"><h3 class="warn">배치 128</h3>효과 없음(0.659 대 0.669). 가설이 틀렸다. 늘어난 오답은 대부분 다른 법령의 쉬운 문서다</div>
+    </div>
+    <p class="lead" style="margin-top:44px">필요한 것은 오답의 <b>수</b>가 아니라 <b>난이도</b>다.</p>
+  </section>
+
+  <section class="slide">
+    <div class="label">오답 분석 · dev 오답 421개</div>
+    <h2>어디서 틀리나</h2>
+    <div class="cols c2">
+      <div class="col">
+        <ul>
+          <li>질문과 조문의 <b>단어 겹침이 적은 구어체</b>가 65%. 겹침 하위 25%의 R@5는 0.46, 상위 25%는 0.88</li>
+          <li>같은 법의 <b>법률과 시행령을 혼동</b>한 경우가 25%</li>
+        </ul>
+      </div>
+      <div class="col">
+        <ul>
+          <li>1위 오답은 <b>다른 법령</b> 51%, 같은 법 다른 조문 45%</li>
+          <li>학습에 준 hard negative가 1위 오답인 경우는 5.5%뿐. 지금 negative는 실제로 헷갈리는 대상을 거의 담지 못한다</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="label">한계</div>
+    <h2>숫자를 그대로 믿지 않는다</h2>
+    <div class="cols c3">
+      <div class="col"><h3>새 법령으로 덜 옮겨 간다</h3>파인튜닝 이득이 본 법령에서 +0.27, 처음 보는 법령에서 +0.15</div>
+      <div class="col"><h3>dev가 치우쳤다</h3>지방세법 한 법령이 dev의 36%. 모델 비교는 test나 법령별 평균으로 본다</div>
+      <div class="col"><h3>오차 범위</h3>dev R@5 표준오차 약 ±0.012. 0.02보다 작은 차이는 차이로 보지 않는다</div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="label">다음 가설</div>
+    <h2>분석이 정한 다음 실험</h2>
+    <div class="cols c4">
+      <div class="col y22-top"><div class="when">1</div><h3>hard negative 다시 캐기</h3>학습한 모델로 코퍼스 전체에서 헷갈리는 조문을 찾는다</div>
+      <div class="col y22-top"><div class="when">2</div><h3>손실 함수</h3>어려운 샘플에 가중을 두는 방식</div>
+      <div class="col y22-top"><div class="when">3</div><h3>합성 질문</h3>코퍼스 전체 조문에 구어체 질문</div>
+      <div class="col y22-top"><div class="when">4</div><h3>맥락 헤더</h3>조문 앞에 법령 종류 · 장 · 위임한 모법을 붙인다</div>
+    </div>
+    <p class="meta muted" style="margin-top:40px;font-size:20px">강사 쪽에서 진행 중. 결과가 나오면 이 장을 채운다</p>
+  </section>
+
+  <section class="slide">
+    <div class="label y26">AI 시대에 더 쉽게</div>
+    <h2>DS는 가설과 판단에 집중한다</h2>
+    <div class="cols c3">
+      <div class="col y26-top"><h3>맡긴 것</h3>오답 분석을 에이전트 4개에 나눠 맡겼다: 정량 분해 · 라벨 품질 · 검색 파이프라인 · 학습 전략</div>
+      <div class="col y26-top"><h3>사람이 한 것</h3>어떤 제약을 둘지(모델 하나, reranker 없음), 어떤 숫자를 믿을지, 다음에 무엇을 할지</div>
+      <div class="col y26-top"><h3>기록</h3>MLflow가 실험마다 설정 · 지표 · 산출물을 남겨 실험 간 비교를 쉽게 한다</div>
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="label">실행</div>
+    <h2>돌려 볼 명령</h2>
+    <div class="cmd">
+      <span class="c"># 학습 맛보기 (몇 step만. 전체 학습은 강사가 미리 한 모델을 받는다)</span><br>
+      uv run --extra train ragkit train experiments/exp_002_finetuned/config.yaml<br>
+      <span class="c"># 받은 파인튜닝 모델과 베이스 모델 비교 (실험 007)</span><br>
+      uv run ragkit compare experiments/exp_007_finetune_comparison/config.yaml<br>
+      <span class="c"># 실험 기록 보기</span><br>
+      uv run --extra mlflow mlflow server
+    </div>
+  </section>
+
+  <section class="slide">
+    <div class="label">확인할 것</div>
+    <h2>표와 오답을 같이 본다</h2>
+    <div class="cols c3">
+      <div class="col"><h3>비교표</h3>질문 유형별 · 테마별로 어디가 가장 많이 올랐나</div>
+      <div class="col"><h3>여전히 틀리는 질문</h3>파인튜닝 후에도 틀린 situation 질문 5개를 읽고, 1위로 나온 조문이 왜 헷갈렸는지 적어 본다</div>
+      <div class="col"><h3>내 가설 하나</h3>다음에 해 볼 실험을 한 문장으로</div>
+    </div>
+  </section>
+
+</div></div>
+<script src="assets/deck.js"></script>
+</body>
+</html>

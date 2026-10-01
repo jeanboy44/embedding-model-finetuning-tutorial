@@ -21,5 +21,6 @@
 전체 230개 파트를 다 만들려면 약 2,200만 토큰이 든다. 실습에서는 파트 하나만 직접 만들어 보고, 나머지는 강사가 Drive에 올린 질문을 받아 쓴다.
 
 ```bash
-uv run python scripts/law_questions_drive.py download
+uv run python scripts/law_questions_drive.py download   # → data/law-questions/generated/<법령>__pNN.jsonl
+uv run ragkit split data/law-questions/generated        # 법령 단위 train/dev/test
 ```
