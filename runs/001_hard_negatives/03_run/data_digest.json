@@ -1,0 +1,42 @@
+{
+  "data/splits/train.jsonl": {
+    "sha256": "4569f5c2e7732c6a45ee0e14c1ff08b04eb1a310026a001cdf2a298d4e8d6ed4",
+    "rows": 8294
+  },
+  "data/splits/dev.jsonl": {
+    "sha256": "b58f54c8e065c43be060264df5a1f530853c92b907b1e78d8f4480eaee0b7d8c",
+    "rows": 1412
+  },
+  "data/splits/test.jsonl": {
+    "sha256": "f799ec0958b956ecc7430c8d234bbda93810302cb9a4f00319b55318ee881bea",
+    "rows": 2526
+  },
+  "data/labels/dev.jsonl": {
+    "sha256": "734ad0fe0e9e66612fb6cd0a5774a8900d20a84d44cf9d5f517b5b56fc67726d",
+    "rows": 641
+  },
+  "data/processed/law_docs.json": {
+    "sha256": "c4c8677f685253c5cec123384a5a7369a9b3a060a3183a17acf70d60d50ebc57"
+  },
+  "runs/001_hard_negatives/artifacts/mined_candidates.jsonl": {
+    "sha256": "e79668ff0434123c3228d844e8f2cffcd93fa45029086579b538ca7ab4cc5227",
+    "rows": 8294
+  },
+  "runs/001_hard_negatives/artifacts/negatives_A.jsonl": {
+    "sha256": "808ae498f9ea88c0c0748a182cd29e12131f4ac3e11964366e4fc0ad8b89a164",
+    "rows": 8294
+  },
+  "runs/001_hard_negatives/artifacts/negatives_B.jsonl": {
+    "sha256": "00c91dcf8adba815649e25e3626228fe1e85a375305be5612709678a8bbf2942",
+    "rows": 8294
+  },
+  "models/finetuned/exp_009/model.safetensors": {
+    "sha256": "adf9c178ec6ee9e45edcdf022a87d62c68002c50c80c1c74fad2bfc3d3dd8d7d"
+  },
+  "git_commit": "cefeeb6434cfed9249a998083af10e0862429118",
+  "libraries": {
+    "sentence-transformers": "6.1.0",
+    "transformers": "5.17.0",
+    "torch": "2.14.0"
+  }
+}

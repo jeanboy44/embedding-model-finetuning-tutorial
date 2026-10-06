@@ -1,0 +1,18 @@
+# 002: 001 run A와 같은 설정, seed 43 (확증 run 기본 seed 2개, 가중치 평균 재료)
+name: r002_A_s43
+training:
+  model: intfloat/multilingual-e5-small
+  output_dir: models/finetuned/r002_A_s43
+  batch_size: 32
+  loss: cached_mnrl
+  mini_batch_size: 16
+  attention_dropout: 0.0
+  epochs: 4
+  lr: 3.0e-5
+  warmup_ratio: 0.1
+  max_seq_length: 512
+  num_negatives: 3
+  seed: 43
+  dev_labels: data/labels/dev.jsonl
+  train_eval_sample: 800
+  negatives_file: runs/001_hard_negatives/artifacts/negatives_A.jsonl

@@ -1,0 +1,2 @@
+date	experiment	split	comparison	metric	value	decision
+2026-10-06	(예외) 001 A 확인	test	A vs Gemma, A vs 002	doc R@5	A 0.723 / Gemma 0.743 / 002 0.669	강사 요청으로 1회 확인. 이후 모델 선택에 test를 쓰지 않음

@@ -1,0 +1,12 @@
+{
+  "pairs": 50,
+  "agreement": 0.84,
+  "kappa": 0.6086105675146771,
+  "binary_agreement": 0.86,
+  "binary_kappa": 0.6450304259634889,
+  "b_totals": {
+    "partial": 2201,
+    "no": 6415,
+    "full": 393
+  }
+}
