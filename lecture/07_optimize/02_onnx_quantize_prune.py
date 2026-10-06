@@ -10,12 +10,12 @@
 - 용량의 대부분이 어휘 임베딩 표임을 확인하고, 어휘 가지치기로 한 번 더 줄인다
 
 두 가지 모드:
-- 기본: 받은 모델 폴더 네 개를 비교만 한다 (변환·양자화를 다시 하지 않는다, 1~2분)
+- 기본: 받은 모델 폴더 네 개를 비교만 한다 (변환·양자화를 다시 하지 않는다, 약 20초)
       models/multilingual-e5-small              원본 (+ onnx/model.onnx)
       models/multilingual-e5-small-int8         ONNX INT8 (채널별)
       models/multilingual-e5-small-pruned       어휘 가지치기 (+ onnx/model.onnx)
       models/multilingual-e5-small-pruned-int8  가지치기 + INT8
-- --run: 임시 폴더에 직접 변환 → 양자화(텐서 단위·채널별) → 가지치기 → 변환 → 양자화 (수 분)
+- --run: 임시 폴더에 직접 변환 → 양자화(텐서 단위·채널별) → 가지치기 → 변환 → 양자화 (약 30초)
       임시 폴더는 끝나면 지운다. 받은 모델 폴더는 건드리지 않는다
 
 사전 준비:

@@ -79,7 +79,7 @@ def run(
     """변형별로 측정하고 results.json과 comparison.md를 쓴다.
 
     Args:
-        variants: 돌릴 변형 이름 (기본: torch-fp32 onnx-fp32 onnx-int8).
+        variants: 돌릴 변형 이름 (기본: torch-fp32 onnx-fp32 onnx-int8 onnx-int8-pruned).
         corpus: 코퍼스 JSON.
         questions: 평가 질문 (ragkit split의 test).
         out_dir: 결과 폴더.

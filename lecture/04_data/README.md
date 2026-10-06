@@ -27,7 +27,7 @@ uv run python scripts/data_version.py pull v1     # → data/processed/law_docs.
 uv run python scripts/data_version.py status      # 지금 data/가 v1과 같은지
 ```
 
-질문 묶음만 따로 받을 수도 있다(장표의 3번 명령). 이때는 `data/law-questions/generated/`에 풀리므로 분할도 그 폴더로 만든다.
+질문 묶음만 따로 받을 수도 있다(`scripts/law_questions_drive.py download`). 이때는 `data/law-questions/generated/`에 풀리므로 분할도 그 폴더로 만든다.
 
 ```bash
 uv run python scripts/law_questions_drive.py download   # → data/law-questions/generated/<법령>__pNN.jsonl

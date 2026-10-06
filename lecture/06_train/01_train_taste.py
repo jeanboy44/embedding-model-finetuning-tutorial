@@ -15,7 +15,7 @@
 
 실행:
     uv run python lecture/06_train/01_train_taste.py          # 원리 + 받은 모델의 학습 기록 (1분 안쪽)
-    uv run python lecture/06_train/01_train_taste.py --run    # ragkit train으로 몇 step만 직접 학습 (몇 분)
+    uv run python lecture/06_train/01_train_taste.py --run    # ragkit train으로 몇 step만 직접 학습 (약 1.5분)
 
 --run은 실험 002 설정 그대로 --output-dir만 임시 폴더로 줘서 돌린다. 받은 모델은 덮어쓰지 않는다.
 """
@@ -266,7 +266,7 @@ print("  · r001_A의 dev는 복수 정답 판정을 붙인 값이라 다른 행
 if not args.run:
     section("5. 직접 학습해 보려면")
     print(
-        f"  uv run python lecture/06_train/01_train_taste.py --run   # {RUN_STEPS} step만 (몇 분)"
+        f"  uv run python lecture/06_train/01_train_taste.py --run   # {RUN_STEPS} step만 (약 1.5분)"
     )
     print(
         "  전체 학습은 just finetune-suite (분할 → 002·004·006 학습 → 비교표, 약 2시간)"
