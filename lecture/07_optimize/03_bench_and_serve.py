@@ -9,8 +9,8 @@
 - 실습 4-1 API의 백엔드를 torch → ONNX로 바꿔 시작 시간과 검색 속도를 비교한다
 
 두 가지 모드:
-- 기본: 받은 측정 결과(experiments/exp_008_deploy_bench/results/)를 읽고, API 비교만 직접 잰다 (1분 안팎)
-- --run: test 질문 앞 200개로 ragkit-bench를 직접 돌린다 (수 분). 결과는 임시 폴더에 쓰고 지운다
+- 기본: 받은 측정 결과(experiments/exp_008_deploy_bench/results/)를 읽고, API 비교만 직접 잰다 (약 10초)
+- --run: test 질문 앞 200개로 ragkit-bench를 직접 돌린다 (약 1분). 결과는 임시 폴더에 쓰고 지운다
   (받은 결과를 덮어쓰지 않는다. 전체 측정은 uv run ragkit-bench run)
 
 사전 준비:

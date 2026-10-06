@@ -340,8 +340,12 @@ print(
 )
 print(
     f"  다시 캔 오답 002 대비 {mined - full:+.3f} ({verdict(mined - full)})."
-    + (" 필요한 것은 오답의 수가 아니라 난이도다" if mined - full >= MIN_DIFF else "")
+    + (" 다만 001은 lr 3e-5 · 4 epoch로 학습 설정도 다르다" if mined - full >= MIN_DIFF else "")
 )
+print(
+    "               같은 설정의 대조군끼리 보면 dev 복수 정답 R@5 0.720 → 0.761 (+0.041, runs/001_hard_negatives/04_results.md)."
+)
+print("               설정을 맞춰도 오르므로, 필요한 것은 오답의 수가 아니라 난이도다")
 if args.run:
     print(
         f"  (표본 {RUN_SAMPLE}개라 전체 test와 숫자가 다르다. 우연인지는 아래 검정으로 본다)"

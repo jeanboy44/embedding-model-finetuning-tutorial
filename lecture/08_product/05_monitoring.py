@@ -27,7 +27,7 @@
 
 실행:
     uv run python lecture/08_product/05_monitoring.py            # 끝나면 MLflow UI를 열어 둔다 (Ctrl+C로 끝)
-    uv run python lecture/08_product/05_monitoring.py --check    # 확인만 하고 종료 (bench는 test 질문 100개로, 몇 분)
+    uv run python lecture/08_product/05_monitoring.py --check    # 확인만 하고 종료 (bench는 test 질문 100개로, 약 90초)
 
 MLflow 서버는 포트 5050에 띄운다 (macOS는 5000을 AirPlay 수신이 쓴다).
 
