@@ -55,12 +55,13 @@ AI 코딩 도구가 오면서 DS 한 사람이 그 범위까지 직접, 빠르�
 
 운영 원칙: 무거운 산출물(모델, 파인튜닝 모델, 인덱스, 질문, split, 확장 쿼리 캐시)은 미리 만들어 Drive로 배포하고, 스크립트는 "받은 산출물로 확인" 모드와 "작은 부분집합으로 직접 실행" 모드를 둔다.
 
-### 다음 작업 (2026-09-30)
+### 다음 작업 (2026-10-06)
 
 1. ~~파인튜닝 재학습~~ — 완료(2026-10-01, 실험 007). 이어서 다시 캔 오답으로 0.723(실험 001, 2026-10-03)
 2. 쿼리 확장 평가 — 코드 완료(`ragkit expand`, `evaluate --expand`, 실험 003 설정). gemini-2.5-flash-lite 무료 등급은 하루 20회라 실행 보류(2026-09-30), 캐시 17/2,526. 데이터 확보는 사용자 결정으로 미룸(2026-10-01). 실습 2 자료는 확장 행을 비워 두고 만든다
-3. 위 두 비교표 채우기
-4. 교시 기준으로 `lecture/` 재구성 (`docs/HANDSON_PLAN.md`). 폴더 이름은 `tutorials` → `lecture`로 바꿨다(2026-10-01)
+3. ~~위 두 비교표 채우기~~ — 실습 3 표는 완료(실험 010). 실습 2 표는 쿼리 확장 행만 남음
+4. 교시 기준으로 `lecture/` 재구성 (`docs/HANDSON_PLAN.md`). 폴더 이름은 `tutorials` → `lecture`로 바꿨다(2026-10-01). 장표는 실습 1~3(`01_data`·`02_evaluate`·`03_train.html`)이 main에 있고, 1교시 장표는 `docs/slides-period-1`에서 진행 중. 스크립트의 교시 폴더 재배치는 아직
+5. 0.95 개선 계획 3단계(손실 함수)부터 — `runs/002_model_soup` 진행 중
 
 ## 저장소 구조
 
@@ -300,11 +301,11 @@ AI 도구 덕분에 DS가 직접 손대기 쉬워진 영역 ②. 모델을 "제�
 - MLflow 3 모니터링 (`ragkit.tracking`, 2026-10-01): 실험 추적(train·evaluate·compare·bench run) → 모델 레지스트리(`ragkit register`, 앱은 `models:/law-embedder@champion`) → 서비스 트레이싱(질문 한 번 = 트레이스, 검색 조문·프롬프트·토큰, 노트북 = 세션)
 - 메시지: DS 한 사람이 모델부터 사용자 화면까지 끝까지 만든다
 
-## 진행 현황 (2026-09-30)
+## 진행 현황 (2026-10-06)
 
 | 단계 | 소스 | 튜토리얼 | 확인 |
 |---|---|---|---|
-| 1 | ragkit(인덱스·분할·학습·평가·비교) | `01_build_rag.py`만 | 질문 12,232개 → 법령 단위 분할 train 8,294 · dev 1,412 · test 2,526(법령 16개). 실험 005: e5-small R@5 0.513 / EmbeddingGemma 0.743. 파인튜닝은 `feat/finetune-runs`에서 진행 중(새 분할로 재학습 필요). 비교 실습 02~05와 학습·평가 튜토리얼 없음 |
+| 1 | ragkit(인덱스·분할·학습·평가·비교) | `01_build_rag.py`만 | 질문 12,232개 → 법령 단위 분할 train 8,294 · dev 1,412 · test 2,526(법령 16개). 실험 010(test R@5): 학습 전 e5 0.513 → 002 0.669 · 004 LoRA 0.641 · 006 0.659 · 001 다시 캔 오답 0.723. 쿼리 확장(실험 003)은 Gemini 한도로 보류. 실습 1~3(데이터·평가·학습) 스크립트는 아직 없음(장표만 있음) |
 | 2 | apps/api | `01_search_api.py`, `02_streaming_and_notebooks.py` | 실행 확인 (torch 백엔드, SSE, 노트북) |
 | 3 | `ragkit quantize`(채널별 INT8), `ragkit prune-vocab`, apps/bench | `01`~`03` | 실험 008(test 2,526개): 가지치기+INT8이 torch 대비 설치 669→127MB·모델 471→30MB·메모리 1133→403MB·로딩 3.6→0.3s, R@5 0.513→0.515(동일). 가지치기 어휘가 test 질문 100%를 원본과 같게 토큰화 |
 | 4 | apps/search-cli·mcp·web, `ragkit.tracking`(MLflow) | `01_search_cli.py`, `02_mcp_server.py`, `03_web_app.py`, `04_monitoring.py` | uvx(torch 없음), MCP stdio 도구 호출, 웹 흐름(Playwright) 확인. MLflow(`feat/mlflow`): bench run 2개 → 레지스트리 champion으로 API 기동 → 노트북 대화 2턴이 세션 하나의 트레이스 2개(검색 조문·토큰 수)로 남는 것 확인 |
