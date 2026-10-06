@@ -198,12 +198,12 @@ print(f"""모두 같은 Searcher를 쓰고, --checkpoint {ckpt} --backend torch 
 [MCP] Claude Code 같은 에이전트가 법령을 검색하는 도구로 등록
   claude mcp add ragkit-law -e RAGKIT_PROJECT_ROOT={ROOT} -- \\
       uv run --directory {ROOT} --package ragkit-mcp ragkit-mcp
-  → 실습 5: uv run python lecture/08_product/02_mcp_server.py
+  → 실습 5: uv run python lecture/08_product/03_mcp_server.py
 
 [웹] 법령 노트 화면 (API 서버가 빌드한 화면을 함께 제공)
   cd apps/web && pnpm install && pnpm build && cd ../..
   uv run --package ragkit-api ragkit-api --web-dist apps/web/dist   # http://127.0.0.1:8000
-  → 실습 5: uv run python lecture/08_product/03_web_app.py
+  → 실습 5: uv run python lecture/08_product/04_web_app.py
 
 답변 생성(ask, 웹 채팅)은 .env의 GEMINI_API_KEY가 있어야 한다. 없으면 검색 결과만 보여 준다.""")
 

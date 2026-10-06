@@ -47,6 +47,22 @@ ragkit-search search "주휴수당" --model google/embeddinggemma-300m
 ragkit-search search "주휴수당" --checkpoint models/my-finetuned --index data/processed/index/my.sqlite
 ```
 
+## 에이전트 스킬 (Claude Code · Gemini CLI)
+
+`SKILL.md` 하나로 셸을 쓰는 에이전트가 이 CLI를 도구로 쓴다. 두 에이전트는 같은 형식을 읽는다.
+스킬은 "질문 → search(필요하면 법률 용어로 다시) → show --article로 원문 읽기 → 조문 id를 붙여 답하기" 순서를 안내한다.
+
+```bash
+ragkit-search skill show                                   # 설치될 내용 보기
+ragkit-search skill install --agent claude                 # ./.claude/skills/korean-law-search/SKILL.md
+ragkit-search skill install --agent gemini --user          # ~/.gemini/skills/korean-law-search/SKILL.md
+ragkit-search skill install --agent claude --checkpoint models/finetuned/r001_A --backend torch   # 파인튜닝 모델로
+```
+
+설치한 SKILL.md에는 이 저장소 환경으로 CLI를 부르는 명령(`uv run --directory <저장소> --package ragkit-search ragkit-search`)과
+모델 옵션이 박힌다. 다른 실행 방법을 쓰려면 `--command`로 바꾼다 (예: `--command ragkit-search`).
+에이전트를 새로 연 뒤 법령 질문을 하면 스킬이 켜진다. 실습은 `lecture/08_product/02_agent_skill.py`.
+
 ## 오류
 
 인덱스가 없거나, 모르는 법령 이름을 주거나, `ask`에 키가 없으면 stderr에 한 줄 안내를 쓰고 종료 코드 1로 끝난다.

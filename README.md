@@ -64,9 +64,10 @@ LLM 단계(답변 생성)는 `.env`에 `GEMINI_API_KEY`가 필요합니다. [Goo
 | 4 (7) | `lecture/07_optimize/02_onnx_quantize_prune.py` | ONNX 변환, INT8 텐서 단위 vs 채널별, 어휘 가지치기 |
 | 4 (7) | `lecture/07_optimize/03_bench_and_serve.py` | 원본/ONNX/INT8/가지치기 비교표, API 백엔드 교체 |
 | 5 (8) | `lecture/08_product/01_search_cli.py` | 검색 CLI, `--json`, uvx 배포 |
-| 5 (8) | `lecture/08_product/02_mcp_server.py` | MCP: 연결 → 도구 목록 → 호출, Claude 등록 |
-| 5 (8) | `lecture/08_product/03_web_app.py` | 웹앱 빌드와 API 서버 한 주소 배포 |
-| 5 (8) | `lecture/08_product/04_monitoring.py` | MLflow: 실험 run 비교 → 모델 레지스트리(champion) → 서비스 트레이스·세션 |
+| 5 (8) | `lecture/08_product/02_agent_skill.py` | 에이전트 스킬(SKILL.md)로 Claude Code·Gemini CLI에 CLI 붙이기, 학습 전 vs 파인튜닝 비교 |
+| 5 (8) | `lecture/08_product/03_mcp_server.py` | MCP: 연결 → 도구 목록 → 호출, Claude 등록 |
+| 5 (8) | `lecture/08_product/04_web_app.py` | 웹앱 빌드와 API 서버 한 주소 배포 |
+| 5 (8) | `lecture/08_product/05_monitoring.py` | MLflow: 실험 run 비교 → 모델 레지스트리(champion) → 서비스 트레이스·세션 |
 | 선택 | `lecture/02_concepts/01_embedding_exploration.py` · `03_setup/extra_gemini_basics.py` · `07_optimize/extra_embedding_speed.py` | 임베딩 공간 탐색, Gemini 기초, 임베딩 속도 옵션 |
 
 ## 도구와 앱
@@ -111,7 +112,7 @@ train·evaluate·compare run에는 입력 파일과 내용이 같은 버전이 �
 | [`apps/api`](apps/api) | `/api/search`, `/api/answer(/stream)`, `/api/notebooks/...` |
 | [`apps/bench`](apps/bench) | `ragkit-bench run`: 지연·처리량·메모리·모델/설치 크기·Recall |
 | [`apps/web`](apps/web/README.md) | 노트북 = 법령 묶음, 인용 달린 답, 조문 보기, 노트 |
-| [`apps/search-cli`](apps/search-cli/README.md) | `search` · `ask` · `laws` · `show` |
+| [`apps/search-cli`](apps/search-cli/README.md) | `search` · `ask` · `laws` · `show` · `skill install`(에이전트 스킬) |
 | [`apps/mcp`](apps/mcp/README.md) | `search_laws` · `get_article` · `list_laws` · `ask` |
 
 ## 저장소 구조

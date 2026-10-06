@@ -1,5 +1,5 @@
 """
-실습 5-4 (8교시): 모니터링 — MLflow 3로 실험·모델·서비스를 한곳에서 본다
+실습 5-5 (8교시): 모니터링 — MLflow 3로 실험·모델·서비스를 한곳에서 본다
 ==========================================================================
 
 학습 목표:
@@ -26,8 +26,8 @@
     .env의 GEMINI_API_KEY (없으면 llm 스팬이 오류로 남는다. 있으면 LLM 2회 호출)
 
 실행:
-    uv run python lecture/08_product/04_monitoring.py            # 끝나면 MLflow UI를 열어 둔다 (Ctrl+C로 끝)
-    uv run python lecture/08_product/04_monitoring.py --check    # 확인만 하고 종료 (bench는 test 질문 100개로, 몇 분)
+    uv run python lecture/08_product/05_monitoring.py            # 끝나면 MLflow UI를 열어 둔다 (Ctrl+C로 끝)
+    uv run python lecture/08_product/05_monitoring.py --check    # 확인만 하고 종료 (bench는 test 질문 100개로, 몇 분)
 
 MLflow 서버는 포트 5050에 띄운다 (macOS는 5000을 AirPlay 수신이 쓴다).
 
@@ -296,7 +296,7 @@ try:
   Experiments › ragkit          deploy_bench의 자식 run 선택 → Compare (R@5 · 지연 · 메모리 · 크기)
   Models › law-embedder         버전 · champion 별칭 · index_key 태그
   Experiments › ragkit-service  Traces: 질문마다 span 트리, Sessions: 노트북별 대화 흐름
-  (웹 화면으로 대화하려면: lecture/08_product/03_web_app.py와 같은 서버에 --model {REGISTRY_URI})
+  (웹 화면으로 대화하려면: lecture/08_product/04_web_app.py와 같은 서버에 --model {REGISTRY_URI})
 끝내려면 Ctrl+C""")
         mlflow_server.wait()
 except KeyboardInterrupt:
