@@ -29,8 +29,8 @@ lecture/
 |---|---|---|---|---|
 | `00_setup` | 3 | 환경 설정, 완성품 먼저 써 보기, RAG 필요성 | `01_check_env.py` (신규: 설치·모델·인덱스·API 키 점검)<br>`02_try_product.py` (신규: 웹·CLI·MCP를 base vs 파인튜닝으로 나란히)<br>`03_why_rag.py` ← `lecture/01_ds_core/01_build_rag.py` | f7 |
 | `01_data` | 4 | 코퍼스, 질문 생성(Claude 스킬), 법령 단위 분할 | `README.md` (질문 생성은 `.claude/skills/law-question-gen` 스킬을 쓰라는 안내, 2026-10-01)<br>나머지 (신규) | 42 |
-| `02_evaluate` | 5 | 평가셋·지표, 학습 없는 선택지 비교: 베이스 모델(실험 005) + LLM 쿼리 확장(실험 003) | (신규) `01_metrics.py` · `02_base_models.py` · `03_query_expansion.py`(확장 캐시 사용) | 42 |
-| `03_train` | 6 | DS 관점 실험 iteration과 분석(실험 간 비교, 유형·테마별, 실패 사례, 한계) + AI 시대에 더 쉽게 하는 법. 학습은 원리 짧게 + 맛보기, 받은 모델 사용 | (신규, `feat/finetune-runs` 결과 사용) `01_train_taste.py` · `02_compare_runs.py`(실험 007) · `03_error_analysis.py` | 42 |
+| `02_evaluate` | 5 | 평가셋·지표, 학습 없는 선택지 비교: 학습 전 e5 + LLM 쿼리 확장(실험 003). 강의는 e5로만 진행하므로 베이스 모델 비교(실험 005)는 뺐다(2026-10-06) | (신규) `01_metrics.py` · `02_query_expansion.py`(확장 캐시 사용) | 42 |
+| `03_train` | 6 | DS 관점 실험 iteration과 분석(실험 간 비교, 유형·테마별, 실패 사례, 한계) + AI 시대에 더 쉽게 하는 법. 학습은 원리 짧게 + 맛보기, 받은 모델 사용 | (신규, 받은 파인튜닝 모델 사용) `01_train_taste.py` · `02_compare_runs.py`(실험 010) · `03_error_analysis.py` | 42 |
 | `04_optimize` | 7 | API 짧은 복습 → ONNX · INT8 · 어휘 가지치기 · 비교표 | `01_api_review.py` ← `lecture/02_api/01_search_api.py` + `02_streaming_and_notebooks.py` (한 파일로 압축)<br>`02_onnx_quantize_prune.py` ← `lecture/03_optimize/02_onnx_and_quantize.py`<br>`03_bench_and_serve.py` ← `lecture/03_optimize/03_bench_and_deploy.py` | f7 |
 | `05_product` | 8 | CLI · MCP · 웹, 운영 모니터링(MLflow), 마무리 | `01_search_cli.py` ← `lecture/04_product/01_search_cli.py`<br>`02_mcp_server.py` ← `lecture/04_product/02_mcp_server.py`<br>`03_web_app.py` ← `lecture/04_product/03_web_app.py`<br>`04_monitoring.py` (신규: MLflow Tracing으로 대화 흐름 추적, 아래) | f7 |
 | `appendix` | — | 선택 실습 | `embedding_speed.py` ← `lecture/03_optimize/01_embedding_speed.py`<br>`embedding_exploration.py` ← `lecture/01_ds_core/appendix_exploration.py`<br>`gemini_basics.py` ← `lecture/01_ds_core/appendix_gemini_basics.py` | f7 |

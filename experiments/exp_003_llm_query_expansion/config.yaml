@@ -13,5 +13,4 @@ models:
   - intfloat/multilingual-e5-small
   - model: intfloat/multilingual-e5-small
     expand: true
-  - google/embeddinggemma-300m            # 참고: 더 큰 베이스 모델 (실험 005)
-  # 파인튜닝 모델은 feat/finetune-runs 결과가 나오면 추가한다 (예: models/finetuned/exp_002)
+  - models/finetuned/r001_A              # 파인튜닝 (다시 캔 오답 3개, test R@5 0.723). EmbeddingGemma는 강의에서 뺐다(2026-10-06)

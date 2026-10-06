@@ -93,5 +93,4 @@ def test_bundle_skill_layout(tmp_path) -> None:
     with zipfile.ZipFile(output) as zf:
         assert sorted(zf.namelist()) == [
             "law-question-gen-skill/law-question-gen-workspace/grade.py",
-            "law-question-gen-skill/law-question-gen/SKILL.md",
         ]

@@ -18,8 +18,11 @@
     uv sync --extra mlflow                    # 이 저장소 (ragkit[mlflow])
     uv pip install "ragkit-api[tracing]"      # 배포할 때 (mlflow-tracing, 레지스트리 기능 없음)
 
-사전 준비 (3단계):
-    uv run ragkit index && uv run ragkit-bench run --variants onnx-int8-pruned   # 모델·인덱스
+사전 준비 (3단계, 가지치기+INT8 모델 models/multilingual-e5-small-pruned-int8):
+    uv run ragkit index
+    uv run ragkit prune-vocab models/multilingual-e5-small
+    uv run ragkit export-onnx models/multilingual-e5-small-pruned
+    uv run ragkit quantize models/multilingual-e5-small-pruned
 
 실행:
     uv run python lecture/04_product/04_monitoring.py            # 끝나면 MLflow UI를 열어 둔다

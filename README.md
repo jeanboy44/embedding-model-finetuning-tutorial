@@ -6,7 +6,7 @@
 
 | 단계 | 내용 | 코드 | 튜토리얼 |
 |---|---|---|---|
-| 1. DS 본업 | 왜 파인튜닝인가(RAG 비교) → 데이터 준비 → 학습 → 평가 | `src/ragkit/` | `lecture/01_ds_core/` |
+| 1. DS 본업 | 왜 파인튜닝인가(RAG 비교) → 데이터 준비 → 학습 → 평가 | `src/ragkit/` | `lecture/01_ds_core/`(RAG 비교), 데이터·평가·학습은 장표 `lecture/slides/01~03` (스크립트 준비 중) |
 | 2. +α 업무 | 모델을 검색 API로 감싸기 | `apps/api/` | `lecture/02_api/` |
 | 3. 배포 최적화 | ONNX 변환 · INT8 양자화 · 어휘 가지치기 · 속도/메모리/정확도 비교 | `ragkit` + `apps/bench/` | `lecture/03_optimize/` |
 | 4. 제품화 | 검색 CLI · MCP 서버 · React 화면 · MLflow 모니터링 | `apps/search-cli/`, `apps/mcp/`, `apps/web/`, `ragkit.tracking` | `lecture/04_product/` |

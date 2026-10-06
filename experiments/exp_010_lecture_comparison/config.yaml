@@ -1,0 +1,12 @@
+# 실험 010: 강의 실습 3 비교표 (학습 없음, e5만). 학습 전 / 002 / 004 / 006 / 001(다시 캔 오답 3개)을 test로 비교한다.
+# 실행: ragkit compare --config experiments/exp_010_lecture_comparison/config.yaml
+# 2026-10-06 강사 결정으로 EmbeddingGemma는 강의에서 뺐다. 젬마가 든 비교는 실험 005·007(기록)을 본다.
+# 모델 폴더는 강사가 학습해 나눠 준다 (models/finetuned/ 아래).
+name: lecture_comparison
+questions: data/splits/test.jsonl
+models:
+  - intfloat/multilingual-e5-small   # 학습 전
+  - models/finetuned/exp_002         # 전체 학습, LLM이 고른 오답 1개
+  - models/finetuned/exp_004         # LoRA
+  - models/finetuned/exp_006         # 배치 128
+  - models/finetuned/r001_A          # 다시 캔 오답 3개 (runs/001_hard_negatives)

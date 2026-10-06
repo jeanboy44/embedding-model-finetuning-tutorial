@@ -66,15 +66,14 @@
 
   <section class="slide">
     <div class="label">결과 · test 2,526 질문</div>
-    <h2>격차의 3분의 2를 메웠다</h2>
+    <h2>학습으로 +0.156</h2>
     <div class="bars" style="max-width:1150px;gap:22px">
       <div class="bar"><div class="row"><span>e5-small (학습 전)</span><b>0.513</b></div><div class="track"><div class="fill" data-w="51.3" style="--c:var(--line)"></div></div></div>
       <div class="bar"><div class="row"><span>004 LoRA</span><b>0.641</b></div><div class="track"><div class="fill" data-w="64.1" style="--c:var(--orange)"></div></div></div>
       <div class="bar"><div class="row"><span>006 배치 128</span><b>0.659</b></div><div class="track"><div class="fill" data-w="65.9" style="--c:var(--orange)"></div></div></div>
       <div class="bar"><div class="row"><span>002 전체 학습</span><b>0.669</b></div><div class="track"><div class="fill" data-w="66.9" style="--c:var(--orange)"></div></div></div>
-      <div class="bar"><div class="row"><span>EmbeddingGemma (학습 없음, 2.6배 크기)</span><b>0.743</b></div><div class="track"><div class="fill" data-w="74.3" style="--c:var(--apricot)"></div></div></div>
     </div>
-    <p class="meta muted" style="margin-top:28px;font-size:20px">R@5. 학습 전과 Gemma 사이 0.230 중 0.156(68%)을 메웠다. Gemma까지는 0.074가 남았다</p>
+    <p class="meta muted" style="margin-top:28px;font-size:20px">R@5. 질문 둘 중 하나만 맞히던 모델이 셋 중 둘을 맞힌다</p>
   </section>
 
   <section class="slide">
@@ -118,15 +117,41 @@
   </section>
 
   <section class="slide">
+    <div class="label">다음 가설 · 실험 001</div>
+    <h2>헷갈리는 조문을 오답으로 준다</h2>
+    <div class="cols c2">
+      <div class="col y22-top"><h3>가설</h3>지금 오답(LLM이 고른 같은 법 조문 1~2개)은 40%가 이미 50위 밖이라 쉽다. 학습한 모델이 <b>실제로 헷갈리는 조문</b>을 오답으로 주면 오른다</div>
+      <div class="col y22-top"><h3>방법</h3>학습한 모델로 train 질문마다 상위 10개를 뽑고, 정답 점수의 95%를 넘는 후보는 "사실은 정답일 수 있어" 버린 뒤 3개를 쓴다. train 법령 문서에서만 뽑는다(처음 보는 법령은 건드리지 않는다)</div>
+    </div>
+    <p class="meta muted" style="margin-top:40px;font-size:20px">같은 설정의 대조군을 seed 3개로 다시 학습해서 비교했다. 차이가 seed 잡음보다 큰지 보기 위해서다</p>
+  </section>
+
+  <section class="slide">
+    <div class="label">결과 · test 2,526 질문</div>
+    <h2>오답의 난이도가 답이었다</h2>
+    <div class="bars" style="max-width:1150px;gap:22px">
+      <div class="bar"><div class="row"><span>e5-small (학습 전)</span><b>0.513</b></div><div class="track"><div class="fill" data-w="51.3" style="--c:var(--line)"></div></div></div>
+      <div class="bar"><div class="row"><span>002 전체 학습 (LLM이 고른 오답 1개)</span><b>0.669</b></div><div class="track"><div class="fill" data-w="66.9" style="--c:var(--orange)"></div></div></div>
+      <div class="bar"><div class="row"><span>001 다시 캔 오답 3개</span><b>0.723</b></div><div class="track"><div class="fill" data-w="72.3" style="--c:var(--apricot)"></div></div></div>
+    </div>
+    <table class="tbl" style="max-width:1150px;margin-top:30px">
+      <tr><th>R@5</th><th class="num">keyword</th><th class="num">question</th><th class="num">situation</th></tr>
+      <tr><td>002</td><td class="num">0.795</td><td class="num">0.687</td><td class="num">0.589</td></tr>
+      <tr class="hl"><td>001</td><td class="num">0.862</td><td class="num">0.749</td><td class="num">0.631</td></tr>
+    </table>
+    <p class="meta muted" style="margin-top:24px;font-size:20px">002 대비 +0.054 (질문 단위 대응 비교 95% 신뢰구간 +0.041~+0.067). 배치를 4배로 늘린 것(006)은 효과가 없었지만 오답을 바꾼 것은 효과가 있었다</p>
+  </section>
+
+  <section class="slide">
     <div class="label">다음 가설</div>
     <h2>분석이 정한 다음 실험</h2>
     <div class="cols c4">
-      <div class="col y22-top"><div class="when">1</div><h3>hard negative 다시 캐기</h3>학습한 모델로 코퍼스 전체에서 헷갈리는 조문을 찾는다</div>
+      <div class="col"><div class="when">1 · 완료</div><h3>hard negative 다시 캐기</h3>0.669 → 0.723 (실험 001)</div>
       <div class="col y22-top"><div class="when">2</div><h3>손실 함수</h3>어려운 샘플에 가중을 두는 방식</div>
       <div class="col y22-top"><div class="when">3</div><h3>합성 질문</h3>코퍼스 전체 조문에 구어체 질문</div>
       <div class="col y22-top"><div class="when">4</div><h3>맥락 헤더</h3>조문 앞에 법령 종류 · 장 · 위임한 모법을 붙인다</div>
     </div>
-    <p class="meta muted" style="margin-top:40px;font-size:20px">강사 쪽에서 진행 중. 결과가 나오면 이 장을 채운다</p>
+    <p class="meta muted" style="margin-top:40px;font-size:20px">크게 놓친 질문(정답이 31위 밖)은 오답을 바꿔도 못 고친다. 질문과 조문의 말투 차이라 3번 합성 질문이 필요하다</p>
   </section>
 
   <section class="slide">
@@ -145,10 +170,10 @@
     <div class="cmd">
       <span class="c"># 학습 맛보기 (몇 step만. 전체 학습은 강사가 미리 한 모델을 받는다)</span><br>
       uv run --extra train ragkit train experiments/exp_002_finetuned/config.yaml<br>
-      <span class="c"># 받은 파인튜닝 모델과 베이스 모델 비교 (실험 007)</span><br>
-      uv run ragkit compare experiments/exp_007_finetune_comparison/config.yaml<br>
+      <span class="c"># 받은 파인튜닝 모델들과 학습 전 모델 비교 (실험 010, test)</span><br>
+      uv run ragkit compare experiments/exp_010_lecture_comparison/config.yaml<br>
       <span class="c"># 실험 기록 보기</span><br>
-      uv run --extra mlflow mlflow server
+      uv run --extra mlflow mlflow server --backend-store-uri sqlite:///mlruns/mlflow.db --artifacts-destination mlruns/artifacts --port 5050
     </div>
   </section>
 
