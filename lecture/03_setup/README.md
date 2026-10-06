@@ -1,7 +1,7 @@
 # 실습 0 (3교시): 준비와 완성품 먼저 써 보기
 
 장표: [3교시 실습 0 준비](https://claude.ai/artifact/VuQyTKs7BHKu4Hsq5xy5Qc). 환경 점검 → 웹(강사 시연) → CLI로 질문 넷 → 학습 전후 비교 순서로 본다.
-API 키는 쓰지 않는다. 명령은 모두 저장소 루트에서 실행한다.
+API 키는 쓰지 않는다. 명령은 모두 저장소 루트에서 실행하고, Mac 터미널과 Windows PowerShell에서 그대로 돈다.
 
 ## 1. 환경 점검
 
@@ -40,14 +40,12 @@ uv run --package ragkit-search ragkit-search show 근로기준법_법률_제55�
 
 ## 3. 학습 전후 비교: 모델만 바꾼다
 
-같은 명령에 `--checkpoint`만 붙이면 파인튜닝한 모델(r001_A)로 찾는다. 인덱스는 자동으로 그 모델 것을 쓴다.
+같은 명령 뒤에 `--checkpoint models/finetuned/r001_A --backend torch`만 붙이면 파인튜닝한 모델(r001_A)로 찾는다. 인덱스는 자동으로 그 모델 것을 쓴다.
 
 ```bash
-FT="--checkpoint models/finetuned/r001_A --backend torch"
-
-uv run --package ragkit-search ragkit-search search "편의점 알바 3개월 했는데 주휴수당 받을 수 있나요?" $FT
-uv run --package ragkit-search ragkit-search search "회사 그만뒀는데 퇴직금은 언제까지 받아야 해요?" $FT
-uv run --package ragkit-search ragkit-search search "방문판매로 산 정수기 환불하고 싶어요" $FT
+uv run --package ragkit-search ragkit-search search "편의점 알바 3개월 했는데 주휴수당 받을 수 있나요?" --checkpoint models/finetuned/r001_A --backend torch
+uv run --package ragkit-search ragkit-search search "회사 그만뒀는데 퇴직금은 언제까지 받아야 해요?" --checkpoint models/finetuned/r001_A --backend torch
+uv run --package ragkit-search ragkit-search search "방문판매로 산 정수기 환불하고 싶어요" --checkpoint models/finetuned/r001_A --backend torch
 ```
 
 말투만 바꿔서도 비교해 본다. 학습 전 모델은 법률 용어로 물어야 찾고, 파인튜닝한 모델은 평소 말투로도 찾는다.
@@ -55,7 +53,7 @@ uv run --package ragkit-search ragkit-search search "방문판매로 산 정수�
 ```bash
 uv run --package ragkit-search ragkit-search search "주휴일 유급휴일 1주 개근"                        # 학습 전 · 법률 용어
 uv run --package ragkit-search ragkit-search search "편의점 알바를 3개월 했는데 주휴수당을 받을 수 있나요?"        # 학습 전 · 일상어
-uv run --package ragkit-search ragkit-search search "편의점 알바를 3개월 했는데 주휴수당을 받을 수 있나요?" $FT   # 파인튜닝 · 일상어
+uv run --package ragkit-search ragkit-search search "편의점 알바를 3개월 했는데 주휴수당을 받을 수 있나요?" --checkpoint models/finetuned/r001_A --backend torch   # 파인튜닝 · 일상어
 ```
 
 강사 PC에서 잰 정답 순위 (조 단위, 전체 2.6만 문서 중):
