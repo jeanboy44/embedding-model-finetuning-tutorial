@@ -113,6 +113,7 @@
       <div class="bar"><div class="row"><span>우리 keyword 질문(2,815개) 중 2~3어절</span><b>9%</b></div><div class="track"><div class="fill" data-w="9" style="--c:var(--orange)"></div></div></div>
     </div>
     <p class="lead" style="margin-top:48px">우리 키워드는 평균 5.6어절이었다. KoAIO에서 <b>형식만</b> 뽑아 스킬에 few-shot으로 넣고, keyword 목표를 35%로 올렸다. 예: 주휴수당 조건 · 벌금 과태료 차이 · 음주측정 거부하면</p>
+    <p class="meta muted" style="margin-top:24px;font-size:20px">강의에서 받는 질문(데이터 v1)은 이 개선 전에 만든 것이라 keyword 23% · 평균 5.6어절 그대로다. 새로 만드는 질문부터 적용된다</p>
   </section>
 
   <section class="slide">
@@ -152,14 +153,14 @@
     <div class="label">실행</div>
     <h2>돌려 볼 명령</h2>
     <div class="cmd">
-      <span class="c"># 1. 코퍼스 (받은 산출물이 있으면 건너뜀)</span><br>
-      uv run python scripts/prepare_law_data.py<br>
-      <span class="c"># 2. 질문: Claude Code에서 "최저임금법 질문 데이터 만들어줘"</span><br>
-      uv run python .claude/skills/law-question-gen/scripts/law_parts.py list<br>
-      <span class="c"># 3. 나머지 질문은 Drive에서 받는다 → data/law-questions/generated/</span><br>
-      uv run python scripts/law_questions_drive.py download<br>
-      <span class="c"># 4. 법령 단위 분할</span><br>
-      uv run ragkit split data/law-questions/generated
+      <span class="c"># 0. 강사 데이터 받기: 코퍼스 · 질문 · 분할 (data/processed, data/questions, data/splits)</span><br>
+      uv run python scripts/data_version.py pull v1<br>
+      <span class="c"># 1. 코퍼스 둘러보기 (--run: 전기 테마만 직접 만들어 받은 것과 비교)</span><br>
+      uv run python lecture/01_data/01_corpus.py<br>
+      <span class="c"># 2. 질문: Claude Code에서 "최저임금법 질문 데이터 만들어줘 (data/questions_mine/에)"</span><br>
+      uv run python lecture/01_data/02_questions.py --run --file data/questions_mine/최저임금법__p01.jsonl<br>
+      <span class="c"># 3. 법령 단위 분할 (--run: ragkit split을 직접 돌려 받은 분할과 같은지 확인)</span><br>
+      uv run python lecture/01_data/03_split.py
     </div>
   </section>
 

@@ -7,6 +7,9 @@
 - multi: 정답 또는 alt_positive_ids(판정으로 인정한 다른 정답) 중 하나가 나오면 정답.
   partial_ids(판정에서 부분답으로 본 문서)도 순위에서 뺀다
 related_ids(정답을 부분적으로 담은 문서)는 모든 판정에서 순위에서 뺀다.
+
+오답 분석 도우미(rank_bucket, confusion_relation, query_overlap, compare_hits)는 질문별 결과
+(per_question)를 순위 구간 · 1위 오답과 정답의 관계 · 단어 겹침 · 고침/망침으로 나눠 본다.
 """
 
 import math
@@ -284,3 +287,100 @@ def paired_test(
         "mcnemar_p": float(p),
         "by_law": by_law,
     }
+
+
+# ============================================================
+# 오답 분석: 질문별 결과(per_question)를 축별로 나눠 보기
+# ============================================================
+RANK_BUCKETS = ("1~5위", "6~10위", "11~30위", "31~100위", "100위 밖")
+
+# 1위 오답이 정답과 어떤 관계인지 (docs/PLAN.md error analysis와 같은 축)
+RELATIONS = {
+    "same_article": "같은 조의 다른 조각",
+    "same_law_same_type": "같은 법 · 같은 종류 · 다른 조",
+    "same_law_other_type": "같은 법 · 법률↔시행령·시행규칙",
+    "other_law_same_theme": "다른 법 · 같은 테마",
+    "other_law_other_theme": "다른 법 · 다른 테마",
+}
+
+
+def rank_bucket(rank: int | None) -> str:
+    """정답 순위를 구간 이름으로 바꾼다 (평가가 상위 100개만 보므로 None은 100위 밖)."""
+    if rank is None or rank > 100:
+        return RANK_BUCKETS[4]
+    for limit, name in zip((5, 10, 30, 100), RANK_BUCKETS):
+        if rank <= limit:
+            return name
+    return RANK_BUCKETS[4]
+
+
+def confusion_relation(positive: dict, wrong: dict) -> str:
+    """정답 문서와 오답 문서의 관계 (RELATIONS의 키).
+
+    같은 법은 category(법령 이름, 법률·시행령·시행규칙을 묶은 것)로, 같은 조는 relevance_key로 본다.
+    """
+    if relevance_key(positive) == relevance_key(wrong):
+        return "same_article"
+    if positive.get("category") == wrong.get("category"):
+        same_type = positive.get("law_type") == wrong.get("law_type")
+        return "same_law_same_type" if same_type else "same_law_other_type"
+    if positive.get("theme") == wrong.get("theme"):
+        return "other_law_same_theme"
+    return "other_law_other_theme"
+
+
+def query_overlap(query: str, text: str) -> float:
+    """질문의 글자 2-gram 중 문서에도 있는 비율 (0~1). 공백·문장부호는 뺀다.
+
+    일상 말투 질문일수록 조문과 겹치는 말이 적다. 오답이 어휘 차이에서 오는지 볼 때 쓴다.
+    """
+
+    def bigrams(value: str) -> set[str]:
+        chars = "".join(ch for ch in value if ch.isalnum())
+        return {chars[i : i + 2] for i in range(len(chars) - 1)}
+
+    wanted = bigrams(query)
+    return len(wanted & bigrams(text)) / len(wanted) if wanted else 0.0
+
+
+def compare_hits(base: dict, other: dict, *, judge: str = "doc", k: int = 5) -> dict[str, list[dict]]:
+    """두 평가 결과를 질문 단위로 짝지어 고친 질문 · 새로 틀린 질문 · 둘 다 틀린 질문으로 나눈다.
+
+    Args:
+        base: 기준 결과 (evaluate_retrieval/evaluate_index 결과, per_question에 qid가 있어야 한다).
+        other: 비교 결과.
+        judge: 순위 판정 (doc | article | multi).
+        k: top-k 안에 들면 맞힌 것으로 본다.
+
+    Returns:
+        {"fixed", "broken", "both_wrong", "both_right"}: 질문 목록. 각 질문은
+        qid, query, positive_id, law, base_rank, other_rank, base_top10, other_top10을 가진다.
+
+    Raises:
+        ValueError: 두 결과의 질문 집합(qid)이 다를 때.
+    """
+    a = {row["qid"]: row for row in base["per_question"]}
+    b = {row["qid"]: row for row in other["per_question"]}
+    if set(a) != set(b):
+        raise ValueError(f"질문 집합이 다릅니다 (기준 {len(a)}개, 비교 {len(b)}개, 공통 {len(set(a) & set(b))}개)")
+    groups: dict[str, list[dict]] = {"fixed": [], "broken": [], "both_wrong": [], "both_right": []}
+    for qid, row in a.items():
+        base_rank, other_rank = row.get(f"{judge}_rank"), b[qid].get(f"{judge}_rank")
+        base_hit = base_rank is not None and base_rank <= k
+        other_hit = other_rank is not None and other_rank <= k
+        name = {(False, True): "fixed", (True, False): "broken", (False, False): "both_wrong"}.get(
+            (base_hit, other_hit), "both_right"
+        )
+        groups[name].append(
+            {
+                "qid": qid,
+                "query": row["query"],
+                "positive_id": row["positive_id"],
+                "law": row.get("law"),
+                "base_rank": base_rank,
+                "other_rank": other_rank,
+                "base_top10": row.get("top10") or [],
+                "other_top10": b[qid].get("top10") or [],
+            }
+        )
+    return groups

@@ -88,7 +88,7 @@
   </section>
 
   <section class="slide">
-    <div class="label">오답 분석 · dev 오답 421개</div>
+    <div class="label">오답 분석 · 실험 002의 dev 오답 421개 (강사 분석)</div>
     <h2>어디서 틀리나</h2>
     <div class="cols c2">
       <div class="col">
@@ -104,6 +104,7 @@
         </ul>
       </div>
     </div>
+    <p class="meta muted" style="margin-top:32px;font-size:20px">실습의 <code>03_error_analysis.py</code>는 개선한 모델(r001_A)을 test로 본다. 다른 법령 49% · 법률↔시행령 25%로 축은 같고 숫자는 조금 다르다</p>
   </section>
 
   <section class="slide">
@@ -168,10 +169,12 @@
     <div class="label">실행</div>
     <h2>돌려 볼 명령</h2>
     <div class="cmd">
-      <span class="c"># 학습 맛보기 (몇 step만. 전체 학습은 강사가 미리 한 모델을 받는다)</span><br>
-      uv run --extra train ragkit train experiments/exp_002_finetuned/config.yaml<br>
-      <span class="c"># 받은 파인튜닝 모델들과 학습 전 모델 비교 (실험 010, test)</span><br>
-      uv run ragkit compare experiments/exp_010_lecture_comparison/config.yaml<br>
+      <span class="c"># 학습 원리와 받은 모델의 학습 기록 (--run: 임시 폴더에 30 step만 직접 학습, 1~2분)</span><br>
+      uv run python lecture/03_train/01_train_taste.py<br>
+      <span class="c"># 받은 파인튜닝 모델들과 학습 전 모델 비교 (실험 010, test) + 차이 검정</span><br>
+      uv run python lecture/03_train/02_compare_runs.py<br>
+      <span class="c"># 오답 분석: 무엇이 고쳐졌고 무엇이 여전히 틀리나</span><br>
+      uv run python lecture/03_train/03_error_analysis.py<br>
       <span class="c"># 실험 기록 보기</span><br>
       uv run --extra mlflow mlflow server --backend-store-uri sqlite:///mlruns/mlflow.db --artifacts-destination mlruns/artifacts --port 5050
     </div>

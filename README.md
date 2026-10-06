@@ -4,12 +4,14 @@
 
 ## 강의 구성
 
-| 단계 | 내용 | 코드 | 튜토리얼 |
+| 단계 | 내용 | 코드 | 실습 |
 |---|---|---|---|
-| 1. DS 본업 | 왜 파인튜닝인가(RAG 비교) → 데이터 준비 → 학습 → 평가 | `src/ragkit/` | `lecture/01_ds_core/`(RAG 비교), 데이터·평가·학습은 장표 `lecture/slides/01~03` (스크립트 준비 중) |
-| 2. +α 업무 | 모델을 검색 API로 감싸기 | `apps/api/` | `lecture/02_api/` |
-| 3. 배포 최적화 | ONNX 변환 · INT8 양자화 · 어휘 가지치기 · 속도/메모리/정확도 비교 | `ragkit` + `apps/bench/` | `lecture/03_optimize/` |
-| 4. 제품화 | 검색 CLI · MCP 서버 · React 화면 · MLflow 모니터링 | `apps/search-cli/`, `apps/mcp/`, `apps/web/`, `ragkit.tracking` | `lecture/04_product/` |
+| 1. DS 본업 | 왜 파인튜닝인가(RAG 비교) → 데이터 준비 → 평가 → 학습 | `src/ragkit/` | `lecture/00_setup` ~ `03_train` (실습 0~3) |
+| 2. +α 업무 | 모델을 검색 API로 감싸기 | `apps/api/` | `lecture/04_optimize/01_api_review.py` (실습 4 복습) |
+| 3. 배포 최적화 | ONNX 변환 · INT8 양자화 · 어휘 가지치기 · 속도/메모리/정확도 비교 | `ragkit` + `apps/bench/` | `lecture/04_optimize/` (실습 4) |
+| 4. 제품화 | 검색 CLI · MCP 서버 · React 화면 · MLflow 모니터링 | `apps/search-cli/`, `apps/mcp/`, `apps/web/`, `ragkit.tracking` | `lecture/05_product/` (실습 5) |
+
+강의는 8교시(이론 2 + 실습 0~5)이고, 교시마다 장표(`lecture/slides/`)와 스크립트 묶음이 짝입니다. 교시별 폴더와 실행 규칙은 [lecture/README.md](lecture/README.md)를 보세요.
 
 자세한 흐름과 결정 사항은 [강의 계획](docs/PLAN.md)을 참고하세요.
 
@@ -41,22 +43,31 @@ uv run ragkit split data/questions                       # 평가 질문 분할 
 
 LLM 단계(답변 생성)는 `.env`에 `GEMINI_API_KEY`가 필요합니다. [Google AI Studio](https://aistudio.google.com)의 무료 등급 키로 충분합니다(기본 모델 `gemini-2.5-flash-lite`). 키가 없으면 해당 단계만 건너뜁니다.
 
-## 튜토리얼
+## 실습 스크립트
 
-모두 `uv run python <파일>`로 실행합니다.
+모두 저장소 루트에서 `uv run python <파일>`로 실행합니다. 기본은 받은 산출물로 확인하고, `--run`을 주면 작은 부분집합으로 직접 실행합니다.
 
-| 단계 | 파일 | 내용 |
+| 실습 (교시) | 파일 | 내용 |
 |---|---|---|
-| 1 | `lecture/01_ds_core/01_build_rag.py` | 통째로 넣으면? → 인덱스 → 검색 → 조문 근거 답변 |
-| 2 | `lecture/02_api/01_search_api.py` | 시작 시 로딩, health/search/법령 필터/검증(422)/answer (torch 백엔드) |
-| 2 | `lecture/02_api/02_streaming_and_notebooks.py` | SSE 스트리밍 답변, 노트북 → 대화 → 노트 저장 |
-| 3 | `lecture/03_optimize/01_embedding_speed.py` | 인덱싱 속도 옵션 (장치·길이순 배치·스레드) |
-| 3 | `lecture/03_optimize/02_onnx_and_quantize.py` | ONNX 변환, INT8 텐서 단위 vs 채널별, 어휘 가지치기 |
-| 3 | `lecture/03_optimize/03_bench_and_deploy.py` | 원본/ONNX/INT8/가지치기 비교표, API 백엔드 교체 |
-| 4 | `lecture/04_product/01_search_cli.py` | 검색 CLI, `--json`, uvx 배포 |
-| 4 | `lecture/04_product/02_mcp_server.py` | MCP: 연결 → 도구 목록 → 호출, Claude 등록 |
-| 4 | `lecture/04_product/03_web_app.py` | 웹앱 빌드와 API 서버 한 주소 배포 |
-| 4 | `lecture/04_product/04_monitoring.py` | MLflow: 실험 run 비교 → 모델 레지스트리(champion) → 서비스 트레이스·세션 |
+| 0 (3) | `lecture/00_setup/01_check_env.py` | 설치·모델·데이터·인덱스·API 키 점검, 빠진 것을 받는 명령 |
+| 0 (3) | `lecture/00_setup/02_try_product.py` | 같은 질문을 학습 전 e5 vs 파인튜닝 모델로 나란히, 제품 띄우는 법 |
+| 0 (3) | `lecture/00_setup/03_why_rag.py` | 통째로 넣으면? → 인덱스 → 검색 → 조문 근거 답변 |
+| 1 (4) | `lecture/01_data/01_corpus.py` | 코퍼스 통계, 항·호 분할, 길이 분포 |
+| 1 (4) | `lecture/01_data/02_questions.py` | 질문 유형·테마, hard negative, 검증 스크립트 (질문 생성은 Claude 스킬, `lecture/01_data/README.md`) |
+| 1 (4) | `lecture/01_data/03_split.py` | 법령 단위 분할과 왜 법령 단위인가 |
+| 2 (5) | `lecture/02_evaluate/01_metrics.py` | R@k · MRR · nDCG · doc/article/multi 판정, 학습 전 e5 test 평가 |
+| 2 (5) | `lecture/02_evaluate/02_query_expansion.py` | LLM 쿼리 확장: 정확도와 질문당 비용 (받은 캐시) |
+| 3 (6) | `lecture/03_train/01_train_taste.py` | MNRL · in-batch negative · NO_DUPLICATES, 학습 기록, 몇 step 맛보기 |
+| 3 (6) | `lecture/03_train/02_compare_runs.py` | 실험 010 비교표, 가설 판정, paired-test |
+| 3 (6) | `lecture/03_train/03_error_analysis.py` | 고쳐진·새로 틀린·여전히 틀리는 질문, 파인튜닝의 한계 |
+| 4 (7) | `lecture/04_optimize/01_api_review.py` | API 복습: 로딩, search·필터·422, SSE 스트리밍, 노트북 |
+| 4 (7) | `lecture/04_optimize/02_onnx_quantize_prune.py` | ONNX 변환, INT8 텐서 단위 vs 채널별, 어휘 가지치기 |
+| 4 (7) | `lecture/04_optimize/03_bench_and_serve.py` | 원본/ONNX/INT8/가지치기 비교표, API 백엔드 교체 |
+| 5 (8) | `lecture/05_product/01_search_cli.py` | 검색 CLI, `--json`, uvx 배포 |
+| 5 (8) | `lecture/05_product/02_mcp_server.py` | MCP: 연결 → 도구 목록 → 호출, Claude 등록 |
+| 5 (8) | `lecture/05_product/03_web_app.py` | 웹앱 빌드와 API 서버 한 주소 배포 |
+| 5 (8) | `lecture/05_product/04_monitoring.py` | MLflow: 실험 run 비교 → 모델 레지스트리(champion) → 서비스 트레이스·세션 |
+| 부록 | `lecture/appendix/` | 임베딩 속도 옵션, 임베딩 공간 탐색, Gemini 기초 |
 
 ## 도구와 앱
 
@@ -109,7 +120,7 @@ train·evaluate·compare run에는 입력 파일과 내용이 같은 버전이 �
 src/ragkit/      # 1단계 라이브러리: data · embeddings · retrieval · rag · service · training · evaluation · CLI
 apps/            # 2~4단계: ragkit을 쓰는 앱 (api·bench·search-cli·mcp는 uv workspace 멤버, web은 pnpm)
 experiments/     # 실험 설정(config.yaml)과 결과(results/, git 제외)
-lecture/         # 강의 자료: 단계별 실습 스크립트(01_ds_core ~ 04_product)와 HTML 슬라이드(slides/)
+lecture/         # 강의 자료: 교시별 실습 스크립트(00_setup ~ 05_product, appendix)와 HTML 슬라이드(slides/)
 scripts/         # 일회성 데이터·모델 준비
 docs/            # 강의 계획, 아키텍처, ADR
 ```

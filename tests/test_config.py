@@ -31,3 +31,9 @@ def test_project_root_from_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) 
 
     assert settings.project_root == tmp_path
     assert settings.models_dir == tmp_path / "models"
+
+
+def test_has_gemini_key_ignores_placeholder() -> None:
+    assert not Settings(_env_file=None, gemini_api_key="").has_gemini_key
+    assert not Settings(_env_file=None, gemini_api_key="your_gemini_api_key_here").has_gemini_key
+    assert Settings(_env_file=None, gemini_api_key="AIza-real").has_gemini_key

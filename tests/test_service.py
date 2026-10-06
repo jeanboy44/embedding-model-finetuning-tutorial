@@ -144,3 +144,35 @@ def test_hit_to_dict_flattens_metadata(index) -> None:
 
     assert record["id"] == "임대_제4조" and record["law_name"] == "주택임대차보호법"
     assert record["score"] == 0.0 and record["text"] == "임대차 임차인 임대인"
+
+
+@pytest.mark.parametrize(
+    ("has_onnx", "requested", "expected"),
+    [(False, None, "torch"), (True, None, None), (False, "onnx", "onnx")],
+)
+def test_open_checkpoint_without_onnx_uses_torch(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    has_onnx: bool,
+    requested: str | None,
+    expected: str | None,
+) -> None:
+    """백엔드를 주지 않았는데 파인튜닝 폴더에 ONNX가 없으면 torch로 연다. 직접 고른 백엔드는 그대로 둔다."""
+    import ragkit.service as service_module
+    from ragkit import embeddings
+
+    checkpoint = tmp_path / "exp"
+    (checkpoint / "onnx").mkdir(parents=True)
+    if has_onnx:
+        (checkpoint / "onnx" / "model.onnx").write_bytes(b"")
+    seen: dict = {}
+    monkeypatch.setattr(
+        embeddings,
+        "create_embedding_fn",
+        lambda model, checkpoint_path, backend: seen.setdefault("backend", backend),
+    )
+    monkeypatch.setattr(service_module.VectorIndex, "open", classmethod(lambda cls, path: object()))
+
+    Searcher.open(model="intfloat/multilingual-e5-small", checkpoint=checkpoint, backend=requested)
+
+    assert seen["backend"] == expected

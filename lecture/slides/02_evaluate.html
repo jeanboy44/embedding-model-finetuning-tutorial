@@ -81,7 +81,7 @@
     <h2>LLM이 질문을 법령 말로 바꿔 준다</h2>
     <div class="cols c2">
       <div class="col y22-top"><div class="when">원래 질문</div><p class="quote">신고 마감날 홈택스가 먹통이라 신고를 못 했어요. 가산세 붙나요?</p></div>
-      <div class="col y26-top"><div class="when">확장 검색어 · gemini-2.5-flash-lite (원문과 함께 검색)</div><p class="quote">국세기본법 가산세, 홈택스 장애</p><p class="meta">입력 127 · 출력 12 토큰, 약 0.9초</p></div>
+      <div class="col y26-top"><div class="when">확장 검색어 · gemini-2.5-flash-lite (원문과 함께 검색)</div><p class="quote">국세기본법 가산세, 홈택스 장애</p><p class="meta">입력 127 · 출력 12 토큰, 약 0.9초 (캐시 17개 평균 2.4초, 최대 7.8초)</p></div>
     </div>
     <p class="lead" style="margin-top:44px">학습이 필요 없다. 대신 <b>질문마다 LLM을 한 번</b> 부른다. 사용자가 늘수록 비용과 지연이 함께 는다.</p>
   </section>
@@ -112,10 +112,11 @@
     <div class="label">실행</div>
     <h2>돌려 볼 명령</h2>
     <div class="cmd">
-      <span class="c"># 학습 없는 e5-small 재기 (test)</span><br>
-      uv run ragkit evaluate intfloat/multilingual-e5-small --split test<br>
-      <span class="c"># 쿼리 확장 (실험 003, 받은 확장 캐시로 API 키 없이)</span><br>
-      uv run ragkit compare experiments/exp_003_llm_query_expansion/config.yaml
+      <span class="c"># 평가셋과 지표, 학습 없는 e5-small 재기 (test, 받은 인덱스 재사용 · 1분 안쪽)</span><br>
+      uv run python lecture/02_evaluate/01_metrics.py<br>
+      <span class="c"># 쿼리 확장 (실험 003). 받은 확장 캐시에 있는 질문(17개)만, API 키 없이</span><br>
+      uv run python lecture/02_evaluate/02_query_expansion.py<br>
+      <span class="c"># --run: 키가 있으면 질문 3개만 새로 확장 (무료 등급 하루 20회)</span>
     </div>
   </section>
 
@@ -123,7 +124,7 @@
     <div class="label">확인할 것</div>
     <h2>표를 읽고 넘어간다</h2>
     <div class="cols c3">
-      <div class="col"><h3>비교표</h3><code>results/comparison.md</code>의 R@5 · R@10 · MRR</div>
+      <div class="col"><h3>비교표</h3>스크립트가 출력하는 R@5 · R@10 · MRR (결과 파일은 <code>experiments/results/lecture/02_evaluate/</code>)</div>
       <div class="col"><h3>유형 · 테마별</h3>어떤 말투, 어떤 분야에서 약한가</div>
       <div class="col"><h3>틀린 질문</h3>모델별 JSON의 질문별 결과에서 situation 오답 몇 개를 읽어 본다</div>
     </div>

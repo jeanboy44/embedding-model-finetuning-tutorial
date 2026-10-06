@@ -1,6 +1,6 @@
 # 강의 자료 재구성 계획 (lecture/)
 
-상태: **계획** (2026-09-30). 2026-10-01에 `tutorials/` → `lecture/`로 이름만 바꿨고(안의 01_ds_core~04_product는 그대로), 교시 폴더로 재배치는 아직이다. 교시 구성은 `docs/PLAN.md` "교시 구성"을 따른다.
+상태: **완료** (2026-10-06). 교시 폴더로 옮기고(`git mv`) 실습 0~3 스크립트를 새로 썼다. 모든 스크립트는 기본 모드와 `--run`으로 끝까지 실행해 확인했다. 폴더 규칙과 스크립트 작성 규칙은 `lecture/README.md`. 아래 표의 "← 기존 파일"은 옮기기 전 위치다. 교시 구성은 `docs/PLAN.md` "교시 구성"을 따른다.
 
 ## 폴더 규칙
 
@@ -29,8 +29,8 @@ lecture/
 |---|---|---|---|---|
 | `00_setup` | 3 | 환경 설정, 완성품 먼저 써 보기, RAG 필요성 | `01_check_env.py` (신규: 설치·모델·인덱스·API 키 점검)<br>`02_try_product.py` (신규: 웹·CLI·MCP를 base vs 파인튜닝으로 나란히)<br>`03_why_rag.py` ← `lecture/01_ds_core/01_build_rag.py` | f7 |
 | `01_data` | 4 | 코퍼스, 질문 생성(Claude 스킬), 법령 단위 분할 | `README.md` (질문 생성은 `.claude/skills/law-question-gen` 스킬을 쓰라는 안내, 2026-10-01)<br>나머지 (신규) | 42 |
-| `02_evaluate` | 5 | 평가셋·지표, 학습 없는 선택지 비교: 학습 전 e5 + LLM 쿼리 확장(실험 003). 강의는 e5로만 진행하므로 베이스 모델 비교(실험 005)는 뺐다(2026-10-06) | (신규) `01_metrics.py` · `02_query_expansion.py`(확장 캐시 사용) | 42 |
-| `03_train` | 6 | DS 관점 실험 iteration과 분석(실험 간 비교, 유형·테마별, 실패 사례, 한계) + AI 시대에 더 쉽게 하는 법. 학습은 원리 짧게 + 맛보기, 받은 모델 사용 | (신규, 받은 파인튜닝 모델 사용) `01_train_taste.py` · `02_compare_runs.py`(실험 010) · `03_error_analysis.py` | 42 |
+| `02_evaluate` | 5 | 평가셋·지표, 학습 없는 선택지 비교: 학습 전 e5 + LLM 쿼리 확장(실험 003). 강의는 e5로만 진행하므로 베이스 모델 비교(실험 005)는 뺐다(2026-10-06) | `01_metrics.py` · `02_query_expansion.py`(받은 확장 캐시 17개로 비교, `--run`은 키가 있으면 3개만 새로 확장) | 42 |
+| `03_train` | 6 | DS 관점 실험 iteration과 분석(실험 간 비교, 유형·테마별, 실패 사례, 한계) + AI 시대에 더 쉽게 하는 법. 학습은 원리 짧게 + 맛보기, 받은 모델 사용 | `01_train_taste.py`(`--run`: `ragkit train --output-dir <임시> --max-steps 30`) · `02_compare_runs.py`(실험 010, paired-test) · `03_error_analysis.py`(r001_A, test) | 42 |
 | `04_optimize` | 7 | API 짧은 복습 → ONNX · INT8 · 어휘 가지치기 · 비교표 | `01_api_review.py` ← `lecture/02_api/01_search_api.py` + `02_streaming_and_notebooks.py` (한 파일로 압축)<br>`02_onnx_quantize_prune.py` ← `lecture/03_optimize/02_onnx_and_quantize.py`<br>`03_bench_and_serve.py` ← `lecture/03_optimize/03_bench_and_deploy.py` | f7 |
 | `05_product` | 8 | CLI · MCP · 웹, 운영 모니터링(MLflow), 마무리 | `01_search_cli.py` ← `lecture/04_product/01_search_cli.py`<br>`02_mcp_server.py` ← `lecture/04_product/02_mcp_server.py`<br>`03_web_app.py` ← `lecture/04_product/03_web_app.py`<br>`04_monitoring.py` (신규: MLflow Tracing으로 대화 흐름 추적, 아래) | f7 |
 | `appendix` | — | 선택 실습 | `embedding_speed.py` ← `lecture/03_optimize/01_embedding_speed.py`<br>`embedding_exploration.py` ← `lecture/01_ds_core/appendix_exploration.py`<br>`gemini_basics.py` ← `lecture/01_ds_core/appendix_gemini_basics.py` | f7 |
@@ -54,6 +54,6 @@ lecture/
 ## 순서
 
 1. ~~MLflow 설계 확정 → 구현 (f7)~~ 완료 (`feat/mlflow`, 2026-10-01)
-2. 폴더 이동과 경로 수정 (f7), 42 세션에 알림
-3. 00·04·05 `SLIDE.md` 작성과 스크립트 두 모드 정리 (f7) / 01~03 (42)
+2. ~~폴더 이동과 경로 수정~~ 완료 (2026-10-06)
+3. ~~스크립트 두 모드 정리, 실습 0~3 스크립트~~ 완료 (2026-10-06). 장표는 실습 1~3(`01_data`·`02_evaluate`·`03_train.html`)만 있다. 실습 0·4·5 장표가 남았다
 4. 1~2교시 이론 장표 (사용자)

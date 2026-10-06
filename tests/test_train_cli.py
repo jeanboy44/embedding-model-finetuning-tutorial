@@ -148,6 +148,33 @@ def test_train_command_can_skip_dev_eval(tmp_path, corpus, questions, monkeypatc
     assert seen == {"dev_eval": False}
 
 
+def test_train_command_output_dir_overrides_config(tmp_path, corpus, questions, monkeypatch) -> None:
+    """--output-dir이면 설정의 output_dir 대신 그 폴더에 저장한다 (받은 모델을 덮어쓰지 않게)."""
+    import ragkit.training.train as train_module
+
+    corpus_path, qpath = _write_inputs(tmp_path, corpus, questions)
+    train_cli.split(qpath, corpus=corpus_path, out=tmp_path / "splits")
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text("training:\n  output_dir: models/finetuned/exp_002\n", encoding="utf-8")
+    seen = {}
+
+    def fake_train(config, train_q, dev_q, docs, **kwargs):
+        seen["output_dir"] = Path(config.output_dir)
+        return {"train_examples": 1, "seconds": 0.0, "trainable_params": 1, "total_params": 1}
+
+    monkeypatch.setattr(train_module, "train", fake_train)
+
+    train_cli.train(
+        config_path,
+        splits=tmp_path / "splits",
+        corpus=corpus_path,
+        output_dir=tmp_path / "taste",
+        dev_eval=False,
+    )
+
+    assert seen == {"output_dir": tmp_path / "taste"}
+
+
 def test_evaluate_command_missing_splits(tmp_path) -> None:
     with pytest.raises(SystemExit):
         train_cli.evaluate("m", splits=tmp_path / "없음", corpus=tmp_path / "law_docs.json")
