@@ -1,0 +1,20 @@
+# 실험 009: 수렴 확인. 002와 같고 epoch 3 → 6, lr 2e-5 → 3e-5(mE5 공식 small 레시피)만 다르다.
+# 실행: just train exp_009_convergence
+# 보는 것: epoch마다 dev 복수 정답 R@5와 train 질문 800개의 코퍼스 전체 검색 R@5 (train_meta.json의 dev_history)
+#   dev가 계속 오르면 미수렴 / train만 오르면 법령이 바뀌는 데서 오는 한계 / 둘 다 멈추면 목표 함수(쉬운 negative)의 한계
+name: convergence
+training:
+  model: intfloat/multilingual-e5-small
+  output_dir: models/finetuned/exp_009
+  batch_size: 32
+  loss: cached_mnrl
+  mini_batch_size: 16
+  attention_dropout: 0.0
+  epochs: 6
+  lr: 3.0e-5
+  warmup_ratio: 0.1
+  max_seq_length: 512
+  num_negatives: 1
+  seed: 42
+  dev_labels: data/labels/dev.jsonl  # 모델 선택은 복수 정답 R@5로 한다
+  train_eval_sample: 800

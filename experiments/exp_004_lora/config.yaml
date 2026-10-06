@@ -1,12 +1,15 @@
 # 실험 004: LoRA (attention query/key/value에 저랭크 행렬만 학습, 끝나면 원래 가중치에 합쳐 저장)
-# 실행: ragkit train --config experiments/exp_004_lora/config.yaml
-#       ragkit evaluate models/finetuned/exp_004
+# 실행: ragkit train --config experiments/exp_004_lora/config.yaml  (전체 실험은 just finetune-suite)
+# 002와 LoRA 여부만 다르다. 비교표는 exp_007.
 name: lora
 training:
   model: intfloat/multilingual-e5-small
   output_dir: models/finetuned/exp_004
   batch_size: 32
-  epochs: 1
+  loss: cached_mnrl
+  mini_batch_size: 16
+  attention_dropout: 0.0
+  epochs: 3
   lr: 2.0e-4  # LoRA는 학습할 파라미터가 적어 전체 학습보다 큰 학습률을 쓴다
   warmup_ratio: 0.1
   max_seq_length: 512

@@ -1,14 +1,19 @@
 # 실험 002: 전체 학습 (모든 파라미터를 학습)
-# 실행: ragkit train --config experiments/exp_002_finetuned/config.yaml
-#       ragkit evaluate models/finetuned/exp_002
+# 실행: ragkit train --config experiments/exp_002_finetuned/config.yaml  (전체 실험은 just finetune-suite)
+# epoch마다 dev R@5를 재고 가장 좋은 epoch를 저장한다. 비교표는 exp_007.
 name: finetuned
 training:
   model: intfloat/multilingual-e5-small
   output_dir: models/finetuned/exp_002
   batch_size: 32
-  epochs: 1
+  # CachedMNRL = MNRL과 손실·기울기가 같고 mini_batch_size씩 계산해 메모리를 줄인다.
+  # M4 Pro 24GB에서 MNRL 배치 32(길이 512)는 메모리가 부족하다.
+  loss: cached_mnrl
+  mini_batch_size: 16
+  attention_dropout: 0.0  # MPS sdpa는 dropout 미지원. 0이면 빠르고 메모리도 적다
+  epochs: 3  # 최대 epoch. 이 안에서 dev R@5로 고른다
   lr: 2.0e-5
   warmup_ratio: 0.1
-  max_seq_length: 512
+  max_seq_length: 512  # 학습 positive의 0.2%만 512 토큰을 넘는다 (256이면 33%가 잘림)
   num_negatives: 1
   seed: 42

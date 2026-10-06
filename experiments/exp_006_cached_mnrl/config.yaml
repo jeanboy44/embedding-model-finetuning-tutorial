@@ -1,0 +1,17 @@
+# 실험 006: 배치 크기 효과. 002와 batch_size(in-batch negative 수)만 다르다: 32 → 128
+# 실행: ragkit train --config experiments/exp_006_cached_mnrl/config.yaml  (전체 실험은 just finetune-suite)
+# 배치가 4배라 같은 epoch에서 step 수는 1/4이다. 학습률은 002와 같게 둬 배치 크기만 바꾼다.
+name: cached_mnrl
+training:
+  model: intfloat/multilingual-e5-small
+  output_dir: models/finetuned/exp_006
+  batch_size: 128
+  loss: cached_mnrl
+  mini_batch_size: 16
+  attention_dropout: 0.0
+  epochs: 3
+  lr: 2.0e-5
+  warmup_ratio: 0.1
+  max_seq_length: 512
+  num_negatives: 1
+  seed: 42

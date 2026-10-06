@@ -1,0 +1,11 @@
+# 실험 007: 파인튜닝 최종 비교 (학습 없음). base e5 / Gemma / 002 / 004 / 006을 test로 평가한다.
+# 실행: ragkit compare --config experiments/exp_007_finetune_comparison/config.yaml  (전체 실험은 just finetune-suite)
+# 결과: experiments/exp_007_finetune_comparison/results/comparison.md (주요 지표 R@5, 데이터 버전 포함)
+name: finetune_comparison
+questions: data/splits/test.jsonl
+models:
+  - intfloat/multilingual-e5-small   # 파인튜닝 전
+  - google/embeddinggemma-300m       # 큰 모델 기준선
+  - models/finetuned/exp_002         # 전체 학습, 배치 32
+  - models/finetuned/exp_004         # LoRA, 배치 32
+  - models/finetuned/exp_006         # 전체 학습, 배치 128

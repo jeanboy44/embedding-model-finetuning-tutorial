@@ -1,0 +1,14 @@
+# 실험 008: 0단계 기준선 (학습 없음). 복수 정답 판정을 붙인 dev로 지금까지의 모델을 다시 잰다.
+# 실행: ragkit compare --config experiments/exp_008_dev_multi_baseline/config.yaml
+# 판정 파일 data/labels/dev.jsonl: 구조 후보(같은 조의 다른 조각, 위임 관계 조문) 중 단어 겹침 필터를 통과한 3,333쌍을
+#   Claude가 full / partial / no로 판정한 결과 (docs/PLAN.md "0.95 개선 계획" 0단계)
+# 이후 단계의 모델 선택은 이 dev 표로 한다 (test는 마지막에 한 번).
+name: dev_multi_baseline
+questions: data/splits/dev.jsonl
+labels: data/labels/dev.jsonl
+models:
+  - intfloat/multilingual-e5-small   # 파인튜닝 전
+  - google/embeddinggemma-300m       # 참고 기준선 (제약상 쓰지 않는 모델)
+  - models/finetuned/exp_002         # 전체 학습, 배치 32
+  - models/finetuned/exp_004         # LoRA
+  - models/finetuned/exp_006         # 전체 학습, 배치 128
