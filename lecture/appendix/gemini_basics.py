@@ -1,5 +1,5 @@
 """
-부록: Gemini API 연동
+부록: Gemini API 기초
 =====================
 
 학습 목표:
@@ -8,10 +8,12 @@
 - 검색 결과를 컨텍스트로 사용하는 패턴을 이해한다
 
 사전 준비:
-    .env 파일에 GEMINI_API_KEY를 설정하세요.
+    .env 파일에 GEMINI_API_KEY를 설정하세요 (없으면 호출 단계는 코드만 보여 주고 건너뛴다).
+    무료 등급은 하루 호출 수가 적다(flash-lite 20회). 이 스크립트는 한 번 실행에 4회 호출한다
+    (기본 질문 · 컨텍스트 기반 · temperature 2개).
 
 실행:
-    uv run python lecture/01_ds_core/appendix_gemini_basics.py
+    uv run python lecture/appendix/gemini_basics.py
 """
 
 from google.genai import errors
@@ -19,7 +21,7 @@ from google.genai import errors
 from ragkit.config import get_settings
 
 # ============================================================
-# 1단계: API 키 확인
+# 1. API 키 확인
 # ============================================================
 
 
@@ -30,11 +32,10 @@ def step1_check_api_key() -> bool:
         API 키가 설정되어 있으면 True.
     """
     print("=" * 60)
-    print("1단계: API 키 확인")
+    print("1. API 키 확인")
     print("=" * 60)
 
-    settings = get_settings()
-    if not settings.gemini_api_key:
+    if not get_settings().has_gemini_key:
         print("""
   API 키가 설정되지 않았습니다.
 
@@ -53,14 +54,14 @@ def step1_check_api_key() -> bool:
 
 
 # ============================================================
-# 2단계: 프롬프트 엔지니어링 기초
+# 2. 프롬프트 엔지니어링 기초
 # ============================================================
 
 
 def step2_prompt_engineering() -> None:
     """프롬프트 설계 패턴을 설명한다."""
     print("\n" + "=" * 60)
-    print("2단계: 프롬프트 엔지니어링 기초")
+    print("2. 프롬프트 엔지니어링 기초")
     print("=" * 60)
 
     print("""
@@ -109,7 +110,7 @@ def step2_prompt_engineering() -> None:
 
 
 # ============================================================
-# 3단계: Gemini API 호출
+# 3. Gemini API 호출
 # ============================================================
 
 
@@ -120,7 +121,7 @@ def step3_api_call(has_key: bool) -> None:
         has_key: API 키가 있으면 True.
     """
     print("\n" + "=" * 60)
-    print("3단계: Gemini API 호출")
+    print("3. Gemini API 호출")
     print("=" * 60)
 
     if not has_key:
@@ -170,7 +171,7 @@ def step3_api_call(has_key: bool) -> None:
 
 
 # ============================================================
-# 4단계: Temperature 실험
+# 4. Temperature 실험
 # ============================================================
 
 
@@ -181,7 +182,7 @@ def step4_temperature(has_key: bool) -> None:
         has_key: API 키가 있으면 True.
     """
     print("\n" + "=" * 60)
-    print("4단계: Temperature 실험")
+    print("4. Temperature 실험")
     print("=" * 60)
 
     print("""
@@ -202,7 +203,7 @@ RAG 시스템에서는 보통 0.1~0.3을 사용한다.
     from ragkit.models import generate_text
 
     prompt = "머신러닝을 한 문장으로 설명해주세요."
-    temperatures = [0.0, 0.3, 0.7, 1.0]
+    temperatures = [0.0, 1.0]  # 무료 등급 호출 수를 아끼려 양 끝 두 값만 비교한다
 
     for temp in temperatures:
         print(f"\n  Temperature={temp}:")
@@ -231,7 +232,7 @@ def main() -> None:
     print("""
 1. .env에 GEMINI_API_KEY를 설정하고 실제 API를 호출해보세요.
 2. 자신만의 프롬프트 템플릿을 만들어보세요.
-3. temperature를 바꿔가며 같은 질문에 대한 답변 변화를 관찰하세요.
+3. temperature를 바꿔가며 같은 질문에 대한 답변 변화를 관찰하세요 (호출 수 한도에 주의).
 4. src/ragkit/models/gemini_client.py의 generate_text 함수를 읽고
    새로운 파라미터(top_p, top_k)를 추가해보세요.
 """)

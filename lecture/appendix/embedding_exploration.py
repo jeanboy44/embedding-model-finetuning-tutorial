@@ -1,6 +1,6 @@
 """
-Phase 1-1: 임베딩 모델 탐색
-=============================
+부록: 임베딩 공간 탐색
+======================
 
 학습 목표:
 - 임베딩이 무엇인지 이해한다
@@ -8,22 +8,28 @@ Phase 1-1: 임베딩 모델 탐색
 - 코사인 유사도로 문장 간 유사성을 측정한다
 - 임베딩 공간을 시각화하고 탐색한다
 
+e5 접두어: 문장끼리 비교하는 대칭 과제(유사도·퀴즈·벡터 산술)는 "query: ",
+검색 대상 문서(data/sample_docs.json)는 "passage: "를 붙인다 (format_queries / format_passages).
+
+사전 준비:
+    data/sample_docs.json (저장소에 들어 있다), 기본 모델 intfloat/multilingual-e5-small
+
 실행:
-    uv run python lecture/01_ds_core/appendix_exploration.py
+    uv run python lecture/appendix/embedding_exploration.py
 """
 
 import json
 from collections.abc import Callable
-from pathlib import Path
 
 import numpy as np
 from sklearn.decomposition import PCA
 
 from ragkit.config import get_settings
-from ragkit.embeddings import create_embedding_fn
+from ragkit.embeddings import create_embedding_fn, format_passages, format_queries
 
 # 타입 별칭
 EmbedFn = Callable[[list[str]], np.ndarray]
+Docs = list[dict]
 
 
 def cosine_similarity(a: np.ndarray, b: np.ndarray) -> float:
@@ -40,7 +46,7 @@ def cosine_similarity(a: np.ndarray, b: np.ndarray) -> float:
 
 
 # ============================================================
-# 1단계: 임베딩이란?
+# 1. 임베딩이란?
 # ============================================================
 # 임베딩은 텍스트를 고정 길이의 숫자 벡터로 변환하는 것이다.
 # 의미가 비슷한 문장은 벡터 공간에서 가까이 위치한다.
@@ -53,7 +59,7 @@ def cosine_similarity(a: np.ndarray, b: np.ndarray) -> float:
 def step1_generate_embeddings(embed: EmbedFn):
     """임베딩을 생성하고 기본 속성을 확인한다."""
     print("=" * 60)
-    print("1단계: 임베딩 생성")
+    print("1. 임베딩 생성")
     print("=" * 60)
 
     settings = get_settings()
@@ -64,7 +70,7 @@ def step1_generate_embeddings(embed: EmbedFn):
         "오늘 날씨가 매우 좋다",
     ]
 
-    embeddings = embed(sentences)
+    embeddings = embed(format_queries(sentences))
 
     print(f"\n모델: {settings.embedding_model_name}")
     print(f"문장 수: {len(sentences)}")
@@ -78,14 +84,14 @@ def step1_generate_embeddings(embed: EmbedFn):
 
 
 # ============================================================
-# 2단계: 코사인 유사도
+# 2. 코사인 유사도
 # ============================================================
 
 
 def step2_similarity(embeddings: np.ndarray, sentences: list[str]) -> None:
     """문장 쌍별 코사인 유사도를 계산한다."""
     print("\n" + "=" * 60)
-    print("2단계: 코사인 유사도")
+    print("2. 코사인 유사도")
     print("=" * 60)
 
     print("""
@@ -111,19 +117,15 @@ def step2_similarity(embeddings: np.ndarray, sentences: list[str]) -> None:
 
 
 # ============================================================
-# 3단계: 유사도 히트맵 (상대 스케일)
+# 3. 유사도 히트맵 (상대 스케일)
 # ============================================================
 
 
-def step3_similarity_matrix(embed: EmbedFn) -> None:
+def step3_similarity_matrix(embed: EmbedFn, docs: Docs) -> None:
     """샘플 데이터셋으로 유사도 히트맵을 생성한다."""
     print("=" * 60)
-    print("3단계: 유사도 히트맵")
+    print("3. 유사도 히트맵")
     print("=" * 60)
-
-    data_path = Path("data/sample_docs.json")
-    with data_path.open() as f:
-        docs = json.load(f)
 
     selected = []
     seen: set[str] = set()
@@ -135,7 +137,7 @@ def step3_similarity_matrix(embed: EmbedFn) -> None:
             break
 
     titles = [d["title"][:6] for d in selected]
-    embeddings = embed([d["text"] for d in selected])
+    embeddings = embed(format_passages([d["text"] for d in selected]))
 
     # 유사도 매트릭스 계산
     n = len(selected)
@@ -171,21 +173,17 @@ def step3_similarity_matrix(embed: EmbedFn) -> None:
 
 
 # ============================================================
-# 4단계: ASCII 산점도 — 임베딩 공간 시각화
+# 4. ASCII 산점도 — 임베딩 공간 시각화
 # ============================================================
 
 
-def step4_ascii_scatter(embed: EmbedFn) -> None:
+def step4_ascii_scatter(embed: EmbedFn, docs: Docs) -> None:
     """PCA로 2D 축소 후 터미널에 산점도를 그린다."""
     print("\n" + "=" * 60)
-    print("4단계: 임베딩 공간 산점도")
+    print("4. 임베딩 공간 산점도")
     print("=" * 60)
 
-    data_path = Path("data/sample_docs.json")
-    with data_path.open() as f:
-        docs = json.load(f)
-
-    embeddings = embed([d["text"] for d in docs])
+    embeddings = embed(format_passages([d["text"] for d in docs]))
 
     pca = PCA(n_components=2)
     coords = pca.fit_transform(embeddings)
@@ -228,14 +226,14 @@ def step4_ascii_scatter(embed: EmbedFn) -> None:
 
 
 # ============================================================
-# 5단계: 끼어든 놈 찾기 (Odd One Out)
+# 5. 끼어든 놈 찾기 (Odd One Out)
 # ============================================================
 
 
 def step5_odd_one_out(embed: EmbedFn) -> None:
     """4개 문장 중 이질적인 문장을 임베딩으로 찾는 게임."""
     print("\n" + "=" * 60)
-    print("5단계: 끼어든 놈 찾기 (Odd One Out)")
+    print("5. 끼어든 놈 찾기 (Odd One Out)")
     print("=" * 60)
     print("\n4개 문장 중 나머지와 가장 다른 1개를 임베딩이 찾을 수 있을까?\n")
 
@@ -275,7 +273,7 @@ def step5_odd_one_out(embed: EmbedFn) -> None:
     correct = 0
     for i, quiz in enumerate(quizzes, 1):
         sents = quiz["sentences"]
-        embeddings = embed(sents)
+        embeddings = embed(format_queries(sents))
 
         avg_sims = []
         for j in range(len(sents)):
@@ -305,14 +303,14 @@ def step5_odd_one_out(embed: EmbedFn) -> None:
 
 
 # ============================================================
-# 6단계: 벡터 산술 — 의미의 덧셈과 뺄셈
+# 6. 벡터 산술 — 의미의 덧셈과 뺄셈
 # ============================================================
 
 
 def step6_vector_arithmetic(embed: EmbedFn) -> None:
     """임베딩 벡터 산술로 의미 관계를 탐색한다."""
     print("\n" + "=" * 60)
-    print("6단계: 벡터 산술 — 의미의 덧셈과 뺄셈")
+    print("6. 벡터 산술 — 의미의 덧셈과 뺄셈")
     print("=" * 60)
     print("\n'A - B + C = ?'  벡터 연산으로 의미를 조합할 수 있을까?\n")
 
@@ -330,7 +328,7 @@ def step6_vector_arithmetic(embed: EmbedFn) -> None:
         "데이터 드리프트는 입력 분포의 변화를 의미한다",
         "하이퍼파라미터 튜닝으로 모델 성능을 최적화한다",
     ]
-    cand_embs = embed(candidates)
+    cand_embs = embed(format_queries(candidates))
 
     experiments = [
         {
@@ -357,9 +355,7 @@ def step6_vector_arithmetic(embed: EmbedFn) -> None:
     ]
 
     for exp in experiments:
-        a_emb = embed([exp["A"]])[0]
-        b_emb = embed([exp["B"]])[0]
-        c_emb = embed([exp["C"]])[0]
+        a_emb, b_emb, c_emb = embed(format_queries([exp["A"], exp["B"], exp["C"]]))
 
         result_vec = a_emb - b_emb + c_emb
 
@@ -381,23 +377,19 @@ def step6_vector_arithmetic(embed: EmbedFn) -> None:
 
 
 # ============================================================
-# 7단계: 자동 클러스터링
+# 7. 자동 클러스터링
 # ============================================================
 
 
-def step7_auto_clustering(embed: EmbedFn) -> None:
+def step7_auto_clustering(embed: EmbedFn, docs: Docs) -> None:
     """K-Means로 임베딩을 자동 군집화하고 카테고리와 비교한다."""
     print("\n" + "=" * 60)
-    print("7단계: 자동 클러스터링")
+    print("7. 자동 클러스터링")
     print("=" * 60)
     print("\n임베딩에 K-Means를 적용하면 카테고리를 알려주지 않아도")
     print("비슷한 문서끼리 자동으로 묶일까?\n")
 
-    data_path = Path("data/sample_docs.json")
-    with data_path.open() as f:
-        docs = json.load(f)
-
-    embeddings = embed([d["text"] for d in docs])
+    embeddings = embed(format_passages([d["text"] for d in docs]))
 
     from sklearn.cluster import KMeans
 
@@ -445,22 +437,28 @@ def main() -> None:
     """모든 단계를 순차 실행한다."""
     # 모델을 1회만 로드하여 모든 step에서 공유
     settings = get_settings()
+    docs_path = settings.data_dir / "sample_docs.json"
+    if not docs_path.exists():
+        raise SystemExit(
+            f"{docs_path}가 없습니다. 저장소 루트에서 실행했는지 확인하세요."
+        )
+    docs = json.loads(docs_path.read_text())  # 3·4·7에서 함께 쓴다
     embed = create_embedding_fn(settings.embedding_model_name)
 
     embeddings, sentences = step1_generate_embeddings(embed)
     step2_similarity(embeddings, sentences)
-    step3_similarity_matrix(embed)
-    step4_ascii_scatter(embed)
+    step3_similarity_matrix(embed, docs)
+    step4_ascii_scatter(embed, docs)
     step5_odd_one_out(embed)
     step6_vector_arithmetic(embed)
-    step7_auto_clustering(embed)
+    step7_auto_clustering(embed, docs)
 
     print("\n" + "=" * 60)
     print("실습 과제")
     print("=" * 60)
     print("""
-1. step5에 자신만의 퀴즈를 추가해보세요 — 임베딩이 맞출 수 있을까?
-2. step6에서 자신만의 벡터 산술 실험을 만들어보세요.
+1. 5번(끼어든 놈 찾기)에 자신만의 퀴즈를 추가해보세요 — 임베딩이 맞출 수 있을까?
+2. 6번(벡터 산술)에 자신만의 실험을 만들어보세요.
 3. 한국어 문장과 영어 문장의 유사도는 어떤가요? 왜 그럴까요?
 4. data/sample_docs.json에 새로운 카테고리를 추가하고
    클러스터링 정확도가 어떻게 변하는지 확인해보세요.

@@ -1,6 +1,6 @@
 """
-3단계-1: 임베딩(인덱싱) 속도 옵션 비교
-=======================================
+부록: 임베딩(인덱싱) 속도 옵션 비교
+====================================
 
 학습 목표:
 - 같은 모델이라도 실행 방법에 따라 인덱싱 시간이 크게 달라짐을 직접 잰다
@@ -11,8 +11,11 @@
   4) 스레드 수
 - 속도를 바꿔도 결과(임베딩)는 같아야 한다 → 기준 대비 코사인 유사도로 확인
 
+사전 준비:
+    Drive에서 받은 data/processed/law_docs.json, models/(또는 HF 캐시의 기본 모델)
+
 실행:
-    uv run python lecture/03_optimize/01_embedding_speed.py
+    uv run python lecture/appendix/embedding_speed.py      # 설정 8개 × 문서 1,000개, 이 Mac에서 수 분
 
 직접 바꿔 볼 것:
     SAMPLE_SIZE, BATCH_SIZE, CONFIGS (아래 상수)
@@ -22,6 +25,7 @@
 """
 
 import time
+import unicodedata
 
 import numpy as np
 import onnxruntime as ort
@@ -35,15 +39,28 @@ BATCH_SIZE = 64
 
 # (이름, backend, device, sort_by_length, threads, onnx_providers)
 CONFIGS = [
-    ("torch  cpu  정렬 없음 (기준)", "torch", "cpu", False, None, None),
+    ("torch  cpu  정렬 없음", "torch", "cpu", False, None, None),
     ("torch  cpu  길이 정렬", "torch", "cpu", True, None, None),
     ("torch  cpu  길이 정렬, 4스레드", "torch", "cpu", True, 4, None),
     ("torch  mps  정렬 없음", "torch", "mps", False, None, None),
     ("torch  mps  길이 정렬", "torch", "mps", True, None, None),
     ("onnx   cpu  정렬 없음", "onnx", None, False, None, None),
     ("onnx   cpu  길이 정렬", "onnx", None, True, None, None),
-    ("onnx   coreml 길이 정렬", "onnx", None, True, None, ["CoreMLExecutionProvider", "CPUExecutionProvider"]),
+    (
+        "onnx   coreml 길이 정렬",
+        "onnx",
+        None,
+        True,
+        None,
+        ["CoreMLExecutionProvider", "CPUExecutionProvider"],
+    ),
 ]
+
+
+def pad(text: str, width: int = 32) -> str:
+    """화면 폭 기준으로 오른쪽을 채운다 (한글은 두 칸을 차지해 f-string 폭 지정으로는 열이 어긋난다)."""
+    used = sum(2 if unicodedata.east_asian_width(ch) in "WF" else 1 for ch in text)
+    return text + " " * max(width - used, 0)
 
 
 def available(device: str | None, providers: list[str] | None) -> bool:
@@ -53,7 +70,11 @@ def available(device: str | None, providers: list[str] | None) -> bool:
     if device in ("mps", "cuda"):
         import torch
 
-        return torch.backends.mps.is_available() if device == "mps" else torch.cuda.is_available()
+        return (
+            torch.backends.mps.is_available()
+            if device == "mps"
+            else torch.cuda.is_available()
+        )
     return True
 
 
@@ -62,14 +83,16 @@ docs = load_corpus(settings.data_dir / "processed" / "law_docs.json")
 step = max(len(docs) // SAMPLE_SIZE, 1)
 texts = format_passages([doc_text(d) for d in docs[::step][:SAMPLE_SIZE]])
 lengths = np.array([len(t) for t in texts])
-print(f"문서 {len(texts):,}개 (전체 {len(docs):,}개에서 고르게), 길이 중앙값 {int(np.median(lengths))}자, "
-      f"최대 {lengths.max():,}자, 배치 {BATCH_SIZE}")
+print(
+    f"문서 {len(texts):,}개 (전체 {len(docs):,}개에서 고르게), 길이 중앙값 {int(np.median(lengths))}자, "
+    f"최대 {lengths.max():,}자, 배치 {BATCH_SIZE}"
+)
 
-baseline = None
+baseline = None  # 처음으로 성공한 설정의 임베딩 = 결과 비교 기준
 rows = []
 for name, backend, device, sort, threads, providers in CONFIGS:
     if not available(device, providers):
-        print(f"{name:32s}  (이 컴퓨터에서 사용 불가, 건너뜀)")
+        print(f"{pad(name)}  (이 컴퓨터에서 사용 불가, 건너뜀)")
         continue
     try:
         embed = create_embedding_fn(
@@ -80,24 +103,33 @@ for name, backend, device, sort, threads, providers in CONFIGS:
             num_threads=threads,
             onnx_providers=providers,
         )
-        embed(texts[:BATCH_SIZE], batch_size=BATCH_SIZE)  # 워밍업 (모델 로딩·첫 실행 비용 제외)
+        # 워밍업 (모델 로딩·첫 실행 비용 제외)
+        embed(texts[:BATCH_SIZE], batch_size=BATCH_SIZE)
         start = time.perf_counter()
         vectors = embed(texts, batch_size=BATCH_SIZE)
         elapsed = time.perf_counter() - start
     except Exception as e:  # noqa: BLE001 - 설정별로 실패 이유만 보여 주고 다음 설정으로 넘어간다
-        print(f"{name:32s}  실패: {type(e).__name__}: {str(e).splitlines()[0][:80]}")
+        print(f"{pad(name)}  실패: {type(e).__name__}: {str(e).splitlines()[0][:80]}")
         continue
     if baseline is None:
         baseline = vectors
     same = float((vectors * baseline).sum(axis=1).min())
     full_min = elapsed / len(texts) * len(docs) / 60
     rows.append((name, elapsed, full_min, same))
-    print(f"{name:32s}  {elapsed:6.1f}초  전체 약 {full_min:5.1f}분  기준 대비 최소 코사인 {same:.4f}")
+    print(
+        f"{pad(name)}  {elapsed:6.1f}초  전체 약 {full_min:5.1f}분  기준 대비 최소 코사인 {same:.4f}"
+    )
 
-base_time = rows[0][1]
-print("\n기준(torch cpu, 정렬 없음) 대비 속도")
+if not rows:
+    raise SystemExit(
+        "\n성공한 설정이 없습니다. 위 실패 이유를 확인하세요 (모델·onnxruntime·torch 설치)."
+    )
+
+base_name, base_time = rows[0][0], rows[0][1]
+print(f"\n코사인·속도의 기준 = 처음 성공한 설정: {base_name}")
+print("기준 대비 속도")
 for name, elapsed, _, _ in rows:
-    print(f"  {name:32s}  x{base_time / elapsed:.1f}")
+    print(f"  {pad(name)}  x{base_time / elapsed:.1f}")
 
 print("""
 생각해 볼 것:
