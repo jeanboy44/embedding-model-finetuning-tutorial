@@ -1,6 +1,6 @@
 # 강의 실습 (lecture/)
 
-8교시 강의의 실습 자료다. 교시마다 **장표 하나(`slides/`) + 그 업무를 직접 해 보는 스크립트 묶음(교시 폴더)** 이 짝이다. 교시 구성은 [`docs/PLAN.md`](../docs/PLAN.md) "교시 구성"을 따른다.
+8교시 강의의 실습 자료다. 교시마다 **장표 하나 + 그 업무를 직접 해 보는 스크립트 묶음(교시 폴더)** 이 짝이다. 교시 구성은 [`docs/PLAN.md`](../docs/PLAN.md) "교시 구성"을 따른다.
 
 | 폴더 | 교시 | 실습 | 업무 |
 |---|---|---|---|
@@ -11,7 +11,24 @@
 | `04_optimize/` | 7 | 실습 4 | API 복습, ONNX · INT8 · 어휘 가지치기, 비교표와 서빙 |
 | `05_product/` | 8 | 실습 5 | 검색 CLI, MCP, 웹, MLflow 모니터링 |
 | `appendix/` | — | 선택 | 임베딩 속도 옵션, 임베딩 공간 탐색, Gemini 기초 |
-| `slides/` | 3~8 | | HTML 장표 (교시마다 한 파일) |
+| `slides/` | — | | 옛 HTML 장표(실습 1~3). 지금 장표는 아래 claude.ai Slides 덱 |
+
+## 장표
+
+장표는 교시마다 claude.ai Slides 덱 하나다(2026-10-06, .pptx·PDF로 내보낼 수 있다).
+
+| 교시 | 장표 |
+|---|---|
+| 1 | [내 소개: DS의 일, 2022 vs 2026](https://claude.ai/artifact/QsNeCea9tMhtxGTpHd89jh) |
+| 2 | [용어 · 왜 임베딩 파인튜닝인가 · 실습 지도](https://claude.ai/artifact/YCojzoPbMkeAamJ7WQhSEG) |
+| 3 | [실습 0: 환경 · 완성품 · RAG 필요성](https://claude.ai/artifact/VuQyTKs7BHKu4Hsq5xy5Qc) |
+| 4 | [실습 1: 데이터](https://claude.ai/artifact/LU4tYoQei2KW1AmzcqtEAq) |
+| 5 | [실습 2: 평가](https://claude.ai/artifact/ELMMxTeWq6z3uPQcXWVR6U) |
+| 6 | [실습 3: 학습과 분석](https://claude.ai/artifact/HBXjApsvu8jxyQxaaH5tP2) |
+| 7 | [실습 4: 서빙과 배포 최적화](https://claude.ai/artifact/F1mKY7iVNVaKZj5psadPvR) |
+| 8 | [실습 5: 제품화와 마무리](https://claude.ai/artifact/TgTkmnDgAnDHwvEFhUP2vE) |
+
+## 실행
 
 실행은 모두 저장소 루트에서 한다.
 
