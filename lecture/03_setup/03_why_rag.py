@@ -9,7 +9,7 @@
 - 일상 말투 질문에서 정답 조문이 밀려나는 것(용어 불일치)을 보고, 메타데이터 필터로는
   이 문제가 풀리지 않는다는 것을 확인한다 → 실습 1~3에서 파인튜닝으로 푼다
 
-사전 준비 (uv run python lecture/03_setup/01_check_env.py 로 한 번에 확인):
+사전 준비 (uv run python lecture/03_setup/01_doctor.py 로 한 번에 확인):
     1. 받은 인덱스 사용 (권장): uv run python scripts/finetuned_drive.py download   # data/processed/index/multilingual-e5-small.sqlite
        와 data/processed/law_docs.json (uv run python scripts/data_version.py pull v1)
     2. 인덱스가 없으면 이 스크립트가 처음 한 번 만든다 (Mac 기준 약 7~13분).

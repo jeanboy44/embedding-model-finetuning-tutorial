@@ -50,7 +50,7 @@ LLM 단계(답변 생성)는 `.env`에 `GEMINI_API_KEY`가 필요합니다. [Goo
 
 | 실습 (교시) | 파일 | 내용 |
 |---|---|---|
-| 0 (3) | `lecture/03_setup/01_check_env.py` | 설치·모델·데이터·인덱스·API 키 점검, 빠진 것을 받는 명령 |
+| 0 (3) | `lecture/03_setup/01_doctor.py` | 설치·모델·데이터·인덱스·API 키 점검, 빠진 것을 받는 명령 |
 | 0 (3) | `lecture/03_setup/02_try_product.py` | 같은 질문을 학습 전 e5 vs 파인튜닝 모델로 나란히, 제품 띄우는 법 |
 | 0 (3) | `lecture/03_setup/03_why_rag.py` | 통째로 넣으면? → 인덱스 → 검색 → 조문 근거 답변 |
 | 1 (4) | `lecture/04_data/01_corpus.py` | 코퍼스 통계, 항·호 분할, 길이 분포 |

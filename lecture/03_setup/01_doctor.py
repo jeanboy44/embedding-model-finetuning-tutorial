@@ -1,26 +1,32 @@
 """
-실습 0-1 (3교시): 환경 점검
-===========================
+실습 0-1 (3교시): doctor — 환경과 리소스 점검
+=============================================
 
 학습 목표:
-- 강의에 필요한 설치(ragkit, extra, 앱, pnpm) · 모델 · 데이터 · 인덱스 · API 키를 한 번에 점검한다
-- 빠진 것마다 어떤 명령으로 받거나 만드는지 확인한다
+- 강의에 필요한 설치(ragkit, extra, 앱, pnpm, 디스크) · 모델 · 데이터 · 인덱스 · API 키를 한 번에 점검한다
+- 받은 모델과 인덱스가 실제로 열리고 검색되는지 확인한다 (동작 확인)
+- 빠진 것마다 어떤 명령으로 받거나 만드는지 보고, --fix로 받을 수 있는 것은 한 번에 받는다
 - 실습 0~5 중 지금 바로 할 수 있는 실습이 어디까지인지 본다
 
-이 스크립트는 파일과 패키지가 있는지만 본다. 모델을 불러오거나 Gemini를 호출하지 않으므로
-몇 초 안에 끝난다. 확인만 하는 스크립트라 `--run` 모드는 없다.
+Gemini는 호출하지 않는다. 동작 확인에서 모델을 한 번씩 열어 검색해 보므로 수십 초 걸린다.
 
 사전 준비:
     uv sync --all-packages --all-extras        # ragkit + 모든 앱 + 학습 도구
 
 실행:
-    uv run python lecture/03_setup/01_check_env.py
+    uv run python lecture/03_setup/01_doctor.py           # 전체 점검 (파일 + 동작 확인)
+    uv run python lecture/03_setup/01_doctor.py --quick   # 파일과 패키지만 (몇 초)
+    uv run python lecture/03_setup/01_doctor.py --fix     # 받을 수 있는 것을 받고 다시 점검
 """
 
+import argparse
 import importlib.metadata
 import importlib.util
+import json
 import shutil
+import subprocess
 import sys
+import time
 import unicodedata
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -63,6 +69,18 @@ class Check:
     fix: str = ""
     labs: set[int] = field(default_factory=set)  # 이 항목이 필요한 실습 번호
     optional: bool = False  # 없어도 실습은 되고 일부 단계만 건너뛴다
+
+    def command(self) -> str:
+        """--fix로 바로 돌릴 수 있는 명령. 손으로 해야 하거나 실습에서 직접 만드는 것이면 빈 문자열."""
+        first = self.fix.splitlines()[0] if self.fix else ""
+        cmd = first.split("   ")[0].strip()
+        if not cmd.startswith("uv ") or "--force" in cmd or "→" in cmd:
+            return ""
+        if (
+            self.labs == {4} or " ragkit index" in cmd
+        ):  # 실습 4에서 직접 만들거나 오래 걸리는 것
+            return ""
+        return cmd
 
 
 def rel(path: Path) -> str:
@@ -162,6 +180,16 @@ def install_checks() -> list[Check]:
         checks.append(
             Check(f"앱 {dist}", has_modules(module), version_of(dist), SYNC, labs)
         )
+    free_gb = shutil.disk_usage(ROOT).free / 1e9
+    checks.append(
+        Check(
+            "디스크 여유 5GB 이상",
+            free_gb >= 5,
+            f"{free_gb:,.0f} GB 남음",
+            "모델 · 인덱스 · 데이터에 약 3GB가 든다. 다른 파일을 정리한다",
+            {0, 1, 2, 3, 4, 5},
+        )
+    )
     node, pnpm = shutil.which("node"), shutil.which("pnpm")
     checks.append(
         Check(
@@ -379,59 +407,164 @@ def show_group(title: str, checks: list[Check]) -> None:
         print(f"  {mark(c)} {pad(c.name, name_w)}  {detail}  실습 {labs}{extra}")
 
 
-groups = {
-    "설치": install_checks(),
-    "모델": model_checks(),
-    "데이터": data_checks(),
-    "인덱스": index_checks(),
-    "API 키": key_checks(),
-}
+def smoke_checks() -> list[Check]:
+    """받은 모델과 인덱스를 실제로 열어 검색해 본다 (파일이 있어도 깨졌거나 짝이 안 맞을 수 있다)."""
+    from ragkit.service import Searcher
 
-print("=" * 60)
-print("실습 0-1: 환경 점검")
-print("=" * 60)
-print(f"저장소: {ROOT}")
-print("✓ 있음   ✗ 없음(필요)   △ 없음(선택: 일부 단계만 건너뜀)")
-for title, checks in groups.items():
-    show_group(title, checks)
+    corpus = DATA / "processed" / "law_docs.json"
+    n_docs = (
+        len(json.loads(corpus.read_text(encoding="utf-8"))) if corpus.exists() else None
+    )
+    targets = [("학습 전 e5", {}, {0, 1, 2, 3, 4, 5})]
+    if (FINETUNED / "model.safetensors").exists():
+        targets.append(("파인튜닝 r001_A", {"checkpoint": FINETUNED}, {0, 3}))
+    checks = []
+    for label, kwargs, labs in targets:
+        name = f"{label}: 열고 검색하기"
+        start = time.perf_counter()
+        try:
+            searcher = Searcher.open(**kwargs)
+            hits = searcher.search("야간 근로 수당", k=3)
+        except Exception as e:  # noqa: BLE001 — 어떤 이유든 그대로 보여 준다
+            checks.append(
+                Check(
+                    name,
+                    False,
+                    f"{type(e).__name__}: {str(e).splitlines()[0][:60]}",
+                    "위 모델 · 인덱스 항목을 먼저 채운다",
+                    labs,
+                )
+            )
+            continue
+        took = time.perf_counter() - start
+        count = searcher.doc_count
+        ok = bool(hits) and (n_docs is None or count == n_docs)
+        detail = f"문서 {count:,}개 · {took:.1f}초"
+        fix = "인덱스를 다시 받는다 (위 인덱스 항목의 명령)"
+        if n_docs is not None and count != n_docs:
+            detail += f" · 코퍼스 {n_docs:,}개와 다름"
+            fix = "코퍼스와 인덱스 버전이 다르다. 둘 다 다시 받는다"
+        checks.append(Check(name, ok, detail, fix, labs))
+    return checks
 
-all_checks = [c for checks in groups.values() for c in checks]
 
-print("\n" + "=" * 60)
-print("실습별 준비 상태")
-print("=" * 60)
-LABS = {
-    0: "환경·완성품·왜 RAG",
-    1: "코퍼스·질문·분할",
-    2: "평가·쿼리 확장",
-    3: "학습·실험 비교",
-    4: "ONNX·INT8·가지치기",
-    5: "CLI·MCP·웹·MLflow",
-}
-for lab, title in LABS.items():
-    need = [c for c in all_checks if lab in c.labs]
-    missing = [c for c in need if not c.ok and not c.optional]
-    skipped = [c for c in need if not c.ok and c.optional]
-    status = "준비됨" if not missing else f"빠진 것 {len(missing)}개"
-    print(f"  {'✓' if not missing else '✗'} 실습 {lab} ({title}): {status}")
-    for c in missing:
-        print(f"      ✗ {c.name}")
-    for c in skipped:
-        print(f"      △ {c.name}")
+def collect(quick: bool) -> dict[str, list[Check]]:
+    groups = {
+        "설치": install_checks(),
+        "모델": model_checks(),
+        "데이터": data_checks(),
+        "인덱스": index_checks(),
+        "API 키": key_checks(),
+    }
+    if not quick:
+        print("동작 확인 중: 모델과 인덱스를 열어 검색해 봅니다 (수십 초)...")
+        groups["동작 확인"] = smoke_checks()
+    return groups
 
-missing = [c for c in all_checks if not c.ok]
-print("\n" + "=" * 60)
-print("빠진 것 받는 법")
-print("=" * 60)
-if not missing:
-    print("모두 준비됐습니다. 다음: uv run python lecture/03_setup/02_try_product.py")
-else:
-    # 같은 명령으로 받는 항목은 한데 모은다 (예: data_version.py pull 하나로 코퍼스·질문·분할)
-    by_fix: dict[str, list[Check]] = {}
-    for c in missing:
-        by_fix.setdefault(c.fix, []).append(c)
-    for fix, items in by_fix.items():
-        for c in items:
-            print(f"  {mark(c)} {c.name}")
-        print(f"      → {fix}\n")
-    print("받은 뒤 이 스크립트를 다시 실행해 확인한다.")
+
+# --fix가 명령을 돌리는 순서: 설치 → 데이터 → 학습 전 모델 → ONNX → 파인튜닝 모델 · 인덱스
+FIX_ORDER = (
+    "uv sync",
+    "uv run python scripts/data_version.py",
+    "uv run python scripts/download_model_hf.py",
+    "uv run ragkit export-onnx",
+    "uv run python scripts/finetuned_drive.py",
+)
+
+
+def run_fixes(missing: list[Check]) -> None:
+    cmds = sorted(
+        {c.command() for c in missing if c.command()},
+        key=lambda cmd: next(
+            (i for i, p in enumerate(FIX_ORDER) if cmd.startswith(p)), len(FIX_ORDER)
+        ),
+    )
+    if not cmds:
+        print("--fix로 받을 수 있는 것이 없습니다. 아래 안내를 따라 손으로 채우세요.")
+        return
+    print("\n" + "=" * 60)
+    print("--fix: 받을 수 있는 것을 받습니다")
+    print("=" * 60)
+    for cmd in cmds:
+        print(f"\n$ {cmd}")
+        result = subprocess.run(cmd, shell=True, cwd=ROOT, check=False)
+        if result.returncode != 0:
+            print(
+                f"  실패 (종료 코드 {result.returncode}). 이어서 다음 명령을 실행합니다."
+            )
+
+
+def report(groups: dict[str, list[Check]]) -> list[Check]:
+    print("=" * 60)
+    print("실습 0-1: doctor — 환경과 리소스 점검")
+    print("=" * 60)
+    print(f"저장소: {ROOT}")
+    print("✓ 있음   ✗ 없음(필요)   △ 없음(선택: 일부 단계만 건너뜀)")
+    for title, checks in groups.items():
+        show_group(title, checks)
+
+    all_checks = [c for checks in groups.values() for c in checks]
+
+    print("\n" + "=" * 60)
+    print("실습별 준비 상태")
+    print("=" * 60)
+    LABS = {
+        0: "환경·완성품·학습 전후 비교",
+        1: "코퍼스·질문·분할",
+        2: "평가·쿼리 확장",
+        3: "학습·실험 비교",
+        4: "ONNX·INT8·가지치기",
+        5: "CLI·MCP·웹·MLflow",
+    }
+    for lab, title in LABS.items():
+        need = [c for c in all_checks if lab in c.labs]
+        missing = [c for c in need if not c.ok and not c.optional]
+        skipped = [c for c in need if not c.ok and c.optional]
+        status = "준비됨" if not missing else f"빠진 것 {len(missing)}개"
+        print(f"  {'✓' if not missing else '✗'} 실습 {lab} ({title}): {status}")
+        for c in missing:
+            print(f"      ✗ {c.name}")
+        for c in skipped:
+            print(f"      △ {c.name}")
+
+    missing = [c for c in all_checks if not c.ok]
+    print("\n" + "=" * 60)
+    print("빠진 것 받는 법")
+    print("=" * 60)
+    if not missing:
+        print(
+            "모두 준비됐습니다. 다음: uv run python lecture/03_setup/02_try_product.py"
+        )
+    else:
+        # 같은 명령으로 받는 항목은 한데 모은다 (예: data_version.py pull 하나로 코퍼스·질문·분할)
+        by_fix: dict[str, list[Check]] = {}
+        for c in missing:
+            by_fix.setdefault(c.fix, []).append(c)
+        for fix, items in by_fix.items():
+            for c in items:
+                print(f"  {mark(c)} {c.name}")
+            print(f"      → {fix}\n")
+        print("받은 뒤 다시 실행한다. uv로 시작하는 명령은 --fix가 대신 돌린다.")
+    return missing
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="강의 환경과 리소스를 점검한다")
+    parser.add_argument(
+        "--quick", action="store_true", help="파일과 패키지만 본다 (동작 확인 생략)"
+    )
+    parser.add_argument(
+        "--fix", action="store_true", help="받을 수 있는 것을 받고 다시 점검한다"
+    )
+    args = parser.parse_args()
+
+    missing = report(collect(args.quick))
+    if args.fix and missing:
+        run_fixes(missing)
+        print("\n다시 점검합니다.")
+        missing = report(collect(args.quick))
+    sys.exit(1 if any(not c.optional for c in missing) else 0)
+
+
+if __name__ == "__main__":
+    main()

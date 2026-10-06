@@ -12,7 +12,7 @@
 서버는 띄우지 않는다. 마지막에 제품 세 가지를 띄우는 명령과 실습 5 스크립트를 안내한다.
 받은 모델·인덱스로 검색만 하므로 `--run` 모드는 없다.
 
-사전 준비 (uv run python lecture/03_setup/01_check_env.py 로 한 번에 확인):
+사전 준비 (uv run python lecture/03_setup/01_doctor.py 로 한 번에 확인):
     models/multilingual-e5-small                                 # scripts/download_model_hf.py
     models/finetuned/r001_A + 그 인덱스                           # scripts/finetuned_drive.py download
     data/processed/index/multilingual-e5-small.sqlite            # (위 명령이 함께 받는다. 또는 uv run ragkit index)
@@ -85,7 +85,7 @@ def rel(path: Path) -> str:
 
 def stop(message: str) -> None:
     print(f"\n{message}")
-    print("준비 상태 점검: uv run python lecture/03_setup/01_check_env.py")
+    print("준비 상태 점검: uv run python lecture/03_setup/01_doctor.py")
     sys.exit(1)
 
 

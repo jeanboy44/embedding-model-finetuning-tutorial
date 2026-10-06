@@ -98,7 +98,7 @@ def require(items: list[tuple[Path, str]]) -> None:
     for path, how in missing:
         print(f"  - {rel(path)}\n      받기: {how.format(path=rel(path))}")
     print(
-        "준비 상태는 uv run python lecture/03_setup/01_check_env.py 로 한 번에 볼 수 있습니다."
+        "준비 상태는 uv run python lecture/03_setup/01_doctor.py 로 한 번에 볼 수 있습니다."
     )
     raise SystemExit(1)
 

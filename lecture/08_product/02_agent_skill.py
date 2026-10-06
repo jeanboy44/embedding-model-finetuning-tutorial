@@ -83,7 +83,7 @@ def pick_questions(n: int) -> list[dict]:
 missing = [p for p in [TEST, FINETUNED / "config.json"] if not p.exists()]
 if missing:
     print("필요한 파일이 없습니다: " + ", ".join(str(p.relative_to(ROOT)) for p in missing))
-    print("준비 상태는 uv run python lecture/03_setup/01_check_env.py 로 한 번에 볼 수 있습니다.")
+    print("준비 상태는 uv run python lecture/03_setup/01_doctor.py 로 한 번에 볼 수 있습니다.")
     sys.exit(1)
 
 # ============================================================
