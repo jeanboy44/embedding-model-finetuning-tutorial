@@ -80,3 +80,79 @@ def test_load_train_config(tmp_path) -> None:
     assert config.output_dir == Path("models/finetuned/x")
     assert config.lora is not None and config.lora.r == 8 and config.lora.alpha == 32
     assert config.batch_size == 32
+    assert config.loss == "mnrl"
+    assert config.train_eval_sample == 0 and config.dev_labels is None
+
+
+def test_load_train_config_cached_mnrl(tmp_path) -> None:
+    from ragkit.training.train import load_train_config
+
+    path = tmp_path / "config.yaml"
+    path.write_text(
+        "training:\n  output_dir: out\n  batch_size: 128\n  loss: cached_mnrl\n  mini_batch_size: 8\n",
+        encoding="utf-8",
+    )
+
+    config = load_train_config(path)
+
+    assert (config.loss, config.batch_size, config.mini_batch_size) == ("cached_mnrl", 128, 8)
+
+
+@pytest.mark.slow
+@needs_model
+@pytest.mark.parametrize("use_lora", [False, True], ids=["full", "lora"])
+def test_train_keeps_best_dev_epoch(tmp_path, corpus, questions, use_lora) -> None:
+    """epoch마다 dev R@5를 재고, 가장 좋은 epoch의 가중치를 저장한다 (CachedMNRL)."""
+    from ragkit.training.train import DEV_METRIC, LoraSettings, TrainConfig, train
+
+    config = TrainConfig(
+        model=str(MODEL),
+        output_dir=tmp_path / "model",
+        batch_size=4,
+        epochs=3,
+        lr=1e-4,
+        max_seq_length=64,
+        loss="cached_mnrl",
+        mini_batch_size=2,
+        attention_dropout=0.0,  # MPS sdpa는 dropout 미지원
+        lora=LoraSettings(r=4, alpha=8) if use_lora else None,
+    )
+
+    meta = train(config, questions[:8], questions[16:20], corpus)
+
+    history = meta["dev_history"]
+    assert [round(h["epoch"]) for h in history] == [1, 2, 3]
+    best = max(history, key=lambda h: h[DEV_METRIC])  # 동점이면 앞 epoch
+    assert meta["best_epoch"] == round(best["epoch"])
+    assert meta["dev_after"][DEV_METRIC] == best[DEV_METRIC]
+    assert (tmp_path / "model" / "model.safetensors").exists()
+
+
+def test_dev_evaluator_accepts_alt_positives(corpus) -> None:
+    """학습 중 dev 평가도 복수 정답(alt_positive_ids)을 정답으로 센다."""
+    from ragkit.training.train import _dev_evaluator
+
+    ids = [d["id"] for d in corpus[:2]]
+    questions = [{"query": "q", "positive_id": ids[0], "alt_positive_ids": [ids[1]]}]
+
+    evaluator = _dev_evaluator(questions, corpus, "query: ", "passage: ")
+
+    assert evaluator.relevant_docs == {"0": set(ids)}
+
+
+@pytest.mark.slow
+@needs_model
+def test_train_records_train_sample_recall(tmp_path, corpus, questions) -> None:
+    """train_eval_sample을 주면 epoch마다 train 질문 표본의 코퍼스 전체 검색 지표도 기록한다."""
+    from ragkit.training.train import DEV_METRIC, TrainConfig, train
+
+    config = TrainConfig(
+        model=str(MODEL), output_dir=tmp_path / "model", batch_size=4, epochs=2, max_seq_length=64,
+        loss="cached_mnrl", mini_batch_size=2, attention_dropout=0.0, train_eval_sample=4,
+    )
+
+    meta = train(config, questions[:8], questions[16:20], corpus)
+
+    assert [round(h["epoch"]) for h in meta["dev_history"]] == [1, 2]
+    assert all(DEV_METRIC in h and "train_cosine_recall@5" in h for h in meta["dev_history"])
+    assert "train_cosine_recall@5" in meta["dev_before"]

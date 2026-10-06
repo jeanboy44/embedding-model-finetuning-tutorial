@@ -68,3 +68,36 @@ def test_filter_questions_drops_missing_and_bad_negatives(corpus_by_id) -> None:
     assert stats == {"missing_positive": 1, "dropped_negatives": 4}
     # 입력은 바꾸지 않는다
     assert len(questions[1]["hard_negative_ids"]) == 6
+
+
+def test_questions_digest_identifies_data_version() -> None:
+    """같은 질문 목록이면 같은 해시, 내용이 하나라도 바뀌면 다른 해시 (결과표의 데이터 버전)."""
+    from ragkit.data import questions_digest
+
+    questions = [{"query": "주휴수당 받나요?", "positive_id": "근로기준법_법률_제55조"}]
+    changed = [{"query": "주휴수당 받을 수 있나요?", "positive_id": "근로기준법_법률_제55조"}]
+
+    digest = questions_digest(questions)
+
+    assert digest == questions_digest([dict(q) for q in questions])
+    assert digest != questions_digest(changed)
+    assert len(digest) == 12
+
+
+def test_attach_labels_adds_alt_positives_and_partial_as_related() -> None:
+    """판정 파일의 full은 alt_positive_ids로, partial은 partial_ids로 붙인다 (기존 related_ids는 그대로)."""
+    from ragkit.data import attach_labels, question_key
+
+    questions = [
+        {"query": "q1", "positive_id": "A", "related_ids": ["R"]},
+        {"query": "q2", "positive_id": "B"},
+    ]
+    labels = {question_key(questions[0]): {"alt_positive_ids": ["C"], "partial_ids": ["D"]}}
+
+    out = attach_labels(questions, labels)
+
+    assert out[0]["alt_positive_ids"] == ["C"] and out[0]["partial_ids"] == ["D"]
+    assert out[0]["related_ids"] == ["R"]
+    assert out[1] == questions[1]  # 판정이 없는 질문은 그대로
+    assert "alt_positive_ids" not in questions[0]  # 입력은 바꾸지 않는다
+    assert len(question_key(questions[0])) == 12

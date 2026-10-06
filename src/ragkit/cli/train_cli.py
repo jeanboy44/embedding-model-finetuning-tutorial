@@ -10,7 +10,15 @@ from typing import Literal
 
 from ragkit import tracking
 from ragkit.config import get_settings
-from ragkit.data import filter_questions, load_corpus, load_questions
+from ragkit.data import (
+    attach_labels,
+    filter_questions,
+    load_corpus,
+    load_labels,
+    load_questions,
+    question_key,
+    questions_digest,
+)
 from ragkit.embeddings import choose_backend, create_embedding_fn, get_profile
 from ragkit.rag.query_expansion import (
     ExpansionUnavailable,
@@ -152,6 +160,10 @@ def train(
     corpus_by_id = {doc["id"]: doc for doc in docs}
     train_questions, train_stats = filter_questions(data["train"], corpus_by_id)
     dev_questions, dev_stats = filter_questions(data["dev"], corpus_by_id)
+    if train_config.negatives_file:
+        train_questions = _replace_negatives(train_questions, train_config.negatives_file)
+    if train_config.dev_labels:
+        dev_questions = attach_labels(dev_questions, load_labels(train_config.dev_labels))
     missing = train_stats["missing_positive"] + dev_stats["missing_positive"]
     if missing:
         print(f"경고: 코퍼스에 없는 질문 {missing}개를 뺐습니다 (split 때와 코퍼스가 다름).")
@@ -177,6 +189,33 @@ def train(
         f"학습 파라미터 {meta['trainable_params']:,} / {meta['total_params']:,}"
         f" → {train_config.output_dir}"
     )
+    if meta.get("best_epoch"):
+        print(f"  dev R@5 기준 best epoch: {meta['best_epoch']}")
+
+
+def _replace_negatives(questions: list[dict], path: Path) -> list[dict]:
+    """채굴 결과로 hard_negative_ids를 바꾸고, alt_positive_ids는 학습 행으로 추가한다.
+
+    빠진 질문이 있으면 학습 집합이 몰래 바뀌므로 멈춘다.
+    """
+    mined = {}
+    for line in Path(path).read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            row = json.loads(line)
+            mined[row["qid"]] = row
+    missing = [q for q in questions if question_key(q) not in mined]
+    if missing:
+        _fail(f"채굴 결과에 없는 train 질문이 {len(missing)}개 있습니다: {path} (예: {missing[0]['query']})")
+    out = []
+    for q in questions:
+        row = mined[question_key(q)]
+        out.append({**q, "hard_negative_ids": row["negative_ids"]})
+        # 판정에서 full(실제로도 정답)인 문서는 같은 negative로 학습 행을 하나 더 만든다
+        out += [
+            {**q, "positive_id": alt, "hard_negative_ids": row["negative_ids"]}
+            for alt in row.get("alt_positive_ids") or []
+        ]
+    return out
 
 
 def evaluate(
@@ -191,6 +230,7 @@ def evaluate(
     expand: bool = False,
     expansion_cache: Path | None = None,
     rpm: float | None = None,
+    labels: Path | None = None,
 ) -> None:
     """모델의 검색 성능을 전체 코퍼스 대상으로 잰다.
 
@@ -211,6 +251,7 @@ def evaluate(
         expand: LLM 쿼리 확장을 쓴다(결과 파일 이름 끝에 _expand). 확장은 캐시에 있으면 재사용한다.
         expansion_cache: 확장 캐시 JSONL. 기본값은 data/processed/query_expansion/{LLM}.jsonl.
         rpm: LLM 분당 호출 한도 (무료 등급이면 15). 캐시에 없는 질문을 받을 때만 쓴다.
+        labels: 복수 정답 판정 파일(JSONL). 주면 multi 판정(다른 정답도 인정)을 함께 낸다.
     """
     if split not in SPLITS:
         _fail(f"알 수 없는 분할: {split} (가능: {', '.join(SPLITS)})")
@@ -222,6 +263,8 @@ def evaluate(
             "  먼저 실행: ragkit split <질문 파일|폴더>"
         )
     docs = _load_corpus_or_fail(corpus_path)
+    if labels:
+        questions = attach_labels(questions, load_labels(labels))
 
     queries = [q["query"] for q in questions]
     expansions = _expansions(queries, expansion_cache, rpm) if expand else None
@@ -308,7 +351,9 @@ def _expansions(
 
 
 def _print_metrics(result: dict) -> None:
-    for judge in ("doc", "article"):
+    for judge in ("doc", "article", "multi"):
+        if judge not in result:
+            continue
         metrics = "  ".join(f"{k} {v:.3f}" for k, v in result[judge].items())
         print(f"  [{judge}] {metrics}")
 
@@ -412,6 +457,7 @@ def compare(
         out_dir: 결과 폴더. 기본값은 {설정 폴더}/results/.
         expansion_cache: 쿼리 확장 캐시 JSONL. 기본값은 data/processed/query_expansion/{LLM}.jsonl.
         rpm: LLM 분당 호출 한도 (무료 등급이면 15). 캐시에 없는 질문을 받을 때만 쓴다.
+            설정에 labels(복수 정답 판정 파일)를 적으면 multi R@5를 함께 낸다.
     """
     import yaml
 
@@ -428,6 +474,10 @@ def compare(
     kept, stats = filter_questions(load_questions(Path(questions_path)), {d["id"]: d for d in docs})
     if not kept:
         _fail("코퍼스에 맞는 질문이 없습니다.")
+    labels_info = None
+    if settings.get("labels"):
+        kept = attach_labels(kept, load_labels(Path(settings["labels"])))
+        labels_info = {"path": str(settings["labels"]), "questions": sum("alt_positive_ids" in q for q in kept)}
     print(f"질문 {len(kept)}개 × 모델 {len(models)}개 (코퍼스에 없어 뺀 질문 {stats['missing_positive']}개)")
 
     out_dir = out_dir or Path(config).parent / "results"
@@ -446,6 +496,8 @@ def compare(
             "questions": str(questions_path),
             "corpus": str(corpus_path),
             "n": len(kept),
+            "data": {"n": len(kept), "digest": questions_digest(kept)},
+            "labels": labels_info,
             "models": rows,
         }
         (out_dir / "comparison.json").write_text(
@@ -489,6 +541,10 @@ def _compare_models(
         result_path.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
         _print_metrics(result)
         row = {k: v for k, v in result.items() if k != "per_question"}
+        train_meta = model_path / "train_meta.json"
+        if train_meta.exists():
+            meta = json.loads(train_meta.read_text(encoding="utf-8"))
+            row["train"] = {k: meta.get(k) for k in TRAIN_FIELDS}
         with tracking.run(f"{key}{' + expand' if expand else ''}", params=_eval_params(result, expand),
                           nested=True) as run:
             _log_eval(run, result, result_path)
@@ -544,23 +600,69 @@ def _log_eval(run: tracking.Run, result: dict, result_path: Path) -> None:
     run.log_artifact(result_path)
 
 
+TRAIN_FIELDS = ("seconds", "trainable_params", "total_params", "best_epoch")
+
+
 def _row_label(row: dict) -> str:
-    return f"{row['model']} + 쿼리 확장" if row.get("expansion") else row["model"]
+    """표에 쓸 모델 이름. 학습한 폴더는 폴더 이름(exp_002 등), 허브 모델은 전체 이름. 확장이면 표시."""
+    model = Path(row["model"]).name if Path(row["model"]).is_dir() else row["model"]
+    return f"{model} + 쿼리 확장" if row.get("expansion") else model
+
+
+def _train_cells(row: dict) -> str:
+    train = row.get("train")
+    if not train:
+        return "- | - | -"
+    ratio = train["trainable_params"] / train["total_params"] if train.get("total_params") else 0
+    return f"{train['seconds'] / 60:.0f}분 | {ratio:.1%} | {train.get('best_epoch') or '-'}"
+
+
+def _group_table(table: dict, field: str, title: str) -> list[str]:
+    """테마·질문 유형별 R@5 (doc) 표."""
+    groups = sorted({g for row in table["models"] for g in row.get(field, {})})
+    if not groups:
+        return []
+    lines = ["", f"## {title}별 R@5 (doc)", "", "| 모델 | " + " | ".join(groups) + " |",
+             "|---|" + "---|" * len(groups)]
+    for row in table["models"]:
+        cells = [
+            f"{row[field][g]['doc'].get('recall@5', 0):.3f} (n={row[field][g]['n']})"
+            if g in row.get(field, {}) else "-"
+            for g in groups
+        ]
+        lines.append(f"| {_row_label(row)} | " + " | ".join(cells) + " |")
+    return lines
+
+
+def _law_macro(row: dict) -> float:
+    """법령별 R@5(doc)의 단순 평균. 한 법령에 질문이 몰린 평가셋의 편중을 줄여 본다."""
+    laws = row.get("by_law") or {}
+    if not laws:
+        return row["doc"].get("recall@5", 0)
+    return sum(group["doc"].get("recall@5", 0) for group in laws.values()) / len(laws)
 
 
 def _comparison_markdown(table: dict) -> str:
-    """비교표 Markdown. 판정은 doc(정답 문서 일치)이 기본, article(같은 조 조각이면 정답)은 참고."""
+    """비교표 Markdown. 주요 지표는 R@5. 판정은 doc(정답 문서 일치)이 기본, article(같은 조 조각이면 정답)은 참고."""
+    data = table.get("data") or {"n": table["n"], "digest": "-"}
     lines = [
         f"# {table.get('name') or '모델 비교'}",
         "",
-        f"질문 {table['n']}개, 코퍼스 `{table['corpus']}` 전체 대상 검색.",
+        (
+            f"질문 {data['n']}개 (`{table['questions']}`, 데이터 버전 `{data['digest']}`), "
+            f"코퍼스 `{table['corpus']}` 전체 대상 검색."
+        ),
         "",
         (
-            "| 모델 | 백엔드 | 차원 | R@1 | R@5 | R@10 | MRR@10 | nDCG@10 | article R@10 "
-            "| LLM 호출/질문 | 확장 지연 s | 배포 가능 |"
+            "| 모델 | R@5 | multi R@5 | 법령 평균 R@5 | R@1 | R@10 | MRR@10 | nDCG@10 | article R@5 "
+            "| LLM 호출/질문 | 확장 지연 s | 백엔드 | 차원 | 배포 가능 | 학습 시간 | 학습 파라미터 | best epoch |"
         ),
-        "|---|---|---|---|---|---|---|---|---|---|---|---|",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
+    if table.get("labels"):
+        lines.insert(3, f"multi: 판정 파일 `{table['labels']['path']}`로 다른 정답도 인정 "
+                        f"(판정이 붙은 질문 {table['labels']['questions']}개). 법령 평균: 법령별 R@5(doc)의 단순 평균.")
+        lines.insert(4, "")
     for row in table["models"]:
         doc, article = row["doc"], row["article"]
         expansion = row.get("expansion")
@@ -569,20 +671,51 @@ def _comparison_markdown(table: dict) -> str:
             if expansion else "| 0 | - "
         )
         lines.append(
-            f"| {_row_label(row)} | {row['backend']} | {row['dim']} "
-            f"| {doc.get('recall@1', 0):.3f} | {doc.get('recall@5', 0):.3f} "
-            f"| {doc.get('recall@10', 0):.3f} | {doc['mrr@10']:.3f} | {doc['ndcg@10']:.3f} "
-            f"| {article.get('recall@10', 0):.3f} {cost}| {'예' if row['deployable'] else '아니오'} |"
+            f"| {_row_label(row)} | **{doc.get('recall@5', 0):.3f}** "
+            f"| {row.get('multi', doc).get('recall@5', 0):.3f} | {_law_macro(row):.3f} "
+            f"| {doc.get('recall@1', 0):.3f} | {doc.get('recall@10', 0):.3f} "
+            f"| {doc['mrr@10']:.3f} | {doc['ndcg@10']:.3f} | {article.get('recall@5', 0):.3f} "
+            f"{cost}| {row['backend']} | {row['dim']} | {'예' if row['deployable'] else '아니오'} "
+            f"| {_train_cells(row)} |"
         )
-    themes = sorted({theme for row in table["models"] for theme in row["by_theme"]})
-    if themes:
-        lines += ["", "## 테마별 R@10 (doc)", "", "| 모델 | " + " | ".join(themes) + " |",
-                  "|---|" + "---|" * len(themes)]
-        for row in table["models"]:
-            cells = [
-                f"{row['by_theme'][t]['doc'].get('recall@10', 0):.3f} (n={row['by_theme'][t]['n']})"
-                if t in row["by_theme"] else "-"
-                for t in themes
-            ]
-            lines.append(f"| {_row_label(row)} | " + " | ".join(cells) + " |")
+    lines += _group_table(table, "by_query_type", "질문 유형")
+    lines += _group_table(table, "by_theme", "테마")
     return "\n".join(lines) + "\n"
+
+
+def paired_test(
+    base: Path,
+    other: Path,
+    *,
+    judge: Literal["doc", "article", "multi"] = "multi",
+    k: int = 5,
+    out: Path | None = None,
+) -> None:
+    """두 평가 결과(ragkit evaluate의 JSON)를 질문 단위로 짝지어 R@k 차이를 검정한다.
+
+    Args:
+        base: 기준 결과 JSON.
+        other: 비교 결과 JSON.
+        judge: 순위 판정 (doc | article | multi).
+        k: R@k의 k.
+        out: 결과 JSON 경로. 주지 않으면 출력만 한다.
+    """
+    from ragkit.evaluation import paired_test as run_paired_test
+
+    def load(path: Path) -> dict:
+        return json.loads(Path(path).read_text(encoding="utf-8"))
+
+    try:
+        result = run_paired_test(load(base), load(other), judge=judge, k=k)
+    except ValueError as e:
+        _fail(str(e))
+    print(
+        f"{judge} R@{k}: {result['base']:.3f} → {result['other']:.3f} (Δ {result['delta']:+.3f}, "
+        f"95% CI [{result['ci95'][0]:+.3f}, {result['ci95'][1]:+.3f}], 고침 {result['fixed']} / 망침 {result['broken']}, "
+        f"McNemar p {result['mcnemar_p']:.4f})"
+    )
+    worse = [law for law, v in result["by_law"].items() if v["delta"] < 0]
+    print(f"  법령 {len(result['by_law'])}개 중 나빠진 법령 {len(worse)}개: {', '.join(worse) or '-'}")
+    if out:
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")

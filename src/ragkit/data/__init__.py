@@ -4,6 +4,7 @@
 질문은 law-question-gen 스킬이 만든 JSONL(한 줄에 질문 하나)이다.
 """
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -37,6 +38,63 @@ def load_questions(path: Path) -> list[dict]:
             if line.strip():
                 rows.append(json.loads(line))
     return rows
+
+
+def questions_digest(questions: list[dict]) -> str:
+    """질문 목록의 짧은 해시(12자). 결과표에 적어 어떤 데이터로 낸 숫자인지 구분한다.
+
+    Args:
+        questions: 질문 목록. 순서와 내용이 같으면 같은 해시다.
+
+    Returns:
+        sha256 16진수 앞 12자.
+    """
+    payload = "\n".join(json.dumps(q, ensure_ascii=False, sort_keys=True) for q in questions)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:12]
+
+
+def question_key(question: dict) -> str:
+    """질문 식별자(12자): 질문 문장과 정답 id의 해시. 판정 파일(복수 정답)과 질문을 잇는다."""
+    payload = question["query"] + "\0" + question["positive_id"]
+    return hashlib.sha1(payload.encode("utf-8")).hexdigest()[:12]
+
+
+def load_labels(path: Path) -> dict[str, dict]:
+    """복수 정답 판정 파일(JSONL: qid, alt_positive_ids, partial_ids)을 qid → 판정으로 읽는다."""
+    labels = {}
+    for line in Path(path).read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            row = json.loads(line)
+            labels[row["qid"]] = row
+    return labels
+
+
+def attach_labels(questions: list[dict], labels: dict[str, dict]) -> list[dict]:
+    """판정을 질문에 붙인다. full은 alt_positive_ids(정답으로 인정), partial은 partial_ids.
+
+    partial은 multi 판정에서만 순위에서 뺀다 (doc·article 판정은 판정 전과 같게 유지).
+
+    Args:
+        questions: 질문 목록. 바꾸지 않는다.
+        labels: load_labels 결과.
+
+    Returns:
+        판정이 붙은 새 질문 목록 (판정이 없는 질문은 그대로).
+    """
+    out = []
+    for question in questions:
+        label = labels.get(question_key(question))
+        if label is None:
+            out.append(question)
+            continue
+        out.append(
+            {
+                **question,
+                "alt_positive_ids": list(label.get("alt_positive_ids") or []),
+                "partial_ids": list(label.get("partial_ids") or []),
+            }
+        )
+    return out
 
 
 def relevance_key(doc: dict) -> str:

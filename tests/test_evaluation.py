@@ -88,7 +88,9 @@ def test_evaluate_index_matches_numpy(tmp_path) -> None:
     by_index = evaluate_index(index, fake_embed, CORPUS, QUESTIONS, ks=(1, 5))
     by_numpy = evaluate_retrieval(fake_embed, CORPUS, QUESTIONS, ks=(1, 5))
 
-    assert by_index["per_question"] == by_numpy["per_question"]
+    # top10은 점수가 같은 문서의 순서가 구현마다 다를 수 있어 순위만 비교한다
+    strip = lambda rows: [{k: v for k, v in r.items() if k != "top10"} for r in rows]
+    assert strip(by_index["per_question"]) == strip(by_numpy["per_question"])
     assert by_index["doc"] == pytest.approx(by_numpy["doc"])
     assert by_index["article"] == pytest.approx(by_numpy["article"])
 
@@ -148,3 +150,70 @@ def test_evaluate_retrieval_rejects_bad_input() -> None:
         evaluate_retrieval(embed, corpus, [])
     with pytest.raises(ValueError, match="코퍼스에 없는"):
         evaluate_retrieval(embed, corpus, [{"query": "q", "positive_id": "Z"}])
+
+
+def test_evaluate_multi_counts_alt_positives_and_groups_by_law() -> None:
+    """multi 판정: 정답 또는 alt_positive_ids 중 가장 먼저 나온 문서의 순위.
+    q1: 정답 A_1은 3위지만 대체 정답 B가 2위 → multi 2위. q2: 대체 정답이 없으면 doc과 같다.
+    by_law: positive 문서의 법령(category)별 지표.
+    """
+    corpus = [{**doc, "category": "갑법" if doc["id"].startswith("A") else "을법"} for doc in CORPUS]
+    questions = [{**QUESTIONS[0], "alt_positive_ids": ["B"]}, QUESTIONS[1]]
+
+    result = evaluate_retrieval(fake_embed, corpus, questions, ks=(1, 5))
+
+    assert [r["multi_rank"] for r in result["per_question"]] == [2, 1]
+    # partial_ids는 multi 판정에서만 순위에서 뺀다: A_2를 빼면 multi에서 B가 1위, doc은 그대로 3위
+    partial = [{**questions[0], "partial_ids": ["A_2"]}, QUESTIONS[1]]
+    result_p = evaluate_retrieval(fake_embed, corpus, partial, ks=(1, 5))
+    assert [r["multi_rank"] for r in result_p["per_question"]] == [1, 1]
+    assert [r["doc_rank"] for r in result_p["per_question"]] == [3, 1]
+    assert result["multi"]["recall@1"] == 0.5 and result["multi"]["mrr@10"] == pytest.approx((1 / 2 + 1) / 2)
+    assert result["doc"]["recall@1"] == 0.5  # doc 판정은 그대로
+    assert set(result["by_law"]) == {"갑법", "을법"}
+    assert result["by_law"]["갑법"]["n"] == 1
+
+
+def test_per_question_has_qid_law_and_top10() -> None:
+    """질문별 결과에 qid(판정 파일·다른 run과 잇는 키), 법령, 상위 10개 id가 있다."""
+    from ragkit.data import question_key
+
+    corpus = [{**doc, "category": "갑법"} for doc in CORPUS]
+    result = evaluate_retrieval(fake_embed, corpus, QUESTIONS, ks=(1, 5))
+
+    row = result["per_question"][0]
+    assert row["qid"] == question_key(QUESTIONS[0])
+    assert row["law"] == "갑법"
+    assert row["top10"][:3] == ["A_2", "B", "A_1"]
+
+
+def test_paired_test_reports_delta_ci_mcnemar_and_law_deltas() -> None:
+    """같은 질문 집합의 두 결과를 질문 단위로 짝지어 Δ, bootstrap CI, McNemar p, 법령별 Δ를 낸다."""
+    from ragkit.evaluation import paired_test
+
+    def result(ranks):
+        return {"per_question": [
+            {"qid": f"q{i}", "law": "갑법" if i < 10 else "을법", "multi_rank": r} for i, r in enumerate(ranks)
+        ]}
+
+    base = result([1] * 10 + [9] * 10)  # 갑법 10개 적중, 을법 10개 실패
+    other = result([1] * 10 + [2] * 6 + [9] * 4)  # 을법 6개를 새로 맞힘
+
+    out = paired_test(base, other, k=5, n_boot=2000, seed=0)
+
+    assert out["n"] == 20 and out["base"] == 0.5 and out["other"] == 0.8
+    assert out["delta"] == pytest.approx(0.3)
+    assert out["ci95"][0] > 0
+    assert out["fixed"] == 6 and out["broken"] == 0
+    assert out["mcnemar_p"] < 0.05
+    assert out["by_law"]["을법"]["delta"] == pytest.approx(0.6)
+    assert out["by_law"]["갑법"]["delta"] == 0.0
+
+
+def test_paired_test_rejects_different_question_sets() -> None:
+    from ragkit.evaluation import paired_test
+
+    a = {"per_question": [{"qid": "q1", "law": "x", "multi_rank": 1}]}
+    b = {"per_question": [{"qid": "q2", "law": "x", "multi_rank": 1}]}
+    with pytest.raises(ValueError):
+        paired_test(a, b)

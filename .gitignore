@@ -34,7 +34,9 @@ env/
 # ML/Data specific
 /models/
 experiments/results/
-experiments/*/results/
+experiments/*/results/*
+# 비교표는 커밋한다 (어떤 데이터로 낸 숫자인지 데이터 버전이 함께 적혀 있다)
+!experiments/*/results/comparison.md
 data/processed/
 data/raw/*
 !data/raw/.gitkeep
@@ -88,3 +90,6 @@ apps/web/dist/
 
 # MLflow 로컬 저장소 (04_monitoring 실습)
 /mlruns/
+
+# 실험 기록의 큰 파일 (runs/README.md)
+runs/*/artifacts/

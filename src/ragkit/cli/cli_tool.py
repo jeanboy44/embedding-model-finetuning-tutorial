@@ -22,6 +22,7 @@ for _command in (
     train_cli.expand,
 ):
     app.command(_command)
+app.command(train_cli.paired_test, name="paired-test")
 
 
 @app.command(name="index")

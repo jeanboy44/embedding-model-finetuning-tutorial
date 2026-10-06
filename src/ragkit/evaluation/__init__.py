@@ -4,7 +4,9 @@
 판정은 두 가지다.
 - doc: 정답 문서 id와 정확히 일치
 - article: 같은 조(relevance_key)의 조각이면 정답. 같은 조의 조각이 여러 개 나오면 첫 등장만 센다
-related_ids(정답을 부분적으로 담은 문서)는 두 판정 모두에서 순위에서 뺀다.
+- multi: 정답 또는 alt_positive_ids(판정으로 인정한 다른 정답) 중 하나가 나오면 정답.
+  partial_ids(판정에서 부분답으로 본 문서)도 순위에서 뺀다
+related_ids(정답을 부분적으로 담은 문서)는 모든 판정에서 순위에서 뺀다.
 """
 
 import math
@@ -12,7 +14,7 @@ from collections.abc import Callable, Sequence
 
 import numpy as np
 
-from ragkit.data import doc_text, relevance_key
+from ragkit.data import doc_text, question_key, relevance_key
 
 CUTOFF = 10  # MRR, nDCG를 계산하는 순위 한도
 CANDIDATES = 100  # 질문마다 정렬할 상위 문서 수 (article 판정의 중복 제거 여유 포함)
@@ -154,28 +156,41 @@ def _score(
         order = [doc_id for doc_id in order if doc_id not in ignore]
         positive = by_id[question["positive_id"]]
         doc_rank = first_rank(order, positive["id"])
+        answers = {positive["id"], *(question.get("alt_positive_ids") or [])}
+        partial = set(question.get("partial_ids") or [])
+        multi_order = [doc_id for doc_id in order if doc_id not in partial]
+        multi_rank = next((i + 1 for i, doc_id in enumerate(multi_order) if doc_id in answers), None)
         article_rank = first_rank(
             [relevance_key(by_id[doc_id]) if doc_id in by_id else doc_id for doc_id in order],
             relevance_key(positive),
         )
         rows.append(
             {
+                "qid": question_key(question),
+                "top10": order[:10],
                 "query": question["query"],
                 "positive_id": positive["id"],
                 "query_type": question.get("query_type") or "unknown",
                 "theme": positive.get("theme") or "unknown",
+                "law": positive.get("category") or "unknown",
                 "doc_rank": doc_rank,
                 "article_rank": article_rank,
+                "multi_rank": multi_rank,
                 "doc": question_metrics(doc_rank, ks),
                 "article": question_metrics(article_rank, ks),
+                "multi": question_metrics(multi_rank, ks),
             }
         )
 
     result = _summarize(rows)
     result["by_query_type"] = _group(rows, "query_type")
     result["by_theme"] = _group(rows, "theme")
+    result["by_law"] = _group(rows, "law")
     result["per_question"] = [
-        {key: row[key] for key in ("query", "positive_id", "doc_rank", "article_rank")}
+        {
+            key: row[key]
+            for key in ("qid", "query", "positive_id", "law", "doc_rank", "article_rank", "multi_rank", "top10")
+        }
         for row in rows
     ]
     return result
@@ -190,6 +205,7 @@ def _summarize(rows: list[dict]) -> dict:
         "n": len(rows),
         "doc": _mean([row["doc"] for row in rows]),
         "article": _mean([row["article"] for row in rows]),
+        "multi": _mean([row["multi"] for row in rows]),
     }
 
 
@@ -197,4 +213,74 @@ def _group(rows: list[dict], field: str) -> dict[str, dict]:
     return {
         value: _summarize([row for row in rows if row[field] == value])
         for value in sorted({row[field] for row in rows})
+    }
+
+
+def paired_test(
+    base: dict,
+    other: dict,
+    *,
+    judge: str = "multi",
+    k: int = 5,
+    n_boot: int = 10000,
+    seed: int = 0,
+) -> dict:
+    """같은 질문 집합에 대한 두 평가 결과를 질문 단위로 짝지어 R@k 차이를 검정한다.
+
+    Args:
+        base: 기준 결과 (evaluate_retrieval/evaluate_index 결과, per_question에 qid가 있어야 한다).
+        other: 비교 결과.
+        judge: 순위 판정 (doc | article | multi).
+        k: R@k의 k.
+        n_boot: 대응 bootstrap 반복 수.
+        seed: bootstrap seed.
+
+    Returns:
+        {"n", "base", "other", "delta", "ci95", "fixed", "broken", "mcnemar_p", "by_law": {법령: {n, base, other, delta}}}
+
+    Raises:
+        ValueError: 두 결과의 질문 집합(qid)이 다를 때.
+    """
+    from math import comb
+
+    def hits(result: dict) -> dict[str, tuple[str, int]]:
+        out = {}
+        for row in result["per_question"]:
+            rank = row.get(f"{judge}_rank")
+            out[row["qid"]] = (row.get("law") or "unknown", int(rank is not None and rank <= k))
+        return out
+
+    a, b = hits(base), hits(other)
+    if set(a) != set(b):
+        raise ValueError(f"질문 집합이 다릅니다 (기준 {len(a)}개, 비교 {len(b)}개, 공통 {len(set(a) & set(b))}개)")
+    qids = sorted(a)
+    x = np.array([a[q][1] for q in qids])
+    y = np.array([b[q][1] for q in qids])
+    diff = y - x
+    rng = np.random.default_rng(seed)
+    boots = diff[rng.integers(0, len(qids), size=(n_boot, len(qids)))].mean(axis=1)
+    fixed, broken = int(((x == 0) & (y == 1)).sum()), int(((x == 1) & (y == 0)).sum())
+    m = fixed + broken
+    p = min(1.0, 2 * sum(comb(m, i) for i in range(min(fixed, broken) + 1)) / 2**m) if m else 1.0
+    by_law = {}
+    for law in sorted({a[q][0] for q in qids}):
+        idx = [i for i, q in enumerate(qids) if a[q][0] == law]
+        by_law[law] = {
+            "n": len(idx),
+            "base": float(x[idx].mean()),
+            "other": float(y[idx].mean()),
+            "delta": float(diff[idx].mean()),
+        }
+    return {
+        "judge": judge,
+        "k": k,
+        "n": len(qids),
+        "base": float(x.mean()),
+        "other": float(y.mean()),
+        "delta": float(diff.mean()),
+        "ci95": [float(np.percentile(boots, 2.5)), float(np.percentile(boots, 97.5))],
+        "fixed": fixed,
+        "broken": broken,
+        "mcnemar_p": float(p),
+        "by_law": by_law,
     }
