@@ -57,6 +57,7 @@ RECEIVED = {
     "pruned-int8": MODELS / "multilingual-e5-small-pruned-int8",
 }
 BENCH = SETTINGS.experiments_dir / "exp_008_deploy_bench" / "results" / "results.json"
+GRANULARITY = SETTINGS.experiments_dir / "exp_012_int8_granularity" / "results" / "comparison.md"
 TEST = SETTINGS.data_dir / "splits" / "test.jsonl"
 SAMPLE = 200
 RUN = "--run" in sys.argv
@@ -182,6 +183,18 @@ with tempfile.TemporaryDirectory() as tmp:
         for variant in ("onnx-fp32", "onnx-int8", "onnx-int8-pruned"):
             if variant in bench:
                 print(f"  {variant:<18} {bench[variant]['recall@5']:.3f}")
+    if GRANULARITY.exists():
+        # 실험 012: 같은 test로 텐서 단위 INT8까지 잰 비교표 (comparison.md의 R@5 열)
+        r5 = {}
+        for line in GRANULARITY.read_text(encoding="utf-8").splitlines():
+            cells = [c.strip() for c in line.strip("|").split("|")]
+            if len(cells) > 2 and cells[1].startswith("**"):
+                r5[cells[0]] = float(cells[1].strip("*"))
+        if "multilingual-e5-small-int8-tensor" in r5:
+            print(f"\n텐서 단위 vs 채널별 R@5 ({GRANULARITY.relative_to(SETTINGS.project_root)}):")
+            print(f"  fp32 {r5.get('intfloat/multilingual-e5-small', float('nan')):.3f} · "
+                  f"채널별 {r5.get('multilingual-e5-small-int8', float('nan')):.3f} · "
+                  f"텐서 단위 {r5['multilingual-e5-small-int8-tensor']:.3f}  → 코사인 0.99의 작은 차이가 검색에서는 R@5 몇 점으로 커진다")  # fmt: skip
 
     # ============================================================
     # 3. 어디를 줄여야 효과가 큰가: 어휘 가지치기

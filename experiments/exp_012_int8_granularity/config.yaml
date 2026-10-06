@@ -1,0 +1,10 @@
+# 실험 012: INT8 양자화 단위 — 텐서 단위 vs 채널별 (실습 4, 7교시 INT8 장)
+# 같은 test(2,526개)로 fp32 / 채널별 INT8 / 텐서 단위 INT8의 검색 정확도를 잰다 (학습 없음, ONNX 백엔드).
+# 준비: uv run ragkit quantize models/multilingual-e5-small --no-per-channel --out-dir models/multilingual-e5-small-int8-tensor
+# 실행: uv run ragkit compare experiments/exp_012_int8_granularity/config.yaml
+name: int8_granularity
+questions: data/splits/test.jsonl
+models:
+  - intfloat/multilingual-e5-small            # fp32 (ONNX)
+  - models/multilingual-e5-small-int8         # INT8 채널별 (배포 기본)
+  - models/multilingual-e5-small-int8-tensor  # INT8 텐서 단위
