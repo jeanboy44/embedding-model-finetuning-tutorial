@@ -12,6 +12,7 @@
     uv run ragkit index
     uv run ragkit split data/questions          # data/splits/test.jsonl
     (02를 실행했거나 아래 모델 폴더가 있어야 한다)
+    uv run ragkit export-onnx models/multilingual-e5-small
     uv run ragkit quantize models/multilingual-e5-small
     uv run ragkit prune-vocab models/multilingual-e5-small
     uv run ragkit export-onnx models/multilingual-e5-small-pruned
@@ -23,6 +24,7 @@
 """
 
 import json
+import statistics
 import subprocess
 import sys
 import time
@@ -31,7 +33,9 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 from ragkit_api.app import create_app
 
-RESULTS = Path("experiments/exp_008_deploy_bench/results/results.json")
+ROOT = Path(__file__).resolve().parents[2]
+RESULTS = ROOT / "experiments/exp_008_deploy_bench/results/results.json"
+SEARCH_REPEAT = 20
 
 
 def section(title: str) -> None:
@@ -55,7 +59,9 @@ print((RESULTS.parent / "comparison.md").read_text())
 # ============================================================
 section("2. 무엇을 얻고 무엇을 잃었나 (원본 torch-fp32 대비)")
 base = next(r for r in rows if r["variant"] == "torch-fp32")
-for r in rows[1:]:
+for r in rows:
+    if r is base:
+        continue
     print(f"[{r['variant']}]")
     print(f"  설치 크기  {base['install_mb']:.0f} → {r['install_mb']:.0f} MB  (x{base['install_mb'] / r['install_mb']:.1f} 작음)")
     print(f"  모델 크기  {base['model_mb']:.0f} → {r['model_mb']:.0f} MB  (x{base['model_mb'] / r['model_mb']:.1f} 작음)")
@@ -77,15 +83,23 @@ print("""
 section("3. API 백엔드 바꾸기: torch → ONNX")
 for label, kwargs in [
     ("torch (2단계)", {"backend": "torch"}),
-    ("ONNX INT8", {"model": "models/multilingual-e5-small-int8", "backend": "onnx"}),
-    ("가지치기 + INT8", {"model": "models/multilingual-e5-small-pruned-int8", "backend": "onnx"}),
+    ("ONNX INT8", {"model": str(ROOT / "models/multilingual-e5-small-int8"), "backend": "onnx"}),
+    ("가지치기 + INT8", {"model": str(ROOT / "models/multilingual-e5-small-pruned-int8"), "backend": "onnx"}),
 ]:
+    if "model" in kwargs and not Path(kwargs["model"]).is_dir():
+        print(f"{label}: {kwargs['model']}가 없어 건너뜁니다. 위 '사전 준비' 명령을 먼저 실행하세요.")
+        continue
     start = time.perf_counter()
     with TestClient(create_app(open_kwargs=kwargs)) as client:
         load = time.perf_counter() - start
-        t = time.perf_counter()
-        hits = client.post("/api/search", json={"query": "야간 근로 수당", "k": 1, "laws": ["근로기준법"]}).json()["hits"]
-        print(f"{label:16s} 시작 {load:4.1f}s · 검색 {1000 * (time.perf_counter() - t):4.0f}ms · 1위 {hits[0]['title']}")
+        body = {"query": "야간 근로 수당", "k": 1, "laws": ["근로기준법"]}
+        hits = client.post("/api/search", json=body).json()["hits"]  # 첫 요청은 워밍업으로 버린다
+        times = []
+        for _ in range(SEARCH_REPEAT):
+            t = time.perf_counter()
+            client.post("/api/search", json=body)
+            times.append(1000 * (time.perf_counter() - t))
+        print(f"[{label}] 시작 {load:4.1f}s · 검색 중앙값 {statistics.median(times):4.0f}ms ({SEARCH_REPEAT}회) · 1위 {hits[0]['title']}")
 print("""
 실제 서버:
   uv run --package ragkit-api ragkit-api --model models/multilingual-e5-small-pruned-int8

@@ -173,7 +173,7 @@
       <span class="c"># 받은 파인튜닝 모델들과 학습 전 모델 비교 (실험 010, test)</span><br>
       uv run ragkit compare experiments/exp_010_lecture_comparison/config.yaml<br>
       <span class="c"># 실험 기록 보기</span><br>
-      uv run --extra mlflow mlflow server
+      uv run --extra mlflow mlflow server --backend-store-uri sqlite:///mlruns/mlflow.db --artifacts-destination mlruns/artifacts --port 5050
     </div>
   </section>
 

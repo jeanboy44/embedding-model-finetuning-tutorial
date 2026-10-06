@@ -1,6 +1,6 @@
 """
-Phase 2-3: Gemini API 연동
-============================
+부록: Gemini API 연동
+=====================
 
 학습 목표:
 - Gemini API를 호출하여 텍스트를 생성한다
@@ -13,6 +13,8 @@ Phase 2-3: Gemini API 연동
 실행:
     uv run python lecture/01_ds_core/appendix_gemini_basics.py
 """
+
+from google.genai import errors
 
 from ragkit.config import get_settings
 
@@ -163,7 +165,7 @@ def step3_api_call(has_key: bool) -> None:
         try:
             answer = generate_text(prompt, temperature=0.3, max_output_tokens=200)
             print(f"  응답: {answer[:200]}")
-        except (ConnectionError, ValueError, RuntimeError) as e:
+        except (ConnectionError, ValueError, RuntimeError, errors.APIError) as e:
             print(f"  오류: {e}")
 
 
@@ -207,7 +209,7 @@ RAG 시스템에서는 보통 0.1~0.3을 사용한다.
         try:
             answer = generate_text(prompt, temperature=temp, max_output_tokens=100)
             print(f"    {answer[:100]}")
-        except (ConnectionError, ValueError, RuntimeError) as e:
+        except (ConnectionError, ValueError, RuntimeError, errors.APIError) as e:
             print(f"    오류: {e}")
 
 
