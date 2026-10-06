@@ -10,7 +10,8 @@
 
 사전 준비 (없으면 스크립트가 받는 명령을 알려 주고 끝난다):
     uv run python scripts/data_version.py pull v1     # 코퍼스 + train/dev/test 분할
-    models/multilingual-e5-small, data/processed/index/multilingual-e5-small.sqlite  # 강사 Drive
+    models/multilingual-e5-small                      # scripts/download_model_hf.py
+    uv run python scripts/finetuned_drive.py download   # data/processed/index/multilingual-e5-small.sqlite
     data/labels/dev.jsonl                             # dev 복수 정답 판정 (강사 Drive)
 
 실행:
@@ -128,7 +129,11 @@ require(
         (CORPUS, GET_DATA),
         (SPLITS / "test.jsonl", GET_DATA),
         (SPLITS / "split_meta.json", GET_DATA),
-        (INDEX, FROM_DRIVE + " (없으면 ragkit evaluate가 7~13분 걸려 새로 만든다)"),
+        (
+            INDEX,
+            "uv run python scripts/finetuned_drive.py download"
+            + " (없으면 ragkit evaluate가 7~13분 걸려 새로 만든다)",
+        ),
     ]
 )
 

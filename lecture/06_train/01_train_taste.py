@@ -10,7 +10,8 @@
 
 사전 준비 (없으면 스크립트가 받는 명령을 알려 주고 끝난다):
     uv run python scripts/data_version.py pull v1     # 코퍼스 + 분할
-    models/multilingual-e5-small, models/finetuned/{exp_002,exp_004,exp_006,r001_A}   # 강사 Drive
+    models/multilingual-e5-small                                   # scripts/download_model_hf.py
+    uv run python scripts/finetuned_drive.py download --all        # models/finetuned/{exp_002,exp_004,exp_006,r001_A}
     (--run) uv sync --extra train                      # sentence-transformers, peft
 
 실행:
@@ -58,7 +59,7 @@ RUN_STEPS = 30  # --run 학습 step 수
 RUN_LIMIT = 960  # --run 학습 질문 수 (배치 32 × 30 step)
 
 GET_DATA = "uv run python scripts/data_version.py pull v1"
-FROM_DRIVE = "강사 Drive에서 받아 {path}에 둔다"
+GET_FINETUNED = "uv run python scripts/finetuned_drive.py download --all"
 
 
 def section(title: str) -> None:
@@ -150,7 +151,7 @@ require(
     [
         (CORPUS, GET_DATA),
         (SPLITS / "train.jsonl", GET_DATA),
-        *[(FINETUNED / name / "train_meta.json", FROM_DRIVE) for name in RUNS],
+        *[(FINETUNED / name / "train_meta.json", GET_FINETUNED) for name in RUNS],
     ]
 )
 docs = load_corpus(CORPUS)

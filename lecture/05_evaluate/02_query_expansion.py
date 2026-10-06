@@ -14,7 +14,8 @@
 사전 준비 (없으면 스크립트가 받는 명령을 알려 주고 끝난다):
     uv run python scripts/data_version.py pull v1     # 코퍼스 + 분할
     data/processed/query_expansion/gemini-2.5-flash-lite.jsonl   # 확장 캐시 (강사 Drive)
-    models/multilingual-e5-small, models/finetuned/r001_A, data/processed/index/*.sqlite  # 강사 Drive
+    models/multilingual-e5-small                       # scripts/download_model_hf.py
+    uv run python scripts/finetuned_drive.py download   # models/finetuned/r001_A + 그 인덱스
     (--run에서 새로 확장하려면) .env에 GEMINI_API_KEY
 
 실행:
@@ -179,8 +180,11 @@ require(
         (CORPUS, GET_DATA),
         (TEST, GET_DATA),
         (CACHE, FROM_DRIVE),
-        (default_index_path("multilingual-e5-small"), FROM_DRIVE),
-        (FINETUNED, FROM_DRIVE),
+        (
+            default_index_path("multilingual-e5-small"),
+            "uv run python scripts/finetuned_drive.py download",
+        ),
+        (FINETUNED, "uv run python scripts/finetuned_drive.py download"),
     ]
 )
 finetuned_index = default_index_path(model_key(str(FINETUNED), FINETUNED))

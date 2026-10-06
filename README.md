@@ -33,6 +33,7 @@ uv sync --all-packages --all-extras   # 강의용: ragkit + 모든 앱 + 학습 
 
 ```bash
 uv run python scripts/download_model_hf.py               # 모델 (또는 scripts/download_model_gdrive.py)
+uv run python scripts/finetuned_drive.py download      # 파인튜닝 모델 r001_A + 그 인덱스 (--all: 실험 002·004·006까지)
 uv run ragkit export-onnx models/multilingual-e5-small   # ONNX 변환 (배포 기본 백엔드)
 uv run ragkit quantize models/multilingual-e5-small      # INT8 양자화 → models/multilingual-e5-small-int8
 uv run ragkit prune-vocab models/multilingual-e5-small   # 어휘 가지치기 → -pruned (이어서 export-onnx, quantize)

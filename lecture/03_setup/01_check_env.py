@@ -47,6 +47,9 @@ GET_E5 = (
 )
 GET_DATA = f"uv run python scripts/data_version.py pull {DATA_VERSION}"
 FROM_DRIVE = "강사 Drive에서 받아 {path}에 둔다 (받는 스크립트 없음)"
+GET_FINETUNED = (
+    "uv run python scripts/finetuned_drive.py download {name}   # 모델 + 인덱스"
+)
 PLACEHOLDER_KEYS = {"", "your_gemini_api_key_here"}
 
 
@@ -193,7 +196,7 @@ def model_checks() -> list[Check]:
             f"{rel(FINETUNED)} (파인튜닝, 실험 010 최고)",
             (FINETUNED / "model.safetensors").exists(),
             size_mb(FINETUNED) if FINETUNED.exists() else "",
-            FROM_DRIVE.format(path=rel(FINETUNED)),
+            GET_FINETUNED.format(name=FINETUNED.name),
             {0, 3},
         ),
     ]
@@ -203,7 +206,7 @@ def model_checks() -> list[Check]:
             Check(
                 f"{rel(path)} (실험 010 비교용)",
                 (path / "model.safetensors").exists(),
-                fix=FROM_DRIVE.format(path=rel(path)),
+                fix=GET_FINETUNED.format(name=name),
                 labs={3},
                 optional=True,
             )
@@ -294,33 +297,41 @@ def data_checks() -> list[Check]:
 
 def index_checks() -> list[Check]:
     targets = [
-        (model_key(E5), "학습 전 e5", f"uv run ragkit index   # {E5}", {0, 4, 5}),
+        (
+            model_key(E5),
+            "학습 전 e5",
+            f"uv run ragkit index   # {E5}",
+            {0, 4, 5},
+            f"uv run python scripts/finetuned_drive.py download {model_key(E5)}",
+        ),
         (
             model_key(E5, FINETUNED) if FINETUNED.exists() else "r001_A-<학습 시각>",
             "파인튜닝 r001_A",
             f"uv run ragkit index --checkpoint {rel(FINETUNED)} --backend torch",
             {0},
+            GET_FINETUNED.format(name=FINETUNED.name),
         ),
         (
             f"{E5_DIR.name}-int8",
             "INT8",
             f"uv run ragkit index --model {rel(MODELS / (E5_DIR.name + '-int8'))}",
             {4},
+            None,
         ),
         (
             f"{E5_DIR.name}-pruned-int8",
             "가지치기 + INT8",
             f"uv run ragkit index --model {rel(MODELS / (E5_DIR.name + '-pruned-int8'))}",
             {4},
+            None,
         ),
     ]
     checks = []
-    for key, label, build, labs in targets:
+    for key, label, build, labs, get in targets:
         path = default_index_path(key)
         fix = (
-            FROM_DRIVE.format(path=rel(path.parent))
-            + f"\n        직접 만들기(수 분~십여 분): {build}"
-        )
+            get or FROM_DRIVE.format(path=rel(path.parent))
+        ) + f"\n        직접 만들기(수 분~십여 분): {build}"
         detail = size_mb(path) if path.exists() else ""
         checks.append(Check(f"{rel(path)} ({label})", path.exists(), detail, fix, labs))
     return checks

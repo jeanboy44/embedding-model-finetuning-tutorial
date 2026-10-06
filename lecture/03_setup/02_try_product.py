@@ -13,9 +13,10 @@
 받은 모델·인덱스로 검색만 하므로 `--run` 모드는 없다.
 
 사전 준비 (uv run python lecture/03_setup/01_check_env.py 로 한 번에 확인):
-    models/multilingual-e5-small, models/finetuned/r001_A        # 강사 Drive
-    data/processed/index/multilingual-e5-small.sqlite            # 강사 Drive (또는 uv run ragkit index)
-    data/processed/index/r001_A-<학습 시각>.sqlite                # 강사 Drive
+    models/multilingual-e5-small                                 # scripts/download_model_hf.py
+    models/finetuned/r001_A + 그 인덱스                           # scripts/finetuned_drive.py download
+    data/processed/index/multilingual-e5-small.sqlite            # (위 명령이 함께 받는다. 또는 uv run ragkit index)
+    data/processed/index/r001_A-<학습 시각>.sqlite                # (위 명령이 함께 받는다)
     파인튜닝 모델은 ONNX로 바꾸지 않았으면 torch로 연다 (uv sync --all-packages --all-extras)
 
 실행:
@@ -91,7 +92,9 @@ def stop(message: str) -> None:
 def open_searchers() -> tuple[Searcher, Searcher, str]:
     """학습 전 e5와 파인튜닝 모델을 연다. 파인튜닝 모델은 ONNX가 없으면 torch로 연다."""
     if not (FINETUNED / "config.json").exists():
-        stop(f"파인튜닝 모델이 없습니다: {rel(FINETUNED)} (강사 Drive에서 받는다)")
+        stop(
+            f"파인튜닝 모델이 없습니다: {rel(FINETUNED)} (uv run python scripts/finetuned_drive.py download)"
+        )
     backend = "onnx" if (FINETUNED / "onnx" / "model.onnx").exists() else "torch"
     try:
         base = Searcher.open()
