@@ -29,7 +29,7 @@
     <h2>세 가지를 잰다</h2>
     <div class="cols c3">
       <div class="col y22-top"><div class="when">1</div><h3>지표</h3>무엇을 좋은 검색이라고 부를지 정한다</div>
-      <div class="col y22-top"><div class="when">2</div><h3>베이스 모델</h3>파인튜닝할 작은 모델과 더 큰 모델을 같은 조건에서</div>
+      <div class="col y22-top"><div class="when">2</div><h3>출발점</h3>파인튜닝할 작은 모델(e5-small)을 학습 없이</div>
       <div class="col y22-top"><div class="when">3</div><h3>쿼리 확장</h3>질문당 LLM 한 번으로 얼마나 오르는지</div>
     </div>
   </section>
@@ -56,13 +56,13 @@
   </section>
 
   <section class="slide">
-    <div class="label">2 · 베이스 모델</div>
-    <h2>작은 모델과 큰 모델</h2>
+    <div class="label">2 · 출발점</div>
+    <h2>학습 없는 작은 모델</h2>
     <div class="bars" style="max-width:1150px">
-      <div class="bar"><div class="row"><span>multilingual-e5-small · 118M · 384차원 <span class="muted">(파인튜닝 대상)</span></span><b>R@5 0.513</b></div><div class="track"><div class="fill" data-w="51.3" style="--c:var(--orange)"></div></div></div>
-      <div class="bar"><div class="row"><span>EmbeddingGemma-300m · 308M · 768차원</span><b>R@5 0.743</b></div><div class="track"><div class="fill" data-w="74.3" style="--c:var(--apricot)"></div></div></div>
+      <div class="bar"><div class="row"><span>multilingual-e5-small · 118M · 384차원 · R@5</span><b>0.513</b></div><div class="track"><div class="fill" data-w="51.3" style="--c:var(--orange)"></div></div></div>
+      <div class="bar"><div class="row"><span>같은 모델 · R@10</span><b>0.601</b></div><div class="track"><div class="fill" data-w="60.1" style="--c:var(--apricot)"></div></div></div>
     </div>
-    <p class="lead" style="margin-top:48px">2.6배 큰 모델이 0.23 높다. 작은 모델은 질문 둘 중 하나에서 정답을 5위 안에 못 올린다.</p>
+    <p class="lead" style="margin-top:48px">질문 둘 중 하나에서 정답을 5위 안에 못 올린다. 이 강의는 이 작은 모델 하나로 끝까지 간다(CPU 배포를 생각해서).</p>
   </section>
 
   <section class="slide">
@@ -71,7 +71,6 @@
     <table class="tbl" style="max-width:1150px">
       <tr><th>R@5</th><th class="num">keyword</th><th class="num">question</th><th class="num">situation</th></tr>
       <tr><td>e5-small</td><td class="num">0.725</td><td class="num">0.517</td><td class="num">0.403</td></tr>
-      <tr><td>EmbeddingGemma</td><td class="num">0.882</td><td class="num">0.730</td><td class="num">0.685</td></tr>
       <tr class="hl"><td>질문 수</td><td class="num">542</td><td class="num">911</td><td class="num">1,073</td></tr>
     </table>
     <p class="lead" style="margin-top:44px">키워드는 조문과 단어가 겹쳐 쉽다. 상황 설명형에서 작은 모델이 무너진다. 파인튜닝이 노릴 곳이 여기다.</p>
@@ -94,7 +93,6 @@
       <tr><th>선택지</th><th class="num">R@5</th><th class="num">R@10</th><th class="num">질문당 LLM 호출</th><th class="num">모델 크기</th></tr>
       <tr><td>e5-small</td><td class="num">0.513</td><td class="num">0.601</td><td class="num">0</td><td class="num">118M</td></tr>
       <tr><td>e5-small + 쿼리 확장</td><td class="num empty">측정 예정</td><td class="num empty">측정 예정</td><td class="num">1</td><td class="num">118M + LLM</td></tr>
-      <tr><td>EmbeddingGemma</td><td class="num">0.743</td><td class="num">0.817</td><td class="num">0</td><td class="num">308M</td></tr>
     </table>
     <p class="meta muted" style="margin-top:36px;font-size:20px">쿼리 확장은 무료 등급 한도(하루 20회) 때문에 test 2,526개를 아직 다 돌리지 못했다</p>
   </section>
@@ -104,19 +102,17 @@
     <h2>학습해야 하는가</h2>
     <div class="cols c3">
       <div class="col"><h3>그대로 쓰면</h3>e5-small은 R@5 0.51. 검색에서 놓친 조문은 LLM도 답할 수 없다</div>
-      <div class="col"><h3>큰 모델로 바꾸면</h3>0.74지만 2.6배 크고 느리다. 7교시의 배포 최적화가 더 어려워진다</div>
+      <div class="col"><h3>큰 모델로 바꾸면</h3>모델이 크고 느려진다. 7교시의 CPU 배포 최적화가 어려워진다</div>
       <div class="col"><h3>쿼리 확장을 붙이면</h3>질문마다 LLM 비용을 낸다</div>
     </div>
-    <p class="lead" style="margin-top:48px">다음 시간의 질문: <b>작은 모델을 한 번 학습해서 큰 모델을 따라잡을 수 있나</b></p>
+    <p class="lead" style="margin-top:48px">다음 시간의 질문: <b>작은 모델을 한 번 학습해서 얼마나 올릴 수 있나</b></p>
   </section>
 
   <section class="slide">
     <div class="label">실행</div>
     <h2>돌려 볼 명령</h2>
     <div class="cmd">
-      <span class="c"># 베이스 모델 비교 (실험 005, 학습 없음)</span><br>
-      uv run ragkit compare experiments/exp_005_base_model_comparison/config.yaml<br>
-      <span class="c"># 모델 하나만 재기</span><br>
+      <span class="c"># 학습 없는 e5-small 재기 (test)</span><br>
       uv run ragkit evaluate intfloat/multilingual-e5-small --split test<br>
       <span class="c"># 쿼리 확장 (실험 003, 받은 확장 캐시로 API 키 없이)</span><br>
       uv run ragkit compare experiments/exp_003_llm_query_expansion/config.yaml

@@ -50,15 +50,14 @@ AI 코딩 도구가 오면서 DS 한 사람이 그 범위까지 직접, 빠르�
 |---|---|---|
 | e5 base | R@k, MRR, nDCG | 0 |
 | e5 base + 쿼리 확장 | | 1 |
-| EmbeddingGemma base (더 큰 모델) | | 0 |
 
-실습 3 비교표 (실험 007, `feat/finetune-runs`): base e5 / Gemma / 002 전체 학습 / 004 LoRA / 006 배치 128. 실습 2 표의 쿼리 확장 행을 옆에 두고 "파인튜닝은 질문당 LLM 비용을 학습 1회로 옮긴다"를 확인한다.
+실습 3 비교표 (실험 010 `experiments/exp_010_lecture_comparison`, test R@5): 학습 전 e5 0.513 / 002 전체 학습 0.669 / 004 LoRA 0.641 / 006 배치 128 0.659 / 001 다시 캔 오답 3개 0.723 (`runs/001_hard_negatives`). 실습 2 표의 쿼리 확장 행을 옆에 두고 "파인튜닝은 질문당 LLM 비용을 학습 1회로 옮긴다"를 확인한다. EmbeddingGemma는 강의에서 뺐다(2026-10-06). 젬마가 든 실험 005·007은 기록으로만 남긴다.
 
 운영 원칙: 무거운 산출물(모델, 파인튜닝 모델, 인덱스, 질문, split, 확장 쿼리 캐시)은 미리 만들어 Drive로 배포하고, 스크립트는 "받은 산출물로 확인" 모드와 "작은 부분집합으로 직접 실행" 모드를 둔다.
 
 ### 다음 작업 (2026-09-30)
 
-1. 파인튜닝 재학습 — 지금 `models/finetuned/exp_002`는 옛 split으로 학습해 새 test(2,526개)와 겹칠 수 있다. 새 split으로 002·004·006 재학습 후 실험 007 (`feat/finetune-runs`)
+1. ~~파인튜닝 재학습~~ — 완료(2026-10-01, 실험 007). 이어서 다시 캔 오답으로 0.723(실험 001, 2026-10-03)
 2. 쿼리 확장 평가 — 코드 완료(`ragkit expand`, `evaluate --expand`, 실험 003 설정). gemini-2.5-flash-lite 무료 등급은 하루 20회라 실행 보류(2026-09-30), 캐시 17/2,526. 데이터 확보는 사용자 결정으로 미룸(2026-10-01). 실습 2 자료는 확장 행을 비워 두고 만든다
 3. 위 두 비교표 채우기
 4. 교시 기준으로 `lecture/` 재구성 (`docs/HANDSON_PLAN.md`). 폴더 이름은 `tutorials` → `lecture`로 바꿨다(2026-10-01)
@@ -100,7 +99,7 @@ scripts/               # 일회성 데이터 준비 (prepare_law_data, 질문 Dr
 - 도입(왜 파인튜닝인가): 코퍼스(약 700만 자)는 LLM에 통째로 넣을 수 없다 → 에이전트형 탐색 vs 임베딩 RAG → 검색에서 놓친 조문은 답할 수 없으니 검색 누락이 정확도 상한이 된다 → 쿼리 확장으로 메우면 쿼리마다 LLM 비용이 늘어 주객이 바뀐다 → 파인튜닝으로 그 비용을 학습 1회로 옮긴다
   - 학습 데이터 생성: 운영이라면 저가 API, 개발은 SKILL.md, 강의에서는 skill 약식으로 한다
   - 비교 실습: 순수 LLM / RAG / RAG+쿼리 확장
-- 베이스 모델 비교: 파인튜닝 대상 `intfloat/multilingual-e5-small`과 비교 대상 `google/embeddinggemma-300m`을 같은 평가셋으로 비교 (`docs/adr/001-model-selection.md`)
+- 베이스 모델: 파인튜닝 대상 `intfloat/multilingual-e5-small` 하나로 진행한다. 학습 전 성능이 출발점이다 (`docs/adr/001-model-selection.md`). EmbeddingGemma와의 비교(실험 005·007)는 2026-10-06 강의에서 뺐다
 - 데이터 준비: legalize-kr 법령 코퍼스 (`scripts/prepare_law_data.py`, 긴 조문은 항·호 단위로 나눠 약 2.6만 문서), Claude 스킬로 질문·정답 조문·hard negative 생성 (`.claude/skills/law-question-gen/`, 실습 폴더 `lecture/01_data/README.md`는 스킬 사용법만 안내), 질문 공유는 `scripts/law_questions_drive.py`
 - 분할: 법령 단위(확정). 테마마다 법령 ~20%는 test, ~10%는 dev. 학습 때 본 적 없는 법령에서도 좋아지는지 측정
 - 파인튜닝: 전체 학습(`exp_002_finetuned`)과 LoRA(`exp_004_lora`)를 따로 실험. MNRL + `BatchSamplers.NO_DUPLICATES`, e5 접두어는 코드에서 붙인다
