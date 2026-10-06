@@ -87,7 +87,7 @@ class Searcher:
 
     def __post_init__(self) -> None:
         if self.llm_available is None:
-            self.llm_available = self.stream is not None or bool(get_settings().gemini_api_key)
+            self.llm_available = self.stream is not None or get_settings().has_gemini_key
         if self.stream is None:
             from ragkit.models.gemini_client import stream_with_usage
 
@@ -107,21 +107,26 @@ class Searcher:
             model: 임베딩 모델 이름 또는 폴더. 기본값 Settings.embedding_model_name.
                 MLflow 레지스트리 주소(models:/law-embedder@champion)도 받는다 (extra [mlflow]).
             checkpoint: 파인튜닝한 모델 폴더.
-            backend: onnx | torch | st. 기본값 Settings.embedding_backend.
+            backend: onnx | torch | st. 기본값 Settings.embedding_backend. 주지 않았는데
+                파인튜닝 폴더에 onnx/model.onnx가 없으면 torch로 연다(`ragkit evaluate`와 같은 규칙).
             index_path: 인덱스 파일. 기본값 data/processed/index/<모델 키>.sqlite.
 
         Raises:
             FileNotFoundError: 인덱스 파일이 없을 때 (만드는 명령을 안내한다).
         """
-        from ragkit.embeddings import create_embedding_fn
+        from ragkit.embeddings import choose_backend, create_embedding_fn
 
         model = model or get_settings().embedding_model_name
         key = model_key(model, checkpoint)
         if model.startswith("models:/"):
             model, key = tracking.resolve_model(model)  # 등록 버전의 폴더 + 그 모델로 만든 인덱스 키
         index = VectorIndex.open(index_path or default_index_path(key))
+        profile = get_profile(checkpoint or model)
+        no_onnx = checkpoint is not None and not (Path(checkpoint) / "onnx" / "model.onnx").exists()
+        if backend is None and no_onnx and choose_backend(profile, None) == "onnx" and "torch" in profile.backends:
+            backend = "torch"
         embed_fn = create_embedding_fn(model, checkpoint_path=checkpoint, backend=backend)
-        return cls(index, embed_fn, profile=get_profile(checkpoint or model))
+        return cls(index, embed_fn, profile=profile)
 
     @property
     def model_key(self) -> str:

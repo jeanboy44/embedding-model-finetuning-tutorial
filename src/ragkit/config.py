@@ -6,6 +6,8 @@ from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+GEMINI_KEY_PLACEHOLDER = "your_gemini_api_key_here"  # .env.example의 값
+
 
 class Settings(BaseSettings):
     """프로젝트 전역 설정.
@@ -45,7 +47,7 @@ class Settings(BaseSettings):
 
     # 임베딩 추론 백엔드: onnx(배포 기본, torch 불필요) | torch(extra [torch])
     embedding_backend: Literal["onnx", "torch"] = "onnx"
-    # 임베딩 속도 옵션 (lecture/03_optimize에서 비교)
+    # 임베딩 속도 옵션 (lecture/appendix/embedding_speed.py에서 비교)
     embedding_device: str = "auto"  # torch: auto(cuda → mps → cpu) | cuda | mps | cpu
     embedding_sort_by_length: bool = True  # 길이순 배치로 패딩 줄이기
     embedding_num_threads: int | None = None  # CPU 스레드 수. None이면 라이브러리 기본값
@@ -61,6 +63,12 @@ class Settings(BaseSettings):
     # 데이터·모델 경로의 기준 폴더. 설치된 패키지 위치(__file__)는 저장소와 무관하므로
     # 환경 변수 RAGKIT_PROJECT_ROOT가 없으면 명령을 실행한 폴더(cwd)를 쓴다.
     ragkit_project_root: Path | None = None
+
+    @property
+    def has_gemini_key(self) -> bool:
+        """GEMINI_API_KEY가 실제로 들어 있는가. .env.example의 자리 표시 값은 없는 것으로 본다."""
+        key = self.gemini_api_key.strip()
+        return bool(key) and key != GEMINI_KEY_PLACEHOLDER
 
     @property
     def project_root(self) -> Path:

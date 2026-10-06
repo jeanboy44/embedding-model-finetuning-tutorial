@@ -123,6 +123,7 @@ def train(
     splits: Path | None = None,
     corpus: Path | None = None,
     model: str | None = None,
+    output_dir: Path | None = None,
     max_steps: int | None = None,
     limit: int | None = None,
     dev_eval: bool = True,
@@ -134,6 +135,7 @@ def train(
         splits: ragkit split 출력 폴더. 기본값은 data/splits.
         corpus: 코퍼스 경로. 기본값은 data/processed/law_docs.json.
         model: 설정의 base 모델 대신 쓸 모델 이름 또는 폴더.
+        output_dir: 설정의 output_dir 대신 저장할 폴더. 맛보기 학습이 받은 모델을 덮어쓰지 않게 할 때.
         max_steps: 학습 step 수 제한 (강의에서 짧게 돌려 볼 때).
         limit: 학습 질문 수 제한.
         dev_eval: 학습 전·후 dev 평가(전체 코퍼스 임베딩 2회). --no-dev-eval로 끈다.
@@ -144,6 +146,7 @@ def train(
     train_config = train_module.load_train_config(config)
     overrides = {
         "model": model,
+        "output_dir": output_dir,
         "max_steps": max_steps,
         "limit": limit,
         "dev_eval": None if dev_eval else False,

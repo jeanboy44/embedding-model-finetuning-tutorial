@@ -308,6 +308,8 @@ class Span:
 
     def end(self, outputs: Any = None, attributes: dict[str, Any] | None = None, error: str | None = None) -> None:
         if self._live:
+            if error:
+                attributes = {**(attributes or {}), "error": error}
             self._live.end(outputs=outputs, attributes=attributes, status="ERROR" if error else "OK")
 
 
