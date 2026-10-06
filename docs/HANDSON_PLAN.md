@@ -29,7 +29,7 @@ lecture/
 
 | 폴더 | 교시 | 업무 | 스크립트 (← 기존 파일) | 담당 |
 |---|---|---|---|---|
-| `00_setup` | 3 | 환경 설정, 완성품 먼저 써 보기, RAG 필요성 | `01_doctor.py` (신규: 설치·모델·인덱스·API 키 점검)<br>`02_try_product.py` (신규: 웹·CLI·MCP를 base vs 파인튜닝으로 나란히)<br>`03_why_rag.py` ← `lecture/01_ds_core/01_build_rag.py` | f7 |
+| `00_setup` | 3 | 환경 설정, 완성품 먼저 써 보기, 학습 전후 비교 | `01_doctor.py` (점검 · 동작 확인 · --fix)<br>`02_try_product.py` (질문 넷을 학습 전 vs 파인튜닝으로 나란히)<br>`README.md` (CLI 명령으로 학습 전후 비교, 2026-10-07 `03_why_rag.py`를 대신함) | f7 |
 | `01_data` | 4 | 코퍼스, 질문 생성(Claude 스킬), 법령 단위 분할 | `README.md` (질문 생성은 `.claude/skills/law-question-gen` 스킬을 쓰라는 안내, 2026-10-01)<br>나머지 (신규) | 42 |
 | `02_evaluate` | 5 | 평가셋·지표, 학습 없는 선택지 비교: 학습 전 e5 + LLM 쿼리 확장(실험 003). 강의는 e5로만 진행하므로 베이스 모델 비교(실험 005)는 뺐다(2026-10-06) | `01_metrics.py` · `02_query_expansion.py`(받은 확장 캐시 17개로 비교, `--run`은 키가 있으면 3개만 새로 확장) | 42 |
 | `03_train` | 6 | DS 관점 실험 iteration과 분석(실험 간 비교, 유형·테마별, 실패 사례, 한계) + AI 시대에 더 쉽게 하는 법. 학습은 원리 짧게 + 맛보기, 받은 모델 사용 | `01_train_taste.py`(`--run`: `ragkit train --output-dir <임시> --max-steps 30`) · `02_compare_runs.py`(실험 010, paired-test) · `03_error_analysis.py`(r001_A, test) | 42 |

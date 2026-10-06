@@ -52,7 +52,7 @@ LLM 단계(답변 생성)는 `.env`에 `GEMINI_API_KEY`가 필요합니다. [Goo
 |---|---|---|
 | 0 (3) | `lecture/03_setup/01_doctor.py` | 설치·모델·데이터·인덱스·API 키 점검, 빠진 것을 받는 명령 |
 | 0 (3) | `lecture/03_setup/02_try_product.py` | 같은 질문을 학습 전 e5 vs 파인튜닝 모델로 나란히, 제품 띄우는 법 |
-| 0 (3) | `lecture/03_setup/03_why_rag.py` | 통째로 넣으면? → 인덱스 → 검색 → 조문 근거 답변 |
+| 0 (3) | `lecture/03_setup/README.md` | CLI로 질문 넷 → `--checkpoint`로 학습 전후 비교 (명령 모음) |
 | 1 (4) | `lecture/04_data/01_corpus.py` | 코퍼스 통계, 항·호 분할, 길이 분포 |
 | 1 (4) | `lecture/04_data/02_questions.py` | 질문 유형·테마, hard negative, 검증 스크립트 (질문 생성은 Claude 스킬, `lecture/04_data/README.md`) |
 | 1 (4) | `lecture/04_data/03_split.py` | 법령 단위 분할과 왜 법령 단위인가 |
