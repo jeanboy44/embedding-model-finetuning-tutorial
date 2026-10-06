@@ -1,0 +1,10 @@
+# 실험 011: 에이전트 + CLI 스킬 — 학습 전 e5 vs 파인튜닝 e5 (r001_A)
+# Claude Code(claude -p --model sonnet)에 korean-law-search 스킬을 붙이고, 스킬 명령에 박힌 모델만 바꿔 같은 질문을 묻는다.
+# 질문: test의 situation 질문 10개 (seed 7). 판정: 답에 정답 조(조 단위 id)를 근거로 인용했는가.
+# 실행: uv run python lecture/08_product/02_agent_skill.py --run --questions 10 --out experiments/exp_011_agent_skill/results
+name: agent_skill
+questions: data/splits/test.jsonl
+agent: claude -p --model sonnet --max-turns 12
+models:
+  - intfloat/multilingual-e5-small   # 학습 전
+  - models/finetuned/r001_A          # 파인튜닝 (실습 3의 최종 모델)

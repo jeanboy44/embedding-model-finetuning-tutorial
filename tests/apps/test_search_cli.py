@@ -89,3 +89,33 @@ def test_show_piece_and_article(run, searcher) -> None:
 def test_show_unknown_id_fails(run, searcher) -> None:
     code, _, err = run(["show", "제999조"], searcher)
     assert code == 1 and "없는 조문 id: 제999조" in err
+
+
+def test_skill_show_fills_command_and_model_options(run, tmp_path) -> None:
+    """설치할 SKILL.md에 실행 명령과 모델 옵션이 박힌다 (에이전트가 그 모델로 검색하게)."""
+    code, out, _ = run(
+        ["skill", "show", "--command", "ragkit-search", "--checkpoint", str(tmp_path / "ft"), "--backend", "torch"], None
+    )
+
+    assert code == 0
+    assert out.startswith("---\nname: korean-law-search\n")
+    assert f'ragkit-search search "<검색어>" -k 5 --json --checkpoint {tmp_path / "ft"} --backend torch' in out
+    assert "{command}" not in out and "{options}" not in out
+
+
+@pytest.mark.parametrize(("agent", "folder"), [("claude", ".claude"), ("gemini", ".gemini")])
+def test_skill_install_writes_agent_skill_folder(run, tmp_path, agent, folder) -> None:
+    """Claude Code는 .claude/skills/, Gemini CLI는 .gemini/skills/ 아래에 같은 SKILL.md를 쓴다."""
+    code, out, _ = run(["skill", "install", "--agent", agent, "--project-dir", str(tmp_path), "--command", "x"], None)
+
+    path = tmp_path / folder / "skills" / "korean-law-search" / "SKILL.md"
+    assert code == 0
+    assert str(path) in out
+    assert 'x search "<검색어>" -k 5 --json\n' in path.read_text(encoding="utf-8")
+
+
+def test_default_skill_command_runs_from_repo(tmp_path) -> None:
+    """기본 실행 명령은 저장소 환경(uv run --directory)이라 에이전트가 어느 폴더에서 불러도 된다."""
+    from ragkit_search import agent_skill
+
+    assert agent_skill.default_command(tmp_path) == f"uv run --directory {tmp_path} --package ragkit-search ragkit-search"

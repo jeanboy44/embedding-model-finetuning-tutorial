@@ -1,5 +1,5 @@
 """
-실습 5-3 (8교시): 사용자 화면 — NotebookLM형 '법령 노트' 웹앱 (apps/web, React)
+실습 5-4 (8교시): 사용자 화면 — NotebookLM형 '법령 노트' 웹앱 (apps/web, React)
 ================================================================================
 
 학습 목표:
@@ -15,9 +15,9 @@
     Node.js 20+, pnpm (corepack enable)
 
 실행:
-    uv run python lecture/08_product/03_web_app.py            # 서버 실행 → 브라우저로 접속 (Ctrl+C로 끝)
-    uv run python lecture/08_product/03_web_app.py --check    # 화면·API 응답만 확인하고 바로 종료
-    uv run python lecture/08_product/03_web_app.py --run      # 화면을 다시 빌드한 뒤 실행 (pnpm install + build)
+    uv run python lecture/08_product/04_web_app.py            # 서버 실행 → 브라우저로 접속 (Ctrl+C로 끝)
+    uv run python lecture/08_product/04_web_app.py --check    # 화면·API 응답만 확인하고 바로 종료
+    uv run python lecture/08_product/04_web_app.py --run      # 화면을 다시 빌드한 뒤 실행 (pnpm install + build)
 
 플래그:
     기본    apps/web/dist가 있으면 그대로 쓴다 (없을 때만 빌드)

@@ -1,5 +1,5 @@
 """
-실습 5-2 (8교시): MCP 서버 — Claude 같은 에이전트가 법령을 검색하게 하기 (apps/mcp, ragkit-mcp)
+실습 5-3 (8교시): MCP 서버 — 에이전트를 붙이는 두 번째 방법 (apps/mcp, ragkit-mcp)
 ================================================================================================
 
 학습 목표:
@@ -15,7 +15,7 @@
     uv run ragkit index             # 또는 Drive에서 받은 data/processed/index/
 
 실행:
-    uv run python lecture/08_product/02_mcp_server.py
+    uv run python lecture/08_product/03_mcp_server.py
 """
 
 import asyncio
@@ -96,10 +96,10 @@ async def main() -> None:
         print("  " + article["pieces"][0]["text"][:150].replace("\n", " ") + " …")
 
         print(
-            '\n잘못된 입력: search_laws(laws=["없는법"]) → 에이전트가 읽고 고칠 수 있는 오류'
+            '\n잘못된 입력: search_laws(laws=["근로기준"]) → 비슷한 이름을 알려 줘 에이전트가 고쳐 다시 부른다'
         )
         bad = await session.call_tool(
-            "search_laws", {"query": "수당", "laws": ["없는법"]}
+            "search_laws", {"query": "수당", "laws": ["근로기준"]}
         )
         print(f"  is_error={bad.is_error}: {text_of(bad)[:150]}")
 
@@ -120,4 +120,11 @@ Claude Desktop (claude_desktop_config.json의 mcpServers):
 
 등록 후 Claude에게: "편의점 알바도 주휴수당 받을 수 있는지 법 조문 근거로 알려줘"
 → Claude가 list_laws / search_laws / get_article을 스스로 골라 부른다.
+
+CLI + 스킬(실습 5-2)과 비교:
+  MCP          서버 프로세스를 등록한다. 도구 이름·설명·입력 스키마로 에이전트가 쓰는 법을 안다.
+               MCP를 지원하는 앱(Claude Desktop 등)이면 어디서나, 터미널이 없어도 쓴다
+  CLI + 스킬   SKILL.md 한 파일을 둔다. 에이전트가 셸로 CLI를 부르고, 사람도 같은 명령을 쓴다.
+               셸을 쓰는 코딩 에이전트(Claude Code, Gemini CLI)에 가볍게 붙는다
+같은 Searcher를 쓰므로 검색 결과는 같다. 차이는 연결 방식과 쓰는 곳이다.
 """)

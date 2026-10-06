@@ -4,7 +4,7 @@ import json
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Literal
 
 import cyclopts
 from cyclopts import Parameter
@@ -194,4 +194,66 @@ def show(
         print(piece.text)
     if url := hit.metadata.get("source_url"):
         print(f"\n출처: {url}")
+    return 0
+
+
+skill_app = cyclopts.App(
+    name="skill",
+    help="에이전트 스킬: Claude Code·Gemini CLI가 이 CLI로 법령을 찾게 하는 SKILL.md.",
+    default_parameter=Parameter(negative=()),
+)
+app.command(skill_app)
+
+
+def _render_skill(options: SearcherOptions, command: str | None) -> str:
+    from ragkit.config import get_settings
+    from ragkit_search import agent_skill
+
+    command = command or agent_skill.default_command(get_settings().project_root.resolve())
+    flags = agent_skill.option_flags(
+        model=options.model, checkpoint=options.checkpoint, backend=options.backend, index=options.index
+    )
+    return agent_skill.render(command, flags)
+
+
+@skill_app.command(name="show")
+def skill_show(*, command: str | None = None, options: SearcherOptions | None = None) -> int:
+    """설치할 SKILL.md 내용을 출력한다.
+
+    Args:
+        command: 에이전트가 쓸 실행 명령. 기본값은 이 저장소에서 uv run으로 실행하는 명령.
+    """
+    print(_render_skill(options or SearcherOptions(), command), end="")
+    return 0
+
+
+@skill_app.command(name="install")
+def skill_install(
+    *,
+    agent: Literal["claude", "gemini"] = "claude",
+    user: bool = False,
+    project_dir: Path | None = None,
+    name: str | None = None,
+    command: str | None = None,
+    options: SearcherOptions | None = None,
+) -> int:
+    """SKILL.md를 에이전트의 스킬 폴더에 쓴다.
+
+    Claude Code는 .claude/skills/, Gemini CLI는 .gemini/skills/ 아래를 읽는다.
+    모델 옵션(--checkpoint 등)을 주면 에이전트가 그 모델로 검색하도록 명령에 박아 넣는다.
+
+    Args:
+        agent: claude | gemini.
+        user: 프로젝트 대신 사용자 폴더(~/.claude, ~/.gemini)에 설치한다 (모든 프로젝트에서 쓰임).
+        project_dir: 설치할 프로젝트 폴더. 기본값은 지금 폴더.
+        name: 스킬 이름(폴더 이름). 기본값 korean-law-search.
+        command: 에이전트가 쓸 실행 명령. 기본값은 이 저장소에서 uv run으로 실행하는 명령.
+    """
+    from ragkit_search import agent_skill
+
+    base = Path.home() if user else (project_dir or Path.cwd())
+    text = _render_skill(options or SearcherOptions(), command)
+    path = agent_skill.install(agent, base, text, name or agent_skill.SKILL_NAME)
+    print(f"설치: {path}")
+    print("에이전트를 새로 열면 스킬 목록에 보인다. 법령 질문을 하면 이 스킬로 조문을 찾는다.")
     return 0
