@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>강의 1~8교시 한눈에</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&family=JetBrains+Mono:wght@400&display=swap">
+<style>
+  :root {
+    --ink: #1f2a37;
+    --body: #4a5361;
+    --muted: #6b7480;
+    --line: #e1e4e8;
+    --card: #fcfcfb;
+    --orange: #ec9a3e;
+    --orange-ink: #b8650f;
+    --orange-bg: #fdf1e3;
+    --blue: #4f93d8;
+    --blue-ink: #2d6db0;
+    --blue-bg: #e8f1fa;
+    --sage: #d6e0cc;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Noto Sans KR", "Pretendard", Arial, sans-serif;
+    color: var(--ink);
+    background: linear-gradient(180deg, #f5f6f7 0%, #e8eaed 100%) fixed;
+    line-height: 1.55;
+  }
+  main {
+    max-width: 1280px;
+    margin: 40px auto;
+    padding: 48px 56px 56px;
+    background: var(--card);
+    border-radius: 18px;
+    box-shadow: 0 10px 40px rgba(31, 42, 55, 0.08);
+  }
+  .eyebrow { font-size: 14px; font-weight: 700; color: var(--muted); margin: 0 0 8px; }
+  h1 { font-size: 34px; font-weight: 800; letter-spacing: -0.5px; margin: 0 0 12px; }
+  .lead { font-size: 16px; color: var(--body); margin: 0 0 28px; max-width: 880px; }
+  .flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 0 0 32px; }
+  .flow div { border-top: 4px solid var(--line); padding: 10px 0 0; }
+  .flow b { display: block; font-size: 15px; }
+  .flow span { font-size: 13px; color: var(--muted); }
+  .flow .theory { border-color: #c9ced6; }
+  .flow .lab0 { border-color: var(--sage); }
+  .flow .y22 { border-color: var(--orange); }
+  .flow .y26 { border-color: var(--blue); }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 980px; }
+  th {
+    text-align: left; font-size: 12px; font-weight: 700; color: var(--muted);
+    padding: 10px 12px; border-bottom: 2px solid var(--line); white-space: nowrap;
+  }
+  td { padding: 14px 12px; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--body); }
+  td.period { font-size: 22px; font-weight: 800; color: var(--ink); white-space: nowrap; }
+  td.title b { display: block; color: var(--ink); font-size: 15px; }
+  .tag {
+    display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px;
+    border-radius: 999px; margin: 0 0 6px; white-space: nowrap;
+  }
+  .tag.theory { background: #eef0f2; color: var(--muted); }
+  .tag.lab0 { background: #eef3e8; color: #5d6b50; }
+  .tag.y22 { background: var(--orange-bg); color: var(--orange-ink); }
+  .tag.y26 { background: var(--blue-bg); color: var(--blue-ink); }
+  .num { font-weight: 700; color: var(--ink); white-space: nowrap; }
+  code { font-family: "JetBrains Mono", monospace; font-size: 12px; background: #f2f3f5; padding: 1px 5px; border-radius: 4px; }
+  a { color: var(--blue-ink); font-weight: 700; text-decoration: none; white-space: nowrap; }
+  a:hover { text-decoration: underline; }
+  tr.y22 td.period { color: var(--orange-ink); }
+  tr.y26 td.period { color: var(--blue-ink); }
+  tfoot td { font-weight: 700; color: var(--ink); border-bottom: none; }
+  .story { margin: 32px 0 0; padding: 20px 24px; background: #f2f3f5; border-radius: 12px; font-size: 15px; }
+  .story b { color: var(--ink); }
+  .notes { margin: 20px 0 0; font-size: 13px; color: var(--muted); }
+  .notes li { margin: 4px 0; }
+  @media (max-width: 720px) {
+    main { margin: 0; padding: 28px 16px; border-radius: 0; }
+    h1 { font-size: 26px; }
+    .flow { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">AI 시대 생존법 · 내 업무 확장편</p>
+  <h1>강의 1~8교시 한눈에</h1>
+  <p class="lead">임베딩 모델 하나를 들고, 데이터 사이언티스트의 업무가 모델을 만드는 일에서 남이 쓰게 건네고 운영하는 일까지 넓어지는 과정을 하루에 따라간다. 교시마다 50분 수업 + 10분 휴식이고, 장표는 교시별 Slides 덱이다.</p>
+
+  <div class="flow">
+    <div class="theory"><b>1~2교시 · 이론</b><span>왜 하는가</span></div>
+    <div class="lab0"><b>3교시 · 실습 0</b><span>완성품을 먼저 써 본다</span></div>
+    <div class="y22"><b>4~6교시 · 2022 파트</b><span>DS 본업: 모델을 만든다</span></div>
+    <div class="y26"><b>7~8교시 · 2026 파트</b><span>확장: 모델을 건네고 운영한다</span></div>
+  </div>
+
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>교시</th><th>구분 · 주제</th><th>핵심 내용</th><th>핵심 숫자</th><th>실습 폴더</th><th>장표</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="period">1</td>
+        <td class="title"><span class="tag theory">이론</span><b>내 소개: DS의 2022와 2026</b></td>
+        <td>경력(SI → 제조지능화연구팀 → AX Lab), 유니콘 DS, 본업 다섯 단계. 변화 ① 방식: 실행은 에이전트가, 판단은 내가. 변화 ② 범위: 모델 + API에서 기획부터 운영까지 넓어지는 중(과도기)</td>
+        <td>—</td>
+        <td>—</td>
+        <td><a href="https://claude.ai/artifact/QsNeCea9tMhtxGTpHd89jh">34장</a></td>
+      </tr>
+      <tr>
+        <td class="period">2</td>
+        <td class="title"><span class="tag theory">이론</span><b>왜 임베딩 파인튜닝인가</b></td>
+        <td>임베딩 모델(하는 일 · 장점 · 한계) → 검색을 더 정확하게 하는 방법 다섯과 비용 비교 → 파인튜닝은 언제 쓰나 → 최근 연구(LLM이 만든 학습 데이터 · LoRA · 작은 모델 · 배포) → 오늘의 과제(법령 · e5-small) → 용어</td>
+        <td><span class="num">R@5 0.513</span><br>학습 전 출발점</td>
+        <td><code>02_concepts</code></td>
+        <td><a href="https://claude.ai/artifact/YCojzoPbMkeAamJ7WQhSEG">38장</a></td>
+      </tr>
+      <tr>
+        <td class="period">3</td>
+        <td class="title"><span class="tag lab0">실습 0</span><b>준비: 완성품부터 써 본다</b></td>
+        <td><code>01_doctor.py --fix</code>로 환경 점검 → 웹 화면(강사 시연) → 질문 넷을 CLI로 학습 전 모델에 → <code>--checkpoint</code>만 바꿔 학습 전후 비교</td>
+        <td><span class="num">65위 → 1위</span><br>주휴수당 질문 정답 순위</td>
+        <td><code>03_setup</code></td>
+        <td><a href="https://claude.ai/artifact/VuQyTKs7BHKu4Hsq5xy5Qc">14장</a></td>
+      </tr>
+      <tr class="y22">
+        <td class="period">4</td>
+        <td class="title"><span class="tag y22">실습 1 · 2022</span><b>데이터를 만든다</b></td>
+        <td>법령 조문을 검색 문서로, Claude 스킬로 질문 · 정답 조문 · 헷갈리는 오답 생성, 처음 보는 법령으로 재도록 법령 단위 분할</td>
+        <td><span class="num">법령 54 · 문서 25,967</span><br>질문 12,232</td>
+        <td><code>04_data</code></td>
+        <td><a href="https://claude.ai/artifact/LU4tYoQei2KW1AmzcqtEAq">16장</a></td>
+      </tr>
+      <tr class="y22">
+        <td class="period">5</td>
+        <td class="title"><span class="tag y22">실습 2 · 2022</span><b>평가: 학습해야 하는가</b></td>
+        <td>지표(Recall@k · MRR · nDCG)와 평가 조건, 학습 전 출발점과 말투별 성적, 쿼리 확장, 학습 없는 선택지 비교 → 학습할지 판단</td>
+        <td><span class="num">R@5 0.513</span><br>상황 설명 질문 0.403</td>
+        <td><code>05_evaluate</code></td>
+        <td><a href="https://claude.ai/artifact/ELMMxTeWq6z3uPQcXWVR6U">14장</a></td>
+      </tr>
+      <tr class="y22">
+        <td class="period">6</td>
+        <td class="title"><span class="tag y22">실습 3 · 2022</span><b>학습 실험과 분석</b></td>
+        <td>가설 → 실험 → 분석 반복. 전체 학습 · LoRA · 배치 비교, 오답 분석과 한계, 헷갈리는 오답 다시 캐기, AI에게 실험을 맡기고 DS는 판단</td>
+        <td><span class="num">0.513 → 0.669 → 0.723</span><br>test R@5</td>
+        <td><code>06_train</code></td>
+        <td><a href="https://claude.ai/artifact/HBXjApsvu8jxyQxaaH5tP2">18장</a></td>
+      </tr>
+      <tr class="y26">
+        <td class="period">7</td>
+        <td class="title"><span class="tag y26">실습 4 · 2026</span><b>서빙과 배포 최적화</b></td>
+        <td>API 짧은 복습 → ONNX 변환 → INT8 양자화 → 어휘 가지치기 → 크기 · 속도 · 정확도 비교표로 판단 → API에 적용</td>
+        <td><span class="num">471 → 30MB</span><br>R@5 0.513 → 0.515</td>
+        <td><code>07_optimize</code></td>
+        <td><a href="https://claude.ai/artifact/F1mKY7iVNVaKZj5psadPvR">15장</a></td>
+      </tr>
+      <tr class="y26">
+        <td class="period">8</td>
+        <td class="title"><span class="tag y26">실습 5 · 2026</span><b>제품화와 마무리</b></td>
+        <td>CLI(uvx로 설치 없이) · 에이전트 스킬 · MCP · 웹을 만들고 건넨다. MLflow 레지스트리와 트레이싱으로 운영. 1교시의 여섯 칸을 다시 본다</td>
+        <td><span class="num">휠 83KB · 8KB</span><br>ragkit · ragkit-search</td>
+        <td><code>08_product</code></td>
+        <td><a href="https://claude.ai/artifact/TgTkmnDgAnDHwvEFhUP2vE">16장</a></td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr><td></td><td>합계</td><td></td><td></td><td></td><td>165장</td></tr>
+    </tfoot>
+  </table>
+  </div>
+
+  <div class="story">
+    <b>하루를 관통하는 숫자</b>: 2교시에 학습 전 R@5 <b>0.513</b>을 문제로 던지고, 3교시에 완성품으로 체감하고(65위 → 1위), 4~6교시에 <b>0.723</b>까지 올리고, 7교시에 30MB로 줄여도 정확도가 그대로인 것을 확인하고, 8교시에 제품으로 내보낸다.
+  </div>
+
+  <ul class="notes">
+    <li>수강생은 LLM API 키 없이 진행한다. LLM 답변 단계는 건너뛰고 검색까지 직접 본다.</li>
+    <li>준비: <code>uv sync --all-packages --all-extras</code> 후 <code>uv run python lecture/03_setup/01_doctor.py --fix</code>. 파인튜닝 모델 · 인덱스는 <code>scripts/finetuned_drive.py download</code>로 받는다.</li>
+    <li>장 수는 2026-10-07 기준. 실습 폴더 안내는 각 폴더의 README.md에 있다.</li>
+  </ul>
+</main>
+</body>
+</html>
