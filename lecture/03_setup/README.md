@@ -1,7 +1,13 @@
 # 실습 0 (3교시): 준비와 완성품 먼저 써 보기
 
-장표: [3교시 실습 0 준비](https://claude.ai/artifact/VuQyTKs7BHKu4Hsq5xy5Qc). 환경 점검 → 웹(강사 시연) → CLI로 질문 넷 → 학습 전후 비교 순서로 본다.
+장표: [3교시 실습 0 준비](https://claude.ai/artifact/VuQyTKs7BHKu4Hsq5xy5Qc). 최종 목표(HTML 파일 하나) → 환경 점검 → 웹(강사 시연) → CLI로 질문 넷 → 학습 전후 비교 순서로 본다.
 API 키는 쓰지 않는다. 명령은 모두 저장소 루트에서 실행하고, Mac 터미널과 Windows PowerShell에서 그대로 돈다.
+
+## 0. 설치 전에: 최종 목표
+
+`law-search-offline.html`(56MB)을 더블클릭하면 Python · 서버 · 인터넷 · API 키 없이 브라우저에서 법령 조문 2.6만 건을 검색한다.
+오늘 만드는 파인튜닝 모델(정답이 10위 안에 드는 비율 60% → 80%)을 7교시 방법(ONNX · INT8 · 어휘 가지치기)으로 30MB까지 줄여
+조문 데이터와 함께 파일 하나에 넣은 것이다. 만드는 법은 [`apps/offline-search/README.md`](../../apps/offline-search/README.md).
 
 ## 1. 환경 점검
 
