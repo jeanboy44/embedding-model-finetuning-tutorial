@@ -1,0 +1,16 @@
+<section id="setup" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:44px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#b8650f">2022 · LoRA 한 바퀴 · 설정</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">002와 다른 것은 딱 두 줄</h2>
+</div>
+<table style="width:1664px;font-size:28px;color:#1f2a37">
+<tr><th style="width:30%;text-align:left;color:#6b7480;font-size:24px">항목</th><th style="width:35%;text-align:left;color:#6b7480;font-size:24px">002 기준</th><th style="width:35%;text-align:left;color:#b8650f;font-size:24px">004 LoRA</th></tr>
+<tr style="background:#fdf1e3"><td><b>lora</b></td><td style="color:#4a5361">없음 (전체 학습)</td><td><b>r 16 · alpha 32 · dropout 0.1, query · key · value</b></td></tr>
+<tr style="background:#fdf1e3"><td><b>lr</b></td><td style="color:#4a5361">2e-5</td><td><b>2e-4</b> (학습할 게 적어 10배)</td></tr>
+<tr><td>나머지</td><td style="color:#4a5361">배치 32 · CachedMNRL mini 16 · 최대 3 epoch · negative 1 · 길이 512 · seed 42</td><td style="color:#4a5361">002와 같음</td></tr>
+</table>
+<div style="background:#f2f3f5;border-radius:14px;padding:32px 44px">
+<p style="font-family:'JetBrains Mono', 'Noto Sans KR', monospace;font-size:26px;line-height:1.7;color:#1f2a37"><span style="color:#6b7480"># experiments/exp_004_lora/config.yaml</span><br>uv run ragkit train --config experiments/exp_004_lora/config.yaml</p>
+</div>
+<aside>설정 파일을 봅니다. experiments/exp_004_lora/config.yaml입니다. 002와 다른 것은 두 줄뿐입니다. lora 블록이 생겼고, 학습률이 2e-5에서 2e-4로 열 배가 됐습니다. LoRA는 학습할 파라미터가 적어서 보통 전체 학습보다 큰 학습률을 씁니다. 나머지, 배치 32, CachedMNRL의 미니 배치 16, 최대 3 epoch, 오답 하나, 길이 512, seed 42는 전부 002와 같습니다. 한 번에 하나만 바꿔야 차이가 어디서 왔는지 말할 수 있습니다. 엄밀히는 lr도 같이 바뀌었으니 두 개를 바꾼 셈입니다. 그래서 이 실험은 LoRA와 거기에 맞춘 학습률, 이 한 묶음을 002와 비교한 것으로 읽어야 합니다. 명령은 ragkit train에 설정 파일만 넘기면 됩니다.</aside>
+</section>

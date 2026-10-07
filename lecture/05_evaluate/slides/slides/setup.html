@@ -1,0 +1,32 @@
+<section id="setup" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:48px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">3 · 기준 실험 · ① 가설 ② 설정</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">가설은 한 문장, 설정은 파일 한 장</h2>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:28px">
+<div style="display:flex;flex-direction:column;gap:14px;border-top:4px solid #ec9a3e;padding:24px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#b8650f">가설</p>
+<p style="font-size:40px;line-height:1.4;font-weight:800">우리 질문 데이터로 학습하면 처음 보는 법령에서도 오른다</p>
+<p style="font-size:26px;line-height:1.55;color:#4a5361">확인: test(법령 16개) R@5가 학습 전 0.513보다 오르는가</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px;background:#f2f3f5;border-radius:14px;padding:28px 28px">
+<p style="font-size:24px;font-weight:700;color:#6b7480">학습 명령</p>
+<p style="font-family:'JetBrains Mono', 'Noto Sans KR', monospace;font-size:24px;line-height:1.6;color:#1f2a37">uv run ragkit train<br>--config experiments/exp_002_finetuned/config.yaml</p>
+</div>
+</div>
+<table style="width:800px;font-size:24px;color:#1f2a37">
+<tr><th style="width:45%;text-align:left;color:#6b7480;font-size:24px">설정</th><th style="width:55%;text-align:left;color:#6b7480;font-size:24px">값</th></tr>
+<tr><td>시작 모델</td><td>multilingual-e5-small</td></tr>
+<tr><td>학습 데이터</td><td>train 8,294행</td></tr>
+<tr><td>배치</td><td>32</td></tr>
+<tr><td>손실</td><td>CachedMNRL (mini 16)</td></tr>
+<tr><td>학습률 · warmup</td><td>2e-5 · 0.1</td></tr>
+<tr><td>epoch</td><td>최대 3</td></tr>
+<tr><td>hard negative</td><td>질문당 1개</td></tr>
+<tr><td>최대 길이</td><td>512 토큰</td></tr>
+<tr><td>seed</td><td>42</td></tr>
+</table>
+</div>
+<aside>바퀴의 첫 두 칸입니다. 가설은 한 문장으로 씁니다. "우리 질문 데이터로 학습하면 처음 보는 법령에서도 오른다." 틀릴 수 있는 문장이어야 합니다. 학습한 법령에서만 오르고 처음 보는 법령에서는 그대로일 수도 있으니까요. 확인 방법도 미리 정해 둡니다. test 법령 16개에서 R@5가 학습 전 0.513보다 오르는지 봅니다. 설정은 experiments/exp_002_finetuned/config.yaml 한 장에 다 들어 있습니다. 시작 모델은 e5-small, 학습 데이터는 train 8,294행, 배치 32, 손실은 CachedMNRL입니다. CachedMNRL은 배치 32를 16개씩 나눠 계산해서 메모리를 아끼면서도 한 질문이 오답 31개를 보는 효과는 그대로 둡니다. 학습률 2e-5에 warmup 0.1, epoch는 최대 3, hard negative는 질문당 하나, 길이는 512토큰, seed는 42로 고정합니다. 명령은 ragkit train에 이 설정 파일을 주는 한 줄입니다.</aside>
+</section>

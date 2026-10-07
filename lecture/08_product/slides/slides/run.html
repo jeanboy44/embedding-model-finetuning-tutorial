@@ -1,0 +1,11 @@
+<section id="run" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:40px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">실행</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">돌려 볼 명령</h2>
+</div>
+<div style="display:flex;flex-direction:column;gap:14px;background:#f2f3f5;border-radius:14px;padding:36px 44px">
+<p style="font-family:'JetBrains Mono', 'Noto Sans KR', monospace;font-size:24px;line-height:1.65;color:#1f2a37"><span style="color:#6b7480"># 0. 데스크톱: 받은 dist/law-search-offline.html을 더블클릭 (인터넷을 꺼 보고)</span><br><span style="color:#6b7480"># 1. CLI: laws · search · show · ask · --json (--run: 휠 빌드 + uvx)</span><br>uv run python lecture/08_product/01_search_cli.py<br><span style="color:#6b7480"># 2. 스킬: 보기 · 설치 · 첫 검색 재현 · 받은 실험 011 결과 (1분 안쪽)</span><br>uv run python lecture/08_product/02_agent_skill.py  <span style="color:#6b7480"># --run --questions N</span><br><span style="color:#6b7480"># 3. MCP: 연결 → 도구 목록 → 호출, Claude 등록 안내</span><br>uv run python lecture/08_product/03_mcp_server.py<br><span style="color:#6b7480"># 4. 웹: 받은 dist를 API 서버가 함께 제공 (--run: 다시 빌드)</span><br>uv run python lecture/08_product/04_web_app.py</p>
+</div>
+<p style="font-size:28px;line-height:1.6;color:#4a5361">스킬 --run은 claude 헤드리스로 실제 비교 (질문당 30~60초, 비용이 든다). 웹은 --check면 확인만 하고 끝난다.</p>
+<aside>먼저 받은 HTML 파일을 더블클릭해서 엽니다. 와이파이를 꺼도 검색이 되는지 보세요. 그다음 네 스크립트를 차례로 돌립니다. CLI는 기본이 명령 실행이고, --run을 붙이면 휠을 빌드해 uvx 격리 환경에서 torch 없이 도는지까지 봅니다. 스킬 스크립트는 기본 모드에서 SKILL.md를 보여 주고, 임시 폴더에 Claude Code용과 Gemini CLI용으로 설치해 보고, 에이전트가 할 첫 검색을 CLI로 두 모델에 재현한 뒤, 받은 실험 011 결과를 읽어 줍니다. 1분 안쪽입니다. --run을 붙이면 claude를 헤드리스로 띄워 실제로 두 모델을 비교합니다. 질문당 30초에서 1분, 호출 비용이 들고, 기본은 질문 2개, --questions 10이면 실험 011과 같은 설정입니다. MCP는 모드가 하나입니다. 웹은 받은 화면 빌드가 있으면 그대로 띄우고, --run이면 pnpm으로 다시 빌드합니다. 웹은 서버를 열어 두는 스크립트라, 급하면 --check로 확인만 하고 넘어가세요. MLflow 모니터링(05_monitoring.py)은 시간이 남을 때 해 보는 선택 실습으로 남겨 둡니다.</aside>
+</section>

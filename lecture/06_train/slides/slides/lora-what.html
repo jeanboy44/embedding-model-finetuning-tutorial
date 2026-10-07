@@ -1,0 +1,23 @@
+<section id="lora-what" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#b8650f">2022 · LoRA 한 바퀴 · 원리</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">원래 가중치는 두고, 옆에 작은 행렬만 학습</h2>
+</div>
+<div style="display:flex;gap:72px;align-items:center">
+<div style="display:flex;gap:28px;align-items:center">
+<div style="width:300px;height:300px;background:#e6e8eb;border-radius:12px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px"><p style="font-size:36px;font-weight:800;color:#4a5361">W</p><p style="font-size:24px;color:#6b7480">384 × 384 · 고정</p></div>
+<p style="font-size:56px;font-weight:800;color:#6b7480">+</p>
+<div style="width:72px;height:300px;background:#ec9a3e;border-radius:8px;display:flex;justify-content:center;align-items:center"><p style="font-size:30px;font-weight:800;color:#1f2a37">B</p></div>
+<p style="font-size:36px;font-weight:800;color:#6b7480">×</p>
+<div style="width:300px;height:72px;background:#ec9a3e;border-radius:8px;display:flex;justify-content:center;align-items:center"><p style="font-size:30px;font-weight:800;color:#1f2a37">A</p></div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:22px">
+<p style="font-size:28px;line-height:1.5;color:#4a5361"><b style="color:#1f2a37">붙이는 곳</b>: attention의 query · key · value</p>
+<p style="font-size:28px;line-height:1.5;color:#4a5361"><b style="color:#1f2a37">크기</b>: r 16 · alpha 32 · dropout 0.1</p>
+<p style="font-size:28px;line-height:1.5;color:#4a5361"><b style="color:#1f2a37">끝나면</b>: W에 B×A를 합쳐 보통 모델로 저장</p>
+</div>
+</div>
+<p style="font-size:34px;line-height:1.5;font-weight:700">학습 파라미터 442,368 / 117,653,760 = <span style="color:#b8650f">0.4%</span></p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">LoRA: Low-Rank Adaptation. 12개 층 × query · key · value 3곳 × 16 × (384 + 384) = 442,368</p>
+<aside>LoRA가 무엇인지 짧게 봅니다. 전체 학습은 모델의 가중치 1억 1천7백만 개를 전부 바꿉니다. LoRA는 원래 가중치 W를 그대로 얼려 두고, 옆에 가늘고 긴 행렬 B와 납작한 행렬 A를 붙여서 이 둘만 학습합니다. 둘을 곱하면 W와 같은 모양이 되니까, W에 더해지는 변화량만 작게 배우는 셈입니다. 우리는 attention의 query, key, value 세 곳에 붙였고, 폭 r은 16, alpha 32, dropout 0.1을 썼습니다. 학습이 끝나면 B 곱하기 A를 W에 합쳐서 보통 모델과 똑같은 모양으로 저장합니다. 그래서 학습하는 파라미터는 44만 2천여 개, 전체 1억 1천7백만 개의 0.4%입니다.</aside>
+</section>

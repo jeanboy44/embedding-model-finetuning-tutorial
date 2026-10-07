@@ -1,0 +1,10 @@
+<section id="run" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:40px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">실행</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">돌려 볼 명령</h2>
+</div>
+<div style="display:flex;flex-direction:column;gap:14px;background:#f2f3f5;border-radius:14px;padding:32px 44px">
+<p style="font-family:'JetBrains Mono', 'Noto Sans KR', monospace;font-size:24px;line-height:1.6;color:#1f2a37"><span style="color:#6b7480"># 0. 비교용 파인튜닝 모델 네 개 받기 (5교시 쉬는 시간에 받았으면 건너뜀)</span><br>uv run python scripts/finetuned_drive.py download --all<br><span style="color:#6b7480"># 1. LoRA 설정과 받은 모델의 학습 기록</span><br>uv run python lecture/06_train/01_train_taste.py --lora<br><span style="color:#6b7480"># 선택: 같은 설정으로 30 step 파일럿, 임시 폴더 (약 1분)</span><br>uv run python lecture/06_train/01_train_taste.py --run --lora<br><span style="color:#6b7480"># 2. 학습 전 · 002 · 004 · 006 · 001 A를 test로 비교 + 004 차이 검정</span><br>uv run python lecture/06_train/02_compare_runs.py<br><span style="color:#6b7480"># 3. 오답 분석: 무엇이 고쳐졌고 무엇이 여전히 틀리나 (2번 먼저)</span><br>uv run python lecture/06_train/03_error_analysis.py<br><span style="color:#6b7480"># 선택: 실험 기록 보기 (터미널 하나 더)</span><br>uv run --extra mlflow mlflow server --backend-store-uri sqlite:///mlruns/mlflow.db --artifacts-destination mlruns/artifacts --port 5050</p>
+</div>
+<aside>오늘 실습 명령입니다. 0번은 비교에 쓸 파인튜닝 모델 네 개를 받는 명령입니다. 5교시 쉬는 시간에 받으라고 안내드렸으니, 이미 받으셨으면 건너뛰면 됩니다. 1번은 LoRA 설정이 002와 어떻게 다른지, 그리고 받은 모델들의 학습 기록을 보여 줍니다. 그다음 줄은 선택입니다. --run을 붙이면 LoRA 설정 그대로 30 step만 임시 폴더에 학습해서, 아까 본 것처럼 손실이 내려가는지, step당 몇 초인지 직접 봅니다. 1분 남짓 걸리고 받은 모델은 덮어쓰지 않습니다. 2번은 학습 전 모델과 002, 004, 006, 001 A를 test로 비교해서 오늘 본 표를 다시 만들고, 004와 002의 차이를 질문 단위로 검정합니다. 3번은 그 결과로 무엇이 고쳐졌고 무엇이 여전히 틀리는지 나눠 봅니다. 2번을 먼저 돌려야 합니다. MLflow는 선택입니다. 터미널을 하나 더 열어 서버를 띄우면 실험마다 남은 설정과 지표를 나란히 볼 수 있습니다. 포트는 5000이 macOS AirPlay와 겹쳐서 5050을 씁니다.</aside>
+</section>

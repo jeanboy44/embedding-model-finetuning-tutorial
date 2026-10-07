@@ -1,0 +1,20 @@
+<section id="opt-why" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:48px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">왜 필요한가</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">만들 때는 한 번, 쓸 때는 매번</h2>
+</div>
+<p style="font-size:32px;line-height:1.6;color:#4a5361">학습은 GPU 한 대에서 한 번 끝난다. 서비스는 질문마다, 서버마다, 날마다 돈다. 임베딩 모델은 질문이 올 때마다 한 번, 문서를 새로 넣을 때마다 또 돈다.</p>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0"><h3 style="font-size:40px;font-weight:800">비용</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">메모리가 곧 서버 크기다. 서버를 여러 대 띄우면 그만큼 곱해진다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0"><h3 style="font-size:40px;font-weight:800">속도</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">검색은 답변 앞 단계라 사용자는 둘을 합친 시간을 기다린다. 서버를 새로 켤 때는 로딩 시간도 기다린다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0"><h3 style="font-size:40px;font-weight:800">놓을 수 있는 곳</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">GPU 없는 서버, 동료 노트북, 인터넷이 막힌 사내망. torch를 깔기 어렵거나 너무 무거운 곳</p></div>
+</div>
+<div style="display:flex;align-items:center;gap:40px;background:#e8f1fa;border-left:6px solid #4f93d8;border-radius:14px;padding:28px 36px">
+<p style="flex:1;font-size:32px;font-weight:800;line-height:1.4;color:#1f2a37">이걸 했기에, 3교시의 단일 HTML 임베딩 검색기가 가능했다</p>
+<div style="display:flex;flex-direction:column;gap:8px">
+<p style="font-size:26px;color:#1f2a37"><b style="color:#2d6db0">ONNX 변환</b> → 브라우저(JS) 위에서 실행</p>
+<p style="font-size:26px;color:#1f2a37"><b style="color:#2d6db0">양자화 + 어휘 가지치기</b> → 모델 30MB</p>
+</div>
+</div>
+<aside>왜 굳이 줄일까요. 학습은 GPU 한 대에서 한 번 하면 끝납니다. 그런데 서비스는 질문이 올 때마다, 띄운 서버마다, 매일 돕니다. 임베딩 모델은 질문마다 한 번, 문서를 새로 넣을 때마다 또 돕니다. 그래서 작은 차이가 계속 곱해집니다. 첫째는 비용입니다. 모델이 쓰는 메모리가 서버 크기를 정하고, 서버를 여러 대 띄우면 그대로 곱해집니다. 둘째는 속도입니다. 검색은 LLM 답변 앞 단계라 사용자는 검색과 답변을 합친 시간을 기다립니다. 요청이 몰릴 때 서버를 새로 켜면 모델 로딩 시간도 기다려야 합니다. 셋째는 놓을 수 있는 곳입니다. GPU 없는 서버, 동료 노트북, 인터넷이 막힌 사내망처럼 torch를 통째로 깔기 어려운 곳에도 모델을 보내야 할 때가 있습니다. 그리고 3교시에 보여 드린 HTML 파일 하나짜리 검색기를 기억하시나요? 더블클릭하면 Python도 서버도 인터넷도 없이 브라우저에서 법령을 검색하던 그 파일입니다. 그게 가능했던 게 바로 오늘 할 최적화 덕분입니다. 모델을 ONNX로 바꿨기 때문에 브라우저의 JavaScript 위에서 돌 수 있었고, 양자화에 어휘 가지치기까지 더해 모델을 30MB로 줄였기 때문에 HTML 파일 하나에 담을 수 있었습니다.</aside>
+</section>

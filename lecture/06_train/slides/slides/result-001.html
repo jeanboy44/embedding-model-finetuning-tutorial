@@ -1,0 +1,19 @@
+<section id="result-001" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:48px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#2d6db0">2026 · 실험 001 결과</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">쉬운 오답을 헷갈리는 오답으로 바꿨다</h2>
+</div>
+<p style="font-size:30px;line-height:1.5;color:#4a5361">기존 오답의 <b style="color:#1f2a37">40%가 이미 50위 밖</b>(쉬움) → 학습한 모델로 채굴한 negative 3개로 교체. 대조군 seed 3개 + 후보 3개, <b style="color:#1f2a37">run 6개를 밤새</b></p>
+<div style="display:flex;gap:40px">
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;border-top:4px solid #c9ced6;padding:20px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">대조군 · 기존 오답</p><p style="font-size:56px;font-weight:800;color:#4a5361">0.720</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;border-top:4px solid #4f93d8;padding:20px 0 0 0"><p style="font-size:24px;font-weight:700;color:#2d6db0">A · 채굴 3개 (채택)</p><p style="font-size:56px;font-weight:800;color:#2d6db0">0.761</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;border-top:4px solid #4f93d8;padding:20px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">B · 판정 후 남김</p><p style="font-size:56px;font-weight:800;color:#1f2a37">0.756</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;border-top:4px solid #4f93d8;padding:20px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">C · 채굴 1개</p><p style="font-size:56px;font-weight:800;color:#1f2a37">0.751</p></div>
+</div>
+<div style="display:flex;gap:40px">
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;padding:24px 32px;background:#e8f1fb;border-radius:16px"><h3 style="font-size:32px;font-weight:800">검토가 누수를 잡았다</h3><p style="font-size:26px;line-height:1.5;color:#4a5361">채굴 후보의 15~19%가 dev · test 법령 문서. train 법령으로만 제한했다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;padding:24px 32px;background:#e8f1fb;border-radius:16px"><h3 style="font-size:32px;font-weight:800">test 0.723</h3><p style="font-size:26px;line-height:1.5;color:#4a5361">002의 0.669보다 위. 다만 001은 lr 3e-5 · 4 epoch로 학습 설정도 다르다</p></div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">dev 복수 정답 R@5, 1,412 질문. 출처: runs/001_hard_negatives/04_results.md, 05_retro.md</p>
+<aside>결과입니다. 오답 분석에서 지금 쓰는 오답의 40%가 이미 50위 밖, 즉 모델에게는 너무 쉬운 오답이라는 게 나왔습니다. 그래서 학습한 모델로 train 질문마다 상위 후보를 뽑고, 정답과 점수가 너무 비슷한 건 사실 정답일 수 있으니 버린 뒤, 3개를 오답으로 썼습니다. 차이가 seed 잡음이 아닌지 보려고 기존 오답 대조군을 seed 3개로, 후보 방식을 3개로, 모두 run 6개를 밤새 돌렸습니다. 대조군 0.720에 비해 A 0.761, 판정 에이전트가 걸러서 남긴 B 0.756, 채굴 오답을 1개만 쓴 C 0.751, 셋 다 올랐습니다. 셋 사이 차이는 잡음 범위라, 판정 비용이 들지 않는 A를 골랐습니다. 중요한 장면이 하나 있습니다. 계획 단계에서 방법론 검토 에이전트가, 채굴 후보의 15~19%가 dev와 test 법령 문서라는 걸 짚었습니다. 그대로 갔으면 처음 보는 법령 성적이 부풀었을 겁니다. 그래서 train 법령 문서에서만 캤습니다. test로는 0.723, 002의 0.669보다 높습니다. 다만 001은 학습률 3e-5에 4 epoch로 학습 설정도 002와 달라서, 오답 효과만의 크기는 같은 설정 대조군과 비교한 +0.041로 봐야 합니다.</aside>
+</section>

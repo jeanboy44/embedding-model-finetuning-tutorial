@@ -1,0 +1,14 @@
+<section id="tech-weight" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">조금 더 기술적으로 · 무엇이 무거운가</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">배포하는 것 = 런타임 + 모델 + 토크나이저</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">런타임</p><h3 style="font-size:36px;font-weight:800;line-height:1.3">모델을 돌리는 엔진</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">PyTorch, ONNX Runtime. 어떤 엔진이냐가 쓸 수 있는 언어와 설치 크기를 정한다. 수십 MB에서 수 GB까지</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">모델 파일</p><h3 style="font-size:36px;font-weight:800;line-height:1.3">파라미터 수 × 바이트</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">1억 개면 fp32(4바이트) 400MB · fp16(2바이트) 200MB · int8(1바이트) 100MB</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">토크나이저</p><h3 style="font-size:36px;font-weight:800;line-height:1.3">글자 → 토큰 번호 사전</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">tokenizer.json 한 파일. 어휘가 수십만 개인 다국어 모델은 이것만 10MB가 넘는다</p></div>
+</div>
+<p style="font-size:30px;line-height:1.6;color:#4a5361">메모리는 셋을 올린 것에 계산 중간값(배치 × 문장 길이 × 차원)이 더해진다. 긴 문서를 크게 묶으면 모델보다 중간값이 더 커진다.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">세 가지를 따로 재야 어디를 줄일지 보인다</p>
+<aside>조금 더 기술적으로 들어가 보겠습니다. 모델을 배포한다고 하면 보통 모델 파일만 떠올리는데, 실제로 옮겨지는 건 세 덩어리입니다. 첫째는 런타임, 모델을 실제로 계산하는 엔진입니다. PyTorch냐 ONNX Runtime이냐에 따라 쓸 수 있는 언어와 설치 크기가 완전히 달라집니다. 둘째는 모델 파일인데, 크기는 단순합니다. 파라미터 수 곱하기 숫자 하나의 바이트 수입니다. 파라미터가 1억 개면 32비트 실수로 400MB, 16비트로 200MB, 8비트 정수로 100MB입니다. 양자화가 파일을 4분의 1로 줄이는 이유가 이겁니다. 셋째는 토크나이저입니다. 문장을 토큰 번호로 바꾸는 사전인데, 다국어 모델은 어휘가 수십만 개라 이 파일만 10MB가 넘습니다. 메모리는 이 셋을 올린 것에 계산하면서 생기는 중간값이 더해집니다. 중간값은 배치 크기, 문장 길이, 차원에 비례해서, 긴 문서를 한꺼번에 많이 넣으면 모델보다 커지기도 합니다.</aside>
+</section>

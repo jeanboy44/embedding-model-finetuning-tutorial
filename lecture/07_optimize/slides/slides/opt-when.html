@@ -1,0 +1,18 @@
+<section id="opt-when" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:48px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">언제 필요한가</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">모델이 어디에 놓이느냐가 정한다</h2>
+</div>
+<table style="width:1664px;font-size:28px;color:#1f2a37">
+<tr><th style="width:40%;text-align:left;color:#6b7480;font-size:24px">놓이는 곳</th><th style="width:27%;text-align:left;color:#6b7480;font-size:24px">걸리는 숫자</th><th style="width:33%;text-align:left;color:#6b7480;font-size:24px">먼저 볼 방법</th></tr>
+<tr><td>동료 노트북 · 사내 PC에 CLI로 설치</td><td>설치 크기 · 모델 파일</td><td><span style="color:#2d6db0">ONNX 변환 · 어휘 가지치기</span></td></tr>
+<tr><td>GPU 없는 CPU 서버</td><td>메모리 · 지연</td><td><span style="color:#2d6db0">ONNX 변환 · INT8 양자화</span></td></tr>
+<tr><td>요청 따라 자주 켜고 끄는 서버</td><td>로딩 시간</td><td><span style="color:#2d6db0">ONNX 변환 · 작은 모델</span></td></tr>
+<tr><td>서버를 여러 대 띄우는 서비스</td><td>메모리 (= 서버 비용)</td><td><span style="color:#2d6db0">INT8 양자화 · 어휘 가지치기</span></td></tr>
+<tr><td>문서를 대량으로 자주 다시 임베딩</td><td>처리량 (문서/초)</td><td><span style="color:#b8650f">GPU · 배치. 줄인 모델이 더 느릴 수도</span></td></tr>
+</table>
+<div style="display:flex;flex-direction:column;gap:10px;background:#f2f3f5;border-radius:14px;padding:28px 36px">
+<p style="font-size:28px;line-height:1.55"><b>아직은 아닐 때</b> <span style="color:#4a5361">정확도가 목표에 못 미칠 때, 사용자가 적은 내부 실험, GPU 서버가 이미 넉넉할 때. 줄이기는 정확도를 지킬 때만 의미가 있다.</span></p>
+</div>
+<aside>그럼 언제 필요할까요. 모델이 어디에 놓이느냐가 정합니다. 동료 노트북이나 사내 PC에 CLI로 깔아 준다면 설치 크기와 모델 파일이 문제라 torch를 빼는 ONNX 변환과 어휘 가지치기가 먼저입니다. GPU 없는 CPU 서버라면 메모리와 지연이, 요청에 따라 서버를 자주 켰다 껐다 한다면 로딩 시간이, 서버를 여러 대 띄운다면 메모리, 곧 서버 비용이 문제입니다. 반대로 문서를 대량으로 자주 다시 임베딩해야 한다면 처리량이 중요한데, 이때는 줄인 모델이 오히려 느릴 수 있어서 GPU와 배치 크기를 먼저 봅니다. 이건 뒤 비교표에서 숫자로 확인합니다. 아직 최적화할 때가 아닌 경우도 있습니다. 정확도가 목표에 못 미친다면 줄이기보다 정확도가 먼저고, 사용자가 적은 내부 실험이나 GPU가 넉넉한 환경이라면 굳이 할 필요가 없습니다. 오늘은 이 중 우리 상황, 즉 동료에게 CLI로 깔아 주고 CPU 서버에 API로 띄우는 경우를 기준으로 줄여 봅니다.</aside>
+</section>

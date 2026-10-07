@@ -1,0 +1,16 @@
+<section id="cost" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#b8650f">2022 · LoRA 한 바퀴 · 비용</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">아낀 것은 생각보다 작다</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;border-top:4px solid #ec9a3e;padding:24px 0 0 0"><p style="font-size:26px;font-weight:700;color:#6b7480">학습 시간</p><p style="font-size:56px;font-weight:800;letter-spacing:-1px;color:#b8650f">40 → 34분</p><p style="font-size:28px;line-height:1.55;color:#4a5361">−15%. 앞뒤 계산은 여전히 모델 전체를 지나가서 크게 못 줄인다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;border-top:4px solid #ec9a3e;padding:24px 0 0 0"><p style="font-size:26px;font-weight:700;color:#6b7480">저장</p><p style="font-size:56px;font-weight:800;letter-spacing:-1px;color:#b8650f">1.7MB</p><p style="font-size:28px;line-height:1.55;color:#4a5361">LoRA 어댑터만. 전체 모델은 449MB</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;border-top:4px dashed #8a939e;padding:24px 0 0 0"><p style="font-size:26px;font-weight:700;color:#6b7480">배포</p><p style="font-size:56px;font-weight:800;letter-spacing:-1px;color:#4a5361">449MB</p><p style="font-size:28px;line-height:1.55;color:#4a5361">배포는 합친 모델이라 크기가 같다</p></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;padding:28px 40px;background:#f2f3f5;border-radius:16px">
+<p style="font-size:30px;line-height:1.5;color:#1f2a37"><b>모델 하나를 배포하는 우리 과제에서는 이득이 작다.</b></p>
+<p style="font-size:28px;line-height:1.5;color:#4a5361">LoRA가 맞는 경우: 모델이 클 때 · GPU 메모리가 모자랄 때 · 버전 여러 개를 어댑터로 바꿔 끼울 때</p>
+</div>
+<aside>그럼 무엇을 아꼈을까요. 학습 시간은 40분에서 34분, 15% 줄었습니다. 생각보다 작죠. 학습하는 가중치는 0.4%지만, 질문을 넣고 손실을 계산하고 기울기를 되돌리는 계산은 여전히 모델 전체를 지나가야 해서 시간이 크게 줄지 않습니다. 저장은 LoRA 어댑터만 따로 두면 1.7MB로, 전체 모델 449MB와 비교가 안 되게 작습니다. 하지만 배포할 때는 어댑터를 원래 가중치에 합친 모델을 내보내니 결국 449MB로 같습니다. 그래서 모델 하나를 학습해서 하나를 배포하는 우리 과제에서는 LoRA의 이득이 작습니다. LoRA가 빛나는 건 다른 상황입니다. 모델이 커서 전체 학습이 버거울 때, GPU 메모리가 모자랄 때, 그리고 고객사별이나 용도별로 버전 여러 개를 만들어 기본 모델 하나에 어댑터만 바꿔 끼울 때입니다.</aside>
+</section>

@@ -1,0 +1,22 @@
+<section id="search" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:72px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">하나 · RAG에서의 자리</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">질문과 가장 가까운 문서 k개를 가져온다</h2>
+</div>
+<div style="display:flex;flex-direction:column;gap:18px">
+<div style="display:flex;align-items:stretch;gap:16px">
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">1</p><h3 style="font-size:32px;font-weight:800">질문</h3><p style="font-size:24px;color:#6b7480">일상어 그대로</p></div>
+<p style="font-size:32px;color:#9aa3ad;padding:56px 0 0 0">→</p>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">2</p><h3 style="font-size:32px;font-weight:800">임베딩</h3><p style="font-size:24px;color:#6b7480">질문을 벡터로</p></div>
+<p style="font-size:32px;color:#9aa3ad;padding:56px 0 0 0">→</p>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">3</p><h3 style="font-size:32px;font-weight:800">가까운 k개</h3><p style="font-size:24px;color:#6b7480">미리 만든 문서 벡터 중에서</p></div>
+<p style="font-size:32px;color:#9aa3ad;padding:56px 0 0 0">→</p>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;border:2px dashed #c9ced6;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">4</p><h3 style="font-size:32px;font-weight:800">LLM 답변</h3><p style="font-size:24px;color:#6b7480">찾은 문서를 읽고</p></div>
+</div>
+<div style="display:grid;grid-template-columns:3fr 1fr;gap:16px">
+<div style="border-top:4px solid #4f93d8;padding:14px 0 0 0"><p style="font-size:26px;font-weight:800;color:#2d6db0">검색 (Retrieval) — 임베딩 모델이 맡는 부분</p></div>
+<div style="border-top:4px solid #c9ced6;padding:14px 0 0 0"><p style="font-size:26px;font-weight:700;color:#6b7480">생성 (Generation)</p></div>
+</div>
+</div>
+<aside>RAG는 이미 배우셨죠. 질문을 벡터로 바꾸고, 미리 만들어 둔 문서 벡터 중 가장 가까운 k개를 가져와 LLM에게 줍니다. 오늘 손대는 건 앞쪽, 검색입니다. LLM은 그대로 둡니다.</aside>
+</section>

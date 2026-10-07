@@ -1,0 +1,13 @@
+<section id="options" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">학습 없는 선택지 · 비교</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">정확도와 질문당 비용</h2>
+</div>
+<table style="width:1664px;font-size:30px;color:#1f2a37">
+<tr><th style="width:32%;text-align:left;color:#6b7480;font-size:26px">선택지</th><th style="width:14%;text-align:right;color:#6b7480;font-size:26px">R@5</th><th style="width:14%;text-align:right;color:#6b7480;font-size:26px">R@10</th><th style="width:20%;text-align:right;color:#6b7480;font-size:26px">질문당 LLM 호출</th><th style="width:20%;text-align:right;color:#6b7480;font-size:26px">모델 크기</th></tr>
+<tr><td>e5-small</td><td style="text-align:right">0.513</td><td style="text-align:right">0.601</td><td style="text-align:right">0</td><td style="text-align:right">118M</td></tr>
+<tr><td>e5-small + 쿼리 확장</td><td style="text-align:right;color:#6b7480">측정 예정</td><td style="text-align:right;color:#6b7480">측정 예정</td><td style="text-align:right;color:#b8650f"><b>1</b></td><td style="text-align:right">118M + LLM</td></tr>
+</table>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">test 전체 확장은 무료 한도(하루 20회)로 아직 못 돌렸다. 받은 캐시 17개(국세기본법)로만 보면 R@5 0.294 → 0.471</p>
+<aside>학습 없이 고를 수 있는 선택지를 한 표에 놓았습니다. 그대로 쓰면 LLM 호출 0번에 0.513. 쿼리 확장은 질문마다 LLM을 한 번 부릅니다. 쿼리 확장의 test 전체 점수는 무료 등급 한도 때문에 아직 돌리지 못해 비워 뒀습니다. 하루 20회면 2,526개에 126일쯤 걸립니다. 받은 캐시에 있는 17개, 전부 국세기본법 질문으로만 비교하면 e5가 0.294, 확장을 붙이면 0.471로 오릅니다. 17개는 표본이 작으니 방향만 보세요. 이 표는 뒤에서 기준 실험 002를 한 줄 더 붙여 다시 봅니다.</aside>
+</section>

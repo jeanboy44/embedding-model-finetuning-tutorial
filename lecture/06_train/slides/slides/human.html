@@ -1,0 +1,17 @@
+<section id="human" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:48px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#2d6db0">2026 · 그래서 사람이 남는 곳</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">기준 · 제약 · 의심 · 규칙</h2>
+</div>
+<div style="display:flex;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:24px 0 0 0"><h3 style="font-size:40px;font-weight:800;color:#2d6db0">기준</h3><p style="font-size:26px;line-height:1.5;color:#4a5361">개선은 <b style="color:#1f2a37">Δ ≥ 0.02</b>이고 seed 흔들림의 <b style="color:#1f2a37">2배 초과</b>일 때</p><p style="font-size:26px;line-height:1.5;color:#4a5361">test는 마지막에 한 번만</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:24px 0 0 0"><h3 style="font-size:40px;font-weight:800;color:#2d6db0">제약</h3><p style="font-size:26px;line-height:1.5;color:#4a5361">모델은 <b style="color:#1f2a37">e5-small 하나</b>. 학습할 때도 다른 모델은 쓰지 않는다</p><p style="font-size:26px;line-height:1.5;color:#4a5361">reranker도 쓰지 않는다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:24px 0 0 0"><h3 style="font-size:40px;font-weight:800;color:#2d6db0">의심</h3><p style="font-size:26px;line-height:1.5;color:#4a5361"><b style="color:#1f2a37">누수</b>: 채굴 후보의 15~19%가 dev · test 법령이었다</p><p style="font-size:26px;line-height:1.5;color:#4a5361"><b style="color:#1f2a37">치팅</b>: test를 보고 고르지 않았나</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:24px 0 0 0"><h3 style="font-size:40px;font-weight:800;color:#2d6db0">규칙</h3><p style="font-size:26px;line-height:1.5;color:#4a5361"><b style="color:#1f2a37">“큰 판정은 300쌍 시범부터”</b></p><p style="font-size:26px;line-height:1.5;color:#4a5361">9,009쌍을 다 판정했는데 효과가 없었던 실수에서 생겼다</p></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;padding:28px 40px;background:#e8f1fb;border:2px solid #4f93d8;border-radius:16px">
+<h3 style="font-size:40px;font-weight:800;color:#1f2a37">손으로 돈 LoRA 바퀴에서 내가 한 일과 같다</h3>
+<p style="font-size:28px;line-height:1.5;color:#4a5361">기준을 먼저 적고, 범위를 정하고, 숫자를 의심하고, 다음을 고른다. 달라진 것은 그 사이를 누가 채우느냐다.</p>
+</div>
+<aside>에이전트가 바퀴를 돌면 사람은 어디에 남을까요. 네 군데입니다. 첫째, 기준. 차이가 0.02 이상이고 seed에 따른 흔들림의 두 배를 넘어야 개선으로 본다. test는 마지막에 한 번만 쓴다. 이건 제가 정했습니다. 둘째, 제약. 모델은 e5-small 하나, 학습할 때도 다른 모델은 쓰지 않고, reranker도 쓰지 않는다. 에이전트는 점수를 올리려고 더 큰 모델을 끌어오고 싶어 할 수 있는데, 그 선을 긋는 게 사람입니다. 셋째, 의심. 좋은 숫자가 나올수록 먼저 의심합니다. 이번에도 채굴 후보의 15~19%가 dev와 test 법령이었고, 그대로 갔으면 성적이 부풀었을 겁니다. test를 보고 고른 건 아닌지도 봅니다. 넷째, 규칙. 큰 판정 작업은 300쌍으로 먼저 시범을 돌린다. 이건 9,009쌍을 전부 판정하고 나서야 효과가 없다는 걸 안 실수에서 생긴 규칙입니다. 이 네 가지는 아까 LoRA 바퀴를 손으로 돌 때 제가 한 일과 똑같습니다. 기준을 먼저 적었고, 결론의 범위를 정했고, 96%라는 숫자를 의심했고, 다음 가설을 골랐죠. 달라진 건 그 사이의 설정 고치기, 기다리기, 표 만들기를 누가 하느냐입니다.</aside>
+</section>

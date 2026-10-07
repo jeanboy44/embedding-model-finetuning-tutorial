@@ -1,0 +1,14 @@
+<section id="split" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">1 · 데이터 · 분할</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">질문이 아니라 법령으로 나눈다</h2>
+</div>
+<table style="width:1300px;font-size:30px;color:#1f2a37">
+<tr><th style="width:20%;text-align:left;color:#6b7480;font-size:26px">split</th><th style="width:18%;text-align:right;color:#6b7480;font-size:26px">질문</th><th style="width:16%;text-align:right;color:#6b7480;font-size:26px">법령</th><th style="width:46%;text-align:left;color:#6b7480;font-size:26px">용도</th></tr>
+<tr><td>train</td><td style="text-align:right">8,294</td><td style="text-align:right">29</td><td>학습</td></tr>
+<tr><td>dev</td><td style="text-align:right">1,412</td><td style="text-align:right">9</td><td>epoch · 설정 고르기</td></tr>
+<tr style="background:#fdf1e3"><td><b>test</b></td><td style="text-align:right"><b>2,526</b></td><td style="text-align:right"><b>16</b></td><td><b>최종 비교에 한 번만</b></td></tr>
+</table>
+<p style="font-size:30px;line-height:1.6;color:#4a5361">정답 조문이 train에도 나온 test 질문: 법령 단위 <b style="color:#1f2a37">0.0%</b>, 질문 단위 무작위 <b style="color:#b8650f">64.6%</b>. 섞으면 외운 것을 맞히는 셈이라 점수가 부풀려진다.</p>
+<aside>나누는 기준이 중요합니다. 03_split.py가 숫자로 보여 줍니다. 질문 단위로 무작위로 섞으면 test 질문의 64.6%는 정답 조문이 train에도 나옵니다. 모델이 외운 걸 맞히는 셈이 되고 점수가 부풀려집니다. 법령 단위로 나누면 0.0%이고, 세 분할의 법령 교집합도 0입니다. test 법령 16개는 학습 때 한 번도 보지 않은 법령이고, 2교시에서 본 베이스 모델 0.513도 이 test로 잰 숫자입니다. 이 표의 숫자들이 오늘 끝까지 따라옵니다. 기준 실험은 train 8,294개로 학습하고, epoch는 dev로 고르고, test는 마지막에 한 번만 씁니다. --run을 붙이면 ragkit split을 임시 폴더에 돌려 받은 분할과 같은지 확인합니다.</aside>
+</section>

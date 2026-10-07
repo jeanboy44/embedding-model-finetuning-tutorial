@@ -1,0 +1,15 @@
+<section id="a-limits" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:48px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">하나 · 한계</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">임베딩 검색이 놓치는 네 가지 경우</h2>
+</div>
+<table style="width:1664px;font-size:26px;color:#1f2a37">
+<tr><th style="width:22%;text-align:left;color:#6b7480;font-size:24px">놓치는 경우</th><th style="width:38%;text-align:left;color:#6b7480;font-size:24px">무슨 뜻인가</th><th style="width:40%;text-align:left;color:#6b7480;font-size:24px">근거</th></tr>
+<tr><td><b>조건이 얽힌 질문</b></td><td style="color:#4a5361">문서 하나를 숫자 수백 개로 압축한다. 조건이 여러 개 얽히면 다 담지 못한다</td><td style="color:#4a5361">“퀘카를 좋아하는 사람은?” 같은 쉬운 질문에도 최신 모델들이 상위 100개 안에 정답의 <b style="color:#b8650f">20%도</b> 못 넣었다</td></tr>
+<tr><td><b>생각을 거쳐야 하는 질문</b></td><td style="color:#4a5361">질문과 답 문서가 겉으로 닮지 않고 추론으로만 이어지면 못 찾는다</td><td style="color:#4a5361">같은 모델이 일반 검색 시험 <b>59점</b>, 추론이 필요한 검색 시험 <b style="color:#b8650f">18.3점</b> (100점 만점)</td></tr>
+<tr><td><b>처음 보는 분야</b></td><td style="color:#4a5361">학습 때 못 본 분야의 용어와 말투를 모른다</td><td style="color:#4a5361">처음 보는 분야에서는 단어만 세는 옛 검색(BM25)보다 <b style="color:#b8650f">못한 경우가 많았다</b></td></tr>
+<tr><td><b>긴 문서</b></td><td style="color:#4a5361">한 번에 읽는 길이가 정해져 있다. 잘게 나누면 앞뒤 문맥이 사라진다</td><td style="color:#4a5361">많은 모델이 <b style="color:#b8650f">512토큰</b>까지만 읽는다</td></tr>
+</table>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">LIMIT (Google DeepMind, 2025) · BRIGHT (ICLR 2025, nDCG@10) · BEIR (NeurIPS 2021, 18개 데이터셋)</p>
+<aside>임베딩 검색이 놓치는 경우는 크게 네 가지입니다. 첫째, 조건이 얽힌 질문입니다. 문서 하나를 숫자 수백 개로 압축하다 보니 조건이 여러 개 얽히면 다 담지 못합니다. 구글 딥마인드가 "존은 퀘카와 사과를 좋아한다" 같은 문서를 잔뜩 만들고 "퀘카를 좋아하는 사람은?"이라고 물었더니, 최신 모델들이 상위 100개 안에 정답의 20%도 넣지 못했습니다. 둘째, 생각을 거쳐야 이어지는 질문입니다. 같은 모델이 보통 검색 시험에서는 59점인데, 추론이 필요한 검색 시험에서는 18.3점이었습니다. 셋째, 처음 보는 분야입니다. 18개 데이터셋으로 잰 연구에서, 학습 때 못 본 분야에 가면 신경망 검색이 단어만 세는 옛 방식보다 못한 경우가 많았습니다. 넷째, 긴 문서입니다. 많은 모델이 512토큰까지만 읽어서 잘게 나눠야 하고, 나누면 문맥이 사라집니다. 이렇게 거르는 단계에서 놓치면 뒤의 LLM이 아무리 좋아도 답할 수 없습니다. 그래서 검색을 더 정확하게 만드는 방법들이 나왔습니다.</aside>
+</section>

@@ -1,0 +1,19 @@
+<section id="tech-onnx" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">조금 더 기술적으로 · ONNX란</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">모델을 담는 표준 파일 형식. 모델의 PDF</h2>
+</div>
+<div style="display:flex;align-items:stretch;gap:16px">
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">PyTorch 모델</p><h3 style="font-size:32px;font-weight:800">Python 코드 + 가중치</h3><p style="font-size:24px;line-height:1.5;color:#4a5361">코드가 있어야 돈다</p></div>
+<p style="font-size:32px;color:#9aa3ad;padding:56px 0 0 0">→</p>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px;background:#e8f1fa"><p style="font-size:24px;font-weight:700;color:#2d6db0">model.onnx</p><h3 style="font-size:32px;font-weight:800">계산 그래프 + 가중치</h3><p style="font-size:24px;line-height:1.5;color:#4a5361">MatMul · Add · Softmax 같은 연산의 순서도</p></div>
+<p style="font-size:32px;color:#9aa3ad;padding:56px 0 0 0">→</p>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">읽는 엔진</p><h3 style="font-size:32px;font-weight:800">ONNX Runtime</h3><p style="font-size:24px;line-height:1.5;color:#4a5361">OpenVINO(Intel) · TensorRT(NVIDIA)도 읽는다</p></div>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #4f93d8;padding:24px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">변환은 어떻게</p><p style="font-size:28px;line-height:1.55;color:#4a5361">예시 입력으로 모델을 한 번 돌리며 지나간 연산을 기록한다. 배치 크기 · 문장 길이는 바뀔 수 있는 축으로 표시해 둔다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #4f93d8;padding:24px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">형식 ≠ 엔진</p><p style="font-size:28px;line-height:1.55;color:#4a5361">ONNX는 파일 형식, ONNX Runtime은 그걸 돌리는 Microsoft의 엔진. 연산 사전의 판 번호를 opset이라 부른다</p></div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">Open Neural Network Exchange · 2017년 Facebook과 Microsoft가 발표 · 2019년부터 Linux Foundation AI &amp; Data 프로젝트</p>
+<aside>ONNX가 무엇인지부터 짚겠습니다. Open Neural Network Exchange의 줄임말로, 신경망 모델을 담는 표준 파일 형식입니다. 2017년에 Facebook과 Microsoft가 함께 발표했고, 지금은 Linux Foundation 산하 프로젝트입니다. 비유하자면 문서의 PDF입니다. 워드 파일은 워드가 있어야 열리지만 PDF는 어디서나 열리죠. PyTorch 모델은 가중치만으로는 돌지 않고, 그 모델을 정의한 Python 코드가 있어야 합니다. ONNX로 바꾸면 행렬곱, 덧셈, 소프트맥스 같은 연산이 어떤 순서로 이어지는지, 즉 계산 그래프와 가중치가 한 파일에 들어갑니다. 그래서 Python 코드 없이도 돕니다. 변환은 예시 문장을 넣고 모델을 한 번 돌리면서 지나간 연산을 기록하는 방식이고, 배치 크기나 문장 길이처럼 매번 달라지는 축은 바뀔 수 있다고 표시해 둡니다. 헷갈리기 쉬운 점 하나. ONNX는 파일 형식이고, ONNX Runtime은 그 파일을 돌리는 Microsoft의 엔진입니다. Intel의 OpenVINO나 NVIDIA의 TensorRT 같은 다른 엔진도 ONNX 파일을 읽습니다.</aside>
+</section>

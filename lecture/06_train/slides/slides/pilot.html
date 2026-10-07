@@ -1,0 +1,15 @@
+<section id="pilot" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#b8650f">2022 · LoRA 한 바퀴 · 파일럿</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">34분 걸기 전에 30 step만</h2>
+</div>
+<div style="background:#f2f3f5;border-radius:14px;padding:32px 44px">
+<p style="font-family:'JetBrains Mono', 'Noto Sans KR', monospace;font-size:26px;line-height:1.7;color:#1f2a37"><span style="color:#6b7480"># LoRA 설정(실험 004) 그대로 30 step, 출력은 임시 폴더</span><br>uv run python lecture/06_train/01_train_taste.py --run --lora</p>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;border-top:4px solid #ec9a3e;padding:24px 0 0 0"><p style="font-size:26px;font-weight:700;color:#6b7480">손실이 내려가나</p><p style="font-size:56px;font-weight:800;letter-spacing:-1px;color:#b8650f">1.385 → 1.085</p><p style="font-size:28px;line-height:1.55;color:#4a5361">배치 손실. lr 2e-4로 올렸어도 튀지 않고 내려간다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;border-top:4px solid #ec9a3e;padding:24px 0 0 0"><p style="font-size:26px;font-weight:700;color:#6b7480">step당 몇 초인가</p><p style="font-size:56px;font-weight:800;letter-spacing:-1px;color:#b8650f">2.2초</p><p style="font-size:28px;line-height:1.55;color:#4a5361">30 step에 65초. 이 속도면 3 epoch 약 28분</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;border-top:4px dashed #8a939e;padding:24px 0 0 0"><p style="font-size:26px;font-weight:700;color:#6b7480">실제 전체 학습</p><p style="font-size:56px;font-weight:800;letter-spacing:-1px;color:#4a5361">34분</p><p style="font-size:28px;line-height:1.55;color:#4a5361">epoch마다 dev 평가와 저장이 더해진다</p></div>
+</div>
+<aside>본 학습을 걸기 전에 파일럿을 돌립니다. 같은 맛보기 스크립트에 --run --lora를 붙이면 실험 004 설정 그대로 30 step만, 임시 폴더에 학습합니다. 받은 모델은 덮어쓰지 않습니다. 제가 돌려 보니 65초 걸렸습니다. 볼 건 두 가지입니다. 첫째, 손실이 내려가는지. 학습률을 열 배로 올렸으니 너무 크면 손실이 튀거나 꿈쩍 않을 수 있습니다. 배치 손실이 1.385에서 1.085로 내려갔으니 방향은 맞습니다. 둘째, step당 몇 초인지. 2.2초입니다. 이 속도를 전체 step 수에 곱하면 3 epoch에 약 28분으로 어림됩니다. 실제 전체 학습은 34분 걸렸는데, epoch마다 dev 평가하고 모델을 저장하는 시간이 더해져서 그렇습니다. 어림이 이 정도로 맞으면 충분합니다. 이 확인을 건너뛰면 34분을 기다린 뒤에야 설정 실수를 알게 됩니다.</aside>
+</section>

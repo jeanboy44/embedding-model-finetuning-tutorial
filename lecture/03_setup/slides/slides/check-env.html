@@ -1,0 +1,18 @@
+<section id="check-env" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:44px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">1 · 환경 점검 · doctor</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">명령 하나로 점검하고, 빠진 것은 받는다</h2>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px;background:#f2f3f5;border-radius:14px;padding:24px 36px">
+<p style="font-family:'JetBrains Mono', 'Noto Sans KR', monospace;font-size:26px;line-height:1.6;color:#1f2a37">uv run python lecture/03_setup/01_doctor.py         <span style="color:#6b7480"># 점검</span><br>uv run python lecture/03_setup/01_doctor.py --fix   <span style="color:#6b7480"># 빠진 것을 받고 다시 점검</span></p>
+</div>
+<table style="width:1664px;font-size:26px;color:#1f2a37">
+<tr><th style="width:18%;text-align:left;color:#6b7480;font-size:24px">점검</th><th style="width:44%;text-align:left;color:#6b7480;font-size:24px">무엇을 보나</th><th style="width:38%;text-align:left;color:#6b7480;font-size:24px">--fix가 하는 일</th></tr>
+<tr><td><b>설치</b></td><td style="color:#4a5361">ragkit · 앱 · extra, 디스크 여유 5GB</td><td style="color:#4a5361">uv sync</td></tr>
+<tr><td><b>데이터</b></td><td style="color:#4a5361">코퍼스 · 질문 · 분할, 데이터 버전 v1</td><td style="color:#4a5361">data_version.py pull v1</td></tr>
+<tr><td><b>모델 · 인덱스</b></td><td style="color:#4a5361">학습 전 e5 · r001_A와 각각의 인덱스</td><td style="color:#4a5361">download_model_hf · finetuned_drive</td></tr>
+<tr><td><b>동작 확인</b></td><td style="color:#4a5361">두 모델을 실제로 열어 검색, 문서 수가 코퍼스와 같은가</td><td style="color:#6b7480">— (위를 채우면 통과)</td></tr>
+</table>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">API 키 항목은 △(선택)로 나온다. 오늘은 키 없이 진행한다 · --quick이면 동작 확인을 건너뛴다</p>
+<aside>점검은 01_doctor.py 하나로 합니다. 설치, 데이터, 모델과 인덱스가 있는지 보고, 받은 두 모델을 실제로 열어 검색까지 해 봅니다. 파일이 있어도 깨졌거나 버전이 안 맞으면 여기서 걸립니다. 빠진 게 있으면 --fix를 붙여 다시 돌리세요. 받을 수 있는 것은 순서대로 받고 다시 점검합니다. API 키 항목은 선택이라 세모로 나오는데, 오늘은 키 없이 진행하니 괜찮습니다. 쉬는 시간 전에 전부 체크가 되도록 채워 두세요. 4교시부터는 이 환경을 계속 씁니다.</aside>
+</section>

@@ -1,0 +1,14 @@
+<section id="base-reality" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:64px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">다섯 · 출발점</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">두 번에 한 번은 정답이 화면에 없다</h2>
+</div>
+<div style="display:flex;flex-direction:column;gap:20px;width:1400px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><p style="font-size:32px;font-weight:700">multilingual-e5-small <span style="color:#6b7480">· 118M · 오늘 파인튜닝할 모델</span></p><p style="font-size:96px;font-weight:800;color:#b8650f;letter-spacing:-2px">0.513</p></div>
+<div style="height:32px;background:#e6e8eb;border-radius:8px;display:flex"><div style="width:718px;height:32px;background:#ec9a3e;border-radius:8px"></div></div>
+<div style="display:flex;justify-content:space-between"><p style="font-size:26px;font-weight:700;color:#b8650f">상위 5개 안에 정답 있음 · 51%</p><p style="font-size:26px;font-weight:700;color:#6b7480">정답 없음 · 49%</p></div>
+</div>
+<p style="font-size:30px;line-height:1.6;color:#4a5361">Recall@5: 정답 조문이 검색 상위 5개 안에 든 질문의 비율. 이 절반을 파인튜닝으로 얼마나 메울 수 있는지가 오늘의 과제다.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">실험 010 · 학습에 쓰지 않은 법령 16개의 test 질문 2,526개 · 전체 코퍼스 2.6만 문서 대상</p>
+<aside>학습 없이 베이스 모델을 그대로 쓰면 어떨까요. 오늘 파인튜닝할 e5-small은 Recall@5가 0.513입니다. 질문 두 개 중 하나는 정답 조문이 상위 5개에 없다는 뜻입니다. 앞에서 말한 "못 본 말에 약하다"가 우리 코퍼스에서는 이 정도입니다. 걸러질 때 놓친 조문은 뒤의 LLM이 아무리 좋아도 답할 수 없으니, 이대로면 RAG 답변의 절반이 처음부터 막혀 있는 셈입니다. 이 절반을 파인튜닝으로 얼마나 메울 수 있는지가 오늘의 과제입니다. 이 숫자는 5교시에 직접 잽니다.</aside>
+</section>

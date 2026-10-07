@@ -1,0 +1,19 @@
+<section id="test-once" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">3 · 기준 실험 · ⑥ test 1회</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">처음 보는 법령에서 +0.156</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;border-top:4px solid #c9ced6;padding:24px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">R@1</p><p style="font-size:56px;font-weight:800;letter-spacing:-1px"><span style="color:#6b7480">0.284 →</span> 0.405</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;border-top:4px solid #ec9a3e;padding:24px 0 0 0"><p style="font-size:24px;font-weight:700;color:#b8650f">R@5 · 주요 지표</p><p style="font-size:56px;font-weight:800;letter-spacing:-1px"><span style="color:#6b7480">0.513 →</span> <span style="color:#b8650f">0.669</span></p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;border-top:4px solid #c9ced6;padding:24px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">R@10</p><p style="font-size:56px;font-weight:800;letter-spacing:-1px"><span style="color:#6b7480">0.601 →</span> 0.757</p></div>
+</div>
+<table style="width:1300px;font-size:28px;color:#1f2a37">
+<tr><th style="width:28%;text-align:left;color:#6b7480;font-size:24px">R@5 말투별</th><th style="width:24%;text-align:right;color:#6b7480;font-size:24px">keyword</th><th style="width:24%;text-align:right;color:#6b7480;font-size:24px">question</th><th style="width:24%;text-align:right;color:#6b7480;font-size:24px">situation</th></tr>
+<tr><td style="color:#6b7480">학습 전 e5-small</td><td style="text-align:right;color:#6b7480">0.725</td><td style="text-align:right;color:#6b7480">0.517</td><td style="text-align:right;color:#6b7480">0.403</td></tr>
+<tr style="background:#fdf1e3"><td><b>002</b></td><td style="text-align:right">0.795</td><td style="text-align:right">0.687</td><td style="text-align:right"><b>0.589</b></td></tr>
+<tr><td style="color:#6b7480">오른 폭</td><td style="text-align:right;color:#6b7480">+0.070</td><td style="text-align:right;color:#6b7480">+0.170</td><td style="text-align:right;color:#b8650f"><b>+0.186 (가장 큼)</b></td></tr>
+</table>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">test 2,526 질문 · 학습 때 본 적 없는 법령 16개 · 코퍼스 전체 25,967 문서에서 검색</p>
+<aside>여섯 번째 칸, 이제 test를 딱 한 번 씁니다. 처음 보는 법령 16개, 2,526개 질문입니다. 주요 지표 R@5가 학습 전 0.513에서 0.669로, 0.156 올랐습니다. 질문 둘 중 하나만 맞히던 모델이 셋 중 둘을 맞히게 된 겁니다. R@1은 0.284에서 0.405로, R@10은 0.601에서 0.757로 올랐습니다. 가설대로 처음 보는 법령에서도 올랐습니다. 말투별로 보면 더 재미있습니다. 키워드형은 원래 잘하던 곳이라 0.070 오르는 데 그쳤고, 궁금한 점을 묻는 질문은 0.170, 상황을 길게 설명하는 일상 말투는 0.186으로 가장 많이 올랐습니다. 앞에서 파인튜닝이 노릴 곳이라고 했던 바로 그 자리입니다. 그래도 situation은 아직 0.589로 가장 낮습니다. 분석은 여기서 시작됩니다.</aside>
+</section>

@@ -1,0 +1,18 @@
+<section id="tech-alt" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">조금 더 기술적으로 · 다른 선택지</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">ONNX만 있는 건 아니다</h2>
+</div>
+<table style="width:1664px;font-size:26px;color:#1f2a37">
+<tr><th style="width:28%;text-align:left;color:#6b7480;font-size:24px">선택지</th><th style="width:40%;text-align:left;color:#6b7480;font-size:24px">무엇</th><th style="width:32%;text-align:left;color:#6b7480;font-size:24px">이럴 때</th></tr>
+<tr><td>PyTorch 그대로</td><td>변환 없이 CPU판 torch로 배포</td><td>Python 서버, 빨리 내보낼 때</td></tr>
+<tr><td>OpenVINO</td><td>Intel의 엔진. ONNX도 읽는다</td><td>Intel CPU 서버를 더 빠르게</td></tr>
+<tr><td>TensorRT</td><td>NVIDIA GPU 전용 엔진. ONNX에서 빌드</td><td>GPU에서 지연 · 처리량 최대로</td></tr>
+<tr><td>Core ML · LiteRT</td><td>Apple · Google의 기기 안 엔진</td><td>아이폰 · 안드로이드 앱 내장</td></tr>
+<tr><td>llama.cpp (GGUF)</td><td>C/C++ 엔진. XLM-R 계열 임베딩도 돈다</td><td>이미 LLM을 GGUF로 돌리는 곳</td></tr>
+<tr><td>Hugging Face TEI</td><td>임베딩 전용 API 서버를 통째로</td><td>코드 없이 서버만 필요할 때</td></tr>
+<tr><td>정적 임베딩 (Model2Vec)</td><td>모델을 단어별 벡터 표로 증류</td><td><span style="color:#b8650f">아주 작고 빠르게. 정확도는 손해</span></td></tr>
+</table>
+<p style="font-size:28px;line-height:1.6;color:#4a5361">오늘 ONNX를 고른 이유: 언어 · OS · 하드웨어를 가장 넓게 덮고, OpenVINO · TensorRT도 ONNX에서 출발한다.</p>
+<aside>ONNX만 있는 건 아닙니다. 대표적인 선택지를 정리했습니다. 가장 쉬운 건 변환하지 않고 CPU판 torch로 그대로 내보내는 겁니다. Python 서버이고 빨리 내보내야 하면 충분합니다. Intel CPU 서버라면 Intel의 OpenVINO가, NVIDIA GPU라면 TensorRT가 각 하드웨어에 맞춰 더 빠르게 돌려 줍니다. 둘 다 ONNX 파일을 입력으로 받습니다. 모바일 앱 안에 넣으려면 Apple의 Core ML, Google의 LiteRT, 예전 이름 TensorFlow Lite가 있습니다. LLM을 로컬에서 돌릴 때 많이 쓰는 llama.cpp도 2024년부터 우리 모델과 같은 XLM-RoBERTa 계열 임베딩 모델을 GGUF 형식으로 돌립니다. 코드를 짜지 않고 임베딩 API 서버만 필요하다면 Hugging Face의 Text Embeddings Inference를 컨테이너로 띄우면 됩니다. 마지막으로 정적 임베딩은 모델을 단어별 벡터 표로 증류해서 트랜스포머 계산 자체를 없앱니다. 아주 작고 빠르지만 문맥을 보지 못해 정확도를 잃습니다. 오늘 ONNX를 고른 건 언어, 운영체제, 하드웨어를 가장 넓게 덮고, OpenVINO나 TensorRT로 가더라도 ONNX에서 출발하기 때문입니다.</aside>
+</section>

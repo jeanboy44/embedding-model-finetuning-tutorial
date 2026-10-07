@@ -1,0 +1,25 @@
+<section id="where" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:48px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#b8650f">2022 · LoRA 한 바퀴 · 어디서 잃었나</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">거의 모든 곳에서 조금씩</h2>
+</div>
+<div style="display:flex;gap:64px;align-items:flex-start">
+<table style="width:640px;font-size:28px;color:#1f2a37">
+<tr><th style="width:40%;text-align:left;color:#6b7480;font-size:24px">질문 유형</th><th style="width:30%;text-align:right;color:#6b7480;font-size:24px">002</th><th style="width:30%;text-align:right;color:#b8650f;font-size:24px">004</th></tr>
+<tr><td>keyword</td><td style="text-align:right">0.795</td><td style="text-align:right">0.764</td></tr>
+<tr><td>question</td><td style="text-align:right">0.687</td><td style="text-align:right">0.653</td></tr>
+<tr><td>situation</td><td style="text-align:right">0.589</td><td style="text-align:right">0.568</td></tr>
+</table>
+<table style="width:960px;font-size:28px;color:#1f2a37">
+<tr><th style="width:40%;text-align:left;color:#6b7480;font-size:24px">테마</th><th style="width:30%;text-align:right;color:#6b7480;font-size:24px">002</th><th style="width:30%;text-align:right;color:#b8650f;font-size:24px">004</th></tr>
+<tr><td>consumer</td><td style="text-align:right">0.650</td><td style="text-align:right">0.596</td></tr>
+<tr><td>traffic</td><td style="text-align:right">0.663</td><td style="text-align:right">0.619</td></tr>
+<tr><td>tax</td><td style="text-align:right">0.630</td><td style="text-align:right">0.599</td></tr>
+<tr><td>youth</td><td style="text-align:right">0.676</td><td style="text-align:right">0.660</td></tr>
+<tr><td>finance</td><td style="text-align:right">0.684</td><td style="text-align:right">0.670</td></tr>
+<tr style="background:#fdf1e3"><td>electric</td><td style="text-align:right">0.834</td><td style="text-align:right"><b>0.841</b> (유일하게 위)</td></tr>
+</table>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">test R@5. electric은 157 질문으로 가장 작은 테마라 +0.007은 잡음으로 본다</p>
+<aside>어디서 잃었는지 쪼개 봅니다. 질문 유형별로는 키워드형, 질문형, 상황 설명형 세 가지 모두에서 002보다 낮습니다. 키워드형 0.795에서 0.764, 질문형 0.687에서 0.653, 상황 설명형 0.589에서 0.568입니다. 테마별로는 소비자 분야가 0.650에서 0.596으로 가장 많이 떨어졌고, 교통, 세금이 그다음입니다. 전기 테마만 0.834에서 0.841로 조금 위인데, 질문이 157개로 가장 작은 테마라 이 정도는 잡음으로 봅니다. 결국 LoRA는 특정 영역에서 크게 무너진 게 아니라, 거의 모든 곳에서 조금씩 덜 배웠습니다. 학습할 수 있는 폭이 좁으니 납득이 가는 모습입니다.</aside>
+</section>

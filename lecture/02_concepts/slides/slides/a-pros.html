@@ -1,0 +1,15 @@
+<section id="a-pros" data-transition="fade" style="display:flex; flex-direction:column; gap:48px; justify-content:center; padding:128px 128px 160px; background:#fcfcfb">
+  <div style="display:flex; flex-direction:column; gap:20px">
+    <p style="font-family:'Noto Sans KR', Arial, sans-serif; font-size:26px; font-weight:700; color:#6b7480">하나 · 장점</p>
+    <h2 style="font-family:'Noto Sans KR', Arial, sans-serif; font-size:64px; font-weight:800; line-height:1.2; letter-spacing:-1px; color:#1f2a37">임베딩 검색이 잘하는 네 가지</h2>
+  </div>
+  <table style="width:1664px; font-family:'Noto Sans KR', Arial, sans-serif; font-size:26px; color:#1f2a37">
+    <tr><th style="width:22%; color:#6b7480">잘하는 것</th><th style="width:38%; color:#6b7480">무슨 뜻인가</th><th style="width:40%; color:#6b7480">근거</th></tr>
+    <tr><td>뜻으로 찾는다</td><td style="color:#4a5361">단어가 달라도 뜻이 가까우면 찾는다. 키워드 검색은 같은 단어가 있어야 한다</td><td style="color:#4a5361">학습한 분야에서는 단어만 세는 BM25보다 7~18점 높았다</td></tr>
+    <tr><td>빠르다</td><td style="color:#4a5361">문서 벡터는 미리 만들어 둔다. 질문마다 벡터 하나만 계산해 가까운 것을 고른다</td><td style="color:#4a5361">전체 문서에서 후보 100개를 고르는 데 약 5ms</td></tr>
+    <tr><td>싸다</td><td style="color:#4a5361">질문마다 LLM에게 문서를 읽힐 필요가 없다</td><td style="color:#4a5361">STS · 군집 · 쌍 분류는 성능이 비슷하고, 분류는 임베딩 모델이 더 나았다. LLM은 최대 1,431배 비쌌다</td></tr>
+    <tr><td>작다</td><td style="color:#4a5361">LLM 없이 혼자 돈다. CPU · 사내망 · 기기 안에도 들어간다</td><td style="color:#4a5361">최신 계열도 가장 작은 모델은 0.6B. 더 작은 모델도 많다</td></tr>
+  </table>
+  <p style="position:absolute; bottom:64px; left:128px; width:1664px; font-family:'Noto Sans KR', Arial, sans-serif; font-size:24px; color:#6b7480">BEIR (NeurIPS 2021, MS MARCO) · ZeroEntropy, Bi vs Cross-Encoders · The Embedder's Dilemma (2026) · Qwen3 Embedding (2025)</p>
+  <aside>임베딩 검색이 잘하는 것은 네 가지입니다. 첫째, 뜻으로 찾습니다. 단어가 달라도 뜻이 가까우면 찾고, 학습한 분야에서는 단어만 세는 BM25보다 7에서 18점 높았습니다. 둘째, 빠릅니다. 문서 벡터는 미리 만들어 두고 질문마다 벡터 하나만 계산하면 되니, 전체에서 후보 100개를 고르는 데 5ms 정도입니다. 셋째, 쌉니다. 최근 연구에서 문장 유사도(STS), 군집, 문장 쌍 분류는 LLM과 임베딩 모델의 성능이 비슷했고, 분류는 오히려 임베딩 모델이 더 나았습니다. 그런데 비용은 LLM이 최대 1,431배였습니다. 넷째, 작습니다. LLM 없이 혼자 돌고, 최신 계열도 가장 작은 모델은 6억 파라미터, 이보다 작은 모델도 많아서 CPU나 기기 안에도 넣을 수 있습니다. 다음 장은 같은 형식으로 약한 점을 봅니다.</aside>
+</section>

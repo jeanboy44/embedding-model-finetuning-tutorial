@@ -1,0 +1,15 @@
+<section id="vs-no-train" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">3 · 기준 실험 · ⑦ 분석 · 학습 없는 선택지 표에 한 줄 더</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">학습 없는 선택지와 나란히</h2>
+</div>
+<table style="width:1664px;font-size:30px;color:#1f2a37">
+<tr><th style="width:28%;text-align:left;color:#6b7480;font-size:26px">선택지</th><th style="width:36%;text-align:right;color:#6b7480;font-size:26px">test R@5</th><th style="width:16%;text-align:right;color:#6b7480;font-size:26px">질문당 LLM 호출</th><th style="width:20%;text-align:right;color:#6b7480;font-size:26px">한 번 드는 비용</th></tr>
+<tr><td>e5-small (학습 전)</td><td style="text-align:right">0.513</td><td style="text-align:right">0</td><td style="text-align:right;color:#6b7480">-</td></tr>
+<tr><td>e5-small + 쿼리 확장</td><td style="text-align:right;color:#6b7480">측정 전 (17개 표본 0.294 → 0.471)</td><td style="text-align:right;color:#b8650f"><b>1</b></td><td style="text-align:right;color:#6b7480">-</td></tr>
+<tr style="background:#fdf1e3"><td><b>002 파인튜닝</b></td><td style="text-align:right"><b>0.669</b></td><td style="text-align:right"><b>0</b></td><td style="text-align:right"><b>학습 40분 1회</b></td></tr>
+</table>
+<p style="font-size:34px;line-height:1.6;font-weight:700">파인튜닝은 질문마다 내던 LLM 비용을 <span style="color:#b8650f">학습 1회</span>로 옮긴다.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">test 2,526 질문 · 쿼리 확장은 무료 한도로 test 전체를 아직 못 쟀다 · 모델 크기(118M, 384차원) 그대로</p>
+<aside>앞에서 학습 없는 선택지를 한 표에 놓았죠. 거기에 방금 끝낸 기준 실험 002를 한 줄 붙입니다. 학습 전 e5-small은 LLM 호출 없이 0.513입니다. 쿼리 확장은 질문마다 LLM을 한 번 부르는데, test 전체 점수는 무료 한도 때문에 아직 못 쟀습니다. 캐시에 있던 17개 표본에서만 0.294가 0.471로 올랐습니다. 002 파인튜닝은 질문당 LLM 호출 없이 test 전체에서 0.669입니다. 대신 학습에 40분을 한 번 썼습니다. 정리하면 파인튜닝은 질문마다 내던 LLM 비용과 지연을 학습 한 번으로 옮기는 선택입니다. 모델 크기는 118M, 384차원 그대로라 7교시 배포 최적화도 같은 조건에서 이어 갑니다.</aside>
+</section>

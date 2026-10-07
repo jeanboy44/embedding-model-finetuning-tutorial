@@ -1,0 +1,61 @@
+{
+  "v": 4,
+  "attachments": {},
+  "cover": "cover",
+  "createdOnFiles": {
+    "at": "2026-10-07T13:30:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "faces": {
+    "jetbrains-mono": {
+      "family": "JetBrains Mono",
+      "href": "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap"
+    },
+    "noto-sans-kr": {
+      "family": "Noto Sans KR",
+      "href": "https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400..800&display=swap"
+    }
+  },
+  "lists": "css",
+  "order": [
+    "cover",
+    "flow",
+    "st-define",
+    "st-data",
+    "st-train",
+    "st-eval",
+    "st-ship",
+    "tools",
+    "div-2022",
+    "d22-tools",
+    "d22-stages",
+    "d22-leak",
+    "div-2026",
+    "d26-data",
+    "d26-exp",
+    "today",
+    "next",
+    "break"
+  ],
+  "sections": {
+    "s1": {
+      "description": "표지, 임베딩 모델 하나가 나오기까지의 다섯 단계와 단계마다 하는 일·실습 자료·힘이 드는 곳, 과제 중에 만드는 도구들",
+      "start": "cover"
+    },
+    "s2": {
+      "description": "2022의 DS: 도구부터 만들고, 손으로 돌리고, 엉뚱한 곳에 시간이 샌다",
+      "start": "div-2022"
+    },
+    "s3": {
+      "before": null,
+      "description": "2026의 DS: 같은 단계를 에이전트가 어떻게 대신했나, 사람이 남는 곳",
+      "start": "div-2026"
+    },
+    "s4": {
+      "description": "오늘 실습 명령, 5·6교시 예고, 휴식",
+      "start": "today"
+    }
+  },
+  "title": "4교시 DS의 일 2022 vs 2026"
+}

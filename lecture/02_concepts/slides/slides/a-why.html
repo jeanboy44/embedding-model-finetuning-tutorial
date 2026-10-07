@@ -1,0 +1,16 @@
+<section id="a-why" data-transition="fade" style="display:flex; flex-direction:column; gap:48px; justify-content:center; padding:128px 128px 160px; background:#fcfcfb">
+  <div style="display:flex; flex-direction:column; gap:20px">
+    <p style="font-family:'Noto Sans KR', Arial, sans-serif; font-size:26px; font-weight:700; color:#6b7480">하나 · 왜 거르나</p>
+    <h2 style="font-family:'Noto Sans KR', Arial, sans-serif; font-size:64px; font-weight:800; line-height:1.2; letter-spacing:-1px; color:#1f2a37">작으면 다 읽히고, 크면 걸러서 넣는다</h2>
+  </div>
+  <table style="width:1664px; font-family:'Noto Sans KR', Arial, sans-serif; font-size:28px; color:#1f2a37">
+    <tr><th style="width:20%; color:#6b7480"></th><th style="width:40%; color:#6b7480">LLM에 전부 넣기</th><th style="width:40%; color:#2d6db0">임베딩으로 걸러서 넣기 (RAG)</th></tr>
+    <tr><td>다 들어가면</td><td style="color:#4a5361">평균 정확도가 RAG보다 높다</td><td style="color:#4a5361">걸러질 때 정답을 놓치면 끝</td></tr>
+    <tr><td>길어지면</td><td style="color:#4a5361">길수록 떨어진다.</td><td style="color:#4a5361">문서가 늘어도 상위 몇 개만 넣는다</td></tr>
+    <tr><td>문서가 아주 많으면</td><td style="color:#b8650f">컨텍스트 한도를 넘어 들어가지 않는다</td><td style="color:#4a5361">문서 수와 상관없이 들어간다</td></tr>
+    <tr><td>질문당 비용</td><td style="color:#b8650f">매번 문서 전체를 읽는다</td><td style="color:#4a5361">임베딩 1번 + 문서 몇 개</td></tr>
+  </table>
+  <p style="font-family:'Noto Sans KR', Arial, sans-serif; font-size:30px; line-height:1.6; color:#4a5361">문서가 크거나 질문이 많으면 걸러야 한다. 그때 답의 품질을 정하는 것이 거르는 모델, 임베딩이다.</p>
+  <p style="position:absolute; bottom:64px; left:128px; width:1664px; font-family:'Noto Sans KR', Arial, sans-serif; font-size:24px; color:#6b7480">Li et al. (EMNLP 2024) · Chroma, Context Rot (2025) · OpenAI GPT-5.5 발표 (MRCR v2 8-needle: 128K 94.8% → 512K~1M 74.0%)</p>
+  <aside>LLM에 문서를 전부 넣고 찾게 하면 안 될까요. 다 들어가고 돈이 충분하면, 연구 결과로도 평균 정확도는 그쪽이 더 높습니다. 하지만 입력이 길어질수록 성능이 떨어집니다. 2025년 Chroma 실험에서 당시 최신 모델 18개가 모두 그랬고, 2026년 모델도 마찬가지입니다. 긴 문맥에서 여러 정보를 찾는 시험에서 OpenAI가 GPT-5.5를 발표하며 낸 숫자로, 12만 8천 토큰에서는 94.8%, 51만 2천~100만 토큰 구간에서는 74.0%였습니다. 폭은 줄었지만 여전히 떨어집니다. 문서가 아주 많으면 애초에 한도를 넘어 들어가지 않고, 들어가더라도 질문마다 전체를 읽혀야 합니다. 그래서 걸러서 넣습니다. 이때 답의 품질을 정하는 것이 거르는 모델, 임베딩입니다. 참고로 RAG로 먼저 답해 보고 안 되면 긴 컨텍스트로 넘기는 혼합 방식도 있습니다.</aside>
+</section>

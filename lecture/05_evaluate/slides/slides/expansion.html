@@ -1,0 +1,21 @@
+<section id="expansion" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">학습 없는 선택지 · 쿼리 확장</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">LLM이 질문을 법령 말로 바꿔 준다</h2>
+</div>
+<div style="display:flex;gap:64px">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;border-top:4px solid #ec9a3e;padding:26px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">원래 질문</p>
+<p style="font-size:36px;line-height:1.55;font-weight:700">가게에 불이 나서 장부가 다 타버렸어요. 세금 신고 기한 좀 늘려줄 수 있나요?</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;border-top:4px solid #4f93d8;padding:26px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">확장 검색어 · gemini-2.5-flash-lite (원문과 함께 검색)</p>
+<p style="font-size:36px;line-height:1.55;font-weight:700;color:#2d6db0">국세기본법, 기한 연장, 천재지변</p>
+<p style="font-size:30px;font-weight:700">정답 순위 100위 밖 → <span style="color:#2d6db0">1위</span></p>
+<p style="font-size:26px;color:#6b7480">입력 131 · 출력 14 토큰, 약 1.0초 (캐시 17개 평균 2.4초, 최대 7.8초)</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.6;color:#4a5361">학습이 필요 없다. 대신 <b style="color:#1f2a37">질문마다 LLM을 한 번</b> 부른다. 사용자가 늘수록 비용과 지연이 함께 는다.</p>
+<p style="font-size:30px;line-height:1.6;color:#4a5361"><b style="color:#b8650f">부작용:</b> 17개 중 10개 좋아짐 · 3개 나빠짐 — 확장어가 엉뚱한 법령 이름을 대면 그쪽으로 끌려간다(예: 특수관계인)</p>
+<aside>학습하기 전에, 학습 없이 올릴 방법부터 봅니다. 2교시에 말로만 했던 쿼리 확장의 실제 예입니다. 가게에 불이 나서 장부가 다 탔다는 일상어 질문을 LLM이 "국세기본법, 기한 연장, 천재지변"처럼 법령 말로 바꿔 주고, 원래 질문과 함께 검색합니다. 원문만으로는 정답 조문이 100위 밖이었는데, 확장하니 1위로 올라옵니다. 이 질문은 1초쯤 걸렸지만, 받은 캐시 17개를 평균하면 질문당 2.4초, 길게는 7.8초까지 걸렸습니다. 토큰은 입력 120여 개, 출력 10여 개로 얼마 안 듭니다. 하지만 질문마다 붙는 비용이라 사용자가 늘면 그대로 늘어납니다. 늘 좋아지는 것도 아닙니다. 17개 중 10개는 좋아졌지만 3개는 나빠졌습니다. "세법에서 말하는 특수관계인은 누구까지예요?"는 LLM이 확장어로 상속세 및 증여세법을 대는 바람에 검색이 그 법령 쪽으로 끌려가, 45위였던 정답이 100위 밖으로 밀렸습니다. 02_query_expansion.py 출력 끝의 질문별 순위표에서 직접 확인할 수 있습니다.</aside>
+</section>

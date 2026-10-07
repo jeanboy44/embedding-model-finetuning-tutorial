@@ -1,0 +1,22 @@
+<section id="decision" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:64px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">판단 · torch → int8 + 가지치기</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">정확도는 그대로, 무게는 몇 분의 일</h2>
+</div>
+<div style="display:flex;gap:72px">
+<div style="flex:1;display:flex;flex-direction:column;gap:18px;border-top:4px solid #4f93d8;padding:28px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#2d6db0">얻은 것</p>
+<p style="font-size:30px;line-height:1.5">설치 669 → 127MB · 모델 471 → 30MB</p>
+<p style="font-size:30px;line-height:1.5">메모리 1,133 → 403MB · 로딩 3.6 → 0.3s</p>
+<p style="font-size:30px;line-height:1.5">Recall@5 0.513 → 0.515 (같은 수준)</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:18px;border-top:4px solid #ec9a3e;padding:28px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#b8650f">잃은 것</p>
+<p style="font-size:30px;line-height:1.5">p95 지연 21.6 → 34.7ms</p>
+<p style="font-size:30px;line-height:1.5">문서 임베딩 처리량 80 → 38 문서/초</p>
+<p style="font-size:30px;line-height:1.5">범용성: 한국어 법령 전용</p>
+</div>
+</div>
+<p style="font-size:32px;line-height:1.6;color:#4a5361">무엇을 내보낼지는 표가 아니라 쓰임새가 정한다. 그 판단이 DS의 일이다.</p>
+<aside>표를 판단으로 바꿔 봅니다. 가지치기에 INT8을 더하면 설치, 모델, 메모리, 로딩이 몇 분의 일로 줄고 정확도는 같습니다. 잃는 것도 있습니다. 느린 쪽 지연이 늘고, 문서를 대량으로 임베딩하는 처리량이 절반으로 줄고, 한국어 법령 전용이 됩니다. 질문 하나씩 검색하는 서비스에 34ms는 문제가 안 될 수 있지만, 인덱스를 자주 새로 만들어야 한다면 이야기가 다릅니다. 어느 쪽을 내보낼지는 쓰임새를 보고 DS가 정합니다.</aside>
+</section>

@@ -1,0 +1,18 @@
+<section id="tech-where" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">조금 더 기술적으로 · 어디까지 가야 하나</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">배포 환경이 필요한 최적화를 정한다</h2>
+</div>
+<table style="width:1664px;font-size:28px;color:#1f2a37">
+<tr><th style="width:30%;text-align:left;color:#6b7480;font-size:24px">모델이 도는 곳</th><th style="width:22%;text-align:left;color:#6b7480;font-size:24px">ONNX 변환</th><th style="width:48%;text-align:left;color:#6b7480;font-size:24px">더 줄여야 하나</th></tr>
+<tr><td>Python API 서버 (GPU)</td><td>선택</td><td>보통 불필요. 처리량이 먼저</td></tr>
+<tr><td>Python API 서버 (CPU)</td><td><span style="color:#2d6db0">권장</span></td><td>메모리 · 서버 대수가 문제면 INT8</td></tr>
+<tr><td>C# 앱 안에 내장</td><td><span style="color:#2d6db0">필수</span></td><td>앱 설치 크기에 그대로 더해진다</td></tr>
+<tr><td>브라우저 · 모바일</td><td><span style="color:#2d6db0">필수</span></td><td><span style="color:#b8650f">필수.</span> 내려받는 크기가 곧 첫 화면 대기 시간</td></tr>
+</table>
+<div style="display:flex;flex-direction:column;gap:10px;background:#f2f3f5;border-radius:14px;padding:28px 36px">
+<p style="font-size:28px;line-height:1.55"><b>API로 감싸면</b> <span style="color:#4a5361">C# · 웹 · 엑셀 매크로 어디서든 HTTP만 부르면 된다. 런타임 고민은 서버 한 곳에만 남는다. 대신 네트워크가 끊긴 곳에서는 못 쓴다.</span></p>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">오늘은 CPU의 Python API 서버와 동료 노트북 CLI를 기준으로 줄인다</p>
+<aside>정리하면, 모델이 어디서 도느냐가 어디까지 최적화해야 하는지를 정합니다. GPU가 있는 Python 서버라면 ONNX 변환은 선택이고, 줄이기보다 처리량이 먼저입니다. CPU 서버라면 torch를 빼는 ONNX 변환을 권하고, 메모리나 서버 대수가 문제일 때 INT8을 더합니다. C# 앱 안에 모델을 넣는다면 ONNX는 필수고, 모델 크기가 앱 설치 크기에 그대로 더해집니다. 브라우저나 모바일이라면 변환도 줄이기도 필수입니다. 사용자가 모델을 내려받는 시간이 곧 첫 화면을 기다리는 시간이기 때문입니다. 다른 길도 있습니다. 모델을 API 서버 하나로 감싸면 C#이든 웹이든 HTTP만 부르면 되니까 런타임 고민은 서버 한 곳에만 남습니다. 다만 네트워크가 없는 곳에서는 쓸 수 없죠. 오늘은 CPU에서 도는 Python API 서버와 동료 노트북의 CLI를 기준으로 줄여 보겠습니다.</aside>
+</section>

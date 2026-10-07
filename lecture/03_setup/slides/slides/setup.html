@@ -1,0 +1,24 @@
+<section id="setup" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">1 · 환경</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">설치는 한 줄, 무거운 것은 받는다</h2>
+</div>
+<div style="display:flex;gap:40px">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px">
+<p style="font-size:24px;font-weight:700;color:#6b7480">코드와 패키지</p>
+<div style="display:flex;flex-direction:column;gap:10px;background:#f2f3f5;border-radius:14px;padding:28px 32px">
+<p style="font-family:'JetBrains Mono', 'Noto Sans KR', monospace;font-size:26px;line-height:1.6;color:#1f2a37">uv sync --all-packages --all-extras</p>
+</div>
+<p style="font-size:28px;line-height:1.55;color:#4a5361">ragkit과 모든 앱(API · CLI · MCP · 벤치), 학습 도구까지 한 번에</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px">
+<p style="font-size:24px;font-weight:700;color:#6b7480">미리 만든 산출물</p>
+<div style="display:flex;flex-direction:column;gap:10px;background:#f2f3f5;border-radius:14px;padding:28px 32px">
+<p style="font-family:'JetBrains Mono', 'Noto Sans KR', monospace;font-size:24px;line-height:1.6;color:#1f2a37">uv run python scripts/data_version.py pull v1<br>uv run python scripts/download_model_hf.py<br>uv run python scripts/finetuned_drive.py download</p>
+</div>
+<p style="font-size:28px;line-height:1.55;color:#4a5361">코퍼스 · 질문 · 분할(v1), 학습 전 e5, 그리고 파인튜닝 모델 r001_A와 인덱스. 셋 다 로그인 없이 받는다</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.6;color:#4a5361"><b style="color:#1f2a37">API 키는 쓰지 않는다.</b> LLM 답변 단계는 건너뛰고, 검색까지 직접 본다.</p>
+<aside>설치는 uv sync 한 줄입니다. 코퍼스, 질문, 분할은 데이터 버전 v1 한 번으로 받고, 학습 전 e5 모델은 HuggingFace에서 받습니다. 사내망 등으로 HF가 막히면 download_model_gdrive.py로 받으면 됩니다. 파인튜닝 모델 r001_A와 인덱스처럼 만드는 데 오래 걸리는 것은 제가 미리 만들어 Drive에 올려 두었습니다. finetuned_drive.py download 한 줄이면 r001_A와 인덱스 두 개를 받아 제자리에 둡니다. 인덱스를 직접 만들면 Mac에서 7~13분 걸리니 받아 쓰는 게 낫습니다. 실은 다음 장의 doctor --fix가 이 명령들을 대신 돌려 줍니다. 오늘은 API 키를 쓰지 않습니다. LLM이 답을 쓰는 단계만 건너뛰고, 오늘의 주제인 검색은 전부 키 없이 돕니다.</aside>
+</section>

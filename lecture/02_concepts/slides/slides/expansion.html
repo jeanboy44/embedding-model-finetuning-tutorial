@@ -1,0 +1,22 @@
+<section id="expansion" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">둘 · 방법 1 · 질문을 고친다</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">쿼리 확장 · HyDE: LLM이 질문을 다시 쓴다</h2>
+</div>
+<div style="display:flex;align-items:center;gap:24px">
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">질문</p><p style="font-size:28px;line-height:1.45">비밀번호를 까먹었어요</p></div>
+<p style="font-size:36px;color:#9aa3ad">→</p>
+<div style="display:flex;flex-direction:column;gap:8px;background:#fdf1e3;border:2px solid #ec9a3e;border-radius:14px;padding:28px;width:300px"><p style="font-size:24px;font-weight:700;color:#b8650f">LLM 호출</p><p style="font-size:28px;line-height:1.45">문서 용어로 다시 쓰기</p></div>
+<p style="font-size:36px;color:#9aa3ad">→</p>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">확장된 질문 (예시)</p><p style="font-size:28px;line-height:1.45">계정 비밀번호 재설정 절차</p></div>
+<p style="font-size:36px;color:#9aa3ad">→</p>
+<div style="display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px;width:220px"><p style="font-size:24px;font-weight:700;color:#6b7480">검색</p><p style="font-size:28px;line-height:1.45">상위 5개</p></div>
+</div>
+<div style="display:flex;gap:48px">
+<div style="flex:1;border-top:4px solid #c9ced6;padding:22px 0 0 0;display:flex;flex-direction:column;gap:8px"><p style="font-size:24px;font-weight:700;color:#6b7480">HyDE</p><p style="font-size:28px;line-height:1.5">질문 대신 LLM이 쓴 “가상의 답 문서”로 검색한다</p></div>
+<div style="flex:1;border-top:4px solid #4f93d8;padding:22px 0 0 0;display:flex;flex-direction:column;gap:8px"><p style="font-size:24px;font-weight:700;color:#6b7480">좋은 점</p><p style="font-size:28px;line-height:1.5">학습 없이 바로 쓴다. 어휘 차이를 LLM이 메운다</p></div>
+<div style="flex:1;border-top:4px solid #ec9a3e;padding:22px 0 0 0;display:flex;flex-direction:column;gap:8px"><p style="font-size:24px;font-weight:700;color:#6b7480">대가</p><p style="font-size:28px;line-height:1.5"><b style="color:#b8650f">질문마다 LLM 1번.</b> 비용과 지연이 검색보다 커진다</p></div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">Gao et al., HyDE: Precise Zero-Shot Dense Retrieval without Relevance Labels (ACL 2023)</p>
+<aside>첫 번째는 질문을 고치는 방법입니다. 쿼리 확장은 LLM이 일상어 질문을 문서에 쓰인 용어로 바꿔서 검색합니다. HyDE는 한발 더 나가서, LLM에게 그럴듯한 답 문서를 먼저 쓰게 하고 그 문서로 검색합니다. 가상의 답이 실제 문서와 말투가 비슷하니 더 잘 찾습니다. 둘 다 학습 없이 바로 쓸 수 있지만, 질문이 올 때마다 LLM을 한 번씩 불러야 합니다. 검색은 싸고 빠른데 앞에 비싼 호출이 붙는 셈입니다.</aside>
+</section>

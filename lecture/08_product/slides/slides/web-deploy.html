@@ -1,0 +1,18 @@
+<section id="web-deploy" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<div style="display:flex;align-items:center;gap:12px"><p style="font-size:24px;font-weight:700;background:#eef0f2;color:#6b7480;padding:6px 20px;border-radius:999px">1 · 데스크톱 앱</p><p style="font-size:24px;font-weight:700;background:#1f2a37;color:#fcfcfb;padding:6px 20px;border-radius:999px">2 · 웹</p><p style="font-size:24px;font-weight:700;background:#eef0f2;color:#6b7480;padding:6px 20px;border-radius:999px">3 · 에이전트</p><p style="font-size:24px;font-weight:700;color:#6b7480;padding:0 0 0 8px">우리 버전</p></div>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">화면과 API를 한 프로세스로</h2>
+</div>
+<div style="display:flex;align-items:stretch;gap:16px">
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">화면 · apps/web</p><h3 style="font-size:32px;font-weight:800">React</h3><p style="font-size:24px;line-height:1.5;color:#4a5361">API만 부른다. 모델을 모른다</p></div>
+<p style="font-size:32px;color:#9aa3ad;padding:56px 0 0 0">→</p>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#e8f1fa;border:2px solid #4f93d8;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#2d6db0">서버 · apps/api</p><h3 style="font-size:32px;font-weight:800">FastAPI</h3><p style="font-size:24px;line-height:1.5;color:#4a5361">검색 · 근거 답변(SSE) · 노트북</p></div>
+<p style="font-size:32px;color:#9aa3ad;padding:56px 0 0 0">→</p>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">모델 · 인덱스</p><h3 style="font-size:32px;font-weight:800">ragkit</h3><p style="font-size:24px;line-height:1.5;color:#4a5361">시작할 때 한 번 로드</p></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:14px;background:#f2f3f5;border-radius:14px;padding:28px 40px">
+<p style="font-family:'JetBrains Mono', 'Noto Sans KR', monospace;font-size:26px;line-height:1.7;color:#1f2a37"><span style="color:#6b7480"># 한 번에: uv run python lecture/08_product/04_web_app.py --run</span><br>pnpm --dir apps/web install<br>pnpm --dir apps/web build<br>uv run --package ragkit-api ragkit-api --web-dist apps/web/dist</p>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">Vite · React · TypeScript · Tailwind · shadcn/ui · TanStack Query</p>
+<aside>웹은 화면, API 서버, 모델 세 층입니다. 화면은 API만 부르고 모델은 전혀 모릅니다. 그래서 모델을 파인튜닝 모델이나 INT8로 바꿔도 화면은 그대로입니다. 배포할 때는 빌드한 화면을 API 서버가 같은 주소에서 함께 내보내니, 프로세스 하나만 띄우면 됩니다. 화면을 다시 빌드하려면 Node.js 20 이상과 pnpm이 필요하고(corepack enable), 저장소 루트에서 pnpm --dir apps/web로 설치와 빌드를 한 뒤 API 서버에 --web-dist로 넘깁니다. 04_web_app.py --run이 이 세 단계를 한 번에 합니다.</aside>
+</section>

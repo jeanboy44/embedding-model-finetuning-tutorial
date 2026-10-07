@@ -1,0 +1,27 @@
+<section id="embedding" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:grid;grid-template-columns:1fr 800px;gap:96px;align-items:center">
+<div style="display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">하나 · 하는 일</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.25;letter-spacing:-1px">문장을 숫자 벡터로 바꾼다</h2>
+</div>
+<p style="font-size:32px;line-height:1.6;color:#4a5361">의미가 가까운 문장은 벡터도 가깝다. 단어가 달라도 뜻이 같으면 가까이 놓이는 것이 좋은 임베딩이다.</p>
+<div style="display:flex;flex-direction:column;gap:10px;background:#f2f3f5;border-radius:14px;padding:28px 32px">
+<p style="font-size:26px;color:#4a5361">“비밀번호를 까먹었어요”</p>
+<p style="font-size:26px;color:#6b7480">→ [0.12, −0.53, 0.08, … ] 수백 개의 숫자</p>
+</div>
+</div>
+<div style="position:relative;width:800px;height:620px;background:#f2f3f5;border-radius:20px">
+<x-shape kind="ellipse" style="position:absolute;left:150px;top:150px;width:300px;height:180px;background:rgba(236,154,62,0.12);border:2px dashed #ec9a3e"></x-shape>
+<x-shape kind="ellipse" style="position:absolute;left:400px;top:360px;width:330px;height:180px;background:rgba(79,147,216,0.12);border:2px dashed #4f93d8"></x-shape>
+<x-shape kind="ellipse" style="position:absolute;left:200px;top:200px;width:24px;height:24px;background:#ec9a3e"></x-shape>
+<x-shape kind="ellipse" style="position:absolute;left:330px;top:262px;width:24px;height:24px;background:#ec9a3e"></x-shape>
+<x-shape kind="ellipse" style="position:absolute;left:460px;top:410px;width:24px;height:24px;background:#4f93d8"></x-shape>
+<x-shape kind="ellipse" style="position:absolute;left:600px;top:470px;width:24px;height:24px;background:#4f93d8"></x-shape>
+<p style="position:absolute;left:150px;top:100px;width:420px;font-size:26px;font-weight:700;color:#b8650f">비밀번호를 까먹었어요</p>
+<p style="position:absolute;left:180px;top:300px;width:300px;font-size:26px;font-weight:700;color:#b8650f">계정 복구 절차</p>
+<p style="position:absolute;left:400px;top:310px;width:360px;font-size:26px;font-weight:700;color:#2d6db0;text-align:right">택배가 안 와요</p>
+<p style="position:absolute;left:330px;top:550px;width:440px;font-size:26px;font-weight:700;color:#2d6db0;text-align:right">배송 지연 안내</p>
+<p style="position:absolute;left:32px;top:28px;width:400px;font-size:24px;color:#6b7480">벡터 공간 (2차원으로 줄여 그림)</p>
+</div>
+<aside>임베딩 모델은 문장을 숫자 벡터로 바꿉니다. 보통 수백 개의 숫자입니다. 의미가 가까우면 벡터도 가깝게 놓입니다. "비밀번호를 까먹었어요"와 "계정 복구 절차"는 겹치는 단어가 없지만 가까이 놓이고, "택배가 안 와요"는 "배송 지연 안내" 근처에 놓이는 식입니다. 그림은 개념도입니다. 선택 실습: uv run python lecture/02_concepts/01_embedding_exploration.py. 직접 돌려 보면 관련 있는 두 문장이 0.909, 전혀 무관한 문장도 0.79처럼 높게 나옵니다. e5는 유사도가 전반적으로 높게 나오는 모델이라 절대값이 아니라 순위를 봐야 합니다.</aside>
+</section>

@@ -1,0 +1,16 @@
+<section id="who-does-what" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:36px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#2d6db0">2026 · 실험 한 바퀴 6단계 · 전문가 에이전트 검토 문서 7개 (검색 · 방법론 · 운영)</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">에이전트가 돌고, 사람은 고른다</h2>
+</div>
+<table style="width:1664px;font-size:24px;color:#1f2a37">
+<tr><th style="width:24%;text-align:left;color:#6b7480;font-size:24px">단계 · 문서</th><th style="width:42%;text-align:left;color:#6b7480;font-size:24px">에이전트가 한 일</th><th style="width:34%;text-align:left;color:#2d6db0;font-size:24px">사람이 한 일</th></tr>
+<tr><td><b>0 오답 분석</b><br>00_error_analysis.md</td><td style="color:#4a5361">dev 실패 382개를 관계 6유형으로 집계, 기존 오답의 현재 순위 계산</td><td style="color:#4a5361">틀린 질문 몇 개를 직접 열어 원인 확인</td></tr>
+<tr><td><b>1 문헌</b><br>01_research.md</td><td style="color:#4a5361">관련 논문의 효과 크기를 표로 정리, 우리 분석과 맞춰 봄</td><td style="color:#4a5361">제약 정하기: e5-small 하나, reranker 없음</td></tr>
+<tr><td><b>2 계획</b><br>02_plan.md</td><td style="color:#4a5361">가설 · run 구성 · 통과 기준을 미리 적음, 검토가 누수를 짚음</td><td style="color:#4a5361">통과 기준 정하기, 누수 처리 판단</td></tr>
+<tr><td><b>3 실행</b><br>03_run/</td><td style="color:#4a5361">run 6개를 밤새 순서대로, 오답 후보 9,009쌍 판정</td><td style="color:#4a5361">자는 동안 돈다</td></tr>
+<tr><td><b>4 결과</b><br>04_results.md</td><td style="color:#4a5361">결과표 · 대응 검정 · 고친 질문과 망친 질문</td><td style="color:#4a5361">결론이 근거보다 강하지 않은지 확인</td></tr>
+<tr><td><b>5 회고</b><br>05_retro.md</td><td style="color:#4a5361">검토 반영, 다음 실험 후보를 비용 · 근거와 함께 순위로</td><td style="color:#4a5361">다음에 무엇을 할지 고르기</td></tr>
+</table>
+<aside>runs/001 폴더의 문서 이름이 곧 바퀴의 여섯 단계입니다. 0번 오답 분석에서 에이전트는 dev에서 틀린 382개를 정답과의 관계로 여섯 유형으로 나눠 세고, 지금 쓰는 오답이 모델 기준으로 몇 위에 있는지 계산했습니다. 저는 틀린 질문 몇 개를 직접 열어 그 분류가 맞는지 봤습니다. 1번 문헌은 관련 논문들이 얼마나 올렸는지 효과 크기를 표로 정리하고 우리 분석과 맞춰 봤습니다. 저는 제약을 정했습니다. 모델은 e5-small 하나, reranker는 쓰지 않는다. 2번 계획에서는 가설과 run 구성, 통과 기준을 실행 전에 적었고, 여기서 검토 에이전트가 데이터 누수를 짚었습니다. 3번 실행은 run 6개를 밤새 순서대로 돌리고 오답 후보 9,009쌍을 판정했습니다. 저는 그동안 잤습니다. 4번 결과는 결과표와 대응 검정, 고친 질문과 망친 질문까지 정리합니다. 제 일은 결론이 근거보다 세게 쓰이지 않았는지 보는 겁니다. 5번 회고는 다음 실험 후보를 비용과 근거와 함께 순위로 내놓고, 저는 그중에서 고릅니다. 단계마다 검색, 방법론, 운영 관점의 전문가 역할 에이전트가 검토한 문서가 모두 7개 남아 있습니다.</aside>
+</section>

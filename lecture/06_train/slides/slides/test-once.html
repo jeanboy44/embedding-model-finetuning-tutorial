@@ -1,0 +1,27 @@
+<section id="test-once" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:48px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#b8650f">2022 · LoRA 한 바퀴 · test는 한 번</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">0.641, 기준선 아래</h2>
+</div>
+<div style="display:flex;flex-direction:column;gap:24px;width:1400px">
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><p style="font-size:28px;font-weight:700">e5-small <span style="color:#6b7480">(학습 전)</span></p><p style="font-size:40px;font-weight:800;color:#4a5361">0.513</p></div>
+<div style="height:20px;background:#e6e8eb;border-radius:8px;display:flex"><div style="width:718px;height:20px;background:#8a939e;border-radius:8px"></div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><p style="font-size:28px;font-weight:700">004 LoRA</p><p style="font-size:40px;font-weight:800;color:#b8650f">0.641</p></div>
+<div style="height:20px;background:#e6e8eb;border-radius:8px;display:flex"><div style="width:897px;height:20px;background:#ec9a3e;border-radius:8px"></div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><p style="font-size:28px;font-weight:700">002 전체 학습</p><p style="font-size:40px;font-weight:800;color:#4a5361">0.669</p></div>
+<div style="height:20px;background:#e6e8eb;border-radius:8px;display:flex"><div style="width:937px;height:20px;background:#b8650f;border-radius:8px"></div></div>
+</div>
+</div>
+<table style="width:1400px;font-size:26px;color:#1f2a37">
+<tr><th style="width:25%;text-align:left;color:#6b7480;font-size:24px">test 2,526</th><th style="width:25%;text-align:right;color:#6b7480;font-size:24px">학습 전</th><th style="width:25%;text-align:right;color:#6b7480;font-size:24px">004 LoRA</th><th style="width:25%;text-align:right;color:#6b7480;font-size:24px">002</th></tr>
+<tr><td>R@1</td><td style="text-align:right">0.284</td><td style="text-align:right"><b>0.375</b></td><td style="text-align:right">0.405</td></tr>
+<tr><td>R@10</td><td style="text-align:right">0.601</td><td style="text-align:right"><b>0.732</b></td><td style="text-align:right">0.757</td></tr>
+</table>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">test: 학습 · 선택에 쓰지 않은 처음 보는 법령 16개의 질문. 모델을 고른 뒤 한 번만 연다</p>
+<aside>모델을 정했으니 이제 test를 한 번 엽니다. 학습에도 epoch 선택에도 쓰지 않은, 처음 보는 법령 16개의 질문 2,526개입니다. LoRA는 R@5 0.641로, 학습 전 0.513보다는 크게 올랐지만 기준선 002의 0.669보다는 아래입니다. R@1과 R@10도 같은 순서입니다. R@1은 0.375 대 0.405, R@10은 0.732 대 0.757입니다. 어느 지표로 봐도 학습 전과 002 사이, 002 쪽에 가깝게 있습니다. 자, 이게 거의 같은 걸까요, 다른 걸까요. 다음 장에서 미리 적어 둔 기준으로 판정합니다.</aside>
+</section>

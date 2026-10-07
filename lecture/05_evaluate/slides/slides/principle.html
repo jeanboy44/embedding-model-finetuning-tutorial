@@ -1,0 +1,19 @@
+<section id="principle" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:64px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">3 · 기준 실험 · 학습 원리 짧게</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">질문을 정답 가까이, 오답에서 멀리</h2>
+</div>
+<div style="display:flex;gap:72px">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;border-top:4px solid #ec9a3e;padding:28px 0 0 0">
+<h3 style="font-size:40px;font-weight:800">MNRL</h3>
+<p style="font-size:30px;line-height:1.55;color:#4a5361">배치 안의 다른 질문의 정답을 모두 오답으로 쓴다. 배치 32면 질문 하나에 <b style="color:#1f2a37">오답 31개 + hard negative 1개</b></p>
+<p style="font-size:24px;line-height:1.55;color:#6b7480">NO_DUPLICATES: 같은 조문이 한 배치에 두 번 들어가 “정답을 오답으로” 가르치는 일을 막는다</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;border-top:4px solid #c9ced6;padding:28px 0 0 0">
+<h3 style="font-size:40px;font-weight:800">전체 학습</h3>
+<p style="font-size:30px;line-height:1.55;color:#4a5361">가중치 1.18억 개를 모두 바꾼다. 모델 크기(118M, 384차원)는 그대로</p>
+<p style="font-size:24px;line-height:1.55;color:#6b7480">e5 접두어(“query: ” · “passage: ”)는 데이터가 아니라 코드에서 붙인다</p>
+</div>
+</div>
+<aside>원리는 짧게만 봅니다. 학습은 질문 벡터를 정답 조문 가까이, 오답 조문에서 멀리 옮기는 일입니다. MNRL은 배치 안의 다른 질문들의 정답을 공짜 오답으로 씁니다. 배치가 32면 질문 하나에 오답이 31개 생기는 셈이고, 여기에 4교시에 만든 hard negative가 하나 더해집니다. 같은 조문이 한 배치에 두 번 들어가면 정답을 오답으로 가르치게 되니 NO_DUPLICATES로 막습니다. 오늘 기준 실험은 전체 학습입니다. 가중치 1.18억 개를 모두 바꾸지만, 모델의 크기와 차원은 그대로라 배포 조건도 그대로입니다. e5는 질문 앞에 "query: ", 조문 앞에 "passage: "를 붙여야 하는데, 이건 데이터에 넣지 않고 코드에서 붙입니다.</aside>
+</section>

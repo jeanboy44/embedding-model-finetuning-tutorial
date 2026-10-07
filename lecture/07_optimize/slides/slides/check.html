@@ -1,0 +1,12 @@
+<section id="check" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:72px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">확인할 것</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">눈으로 보고 넘어간다</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0"><h3 style="font-size:36px;font-weight:800;line-height:1.3">변환이 같은가</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">torch와 ONNX 임베딩의 코사인 유사도가 사실상 1인지</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0"><h3 style="font-size:36px;font-weight:800;line-height:1.3">표 읽기</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">내 쓰임새라면 어느 변형을 고를지, 그 이유 한 줄</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0"><h3 style="font-size:36px;font-weight:800;line-height:1.3">API 시작 · 검색 속도</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">torch에서 바꾸면 시작 약 3.3s → ONNX INT8 0.3s · 가지치기+INT8 0.1s, 검색 약 15 → 9ms (워밍업 후 20회 중앙값, 이 Mac)</p></div>
+</div>
+<aside>세 가지를 확인합니다. 변환한 모델이 원본과 같은 결과를 내는지, 비교표를 보고 내 상황이라면 무엇을 고를지 한 줄로 써 보기, 그리고 3번 스크립트에서 API를 torch, ONNX INT8, 가지치기 + INT8로 바꿔 띄웠을 때 시작 시간과 검색 속도입니다. 검색은 첫 요청을 워밍업으로 버리고 20회 잰 중앙값인데, 이 Mac에서는 torch로 약 3.3초 걸리던 시작이 ONNX INT8에서 0.3~0.4초, 가지치기 + INT8에서 0.1초로 줄었고, 검색은 약 15ms에서 9ms로 줄었습니다. 여러분 노트북에서는 숫자가 다를 수 있습니다.</aside>
+</section>

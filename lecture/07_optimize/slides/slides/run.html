@@ -1,0 +1,11 @@
+<section id="run" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:40px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">실행</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">돌려 볼 명령</h2>
+</div>
+<div style="display:flex;flex-direction:column;gap:14px;background:#f2f3f5;border-radius:14px;padding:32px 44px">
+<p style="font-family:'JetBrains Mono', 'Noto Sans KR', monospace;font-size:24px;line-height:1.6;color:#1f2a37"><span style="color:#6b7480"># 1. API 복습: 검색 · 법령 필터 · 422 · 스트리밍 답변</span><br>uv run python lecture/07_optimize/01_api_review.py<br><span style="color:#6b7480"># 2. ONNX → INT8 → 어휘 가지치기로 배포용 모델 세 개 만들고 비교 (각 수 초~수십 초)</span><br>uv run ragkit export-onnx models/multilingual-e5-small<br>uv run ragkit quantize models/multilingual-e5-small<br>uv run ragkit prune-vocab models/multilingual-e5-small<br>uv run ragkit export-onnx models/multilingual-e5-small-pruned<br>uv run ragkit quantize models/multilingual-e5-small-pruned<br>uv run python lecture/07_optimize/02_onnx_quantize_prune.py<br><span style="color:#6b7480"># 3. 새 모델의 인덱스 (몇 분씩) → 비교표 읽기 · API 백엔드 바꿔 재기</span><br>uv run ragkit index --model models/multilingual-e5-small-int8<br>uv run ragkit index --model models/multilingual-e5-small-pruned-int8<br>uv run python lecture/07_optimize/03_bench_and_serve.py</p>
+</div>
+<p style="font-size:30px;line-height:1.6;color:#4a5361">--run은 임시 폴더에서 처음부터 직접 (02 약 30초 · 03 약 1분, 받은 파일은 그대로).</p>
+<aside>위에서부터 순서대로 돌립니다. 1번은 API 복습입니다. 2번은 ragkit 명령 다섯 줄로 ONNX 변환, 채널별 INT8 양자화, 어휘 가지치기 뒤 다시 변환과 양자화를 해서 배포용 모델 세 개를 만들고, 02 스크립트로 만든 모델을 비교합니다. 3번은 새 모델마다 코퍼스 2.6만 문서를 다시 임베딩해 인덱스를 만들어야 해서 몇 분씩 걸립니다. 쉬는 시간 전에 걸어 두세요. 그다음 03 스크립트로 비교표를 읽고 API 백엔드를 바꿔 시작 시간과 검색 속도를 잽니다. 직접 해 보고 싶으면 --run을 붙이세요. 2번은 임시 폴더에서 ONNX 변환, 텐서 단위와 채널별 양자화, 어휘 가지치기를 직접 하고, 3번은 test 질문 200개로 ragkit-bench를 다시 잽니다. 2번 --run은 약 30초, 3번 --run은 약 1분 걸리고, 받은 모델과 결과는 덮어쓰지 않습니다. 선택: uv run python lecture/07_optimize/extra_embedding_speed.py (약 2분)</aside>
+</section>

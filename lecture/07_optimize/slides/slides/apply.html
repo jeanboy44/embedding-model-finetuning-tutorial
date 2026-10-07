@@ -1,0 +1,15 @@
+<section id="apply" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">API에 적용</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">고른 모델로 바꿔 띄운다</h2>
+</div>
+<div style="display:flex;flex-direction:column;gap:14px;background:#f2f3f5;border-radius:14px;padding:36px 40px">
+<p style="font-family:'JetBrains Mono', 'Noto Sans KR', monospace;font-size:26px;line-height:1.75;color:#1f2a37"><span style="color:#6b7480"># 처음: torch 백엔드</span><br>uv run --package ragkit-api ragkit-api --backend torch<br><span style="color:#6b7480"># 지금: 가지치기 + INT8 모델</span><br>uv run --package ragkit-api ragkit-api --model models/multilingual-e5-small-pruned-int8</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:26px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#2d6db0">MLflow 모델 레지스트리를 쓰면</p>
+<p style="font-family:'JetBrains Mono', 'Noto Sans KR', monospace;font-size:24px;line-height:1.7;color:#1f2a37">uv run ragkit register models/multilingual-e5-small-pruned-int8 --name law-embedder --alias champion<br>uv run --package ragkit-api ragkit-api --model models:/law-embedder@champion</p>
+<p style="font-size:28px;line-height:1.55;color:#4a5361">앱은 경로 대신 별칭으로 부른다. 더 나은 모델이 나오면 별칭만 옮긴다.</p>
+</div>
+<aside>고른 모델로 API를 다시 띄웁니다. 옵션 하나만 바뀌고 API 코드는 그대로입니다. 3번 스크립트가 백엔드를 바꿔 가며 시작 시간과 검색 속도를 직접 재는데, 여기 띄우는 가지치기 + INT8 모델 기준으로, 이 Mac에서는 시작 시간이 torch의 약 3.3초에서 0.1초로, 워밍업 후 20회 검색 중앙값이 약 15ms에서 9ms로 줄었습니다. 가지치기 없이 ONNX INT8만 쓰면 시작은 0.3~0.4초입니다. 돌릴 때마다 조금씩 달라지니 범위로 기억하세요. MLflow 레지스트리에 law-embedder라는 이름, champion이라는 별칭으로 등록해 두면 앱은 경로 대신 별칭으로 모델을 부르고, 더 나은 모델이 나오면 별칭만 옮기면 됩니다. 레지스트리와 모니터링은 8교시에 MLflow 서버(포트 5050)를 띄워 이어서 봅니다.</aside>
+</section>

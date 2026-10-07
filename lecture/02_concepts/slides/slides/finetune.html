@@ -1,0 +1,32 @@
+<section id="finetune" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:48px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">셋 · 무엇인가</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">이미 학습된 모델을 내 데이터로 조금 더</h2>
+</div>
+<div style="display:flex;gap:48px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px">
+<p style="font-size:28px;font-weight:800;color:#6b7480">학습 전</p>
+<div style="position:relative;width:808px;height:380px;background:#f2f3f5;border-radius:18px">
+<x-shape kind="ellipse" style="position:absolute;left:110px;top:150px;width:30px;height:30px;background:#ec9a3e"></x-shape>
+<x-shape kind="ellipse" style="position:absolute;left:250px;top:220px;width:30px;height:30px;background:#9aa3ad"></x-shape>
+<x-shape kind="ellipse" style="position:absolute;left:640px;top:260px;width:30px;height:30px;background:#4f93d8"></x-shape>
+<p style="position:absolute;left:60px;top:96px;width:300px;font-size:26px;font-weight:700;color:#b8650f">질문</p>
+<p style="position:absolute;left:230px;top:262px;width:300px;font-size:26px;font-weight:700;color:#6b7480">비슷한 다른 문서</p>
+<p style="position:absolute;left:470px;top:304px;width:320px;font-size:26px;font-weight:700;color:#2d6db0;text-align:right">정답 문서</p>
+</div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px">
+<p style="font-size:28px;font-weight:800;color:#2d6db0">학습 후</p>
+<div style="position:relative;width:808px;height:380px;background:#f2f3f5;border-radius:18px">
+<x-shape kind="ellipse" style="position:absolute;left:300px;top:160px;width:30px;height:30px;background:#ec9a3e"></x-shape>
+<x-shape kind="ellipse" style="position:absolute;left:370px;top:190px;width:30px;height:30px;background:#4f93d8"></x-shape>
+<x-shape kind="ellipse" style="position:absolute;left:660px;top:300px;width:30px;height:30px;background:#9aa3ad"></x-shape>
+<p style="position:absolute;left:180px;top:106px;width:300px;font-size:26px;font-weight:700;color:#b8650f">질문</p>
+<p style="position:absolute;left:420px;top:184px;width:300px;font-size:26px;font-weight:700;color:#2d6db0">정답 문서</p>
+<p style="position:absolute;left:440px;top:240px;width:340px;font-size:26px;font-weight:700;color:#6b7480;text-align:right">비슷한 다른 문서</p>
+</div>
+</div>
+</div>
+<p style="font-size:32px;line-height:1.6;color:#4a5361">질문과 정답 문서 쌍을 보여 주며 정답은 당기고, 다른 문서는 민다. 학습하는 것은 LLM이 아니라 작은 검색 모델이다.</p>
+<aside>파인튜닝은 처음부터 만드는 게 아니라 이미 학습된 모델을 내 데이터로 조금 더 학습하는 겁니다. 질문과 정답 문서 쌍을 주면, 정답은 가까이 당기고 다른 문서는 밀어냅니다. LLM이 아니라 작은 임베딩 모델을 학습하므로 노트북에서도 됩니다.</aside>
+</section>

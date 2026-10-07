@@ -1,0 +1,22 @@
+<section id="opt-what" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:64px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">최적화란</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">다 만든 모델을, 같은 답 그대로 더 가볍게</h2>
+</div>
+<div style="display:flex;gap:72px">
+<div style="flex:1;display:flex;flex-direction:column;gap:22px;border-top:4px solid #c9ced6;padding:28px 0 0 0">
+<p style="font-size:28px;font-weight:800;color:#6b7480">학습</p>
+<p style="font-size:30px;line-height:1.5"><span style="color:#6b7480">목표</span>  더 잘 맞히게</p>
+<p style="font-size:30px;line-height:1.5"><span style="color:#6b7480">바꾸는 것</span>  가중치의 값</p>
+<p style="font-size:30px;line-height:1.5"><span style="color:#6b7480">재는 것</span>  Recall이 올랐나</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:22px;border-top:4px solid #4f93d8;padding:28px 0 0 0">
+<p style="font-size:28px;font-weight:800;color:#2d6db0">배포 최적화</p>
+<p style="font-size:30px;line-height:1.5"><span style="color:#6b7480">목표</span>  같은 답을 더 싸고 빠르게</p>
+<p style="font-size:30px;line-height:1.5"><span style="color:#6b7480">바꾸는 것</span>  실행 형식 · 숫자 정밀도 · 어휘</p>
+<p style="font-size:30px;line-height:1.5"><span style="color:#6b7480">재는 것</span>  크기 · 메모리 · 지연, 그리고 Recall이 그대로인가</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.6;color:#4a5361">다시 학습하지 않는다. 학습 때의 optimizer(AdamW)와도 다른 이야기다. 줄인 뒤에는 정확도를 꼭 다시 잰다.</p>
+<aside>오늘 말하는 최적화가 무엇인지부터 정리합니다. 학습은 모델이 더 잘 맞히도록 가중치 값을 바꾸는 일이었습니다. 배포 최적화는 이미 다 만든 모델을, 같은 답을 내면서 더 싸고 빠르게 돌게 하는 일입니다. 다시 학습하지 않고, 모델을 담는 형식, 숫자를 몇 비트로 저장하는지, 모델이 들고 있는 어휘를 바꿉니다. 학습할 때 들은 optimizer, AdamW와 이름은 비슷하지만 전혀 다른 이야기입니다. 그리고 줄이면 정확도가 떨어질 수 있으니, 줄인 뒤에는 반드시 정확도를 다시 잽니다. 크기와 정확도를 같이 재는 것, 이게 오늘 내내 할 일입니다.</aside>
+</section>

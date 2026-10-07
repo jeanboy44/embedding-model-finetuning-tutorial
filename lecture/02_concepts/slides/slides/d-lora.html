@@ -1,0 +1,14 @@
+<section id="d-lora" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:64px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">넷 · 트렌드 2</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">적게 학습한다: LoRA · 어댑터</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #c9ced6;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">무엇인가</p><h3 style="font-size:36px;font-weight:800;line-height:1.3">작은 행렬만 학습</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">원래 가중치는 얼리고, 옆에 붙인 작은 행렬만 학습한다. 학습할 양과 저장할 파일이 크게 준다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#2d6db0">사례 · jina-embeddings-v3</p><h3 style="font-size:36px;font-weight:800;line-height:1.3">용도별 어댑터</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">모델 하나에 검색 · 분류 · 군집용 어댑터를 바꿔 끼워 쓴다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#2d6db0">연구 · 밀집 검색</p><h3 style="font-size:36px;font-weight:800;line-height:1.3">일반화에 유리할 때도</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">도메인 밖에서는 전체 학습보다 1.6~4.6점 높았고, 도메인 안에서는 전체 학습이 나았다</p></div>
+</div>
+<p style="font-size:30px;line-height:1.6;color:#4a5361">어느 쪽이 나은지는 데이터마다 다르다. 결국 내 데이터로 재 봐야 한다.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">jina-embeddings-v3 (2024) · Back to Basics: Out-of-Domain Retrieval in Dense Encoders (2023)</p>
+<aside>둘째, 적게 학습합니다. LoRA는 원래 모델은 얼려 두고 옆에 붙인 작은 행렬만 학습합니다. 학습할 양도, 저장할 파일도 크게 줄어듭니다. jina-embeddings-v3는 모델 하나에 검색용, 분류용, 군집용 어댑터를 바꿔 끼워 씁니다. 밀집 검색 연구에서는 LoRA가 도메인 밖 일반화에서 전체 학습보다 1.6에서 4.6점 높았고, 도메인 안에서는 전체 학습이 나았습니다. 어느 쪽이 나은지는 데이터마다 다르다는 얘기입니다. 그래서 결국 내 데이터로 재 봐야 합니다. 오늘 6교시에 우리 데이터로 둘을 비교해 봅니다.</aside>
+</section>

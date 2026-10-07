@@ -1,0 +1,15 @@
+<section id="bench-table" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">비교표 · ragkit-bench</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">같은 조건에서 네 변형을 잰다</h2>
+</div>
+<table style="width:1664px;font-size:28px;color:#1f2a37">
+<tr><th style="width:22%;text-align:left;color:#6b7480;font-size:24px">변형</th><th style="width:11%;text-align:right;color:#6b7480;font-size:24px">설치 MB</th><th style="width:11%;text-align:right;color:#6b7480;font-size:24px">모델 MB</th><th style="width:12%;text-align:right;color:#6b7480;font-size:24px">메모리 MB</th><th style="width:10%;text-align:right;color:#6b7480;font-size:24px">로딩 s</th><th style="width:11%;text-align:right;color:#6b7480;font-size:24px">p50 ms</th><th style="width:11%;text-align:right;color:#6b7480;font-size:24px">p95 ms</th><th style="width:12%;text-align:right;color:#6b7480;font-size:24px">R@5</th></tr>
+<tr><td>torch-fp32</td><td style="text-align:right">669</td><td style="text-align:right">471</td><td style="text-align:right">1,133</td><td style="text-align:right">3.59</td><td style="text-align:right">19.7</td><td style="text-align:right">21.6</td><td style="text-align:right">0.513</td></tr>
+<tr><td>onnx-fp32</td><td style="text-align:right">127</td><td style="text-align:right">470</td><td style="text-align:right">1,782</td><td style="text-align:right">0.77</td><td style="text-align:right">16.5</td><td style="text-align:right">20.7</td><td style="text-align:right">0.513</td></tr>
+<tr><td>onnx-int8</td><td style="text-align:right">127</td><td style="text-align:right">118</td><td style="text-align:right">874</td><td style="text-align:right">0.54</td><td style="text-align:right">15.6</td><td style="text-align:right">17.6</td><td style="text-align:right">0.514</td></tr>
+<tr style="background:#e8f1fa"><td><b>int8 + 가지치기</b></td><td style="text-align:right"><b>127</b></td><td style="text-align:right"><b>30</b></td><td style="text-align:right"><b>403</b></td><td style="text-align:right"><b>0.30</b></td><td style="text-align:right">16.7</td><td style="text-align:right">34.7</td><td style="text-align:right"><b>0.515</b></td></tr>
+</table>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">실험 008 · CPU · test 질문 2,526개 · 전체 코퍼스 대상 · base e5-small</p>
+<aside>네 변형을 같은 조건에서 잰 표입니다. CPU에서 test 질문 2,526개로 지연, 메모리, 크기, 정확도를 한 번에 잽니다. 맨 아래 가지치기에 INT8을 더한 모델이 설치, 모델, 메모리, 로딩 네 가지에서 가장 작고, Recall@5는 원본과 사실상 같습니다. 대신 p95 지연은 오히려 늘었습니다. 이런 걸 표로 보고 판단하는 게 이번 시간의 핵심입니다.</aside>
+</section>

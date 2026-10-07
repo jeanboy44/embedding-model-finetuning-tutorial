@@ -1,0 +1,11 @@
+<section id="run" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">실행</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">돌려 볼 명령</h2>
+</div>
+<div style="display:flex;flex-direction:column;gap:14px;background:#f2f3f5;border-radius:14px;padding:40px 44px">
+<p style="font-family:'JetBrains Mono', 'Noto Sans KR', monospace;font-size:28px;line-height:1.75;color:#1f2a37"><span style="color:#6b7480"># 1. 환경 점검 (빠진 것이 있으면 --fix)</span><br>uv run python lecture/03_setup/01_doctor.py<br><span style="color:#6b7480"># 2. 완성품 써 보기: 같은 질문을 학습 전 e5와 파인튜닝에</span><br>uv run python lecture/03_setup/02_try_product.py<br><span style="color:#6b7480"># 3. 학습 전후 비교: CLI 명령 모음</span><br>lecture/03_setup/README.md</p>
+</div>
+<p style="font-size:30px;line-height:1.6;color:#4a5361">저장소 루트에서 실행한다. 받은 산출물만 쓰므로 --run 모드가 없고, 몇 분이면 끝난다.</p>
+<aside>점검과 완성품 스크립트를 돌리고, 학습 전후 비교는 README에 모아 둔 CLI 명령을 직접 쳐 봅니다. 모두 저장소 루트에서 실행합니다. 3교시 스크립트는 받은 모델과 인덱스를 열어 보기만 해서 --run 모드가 없고, 오래 걸리지 않습니다. 점검에서 빠진 게 나오면 --fix를 붙여 다시 돌리세요. API 키는 쓰지 않습니다. 선택: uv run python lecture/03_setup/extra_gemini_basics.py. GEMINI_API_KEY가 있어야 하고, 한 번 실행에 Gemini를 4회 호출합니다. 무료 한도가 작으니 여러 번 돌리지 마세요.</aside>
+</section>
