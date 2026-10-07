@@ -340,7 +340,11 @@ print(
 )
 print(
     f"  다시 캔 오답 002 대비 {mined - full:+.3f} ({verdict(mined - full)})."
-    + (" 다만 001은 lr 3e-5 · 4 epoch로 학습 설정도 다르다" if mined - full >= MIN_DIFF else "")
+    + (
+        " 다만 001은 lr 3e-5 · 4 epoch로 학습 설정도 다르다"
+        if mined - full >= MIN_DIFF
+        else ""
+    )
 )
 print(
     "               같은 설정의 대조군끼리 보면 dev 복수 정답 R@5 0.720 → 0.761 (+0.041, runs/001_hard_negatives/04_results.md)."
@@ -357,7 +361,7 @@ if args.run:
 # ============================================================
 section("5. 차이가 우연인가: ragkit paired-test (같은 질문끼리 짝지어 비교)")
 base_path = results["exp_002"][1]
-for other in ("exp_006", "r001_A"):
+for other in ("exp_004", "exp_006", "r001_A"):
     print(f"\n002 → {RUNS[other][0]}")
     ragkit("paired-test", str(base_path), str(results[other][1]), "--judge", "doc")
 print(

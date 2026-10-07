@@ -17,8 +17,10 @@
 실행:
     uv run python lecture/06_train/01_train_taste.py          # 원리 + 받은 모델의 학습 기록 (1분 안쪽)
     uv run python lecture/06_train/01_train_taste.py --run    # ragkit train으로 몇 step만 직접 학습 (약 1.5분)
+    uv run python lecture/06_train/01_train_taste.py --run --lora   # 같은 맛보기를 LoRA 설정(실험 004)으로
 
---run은 실험 002 설정 그대로 --output-dir만 임시 폴더로 줘서 돌린다. 받은 모델은 덮어쓰지 않는다.
+--run은 실험 002(--lora면 004) 설정 그대로 --output-dir만 임시 폴더로 줘서 돌린다. 받은 모델은 덮어쓰지 않는다.
+5교시는 기준 실험 002의 파일럿으로, 6교시는 LoRA 실험 004의 파일럿(--lora)으로 쓴다.
 """
 
 import argparse
@@ -45,7 +47,10 @@ DATA = ROOT / "data"
 CORPUS = DATA / "processed" / "law_docs.json"
 SPLITS = DATA / "splits"
 FINETUNED = ROOT / "models" / "finetuned"
-CONFIG = ROOT / "experiments" / "exp_002_finetuned" / "config.yaml"
+CONFIGS = {  # --run에 쓰는 설정: 기준 실험 002(5교시) / LoRA 실험 004(6교시)
+    "002": ROOT / "experiments" / "exp_002_finetuned" / "config.yaml",
+    "004": ROOT / "experiments" / "exp_004_lora" / "config.yaml",
+}
 MODEL = "intfloat/multilingual-e5-small"
 RUNS = {  # 받은 모델 → 무엇을 바꾼 실험인가 (docs/PLAN.md, runs/001_hard_negatives)
     "exp_002": "전체 학습 · 배치 32 · LLM이 고른 오답 1개 (기준)",
@@ -145,7 +150,13 @@ parser = argparse.ArgumentParser(description="실습 3-1: 학습 원리와 맛�
 parser.add_argument(
     "--run", action="store_true", help=f"ragkit train으로 {RUN_STEPS} step만 직접 학습"
 )
+parser.add_argument(
+    "--lora",
+    action="store_true",
+    help="실험 002 대신 LoRA 실험 004 설정으로 (6교시)",
+)
 args = parser.parse_args()
+CONFIG = CONFIGS["004" if args.lora else "002"]
 
 require(
     [
@@ -232,7 +243,7 @@ print(
 # ============================================================
 # 4. 설정 파일과 전체 학습 vs LoRA
 # ============================================================
-section("4. 설정 파일 (실험 002) 과 받은 모델의 학습 기록")
+section(f"4. 설정 파일 ({rel(CONFIG)}) 과 받은 모델의 학습 기록")
 config = yaml.safe_load(CONFIG.read_text(encoding="utf-8"))
 print(f"{rel(CONFIG)} 의 training:")
 for key, value in config["training"].items():
@@ -268,6 +279,9 @@ if not args.run:
     section("5. 직접 학습해 보려면")
     print(
         f"  uv run python lecture/06_train/01_train_taste.py --run   # {RUN_STEPS} step만 (약 1.5분)"
+    )
+    print(
+        "  uv run python lecture/06_train/01_train_taste.py --run --lora   # 같은 맛보기를 LoRA 설정(실험 004)으로"
     )
     print(
         "  전체 학습은 just finetune-suite (분할 → 002·004·006 학습 → 비교표, 약 2시간)"
