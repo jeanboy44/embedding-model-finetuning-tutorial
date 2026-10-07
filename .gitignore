@@ -94,3 +94,6 @@ apps/web/dist/
 
 # 실험 기록의 큰 파일 (runs/README.md)
 runs/*/artifacts/
+
+# 장표 세션의 덱 작업 사본 (게시본 소스는 lecture/0N_*/slides/)
+/.deck-tmp/
