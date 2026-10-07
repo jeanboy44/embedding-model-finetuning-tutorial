@@ -1,0 +1,54 @@
+{
+  "drive_folder": "https://drive.google.com/drive/folders/1vpGtkFmS5kPfRlu5f7pcGKf_gZ2AWHXK",
+  "models": {
+    "r001_A": {
+      "file": "finetuned-r001_A.zip",
+      "model_dir": "models/finetuned/r001_A",
+      "index": "data/processed/index/r001_A-20261002120228.sqlite",
+      "model_key": "r001_A-20261002120228",
+      "weights_mtime": 1790942548.600959,
+      "sha256": "d3b07a70959e833b3557ea2eee9f6a533f21b022b5f5ea3dc5cf0e49cae3d9c5",
+      "size_mb": 358.5,
+      "file_id": "1BZDpsGyrtD6_NgKyra9ifDfuraULO8Fn"
+    },
+    "exp_002": {
+      "file": "finetuned-exp_002.zip",
+      "model_dir": "models/finetuned/exp_002",
+      "index": "data/processed/index/exp_002-20260930142234.sqlite",
+      "model_key": "exp_002-20260930142234",
+      "weights_mtime": 1790778154.2225323,
+      "sha256": "c45b25f04f2947b9eab0170c3fa20d58589cbc0c6f3dd2cef889210ec7e20a88",
+      "size_mb": 358.4,
+      "file_id": "1fuvHutnkMxY7Jlh3DxZ2s2GmFGJEOniV"
+    },
+    "exp_004": {
+      "file": "finetuned-exp_004.zip",
+      "model_dir": "models/finetuned/exp_004",
+      "index": "data/processed/index/exp_004-20260930145821.sqlite",
+      "model_key": "exp_004-20260930145821",
+      "weights_mtime": 1790780301.1197865,
+      "sha256": "1434c7a9e8e871e4356db985b6eb9af50cfe777d6eb5cb4ffae0d5f3ba7645f9",
+      "size_mb": 333.7,
+      "file_id": "19ilF-Ud_8DXSak9EjKlCsWPoONmK-_zE"
+    },
+    "exp_006": {
+      "file": "finetuned-exp_006.zip",
+      "model_dir": "models/finetuned/exp_006",
+      "index": "data/processed/index/exp_006-20260930153413.sqlite",
+      "model_key": "exp_006-20260930153413",
+      "weights_mtime": 1790782453.8664248,
+      "sha256": "558ddc12e8a3bcdf7a312d1fa5faccb8ef8b41f0a35c15069284ab970cc2f863",
+      "size_mb": 358.4,
+      "file_id": "1J7AVUj_ikkZdUIOx4qCWFk6WjJMJCLCf"
+    }
+  },
+  "indexes": {
+    "multilingual-e5-small": {
+      "file": "index-multilingual-e5-small.zip",
+      "index": "data/processed/index/multilingual-e5-small.sqlite",
+      "sha256": "350584332ce6113fdef03f864c0992326e71d437218f124662a6878e73a37163",
+      "size_mb": 43.3,
+      "file_id": "1l3_nuTHWKDf3kKBDGEpKdaCAnOgqO1ZC"
+    }
+  }
+}

@@ -145,7 +145,7 @@ def ask_claude(project: Path, question: str) -> dict:
     prompt = f"{question}\n\n(한국 법령 질문입니다. korean-law-search 스킬로 조문을 찾아 근거 조문 id를 붙여 답해 주세요.)"
     start = time.time()
     proc = subprocess.run(
-        ["claude", "-p", prompt, "--model", "sonnet", "--output-format", "stream-json", "--verbose",
+        [shutil.which("claude") or "claude", "-p", prompt, "--model", "sonnet", "--output-format", "stream-json", "--verbose",
          "--allowedTools", "Bash(uv run:*)", "Skill", "--max-turns", "12"],
         cwd=project, capture_output=True, text=True, timeout=900, check=False,
     )  # fmt: skip

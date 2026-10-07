@@ -84,7 +84,7 @@ def prune_vocab(model_dir: Path, out_dir: Path, keep_ids: set[int]) -> Path:
     order = sorted(keep_ids)
     new_id = {old: new for new, old in enumerate(order)}
 
-    tok = json.loads((model_dir / "tokenizer.json").read_text())
+    tok = json.loads((model_dir / "tokenizer.json").read_text(encoding="utf-8"))
     old_vocab = tok["model"]["vocab"]
     tok["model"]["vocab"] = [old_vocab[i] for i in order]
     tok["model"]["unk_id"] = new_id[tok["model"]["unk_id"]]
@@ -92,16 +92,16 @@ def prune_vocab(model_dir: Path, out_dir: Path, keep_ids: set[int]) -> Path:
         added["id"] = new_id[added["id"]]
     for special in (tok.get("post_processor") or {}).get("special_tokens", {}).values():
         special["ids"] = [new_id[i] for i in special["ids"]]
-    (out_dir / "tokenizer.json").write_text(json.dumps(tok, ensure_ascii=False))
+    (out_dir / "tokenizer.json").write_text(json.dumps(tok, ensure_ascii=False), encoding="utf-8")
 
     weights = load_file(str(model_dir / "model.safetensors"))
     key = next(k for k in weights if k.endswith("word_embeddings.weight"))
     weights[key] = weights[key][order].copy()
     save_file(weights, str(out_dir / "model.safetensors"), metadata={"format": "pt"})
 
-    config = json.loads((model_dir / "config.json").read_text())
+    config = json.loads((model_dir / "config.json").read_text(encoding="utf-8"))
     config["vocab_size"] = len(order)
-    (out_dir / "config.json").write_text(json.dumps(config, ensure_ascii=False, indent=2))
+    (out_dir / "config.json").write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8")
     for name in COPY_FILES:
         if (model_dir / name).exists():
             shutil.copy2(model_dir / name, out_dir / name)

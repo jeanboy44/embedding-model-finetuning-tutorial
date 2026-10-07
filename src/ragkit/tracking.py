@@ -268,14 +268,14 @@ def resolve_model(uri: str, cache_dir: Path | None = None) -> tuple[str, str]:
         mv = client.get_model_version(name, number)
     target = (cache_dir or get_settings().models_dir / "registry") / f"{name}-v{mv.version}"
     marker = target / ".mlflow_run_id"  # 같은 이름·버전이라도 다른 저장소의 등록이면 다시 받는다
-    if not (marker.exists() and marker.read_text() == mv.run_id):
+    if not (marker.exists() and marker.read_text(encoding="utf-8") == mv.run_id):
         with tempfile.TemporaryDirectory() as tmp:
             downloaded = Path(mlflow.artifacts.download_artifacts(f"models:/{name}/{mv.version}", dst_path=tmp))
             folder = next(p.parent for p in downloaded.rglob("tokenizer.json"))
             if target.exists():
                 shutil.rmtree(target)
             shutil.copytree(folder, target)
-        marker.write_text(mv.run_id)
+        marker.write_text(mv.run_id, encoding="utf-8")
     return str(target), mv.tags.get("index_key") or f"{name}-v{mv.version}"
 
 

@@ -32,12 +32,27 @@
 
 ## 실행
 
-실행은 모두 저장소 루트에서 한다.
+**교시마다 그 폴더의 `README.md`를 위에서부터 순서대로 따라 한다.** 명령은 모두 저장소 루트에서 실행하고, macOS 터미널과 Windows PowerShell에서 같은 명령 그대로 돈다(파이썬 실행은 모두 `uv run`).
 
-```bash
+```shell
 uv run python lecture/<폴더>/<파일>.py          # 받은 산출물로 확인 (기본)
 uv run python lecture/<폴더>/<파일>.py --run    # 작은 부분집합으로 직접 실행
 ```
+
+처음 한 번:
+
+```shell
+uv sync --all-packages --all-extras
+uv run python lecture/03_setup/01_doctor.py --fix
+```
+
+Windows는 처음 한 번 PowerShell에서 아래를 실행하고 **PowerShell 창을 새로 연다**. 파이썬이 파일과 출력을 UTF-8로 다루게 해서 한글 데이터가 깨지지 않게 한다.
+
+```powershell
+setx PYTHONUTF8 1
+```
+
+API 키 같은 설정은 셸마다 문법이 다른 환경 변수 대신 `.env` 파일에 둔다(`.env.example`을 복사해 `.env`로).
 
 ## 두 가지 모드
 

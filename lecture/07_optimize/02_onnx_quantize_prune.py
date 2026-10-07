@@ -110,7 +110,7 @@ texts += format_queries(
     ["편의점 알바 주휴수당", "전세 보증금 돌려받기", "음주운전 벌금"]
 )
 questions = [
-    json.loads(line)["query"] for line in TEST.read_text().splitlines() if line.strip()
+    json.loads(line)["query"] for line in TEST.read_text(encoding="utf-8").splitlines() if line.strip()
 ]
 
 with tempfile.TemporaryDirectory() as tmp:
@@ -175,7 +175,7 @@ with tempfile.TemporaryDirectory() as tmp:
         + ("" if RUN else " (텐서 단위와 직접 비교하려면 --run)")
     )
     if BENCH.exists():
-        bench = {r["variant"]: r for r in json.loads(BENCH.read_text())["rows"]}
+        bench = {r["variant"]: r for r in json.loads(BENCH.read_text(encoding="utf-8"))["rows"]}
         n = next(iter(bench.values()))["n_questions"]
         print(
             f"\n검색 정확도 R@5 (test 질문 {n:,}개, {BENCH.relative_to(SETTINGS.project_root)}):"
