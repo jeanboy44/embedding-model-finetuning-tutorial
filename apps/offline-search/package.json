@@ -1,0 +1,10 @@
+{
+  "name": "ragkit-offline-search",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "build.py가 HTML 안에 넣을 onnxruntime-web을 받아 둔다",
+  "devDependencies": {
+    "onnxruntime-web": "1.30.0"
+  }
+}

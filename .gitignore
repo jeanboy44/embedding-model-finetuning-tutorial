@@ -86,6 +86,7 @@ data/splits/
 # 앱 데이터 (노트북 저장소) / web 빌드
 data/app/
 apps/web/node_modules/
+apps/offline-search/node_modules/
 apps/web/dist/
 
 # MLflow 로컬 저장소 (04_monitoring 실습)

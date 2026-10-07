@@ -115,6 +115,7 @@ train·evaluate·compare run에는 입력 파일과 내용이 같은 버전이 �
 | [`apps/web`](apps/web/README.md) | 노트북 = 법령 묶음, 인용 달린 답, 조문 보기, 노트 |
 | [`apps/search-cli`](apps/search-cli/README.md) | `search` · `ask` · `laws` · `show` · `skill install`(에이전트 스킬) |
 | [`apps/mcp`](apps/mcp/README.md) | `search_laws` · `get_article` · `list_laws` · `ask` |
+| [`apps/offline-search`](apps/offline-search/README.md) | 설치·서버·인터넷 없이 여는 HTML 한 파일: 30MB 파인튜닝 모델 + 조문 벡터 + 원문 (3교시에 최종 목표로 소개) |
 
 ## 저장소 구조
 

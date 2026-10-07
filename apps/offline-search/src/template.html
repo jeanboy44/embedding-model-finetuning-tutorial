@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>오프라인 법령 검색</title>
+<style>
+:root {
+  --bg: #f4f5f7;
+  --bg-2: #e9ebef;
+  --card: #ffffff;
+  --ink: #1d2330;
+  --ink-soft: #5b6475;
+  --line: #dde1e8;
+  --accent: #2563eb;
+  --accent-soft: #e8efff;
+  --danger: #c2410c;
+  --base: #d9822b;
+  --font: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14171d;
+    --bg-2: #1b1f27;
+    --card: #1f242d;
+    --ink: #e6e9ef;
+    --ink-soft: #9aa3b2;
+    --line: #313846;
+    --accent: #6c9cff;
+    --accent-soft: #23304d;
+    --danger: #fb923c;
+    --base: #e8a35c;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%) fixed;
+  color: var(--ink);
+  font-family: var(--font);
+  line-height: 1.6;
+}
+main { max-width: 1240px; margin: 0 auto; padding: 40px 16px 64px; }
+header h1 { margin: 0; font-size: 1.7rem; letter-spacing: -0.02em; }
+header p { margin: 4px 0 0; color: var(--ink-soft); }
+#status { margin: 16px 0 0; font-size: 0.9rem; color: var(--ink-soft); }
+#status.busy::before {
+  content: ""; display: inline-block; width: 0.8em; height: 0.8em; margin-right: 0.5em;
+  border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%;
+  animation: spin 0.8s linear infinite; vertical-align: -0.1em;
+}
+#status.error { color: var(--danger); }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+form { margin-top: 20px; }
+.search-row { display: flex; gap: 8px; }
+input[type="search"] {
+  flex: 1; min-width: 0; padding: 12px 14px; font: inherit; font-size: 1.05rem;
+  color: var(--ink); background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+}
+input[type="search"]:focus, select:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+button, select {
+  font: inherit; color: var(--ink); background: var(--card);
+  border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; cursor: pointer;
+}
+button:disabled, input:disabled, select:disabled { opacity: 0.5; cursor: not-allowed; }
+#search { padding: 0 20px; background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; border-radius: 10px; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.filters select { font-size: 0.9rem; max-width: 100%; }
+#law-name { flex: 1; min-width: 180px; }
+.examples { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.example { font-size: 0.85rem; border-radius: 999px; background: var(--accent-soft); border-color: transparent; color: var(--ink); }
+#timing { margin: 18px 0 8px; font-size: 0.82rem; color: var(--ink-soft); min-height: 1.3em; }
+
+#modes { display: inline-flex; margin-top: 12px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--card); }
+#modes button { border: 0; border-radius: 0; padding: 7px 14px; font-size: 0.9rem; background: transparent; }
+#modes button + button { border-left: 1px solid var(--line); }
+#modes button[aria-pressed="true"] { background: var(--accent); color: #fff; font-weight: 600; }
+
+#results, .hits { display: flex; flex-direction: column; gap: 12px; }
+#results.compare { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.column-head { margin: 0 0 10px; font-size: 1.05rem; padding-bottom: 6px; border-bottom: 3px solid var(--accent); }
+.column-head.base { border-color: var(--base); }
+.column-head.finetuned { border-color: var(--accent); }
+.elsewhere { font-size: 0.75rem; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.elsewhere.missing { border-style: dashed; }
+.hit { overflow-wrap: anywhere; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+.hit-head { display: flex; align-items: baseline; gap: 10px; }
+.hit-head h3 { flex: 1; margin: 0; font-size: 1rem; line-height: 1.45; }
+.rank { color: var(--accent); font-weight: 700; min-width: 1.2em; }
+.score { font-variant-numeric: tabular-nums; font-size: 0.85rem; color: var(--ink-soft); }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 0 calc(1.2em + 10px); }
+.tag { font-size: 0.75rem; padding: 1px 8px; border-radius: 999px; background: var(--accent-soft); }
+.tag.quiet { background: transparent; border: 1px solid var(--line); color: var(--ink-soft); }
+.text { margin: 10px 0 0 calc(1.2em + 10px); white-space: pre-wrap; font-size: 0.93rem; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0 0 calc(1.2em + 10px); font-size: 0.85rem; }
+.actions button { font-size: 0.82rem; padding: 3px 10px; }
+.actions a { color: var(--accent); text-decoration: none; }
+.article { margin: 12px 0 0 calc(1.2em + 10px); border-left: 3px solid var(--line); padding-left: 12px; }
+.piece h4 { margin: 10px 0 0; font-size: 0.85rem; color: var(--ink-soft); }
+.piece .text { margin-left: 0; }
+.piece.current h4 { color: var(--accent); }
+.empty { color: var(--ink-soft); }
+
+details { margin-top: 40px; font-size: 0.88rem; color: var(--ink-soft); }
+summary { cursor: pointer; }
+dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 12px 0; }
+dt { font-weight: 600; }
+dd { margin: 0; }
+
+@media (max-width: 560px) {
+  main { padding-top: 24px; }
+  .tags, .text, .actions, .article { margin-left: 0; }
+  #results.compare { grid-template-columns: minmax(0, 1fr); }
+  #search { padding: 0 14px; }
+}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>오프라인 법령 검색</h1>
+    <p>인터넷도 서버도 없이 이 파일 하나로 대한민국 법령 조문을 찾습니다.</p>
+    <p id="status" class="busy">여는 중…</p>
+  </header>
+
+  <form id="form">
+    <div class="search-row">
+      <input id="query" type="search" placeholder="궁금한 것을 평소 말투로 물어보세요" autocomplete="off" disabled>
+      <button id="search" type="submit" disabled>검색</button>
+    </div>
+    <div class="filters">
+      <select id="theme" aria-label="테마" disabled><option value="">테마 전체</option></select>
+      <select id="law-type" aria-label="법령 종류" disabled><option value="">종류 전체</option></select>
+      <select id="law-name" aria-label="법령" disabled><option value="">법령 전체</option></select>
+      <select id="top-k" aria-label="결과 수" disabled>
+        <option value="5">5건</option>
+        <option value="10" selected>10건</option>
+        <option value="20">20건</option>
+      </select>
+    </div>
+  </form>
+  <div id="modes" role="group" aria-label="모델"></div>
+  <div class="examples">
+    <button type="button" class="example" disabled>야간 근로 수당</button>
+    <button type="button" class="example" disabled>편의점 알바 3개월 했는데 주휴수당 받을 수 있나요?</button>
+    <button type="button" class="example" disabled>회사 그만뒀는데 퇴직금은 언제까지 받아야 해요?</button>
+    <button type="button" class="example" disabled>방문판매로 산 정수기 환불하고 싶어요</button>
+    <button type="button" class="example" disabled>주휴일 유급휴일 1주 개근</button>
+  </div>
+
+  <p id="timing"></p>
+  <div id="results"></div>
+
+  <details>
+    <summary>이 파일은 어떻게 동작하나요?</summary>
+    <p>파일 안에 임베딩 모델(ONNX), 조문 벡터, 조문 원문이 모두 들어 있습니다.
+      질문을 입력하면 브라우저가 질문을 벡터로 바꾸고, 미리 계산해 둔 조문 벡터 전체와 코사인 유사도를 비교해 가까운 조문을 보여 줍니다.
+      입력한 내용은 어디로도 전송되지 않습니다.</p>
+    <p>순위는 조(條) 단위입니다. 같은 조의 항·호 조각은 점수가 가장 높은 것 하나로 셉니다.
+      "나란히 비교"에서 카드의 "학습 전 n위"·"파인튜닝 n위"는 같은 조가 상대 모델에서 몇 위였는지입니다 (100위까지 찾아봅니다).</p>
+    <dl>
+      <dt>모델</dt><dd id="about-model">-</dd>
+      <dt>조문</dt><dd id="about-docs">-</dd>
+      <dt>만든 날</dt><dd id="about-built">-</dd>
+    </dl>
+    <p>답변 생성(LLM)은 들어 있지 않습니다. 찾은 조문 원문을 직접 읽어 확인하세요. 법률 자문이 아닙니다.</p>
+  </details>
+</main>
+<!-- PAYLOADS -->
+<script type="module">
+/* SCRIPT */
+</script>
+</body>
+</html>
