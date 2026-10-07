@@ -112,10 +112,10 @@ def run(
 
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "results.json").write_text(
-        json.dumps({"variants": [asdict(v) for v in chosen], "rows": rows}, ensure_ascii=False, indent=2)
+        json.dumps({"variants": [asdict(v) for v in chosen], "rows": rows}, ensure_ascii=False, indent=2), encoding="utf-8"
     )
     table = to_markdown(rows)
-    (out_dir / "comparison.md").write_text(f"# 배포 최적화 비교 (질문 {rows[0]['n_questions']}개, CPU)\n\n{table}\n")
+    (out_dir / "comparison.md").write_text(f"# 배포 최적화 비교 (질문 {rows[0]['n_questions']}개, CPU)\n\n{table}\n", encoding="utf-8")
     print("\n" + table)
     print(f"\n결과 → {out_dir}/comparison.md")
     log_to_mlflow(rows, out_dir, n_latency=n_latency)

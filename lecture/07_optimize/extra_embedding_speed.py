@@ -15,7 +15,7 @@
     Drive에서 받은 data/processed/law_docs.json, models/(또는 HF 캐시의 기본 모델)
 
 실행:
-    uv run python lecture/07_optimize/extra_embedding_speed.py      # 설정 8개 × 문서 1,000개, 이 Mac에서 수 분
+    uv run python lecture/07_optimize/extra_embedding_speed.py      # 설정 8개 × 문서 1,000개, 이 Mac에서 약 2분
 
 직접 바꿔 볼 것:
     SAMPLE_SIZE, BATCH_SIZE, CONFIGS (아래 상수)

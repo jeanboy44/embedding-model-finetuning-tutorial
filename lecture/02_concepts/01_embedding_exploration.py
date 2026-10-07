@@ -442,7 +442,7 @@ def main() -> None:
         raise SystemExit(
             f"{docs_path}가 없습니다. 저장소 루트에서 실행했는지 확인하세요."
         )
-    docs = json.loads(docs_path.read_text())  # 3·4·7에서 함께 쓴다
+    docs = json.loads(docs_path.read_text(encoding="utf-8"))  # 3·4·7에서 함께 쓴다
     embed = create_embedding_fn(settings.embedding_model_name)
 
     embeddings, sentences = step1_generate_embeddings(embed)

@@ -70,11 +70,11 @@ def ratio(before: float, after: float) -> str:
 
 def run_bench_subset(out_dir: Path) -> Path:
     """test 질문 앞부분으로 ragkit-bench를 돌려 out_dir에 결과를 쓴다."""
-    lines = [line for line in TEST.read_text().splitlines() if line.strip()][
+    lines = [line for line in TEST.read_text(encoding="utf-8").splitlines() if line.strip()][
         :RUN_QUESTIONS
     ]
     subset = out_dir / "test_subset.jsonl"
-    subset.write_text("\n".join(lines) + "\n")
+    subset.write_text("\n".join(lines) + "\n", encoding="utf-8")
     cmd = [
         "ragkit-bench",
         "run",
@@ -110,8 +110,8 @@ with tempfile.TemporaryDirectory() as tmp:
         sys.exit(
             f"{RESULTS}가 없습니다.\n  Drive에서 experiments/exp_008_deploy_bench/를 받거나 --run으로 직접 재세요."
         )
-    rows = json.loads(results.read_text())["rows"]
-    print((results.parent / "comparison.md").read_text())
+    rows = json.loads(results.read_text(encoding="utf-8"))["rows"]
+    print((results.parent / "comparison.md").read_text(encoding="utf-8"))
 
 # ============================================================
 # 2. 표 읽기

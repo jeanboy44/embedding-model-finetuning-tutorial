@@ -62,8 +62,9 @@ if "--run" in sys.argv or not (WEB / "dist" / "index.html").exists():
         sys.exit(
             "pnpm이 없습니다: corepack enable (Node.js 20+). 또는 Drive에서 받은 apps/web/dist를 쓰세요."
         )
-    subprocess.run(["pnpm", "install", "--frozen-lockfile"], cwd=WEB, check=True)
-    subprocess.run(["pnpm", "build"], cwd=WEB, check=True)
+    pnpm = shutil.which("pnpm")  # Windows에서는 pnpm.cmd라 전체 경로로 부른다
+    subprocess.run([pnpm, "install", "--frozen-lockfile"], cwd=WEB, check=True)
+    subprocess.run([pnpm, "build"], cwd=WEB, check=True)
 files = [p for p in (WEB / "dist").rglob("*") if p.is_file()]
 print(
     f"dist: 파일 {len(files)}개, {sum(p.stat().st_size for p in files) / 1e3:.0f} KB (이것이 사용자 브라우저로 가는 전부)"

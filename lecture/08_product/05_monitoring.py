@@ -23,7 +23,7 @@
     uv run ragkit prune-vocab models/multilingual-e5-small
     uv run ragkit export-onnx models/multilingual-e5-small-pruned
     uv run ragkit quantize models/multilingual-e5-small-pruned
-    .env의 GEMINI_API_KEY (없으면 llm 스팬이 오류로 남는다. 있으면 LLM 2회 호출)
+    .env의 GEMINI_API_KEY (없으면 llm 스팬 없이 끝나고 트레이스가 ERROR로 남는다. 있으면 LLM 2회 호출)
 
 실행:
     uv run python lecture/08_product/05_monitoring.py            # 끝나면 MLflow UI를 열어 둔다 (Ctrl+C로 끝)
@@ -151,11 +151,11 @@ try:
     section("2. 실험 추적 — ragkit-bench (부모 run + 변형마다 자식 run)")
     questions = TEST
     if CHECK:
-        lines = [line for line in TEST.read_text().splitlines() if line.strip()][
+        lines = [line for line in TEST.read_text(encoding="utf-8").splitlines() if line.strip()][
             :CHECK_QUESTIONS
         ]
         questions = Path(tmp.name) / "test_subset.jsonl"
-        questions.write_text("\n".join(lines) + "\n")
+        questions.write_text("\n".join(lines) + "\n", encoding="utf-8")
         print(f"(--check: test 질문 앞 {len(lines)}개만 쓴다)")
     run(
         [
