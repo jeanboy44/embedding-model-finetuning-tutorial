@@ -69,7 +69,7 @@ LLM 단계(답변 생성)는 `.env`에 `GEMINI_API_KEY`가 필요합니다. [Goo
 | 5 (8) | `lecture/08_product/03_mcp_server.py` | MCP: 연결 → 도구 목록 → 호출, Claude 등록 |
 | 5 (8) | `lecture/08_product/04_web_app.py` | 웹앱 빌드와 API 서버 한 주소 배포 |
 | 5 (8) | `lecture/08_product/05_monitoring.py` | MLflow: 실험 run 비교 → 모델 레지스트리(champion) → 서비스 트레이스·세션 |
-| 선택 | `lecture/02_concepts/01_embedding_exploration.py` · `03_setup/extra_gemini_basics.py` · `07_optimize/extra_embedding_speed.py` | 임베딩 공간 탐색, Gemini 기초, 임베딩 속도 옵션 |
+| 선택 | `lecture/03_setup/extra_gemini_basics.py` · `07_optimize/extra_embedding_speed.py` | Gemini 기초, 임베딩 속도 옵션 |
 
 ## 도구와 앱
 

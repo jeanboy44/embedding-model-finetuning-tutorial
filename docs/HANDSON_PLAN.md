@@ -7,7 +7,7 @@
 ```
 lecture/
   01_introduction/  # 1교시 내 소개 — 장표를 내보낸 HTML 하나만
-  02_concepts/      # 2교시 용어·개념 (선택 실습: 임베딩 공간 탐색)
+  02_concepts/      # 2교시 용어·개념
   03_setup/         # 3교시 실습 0 (선택: Gemini 기초)
   04_data/          # 4교시 실습 1
   05_evaluate/      # 5교시 실습 2
