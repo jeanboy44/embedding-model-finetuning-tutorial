@@ -1,6 +1,7 @@
 # 실습 1 (4교시): 데이터 만들기
 
-장표: [4교시 실습 1 데이터](https://claude.ai/artifact/LU4tYoQei2KW1AmzcqtEAq). 코퍼스 → 질문(Claude 스킬) → 법령 단위 분할 순서로 본다.
+장표: [4교시 DS의 일, 2022와 2026](https://claude.ai/artifact/FvbbskQyEMrxWcMJeRKka8). 4교시 실습은 0(데이터 받기)과 2(질문, 특히 "직접 만들어 보기")다.
+1(코퍼스)과 3(분할)은 5교시에 데이터를 자세히 볼 때 실행한다([`05_evaluate/README.md`](../05_evaluate/README.md)).
 
 명령은 모두 저장소 루트에서, 위에서부터 순서대로 실행한다. macOS 터미널과 Windows PowerShell에서 같은 명령 그대로 돈다. API 키는 쓰지 않는다.
 기본은 받은 산출물로 확인하고, `--run`은 임시 폴더에서 작게 직접 실행한다(받은 파일은 바꾸지 않는다).
