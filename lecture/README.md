@@ -7,9 +7,9 @@
 | `01_introduction/` | 1 | 이론 | 내 소개: DS의 일, 2022 vs 2026. 1교시 장표를 내보낸 HTML 하나만 둔다 |
 | `02_concepts/` | 2 | 이론 | 용어·개념, 왜 임베딩 파인튜닝인가 |
 | `03_setup/` | 3 | 실습 0 | 환경 점검(doctor), 완성품 먼저 써 보기, CLI로 학습 전후 비교(README). 선택: Gemini 기초 |
-| `04_data/` | 4 | 실습 1 | 코퍼스, 질문 생성(Claude 스킬), 법령 단위 분할 |
-| `05_evaluate/` | 5 | 실습 2 | 평가셋과 지표, 학습 없이 쓸 수 있는 선택지(쿼리 확장) |
-| `06_train/` | 6 | 실습 3 | 학습 맛보기, 실험 비교, 오답 분석 |
+| `04_data/` | 4 | 실습 1 | DS의 일 2022 vs 2026, 질문 생성을 손으로 vs 에이전트로. 코퍼스 · 분할 스크립트는 5교시에 |
+| `05_evaluate/` | 5 | 실습 2 | 데이터(코퍼스 · 분할) 확인, 평가셋과 지표, 쿼리 확장, 기준 실험 002 한 바퀴(파일럿은 `06_train/01_train_taste.py --run`) |
+| `06_train/` | 6 | 실습 3 | 우리가 세운 가설 전부, LoRA(004) 한 바퀴(`--run --lora` 파일럿 · 비교 · 검정), 오답 분석 |
 | `07_optimize/` | 7 | 실습 4 | API 복습, ONNX · INT8 · 어휘 가지치기, 비교표와 서빙. 선택: 임베딩 속도 옵션 |
 | `08_product/` | 8 | 실습 5 | 검색 CLI, 에이전트 스킬(CLI + SKILL.md), MCP, 웹, MLflow 모니터링 |
 
@@ -24,9 +24,9 @@
 | 1 | [내 소개: DS의 일, 2022 vs 2026](https://claude.ai/artifact/QsNeCea9tMhtxGTpHd89jh) |
 | 2 | [용어 · 왜 임베딩 파인튜닝인가 · 실습 지도](https://claude.ai/artifact/YCojzoPbMkeAamJ7WQhSEG) |
 | 3 | [실습 0: 환경 · 완성품 · RAG 필요성](https://claude.ai/artifact/VuQyTKs7BHKu4Hsq5xy5Qc) |
-| 4 | [실습 1: 데이터](https://claude.ai/artifact/LU4tYoQei2KW1AmzcqtEAq) |
-| 5 | [실습 2: 평가](https://claude.ai/artifact/ELMMxTeWq6z3uPQcXWVR6U) |
-| 6 | [실습 3: 학습과 분석](https://claude.ai/artifact/HBXjApsvu8jxyQxaaH5tP2) |
+| 4 | [DS의 일, 2022와 2026](https://claude.ai/artifact/FvbbskQyEMrxWcMJeRKka8) |
+| 5 | [데이터 · 평가 · 기준 실험](https://claude.ai/artifact/EzELtdX3t269cS4DHsmX3p) |
+| 6 | [실험 한 바퀴: LoRA, 그리고 딸깍](https://claude.ai/artifact/MtviA3WTikxFfG4a7YrN43) |
 | 7 | [실습 4: 서빙과 배포 최적화](https://claude.ai/artifact/F1mKY7iVNVaKZj5psadPvR) |
 | 8 | [실습 5: 제품화와 마무리](https://claude.ai/artifact/TgTkmnDgAnDHwvEFhUP2vE) |
 

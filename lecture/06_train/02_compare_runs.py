@@ -324,8 +324,11 @@ print(
 if lora_meta and full_meta:
     share = lora_meta["trainable_params"] / lora_meta["total_params"]
     print(
-        f"  LoRA         파라미터 {share:.1%}만 학습해 002의 {lora / full:.0%} ({lora:.3f} 대 {full:.3f})"
-        + (". 가설대로 대부분 따라간다" if lora / full >= 0.9 else "")
+        f"  LoRA         파라미터 {share:.1%}만 학습해 002 대비 {lora - full:+.3f} ({verdict(lora - full)})."
+        f" 학습으로 오른 폭의 {(lora - base) / (full - base):.0%}를 따라간다"
+    )
+    print(
+        "               '002와 같다'가 맞는지는 아래 5의 검정(CI가 0을 걸치는가)으로 판정한다"
     )
 print(
     f"  배치 128     002 대비 {big - full:+.3f} ({verdict(big - full)})."
