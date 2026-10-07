@@ -6,84 +6,60 @@
 <title>강의 1~8교시 한눈에</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&family=JetBrains+Mono:wght@400&display=swap">
 <style>
+  /* 레이아웃: 흰 카드 한 장 위에 흐름 띠 → 교시 표 → 요약. 2022 주황 · 2026 파랑 */
   :root {
-    --ink: #1f2a37;
-    --body: #4a5361;
-    --muted: #6b7480;
-    --line: #e1e4e8;
-    --card: #fcfcfb;
-    --orange: #ec9a3e;
-    --orange-ink: #b8650f;
-    --orange-bg: #fdf1e3;
-    --blue: #4f93d8;
-    --blue-ink: #2d6db0;
-    --blue-bg: #e8f1fa;
-    --sage: #d6e0cc;
+    --ground: #eceef1; --card: #fcfcfb; --ink: #1f2a37; --body: #4a5361; --muted: #6b7480;
+    --line: #e1e4e8; --soft: #f2f3f5; --chip: #eef0f2;
+    --orange: #ec9a3e; --orange-ink: #b8650f; --orange-bg: #fdf1e3;
+    --blue: #4f93d8; --blue-ink: #2d6db0; --blue-bg: #e8f1fa;
+    --sage: #a9b89a; --sage-ink: #5d6b50; --sage-bg: #eef3e8; --gray-rule: #c9ced6;
+    --shadow: rgba(31, 42, 55, 0.08);
+    --font-body: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", Arial, sans-serif;
+    --font-code: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+    color-scheme: light;
   }
   * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    font-family: "Noto Sans KR", "Pretendard", Arial, sans-serif;
-    color: var(--ink);
-    background: linear-gradient(180deg, #f5f6f7 0%, #e8eaed 100%) fixed;
-    line-height: 1.55;
-  }
-  main {
-    max-width: 1280px;
-    margin: 40px auto;
-    padding: 48px 56px 56px;
-    background: var(--card);
-    border-radius: 18px;
-    box-shadow: 0 10px 40px rgba(31, 42, 55, 0.08);
-  }
-  .eyebrow { font-size: 14px; font-weight: 700; color: var(--muted); margin: 0 0 8px; }
-  h1 { font-size: 34px; font-weight: 800; letter-spacing: -0.5px; margin: 0 0 12px; }
-  .lead { font-size: 16px; color: var(--body); margin: 0 0 28px; max-width: 880px; }
-  .flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 0 0 32px; }
-  .flow div { border-top: 4px solid var(--line); padding: 10px 0 0; }
+  body { margin: 0; font-family: var(--font-body); color: var(--ink); background: var(--ground); line-height: 1.55; padding: 0 16px; }
+  main { max-width: 1280px; margin: 0 auto; padding-block: 40px; }
+  .card { background: var(--card); border-radius: 18px; box-shadow: 0 10px 40px var(--shadow); padding: 44px clamp(16px, 4vw, 52px); }
+  .eyebrow { font-size: 13px; font-weight: 700; color: var(--muted); letter-spacing: 0.04em; margin: 0 0 8px; }
+  h1 { font-size: clamp(26px, 4vw, 34px); font-weight: 800; letter-spacing: -0.5px; margin: 0 0 12px; text-wrap: balance; }
+  .lead { font-size: 16px; color: var(--body); margin: 0 0 28px; max-width: 70ch; }
+  .flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 0 0 32px; }
+  .flow div { border-top: 4px solid var(--line); padding-top: 10px; min-width: 0; }
   .flow b { display: block; font-size: 15px; }
   .flow span { font-size: 13px; color: var(--muted); }
-  .flow .theory { border-color: #c9ced6; }
+  .flow .theory { border-color: var(--gray-rule); }
   .flow .lab0 { border-color: var(--sage); }
   .flow .y22 { border-color: var(--orange); }
   .flow .y26 { border-color: var(--blue); }
   .table-wrap { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 980px; }
-  th {
-    text-align: left; font-size: 12px; font-weight: 700; color: var(--muted);
-    padding: 10px 12px; border-bottom: 2px solid var(--line); white-space: nowrap;
-  }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 900px; }
+  th { text-align: left; font-size: 12px; font-weight: 700; color: var(--muted); padding: 10px 12px; border-bottom: 2px solid var(--line); white-space: nowrap; letter-spacing: 0.03em; }
   td { padding: 14px 12px; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--body); }
-  td.period { font-size: 22px; font-weight: 800; color: var(--ink); white-space: nowrap; }
+  td.period { font-size: 22px; font-weight: 800; color: var(--ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
   td.title b { display: block; color: var(--ink); font-size: 15px; }
-  .tag {
-    display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px;
-    border-radius: 999px; margin: 0 0 6px; white-space: nowrap;
-  }
-  .tag.theory { background: #eef0f2; color: var(--muted); }
-  .tag.lab0 { background: #eef3e8; color: #5d6b50; }
+  .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; margin-bottom: 6px; white-space: nowrap; }
+  .tag.theory { background: var(--chip); color: var(--muted); }
+  .tag.lab0 { background: var(--sage-bg); color: var(--sage-ink); }
   .tag.y22 { background: var(--orange-bg); color: var(--orange-ink); }
   .tag.y26 { background: var(--blue-bg); color: var(--blue-ink); }
-  .num { font-weight: 700; color: var(--ink); white-space: nowrap; }
-  code { font-family: "JetBrains Mono", monospace; font-size: 12px; background: #f2f3f5; padding: 1px 5px; border-radius: 4px; }
+  .num { font-weight: 700; color: var(--ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  code { font-family: var(--font-code); font-size: 12px; background: var(--soft); color: var(--ink); padding: 1px 5px; border-radius: 4px; }
   a { color: var(--blue-ink); font-weight: 700; text-decoration: none; white-space: nowrap; }
-  a:hover { text-decoration: underline; }
+  a:hover, a:focus-visible { text-decoration: underline; }
+  a:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
   tr.y22 td.period { color: var(--orange-ink); }
   tr.y26 td.period { color: var(--blue-ink); }
   tfoot td { font-weight: 700; color: var(--ink); border-bottom: none; }
-  .story { margin: 32px 0 0; padding: 20px 24px; background: #f2f3f5; border-radius: 12px; font-size: 15px; }
+  .story { margin-top: 32px; padding: 20px 24px; background: var(--soft); border-radius: 12px; font-size: 15px; color: var(--body); }
   .story b { color: var(--ink); }
-  .notes { margin: 20px 0 0; font-size: 13px; color: var(--muted); }
-  .notes li { margin: 4px 0; }
-  @media (max-width: 720px) {
-    main { margin: 0; padding: 28px 16px; border-radius: 0; }
-    h1 { font-size: 26px; }
-    .flow { grid-template-columns: 1fr 1fr; }
-  }
+  .notes { margin: 20px 0 0; padding-left: 20px; font-size: 13px; color: var(--muted); display: grid; gap: 4px; }
+  @media (max-width: 720px) { .flow { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 </style>
 </head>
 <body>
-<main>
+<main><div class="card">
   <p class="eyebrow">AI 시대 생존법 · 내 업무 확장편</p>
   <h1>강의 1~8교시 한눈에</h1>
   <p class="lead">임베딩 모델 하나를 들고, 데이터 사이언티스트의 업무가 모델을 만드는 일에서 남이 쓰게 건네고 운영하는 일까지 넓어지는 과정을 하루에 따라간다. 교시마다 50분 수업 + 10분 휴식이고, 장표는 교시별 Slides 덱이다.</p>
@@ -127,15 +103,15 @@
       </tr>
       <tr class="y22">
         <td class="period">4</td>
-        <td class="title"><span class="tag y22">실습 1 · 2022</span><b>데이터를 만든다</b></td>
-        <td>법령 조문을 검색 문서로, Claude 스킬로 질문 · 정답 조문 · 헷갈리는 오답 생성, 처음 보는 법령으로 재도록 법령 단위 분할</td>
-        <td><span class="num">법령 54 · 문서 25,967</span><br>질문 12,232</td>
+        <td class="title"><span class="tag y22">2022 vs 2026</span><b>DS의 일, 2022와 2026</b></td>
+        <td>모델이 나오기까지 다섯 단계와 곁다리 도구 → 2022: 도구부터 만들고 손으로 → 2026: 에이전트에게 맡기고 사람은 기준 · 규칙 · 검증 → 질문 데이터를 손으로 vs 에이전트로</td>
+        <td><span class="num">dev R@5 0.720 → 0.761</span><br>에이전트가 밤새 돌린 run 6개</td>
         <td><code>04_data</code></td>
-        <td><a href="https://claude.ai/artifact/LU4tYoQei2KW1AmzcqtEAq">16장</a></td>
+        <td><a href="https://claude.ai/artifact/FvbbskQyEMrxWcMJeRKka8">19장</a></td>
       </tr>
       <tr class="y22">
         <td class="period">5</td>
-        <td class="title"><span class="tag y22">실습 2 · 2022</span><b>평가: 학습해야 하는가</b></td>
+        <td class="title"><span class="tag y22">실습 1 · 2022</span><b>평가: 학습해야 하는가</b></td>
         <td>지표(Recall@k · MRR · nDCG)와 평가 조건, 학습 전 출발점과 말투별 성적, 쿼리 확장, 학습 없는 선택지 비교 → 학습할지 판단</td>
         <td><span class="num">R@5 0.513</span><br>상황 설명 질문 0.403</td>
         <td><code>05_evaluate</code></td>
@@ -143,7 +119,7 @@
       </tr>
       <tr class="y22">
         <td class="period">6</td>
-        <td class="title"><span class="tag y22">실습 3 · 2022</span><b>학습 실험과 분석</b></td>
+        <td class="title"><span class="tag y22">실습 2 · 2022</span><b>학습 실험과 분석</b></td>
         <td>가설 → 실험 → 분석 반복. 전체 학습 · LoRA · 배치 비교, 오답 분석과 한계, 헷갈리는 오답 다시 캐기, AI에게 실험을 맡기고 DS는 판단</td>
         <td><span class="num">0.513 → 0.669 → 0.723</span><br>test R@5</td>
         <td><code>06_train</code></td>
@@ -151,23 +127,23 @@
       </tr>
       <tr class="y26">
         <td class="period">7</td>
-        <td class="title"><span class="tag y26">실습 4 · 2026</span><b>서빙과 배포 최적화</b></td>
-        <td>API 짧은 복습 → ONNX 변환 → INT8 양자화 → 어휘 가지치기 → 크기 · 속도 · 정확도 비교표로 판단 → API에 적용</td>
+        <td class="title"><span class="tag y26">실습 3 · 2026</span><b>배포 최적화: 모델을 가볍게</b></td>
+        <td>최적화란 · 왜 · 언제, ONNX와 런타임 크기 → ONNX 변환 → INT8 양자화 → 어휘 가지치기 → 비교표로 판단 → API에 적용</td>
         <td><span class="num">471 → 30MB</span><br>R@5 0.513 → 0.515</td>
         <td><code>07_optimize</code></td>
-        <td><a href="https://claude.ai/artifact/F1mKY7iVNVaKZj5psadPvR">15장</a></td>
+        <td><a href="https://claude.ai/artifact/F1mKY7iVNVaKZj5psadPvR">27장</a></td>
       </tr>
       <tr class="y26">
         <td class="period">8</td>
-        <td class="title"><span class="tag y26">실습 5 · 2026</span><b>제품화와 마무리</b></td>
-        <td>CLI(uvx로 설치 없이) · 에이전트 스킬 · MCP · 웹을 만들고 건넨다. MLflow 레지스트리와 트레이싱으로 운영. 1교시의 여섯 칸을 다시 본다</td>
-        <td><span class="num">휠 83KB · 8KB</span><br>ragkit · ragkit-search</td>
+        <td class="title"><span class="tag y26">실습 4 · 2026</span><b>제품화와 마무리</b></td>
+        <td>같은 모델을 세 길로 건넨다: 데스크톱 앱(HTML 하나) · 웹 · 사용자의 에이전트(CLI + 스킬, MCP). 길마다 환경 · 사용 케이스 · 장단점. 1교시의 여섯 칸을 다시 본다</td>
+        <td><span class="num">HTML 57MB</span><br>R@10 0.802 · 오프라인</td>
         <td><code>08_product</code></td>
-        <td><a href="https://claude.ai/artifact/TgTkmnDgAnDHwvEFhUP2vE">16장</a></td>
+        <td><a href="https://claude.ai/artifact/TgTkmnDgAnDHwvEFhUP2vE">27장</a></td>
       </tr>
     </tbody>
     <tfoot>
-      <tr><td></td><td>합계</td><td></td><td></td><td></td><td>165장</td></tr>
+      <tr><td></td><td>합계</td><td></td><td></td><td></td><td>191장</td></tr>
     </tfoot>
   </table>
   </div>
@@ -181,6 +157,6 @@
     <li>준비: <code>uv sync --all-packages --all-extras</code> 후 <code>uv run python lecture/03_setup/01_doctor.py --fix</code>. 파인튜닝 모델 · 인덱스는 <code>scripts/finetuned_drive.py download</code>로 받는다.</li>
     <li>장 수는 2026-10-07 기준. 실습 폴더 안내는 각 폴더의 README.md에 있다.</li>
   </ul>
-</main>
+</div></main>
 </body>
 </html>
