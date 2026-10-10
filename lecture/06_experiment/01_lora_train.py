@@ -3,15 +3,15 @@
 ==============================================
 
 학습 목표:
-- 기준 실험 002와 LoRA 실험 004의 설정 파일에서 무엇이 다른지 본다 (lora 블록, 학습률)
+- 기본 실험 001과 LoRA 실험 004의 설정 파일에서 무엇이 다른지 본다 (lora 블록, 학습률)
 - LoRA가 학습하는 파라미터가 왜 0.4%인지 숫자로 확인한다
-- 받은 모델 네 개(002 · 004 · 006 · r001_A)의 학습 기록을 나란히 본다
+- 받은 모델 네 개(001 · 004 · 005 · 002_hard_negatives)의 학습 기록을 나란히 본다
 - 파일럿: LoRA 설정으로 몇 step만 직접 돌려 손실이 내려가는지, step당 시간으로 전체 학습이 몇 분일지 본다
 
 사전 준비 (없으면 스크립트가 받는 명령을 알려 주고 끝난다):
     uv run python scripts/data_version.py pull v1     # 코퍼스 + 분할
     models/multilingual-e5-small                                   # scripts/download_model_hf.py
-    uv run python scripts/finetuned_drive.py download --all        # models/finetuned/{exp_002,exp_004,exp_006,r001_A}
+    uv run python scripts/finetuned_drive.py download --all        # models/finetuned/{001_baseline,004_lora,005_batch128,002_hard_negatives}
     (--run) uv sync --extra train                      # sentence-transformers, peft
 
 실행:
@@ -44,14 +44,14 @@ DATA = ROOT / "data"
 CORPUS = DATA / "processed" / "law_docs.json"
 SPLITS = DATA / "splits"
 FINETUNED = ROOT / "models" / "finetuned"
-BASELINE = ROOT / "experiments" / "exp_002_finetuned" / "config.yaml"
-CONFIG = ROOT / "experiments" / "exp_004_lora" / "config.yaml"
+BASELINE = ROOT / "experiments" / "001_baseline" / "config.yaml"
+CONFIG = ROOT / "experiments" / "004_lora" / "config.yaml"
 MODEL = "intfloat/multilingual-e5-small"
-RUNS = {  # 받은 모델 → 무엇을 바꾼 실험인가 (docs/PLAN.md, runs/001_hard_negatives)
-    "exp_002": "전체 학습 · 배치 32 · LLM이 고른 오답 1개 (기준)",
-    "exp_004": "002 + LoRA (r16, query/key/value) · lr 2e-4",
-    "exp_006": "002 + 배치 128",
-    "r001_A": "다시 캔 오답 3개 · lr 3e-5 · 4 epoch (에이전트가 돈 실험 001)",
+RUNS = {  # 받은 모델 → 무엇을 바꾼 실험인가 (docs/PLAN.md, experiments/002_hard_negatives)
+    "001_baseline": "전체 학습 · 배치 32 · LLM이 고른 오답 1개 (기본 실험)",
+    "004_lora": "001 + LoRA (r16, query/key/value) · lr 2e-4",
+    "005_batch128": "001 + 배치 128",
+    "002_hard_negatives": "다시 캔 오답 3개 · lr 3e-5 · 4 epoch (오답 분석으로 찾은 실험 002)",
 }
 BATCH = 4  # 학습 전후를 비교할 배치 크기 (실제 학습은 32)
 RUN_STEPS = 30  # --run 학습 step 수
@@ -132,13 +132,13 @@ metas = {
 
 
 # ============================================================
-# 1. 설정: 002와 다른 것
+# 1. 설정: 001과 다른 것
 # ============================================================
-section(f"1. 설정 파일 ({rel(CONFIG)}): 기준 002와 다른 것")
+section(f"1. 설정 파일 ({rel(CONFIG)}): 기본 실험 001과 다른 것")
 base = yaml.safe_load(BASELINE.read_text(encoding="utf-8"))["training"]
 config = yaml.safe_load(CONFIG.read_text(encoding="utf-8"))
 lora = config["training"]
-print(f"  {'항목':16s} {'002 기준':24s} 004 LoRA")
+print(f"  {'항목':16s} {'001 기본':24s} 004 LoRA")
 
 
 def show(value) -> str:
@@ -159,10 +159,10 @@ for key in sorted(set(base) | set(lora)):
     before = show(base[key]) if key in base else "없음 (전체 학습)"
     print(f"  {key:16s} {before:24s} {show(lora.get(key))}")
 same = [k for k in base if k != "output_dir" and base[k] == lora.get(k)]
-print(f"  나머지 {len(same)}개({', '.join(same)})는 002와 같다")
+print(f"  나머지 {len(same)}개({', '.join(same)})는 001과 같다")
 print("  · LoRA는 학습할 파라미터가 적어 보통 전체 학습보다 큰 학습률을 쓴다")
 print(
-    "  · 엄밀히는 두 가지(LoRA, 학습률)를 같이 바꿨다. 'LoRA + 맞춘 학습률' 한 묶음을 002와 비교한다"
+    "  · 엄밀히는 두 가지(LoRA, 학습률)를 같이 바꿨다. 'LoRA + 맞춘 학습률' 한 묶음을 001과 비교한다"
 )
 
 
@@ -173,7 +173,7 @@ section("2. LoRA가 학습하는 파라미터")
 r = lora["lora"]["r"]
 targets = lora["lora"]["target_modules"]
 expected = LAYERS * len(targets) * r * (HIDDEN + HIDDEN)
-meta = metas["exp_004"]
+meta = metas["004_lora"]
 print(
     f"  층 {LAYERS}개 × {'·'.join(targets)} {len(targets)}곳 × r {r} × ({HIDDEN} + {HIDDEN}) = {expected:,}"
 )
@@ -204,7 +204,7 @@ for name, what in RUNS.items():
     )
     print(f"{'':10s} └ {what}")
 print("  · test 성능은 02_compare_runs.py에서 같은 기준으로 잰다")
-print("  · r001_A의 dev는 복수 정답 판정을 붙인 값이라 다른 행과 기준이 조금 다르다")
+print("  · 002_hard_negatives의 dev는 복수 정답 판정을 붙인 값이라 다른 행과 기준이 조금 다르다")
 
 
 # ============================================================

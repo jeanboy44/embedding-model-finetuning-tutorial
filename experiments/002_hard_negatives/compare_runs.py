@@ -1,6 +1,6 @@
-"""001 4단계 결과 분석: 두 run의 dev 실패 유형(1위 오답과 정답의 관계)과 고친/망친 질문을 비교한다.
+"""002 4단계 결과 분석: 두 run의 dev 실패 유형(1위 오답과 정답의 관계)과 고친/망친 질문을 비교한다.
 
-사용: uv run python runs/001_hard_negatives/compare_runs.py <기준 run> <비교 run>   (예: r001_control_s42 r001_A)
+사용: uv run python experiments/002_hard_negatives/compare_runs.py <기준 run> <비교 run>   (예: 002_hard_negatives_control_s42 002_hard_negatives)
 입력: artifacts/<run>/topk_dev.jsonl (dump_topk.py), data/labels/dev.jsonl
 출력: 표준 출력, artifacts/fixed_broken_<기준>_vs_<비교>.jsonl
 """

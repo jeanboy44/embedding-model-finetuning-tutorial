@@ -1,4 +1,4 @@
-# 001 결과·회고 검토 — dense retrieval 관점 (2026-10-02)
+# 002 결과·회고 검토 — dense retrieval 관점 (2026-10-02)
 
 [측정]은 `03_run/*/eval_dev.json`, `artifacts/negatives_*.jsonl`, `artifacts/fixed_broken_*.jsonl`에서 직접 계산한 값, [추론]은 검토자 판단이다.
 

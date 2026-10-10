@@ -6,10 +6,10 @@ data/processed/index/<모델 키>.sqlite 가 저장소 루트 기준 경로로 �
 
 사용법:
     uv run python scripts/finetuned_drive.py list                     # 받을 수 있는 모델
-    uv run python scripts/finetuned_drive.py download                 # r001_A + 학습 전 e5 인덱스 (강의 기본)
-    uv run python scripts/finetuned_drive.py download exp_002 exp_004 exp_006   # 6교시 비교용
+    uv run python scripts/finetuned_drive.py download                 # 002_hard_negatives + 학습 전 e5 인덱스 (강의 기본)
+    uv run python scripts/finetuned_drive.py download 001_baseline 004_lora 005_batch128   # 6교시 비교용
     uv run python scripts/finetuned_drive.py download --all
-    uv run python scripts/finetuned_drive.py upload r001_A exp_002   # (강사) zip → Drive, 목록 갱신
+    uv run python scripts/finetuned_drive.py upload 002_hard_negatives 001_baseline   # (강사) zip → Drive, 목록 갱신
     uv run python scripts/finetuned_drive.py upload-index multilingual-e5-small   # (강사) 인덱스만
     uv run python scripts/finetuned_drive.py upload-files multilingual-e5-small-int8 models/multilingual-e5-small-int8 data/processed/index/multilingual-e5-small-int8.sqlite   # (강사) 그 밖의 파일 묶음
 
@@ -18,6 +18,9 @@ data/processed/index/<모델 키>.sqlite 가 저장소 루트 기준 경로로 �
     rclone config   # n → 이름 gdrive → Storage: drive → 나머지는 기본값, 브라우저에서 로그인
 
 다운로드는 로그인이 필요 없다. Drive 폴더가 "링크가 있는 모든 사용자"로 공유되어 있어야 한다.
+
+모델 이름은 실험 번호를 따른다(experiments/README.md의 대응표). 목록에 pending_reupload가 적힌 모델은
+Drive에 옛 이름으로 묶인 zip만 있어 받지 않는다. 강사가 upload로 다시 올리면 그 항목이 새 값으로 바뀐다.
 
 인덱스 파일 이름의 모델 키는 가중치 파일의 수정 시각으로 정해진다(ragkit.retrieval.model_key).
 그래서 받은 뒤 model.safetensors의 수정 시각을 올릴 때 값으로 되돌려, 받은 인덱스를 그대로 찾게 한다.
@@ -45,7 +48,7 @@ DEFAULT_FOLDER_URL = (
     "https://drive.google.com/drive/folders/1vpGtkFmS5kPfRlu5f7pcGKf_gZ2AWHXK"
 )
 MANIFEST = Path(__file__).resolve().parent / "finetuned_models.json"
-DEFAULT_MODEL = "r001_A"  # 실험 010에서 test R@5가 가장 높은 모델 (3교시 · 실습 0)
+DEFAULT_MODEL = "002_hard_negatives"  # test R@5가 가장 높은 모델(0.723, 실험 002) (3교시 · 실습 0)
 DEFAULT_INDEX = "multilingual-e5-small"  # 학습 전 e5의 인덱스. 직접 만들면 7~13분
 WEIGHTS = "model.safetensors"
 
@@ -237,7 +240,7 @@ def upload(
     """(강사) 모델을 zip으로 묶어 Drive 폴더에 올리고 scripts/finetuned_models.json을 갱신한다.
 
     Args:
-        names: models/finetuned/ 아래 폴더 이름. 비우면 r001_A.
+        names: models/finetuned/ 아래 폴더 이름. 비우면 002_hard_negatives.
         folder_url: 올릴 Drive 폴더 링크 ("링크가 있는 모든 사용자" 공유).
         remote: rclone config에서 만든 Google Drive remote 이름.
         with_index: 그 모델로 만든 인덱스(data/processed/index/<모델 키>.sqlite)도 함께 묶는다.
@@ -346,7 +349,7 @@ def _fetch(entry: dict, root: Path) -> None:
 def download(*names: str, all: bool = False, force: bool = False) -> None:
     """Drive에서 모델(과 그 인덱스)을 받아 저장소에 둔다. 로그인 불필요.
 
-    이름 없이 부르면 강의 기본 묶음(r001_A + 학습 전 e5 인덱스)을 받는다.
+    이름 없이 부르면 강의 기본 묶음(002_hard_negatives + 학습 전 e5 인덱스)을 받는다.
 
     Args:
         names: 받을 모델 이름(models/finetuned/ 아래). 인덱스 이름도 된다.
@@ -384,6 +387,9 @@ def download(*names: str, all: bool = False, force: bool = False) -> None:
         if have_model and have_index and have_files and not force:
             print(f"이미 있습니다: {name} (다시 받으려면 --force)")
             continue
+        if entry.get("pending_reupload"):
+            print(f"건너뜀: {name}. {entry['pending_reupload']}")
+            continue
         _fetch(entry, root)
         if model_dir is not None:
             print(f"  모델: {entry['model_dir']}")
@@ -410,8 +416,9 @@ def list_models() -> None:
     for name, entry in manifest["models"].items():
         have = (root / entry["model_dir"] / WEIGHTS).exists()
         index = "인덱스 포함" if entry.get("index") else "인덱스 없음"
+        pending = "  (재업로드 대기)" if entry.get("pending_reupload") else ""
         print(
-            f"  모델   {name:22s} {entry['size_mb']:7.1f} MB  {index}  [{'받음' if have else '-'}]"
+            f"  모델   {name:22s} {entry['size_mb']:7.1f} MB  {index}  [{'받음' if have else '-'}]{pending}"
         )
     for key, entry in manifest["indexes"].items():
         have = (root / entry["index"]).exists()

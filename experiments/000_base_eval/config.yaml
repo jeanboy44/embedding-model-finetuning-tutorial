@@ -1,0 +1,10 @@
+# 실험 000: 학습 전 e5-small 평가 (기준선, 학습 없음)
+# 같은 test(처음 보는 법령 16개, 2,526개)와 같은 코퍼스 전체로 검색 성능을 잰다. 이후 모든 실험이 이 값과 비교한다.
+# 실행: uv run ragkit compare experiments/000_base_eval/config.yaml
+#   (강의 5교시: lecture/05_data_eval/03_metrics.py가 같은 값을 ragkit evaluate로 잰다)
+# dev 복수 정답까지 보려면: uv run ragkit evaluate intfloat/multilingual-e5-small --split dev --labels data/labels/dev.jsonl
+# 결과: experiments/000_base_eval/results/ (comparison.md만 커밋)
+name: base_eval
+questions: data/splits/test.jsonl
+models:
+  - intfloat/multilingual-e5-small   # 파인튜닝 대상. 118M, 384차원, MIT

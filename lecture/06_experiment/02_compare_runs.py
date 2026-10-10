@@ -3,14 +3,14 @@
 ==========================================
 
 학습 목표:
-- 실험 한 바퀴(가설 → 설정 → 파일럿 → 학습 → dev로 선택 → test 1회 → 분석 → 다음 가설)를 실험 010 비교표로 따라간다
-- 학습 전 / 002 전체 학습 / 004 LoRA / 006 배치 128 / 001 다시 캔 오답 3개를 같은 test로 비교한다
+- 실험 한 바퀴(가설 → 설정 → 파일럿 → 학습 → dev로 선택 → test 1회 → 분석 → 다음 가설)를 exp_010 비교표로 따라간다
+- 학습 전 / 001 전체 학습 / 004 LoRA / 005 배치 128 / 002 다시 캔 오답 3개를 같은 test로 비교한다
 - 두 모델의 차이가 우연인지 질문 단위 대응 검정(ragkit paired-test)으로 확인한다
 - 5교시의 쿼리 확장 행을 옆에 두고 "파인튜닝은 질문당 LLM 비용을 학습 1회로 옮긴다"를 확인한다
 
 사전 준비 (없으면 스크립트가 받는 명령을 알려 주고 끝난다):
     uv run python scripts/data_version.py pull v1     # 코퍼스 + 분할
-    models/multilingual-e5-small, models/finetuned/{exp_002,exp_004,exp_006,r001_A},
+    models/multilingual-e5-small, models/finetuned/{001_baseline,004_lora,005_batch128,002_hard_negatives},
     data/processed/index/*.sqlite                      # 강사 Drive (인덱스가 있으면 질문만 임베딩한다)
 
 실행:
@@ -18,7 +18,7 @@
     uv run python lecture/06_experiment/02_compare_runs.py --run    # test 300개 표본으로 비교와 검정을 직접 (1분 안쪽)
 
 기본 모드 결과는 experiments/results/lecture/06_experiment/exp_010/ 에 쓴다(03_error_analysis.py가 이어서 읽는다).
-강사가 실험 010 결과 JSON(experiments/exp_010_lecture_comparison/results/*.json)을 나눠 줬으면 그것을 읽는다.
+강사가 exp_010 결과 JSON(experiments/archive/exp_010_lecture_comparison/results/*.json)을 나눠 줬으면 그것을 읽는다.
 받은 비교표(comparison.md)는 덮어쓰지 않는다.
 """
 
@@ -41,7 +41,7 @@ ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "data"
 CORPUS = DATA / "processed" / "law_docs.json"
 TEST = DATA / "splits" / "test.jsonl"
-EXPERIMENT = ROOT / "experiments" / "exp_010_lecture_comparison"
+EXPERIMENT = ROOT / "experiments" / "archive" / "exp_010_lecture_comparison"
 CONFIG = EXPERIMENT / "config.yaml"
 RECEIVED = EXPERIMENT / "results"  # 강사가 나눠 준 결과 JSON이 있으면 여기
 OUT = ROOT / "experiments" / "results" / "lecture" / "06_experiment" / "exp_010"
@@ -55,13 +55,13 @@ EXPANSION = (
     / "comparison.json"
 )
 MODELS = ROOT / "models"
-# 모델 폴더 이름 → (표에 쓸 이름, 가설). 실험 설정은 experiments/exp_00X, runs/001_hard_negatives
+# 모델 폴더 이름 → (표에 쓸 이름, 가설). 실험 설정은 experiments/<번호>_<이름>/
 RUNS = {
     "multilingual-e5-small": ("학습 전 e5-small", "출발점 (5교시)"),
-    "exp_002": ("002 전체 학습", "기준 실험: 학습하면 오른다"),
-    "exp_004": ("004 LoRA", "파라미터 0.4%로도 대부분 따라간다"),
-    "exp_006": ("006 배치 128", "in-batch 오답이 많을수록 오른다"),
-    "r001_A": ("001 다시 캔 오답 3개", "모델이 헷갈리는 조문을 오답으로 주면 오른다"),
+    "001_baseline": ("001 전체 학습", "기본 실험: 학습하면 오른다"),
+    "004_lora": ("004 LoRA", "파라미터 0.4%로도 대부분 따라간다"),
+    "005_batch128": ("005 배치 128", "in-batch 오답이 많을수록 오른다"),
+    "002_hard_negatives": ("002 다시 캔 오답 3개", "모델이 헷갈리는 조문을 오답으로 주면 오른다"),
 }
 RUN_SAMPLE = 300
 SEED = 42
@@ -188,12 +188,12 @@ print(
 for name, (label, hypothesis) in RUNS.items():
     print(f"  {pad(label, 22)}{hypothesis}")
 print(
-    "\n  001의 가설은 002의 오답 분석에서 나왔다 (runs/001_hard_negatives/00_error_analysis.md)"
+    "\n  002의 가설은 001의 오답 분석에서 나왔다 (experiments/002_hard_negatives/00_error_analysis.md)"
 )
 
 
 # ============================================================
-# 2. 결과 모으기: ragkit compare (실험 010)
+# 2. 결과 모으기: ragkit compare (exp_010)
 # ============================================================
 if args.run:
     section(f"2. --run: test {RUN_SAMPLE}개 표본으로 ragkit compare")
@@ -211,7 +211,7 @@ if args.run:
     print(f"  ({seconds:.0f}초, 표본 {RUN_SAMPLE}개 · seed {SEED})")
     results = load_results(out_dir)
 else:
-    section("2. 결과 모으기: ragkit compare (실험 010, test 전체)")
+    section("2. 결과 모으기: ragkit compare (exp_010, test 전체)")
     results = load_results(RECEIVED)
     out_dir = RECEIVED
     if set(RUNS) <= set(results):
@@ -305,9 +305,9 @@ for name, (label, _) in RUNS.items():
 section("4. 가설은 맞았나 (숫자는 위 표에서, 0.02 미만 차이는 차이로 보지 않는다)")
 r5 = {name: results[name][0]["doc"]["recall@5"] for name in RUNS}
 base, full, lora, big, mined = (r5[k] for k in RUNS)
-lora_meta, full_meta = train_meta("exp_004"), train_meta("exp_002")
+lora_meta, full_meta = train_meta("004_lora"), train_meta("001_baseline")
 MIN_DIFF = (
-    0.02  # 실험 기록의 기준 (runs/README.md): 이보다 작은 차이는 의미 없음으로 본다
+    0.02  # 실험 기록의 기준 (experiments/README.md): 이보다 작은 차이는 의미 없음으로 본다
 )
 
 
@@ -318,20 +318,20 @@ def verdict(delta: float) -> str:
 
 
 print(
-    f"  파인튜닝     학습 전 {base:.3f} → 002 {full:.3f} ({full - base:+.3f}, {verdict(full - base)})."
+    f"  파인튜닝     학습 전 {base:.3f} → 001 {full:.3f} ({full - base:+.3f}, {verdict(full - base)})."
     " 처음 보는 법령에서 잰 값이다"
 )
 if lora_meta and full_meta:
     share = lora_meta["trainable_params"] / lora_meta["total_params"]
     print(
-        f"  LoRA         파라미터 {share:.1%}만 학습해 002 대비 {lora - full:+.3f} ({verdict(lora - full)})."
+        f"  LoRA         파라미터 {share:.1%}만 학습해 001 대비 {lora - full:+.3f} ({verdict(lora - full)})."
         f" 학습으로 오른 폭의 {(lora - base) / (full - base):.0%}를 따라간다"
     )
     print(
-        "               '002와 같다'가 맞는지는 아래 5의 검정(CI가 0을 걸치는가)으로 판정한다"
+        "               '001과 같다'가 맞는지는 아래 5의 검정(CI가 0을 걸치는가)으로 판정한다"
     )
 print(
-    f"  배치 128     002 대비 {big - full:+.3f} ({verdict(big - full)})."
+    f"  배치 128     001 대비 {big - full:+.3f} ({verdict(big - full)})."
     + (
         " 오답 수를 4배로 늘려도 오르지 않았다. 가설이 틀렸다"
         if big - full < MIN_DIFF
@@ -342,15 +342,15 @@ print(
     "               늘어난 in-batch 오답은 대부분 다른 법령의 쉬운 문서다 (docs/PLAN.md 학습 실험 결과)"
 )
 print(
-    f"  다시 캔 오답 002 대비 {mined - full:+.3f} ({verdict(mined - full)})."
+    f"  다시 캔 오답 001 대비 {mined - full:+.3f} ({verdict(mined - full)})."
     + (
-        " 다만 001은 lr 3e-5 · 4 epoch로 학습 설정도 다르다"
+        " 다만 002는 lr 3e-5 · 4 epoch(003 수렴 확인에서 고른 값)로 학습 설정도 다르다"
         if mined - full >= MIN_DIFF
         else ""
     )
 )
 print(
-    "               같은 설정의 대조군끼리 보면 dev 복수 정답 R@5 0.720 → 0.761 (+0.041, runs/001_hard_negatives/04_results.md)."
+    "               같은 설정의 대조군끼리 보면 dev 복수 정답 R@5 0.720 → 0.761 (+0.041, experiments/002_hard_negatives/04_results.md)."
 )
 print("               설정을 맞춰도 오르므로, 필요한 것은 오답의 수가 아니라 난이도다")
 if args.run:
@@ -363,9 +363,9 @@ if args.run:
 # 5. 차이가 우연인가: 질문 단위 대응 검정
 # ============================================================
 section("5. 차이가 우연인가: ragkit paired-test (같은 질문끼리 짝지어 비교)")
-base_path = results["exp_002"][1]
-for other in ("exp_004", "exp_006", "r001_A"):
-    print(f"\n002 → {RUNS[other][0]}")
+base_path = results["001_baseline"][1]
+for other in ("004_lora", "005_batch128", "002_hard_negatives"):
+    print(f"\n001 → {RUNS[other][0]}")
     ragkit("paired-test", str(base_path), str(results[other][1]), "--judge", "doc")
 print(
     "\n  읽는 법: 95% CI가 0을 걸치면 차이를 주장하지 않는다. 고침/망침은 한쪽만 맞힌 질문 수"
@@ -405,12 +405,12 @@ print(
     + pad("1 (매 질문)", 18)
     + "-"
 )
-mined_meta = train_meta("r001_A")
+mined_meta = train_meta("002_hard_negatives")
 train_cost = (
     f"학습 {mined_meta['seconds'] / 60:.0f}분 1회" if mined_meta else "학습 1회"
 )
 print(
-    "  " + pad("001 파인튜닝", 24) + pad(f"{mined:.3f}", 36) + pad("0", 18) + train_cost
+    "  " + pad("002 파인튜닝", 24) + pad(f"{mined:.3f}", 36) + pad("0", 18) + train_cost
 )
 print(
     "\n  → 파인튜닝은 질문마다 내던 LLM 비용·지연을 학습 1회로 옮긴다. 모델 크기(118M, 384차원)도 그대로다"

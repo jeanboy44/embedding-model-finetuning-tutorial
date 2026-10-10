@@ -4,7 +4,7 @@
 
 ```bash
 uv run --package ragkit-api ragkit-api                        # http://127.0.0.1:8000, 문서 /docs
-uv run --package ragkit-api ragkit-api --checkpoint experiments/exp_002_finetuned/model   # 파인튜닝 모델
+uv run --package ragkit-api ragkit-api --checkpoint models/finetuned/002_hard_negatives   # 파인튜닝 모델
 uv run --package ragkit-api ragkit-api --web-dist apps/web/dist                          # 빌드한 web도 함께
 ```
 

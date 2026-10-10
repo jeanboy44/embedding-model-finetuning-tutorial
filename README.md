@@ -33,7 +33,7 @@ uv sync --all-packages --all-extras   # 강의용: ragkit + 모든 앱 + 학습 
 
 ```bash
 uv run python scripts/download_model_hf.py               # 모델 (또는 scripts/download_model_gdrive.py)
-uv run python scripts/finetuned_drive.py download      # 파인튜닝 모델 r001_A + 그 인덱스 (--all: 실험 002·004·006까지)
+uv run python scripts/finetuned_drive.py download      # 파인튜닝 모델 002_hard_negatives + 그 인덱스 (--all: 실험 001·004·005까지)
 uv run ragkit export-onnx models/multilingual-e5-small   # ONNX 변환 (배포 기본 백엔드)
 uv run ragkit quantize models/multilingual-e5-small      # INT8 양자화 → models/multilingual-e5-small-int8
 uv run ragkit prune-vocab models/multilingual-e5-small   # 어휘 가지치기 → -pruned (이어서 export-onnx, quantize)
@@ -59,9 +59,9 @@ LLM 단계(답변 생성)는 `.env`에 `GEMINI_API_KEY`가 필요합니다. [Goo
 | 1 (5) | `lecture/05_data_eval/02_split.py` | 법령 단위 분할과 왜 법령 단위인가 |
 | 1 (5) | `lecture/05_data_eval/03_metrics.py` | R@k · MRR · nDCG · doc/article/multi 판정, 학습 전 e5 test 평가 |
 | 1 (5) | `lecture/05_data_eval/04_query_expansion.py` | LLM 쿼리 확장: 정확도와 질문당 비용 (받은 캐시) |
-| 1 (5) | `lecture/05_data_eval/05_baseline_train.py` | 기준 실험 002: MNRL · in-batch negative · NO_DUPLICATES, 학습 기록, 30 step 파일럿 |
+| 1 (5) | `lecture/05_data_eval/05_baseline_train.py` | 기본 실험 001: MNRL · in-batch negative · NO_DUPLICATES, 학습 기록, 30 step 파일럿 |
 | 2 (6) | `lecture/06_experiment/01_lora_train.py` | LoRA 실험 004: 설정 차이, 학습 파라미터 0.4%, 학습 기록, 30 step 파일럿 |
-| 2 (6) | `lecture/06_experiment/02_compare_runs.py` | 실험 010 비교표, 가설 판정, paired-test |
+| 2 (6) | `lecture/06_experiment/02_compare_runs.py` | exp_010 비교표, 가설 판정, paired-test |
 | 2 (6) | `lecture/06_experiment/03_error_analysis.py` | 고쳐진·새로 틀린·여전히 틀리는 질문, 파인튜닝의 한계 |
 | 3 (7) | `lecture/07_optimize/01_api_review.py` | API 복습: 로딩, search·필터·422, SSE 스트리밍, 노트북 |
 | 3 (7) | `lecture/07_optimize/02_onnx_quantize_prune.py` | ONNX 변환, INT8 텐서 단위 vs 채널별, 어휘 가지치기 |
@@ -78,7 +78,7 @@ LLM 단계(답변 생성)는 `.env`에 `GEMINI_API_KEY`가 필요합니다. [Goo
 # DS용 CLI (1·3단계): index · split · train · evaluate · compare · export-onnx · quantize · prune-vocab
 uv run ragkit --help
 
-# 배포 최적화 비교표 (3단계) → experiments/exp_008_deploy_bench/results/comparison.md
+# 배포 최적화 비교표 (3단계) → experiments/008_deploy_bench/results/comparison.md
 uv run ragkit-bench run
 
 # 검색 API (2단계) → http://127.0.0.1:8000/docs
@@ -123,7 +123,7 @@ train·evaluate·compare run에는 입력 파일과 내용이 같은 버전이 �
 ```
 src/ragkit/      # 1단계 라이브러리: data · embeddings · retrieval · rag · service · training · evaluation · CLI
 apps/            # 2~4단계: ragkit을 쓰는 앱 (api·bench·search-cli·mcp는 uv workspace 멤버, web은 pnpm)
-experiments/     # 실험 설정(config.yaml)과 결과(results/, git 제외)
+experiments/     # 실험 000~010(번호 = 강의 순서), 실험 기록 · 장부, archive/ (experiments/README.md)
 lecture/         # 강의 자료: 교시별 폴더 8개(01_introduction ~ 08_product)
 scripts/         # 일회성 데이터·모델 준비
 docs/            # 강의 계획, 아키텍처, ADR

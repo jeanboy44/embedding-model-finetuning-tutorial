@@ -69,7 +69,7 @@ def test_evaluate_default_index_shared_with_ragkit_index(
     monkeypatch.chdir(tmp_path)
     corpus_path, qpath = _write_inputs(tmp_path, corpus, questions)
     train_cli.split(qpath, corpus=corpus_path, out=tmp_path / "splits")
-    model_dir = tmp_path / "models" / "finetuned" / "exp_002"
+    model_dir = tmp_path / "models" / "finetuned" / "001_baseline"
     model_dir.mkdir(parents=True)
     (model_dir / "model.safetensors").write_bytes(b"w")
     monkeypatch.setattr(train_cli, "create_embedding_fn", _fake_create)
@@ -110,7 +110,7 @@ def test_evaluate_applies_model_profile(tmp_path, corpus, questions, monkeypatch
     assert not any(t.startswith(("query: ", "passage: ")) for t in seen)
 
 
-@pytest.mark.parametrize("model", ["models/finetuned/exp_002", "./exp_002", "/없는/경로/exp"])
+@pytest.mark.parametrize("model", ["models/finetuned/001_baseline", "./001_baseline", "/없는/경로/exp"])
 def test_evaluate_missing_model_folder_fails(tmp_path, corpus, questions, monkeypatch, model):
     """학습 전에 평가부터 실행하면 안내하고 종료한다 (HF 모델 이름으로 해석하지 않는다)."""
     monkeypatch.chdir(tmp_path)
@@ -155,7 +155,7 @@ def test_train_command_output_dir_overrides_config(tmp_path, corpus, questions, 
     corpus_path, qpath = _write_inputs(tmp_path, corpus, questions)
     train_cli.split(qpath, corpus=corpus_path, out=tmp_path / "splits")
     config_path = tmp_path / "config.yaml"
-    config_path.write_text("training:\n  output_dir: models/finetuned/exp_002\n", encoding="utf-8")
+    config_path.write_text("training:\n  output_dir: models/finetuned/001_baseline\n", encoding="utf-8")
     seen = {}
 
     def fake_train(config, train_q, dev_q, docs, **kwargs):
@@ -201,7 +201,7 @@ def test_evaluate_onnx_fails_when_onnx_older_than_weights(
     monkeypatch.chdir(tmp_path)  # 회귀로 끝까지 실행돼도 저장소에 결과를 남기지 않게
     corpus_path, qpath = _write_inputs(tmp_path, corpus, questions)
     train_cli.split(qpath, corpus=corpus_path, out=tmp_path / "splits")
-    model_dir = tmp_path / "exp_002"
+    model_dir = tmp_path / "001_baseline"
     (model_dir / "onnx").mkdir(parents=True)
     (model_dir / "model.safetensors").write_bytes(b"w")
     (model_dir / "onnx" / "model.onnx").write_bytes(b"o")
@@ -293,7 +293,7 @@ def test_compare_shows_training_info_for_trained_folder(
     """학습한 모델 폴더는 train_meta.json의 학습 시간·학습 파라미터·선택된 epoch를 표에 싣는다."""
     monkeypatch.chdir(tmp_path)
     corpus_path, qpath = _write_inputs(tmp_path, corpus, questions)
-    model_dir = tmp_path / "models" / "finetuned" / "exp_002"
+    model_dir = tmp_path / "models" / "finetuned" / "001_baseline"
     model_dir.mkdir(parents=True)
     (model_dir / "train_meta.json").write_text(
         json.dumps({"seconds": 120.0, "trainable_params": 1000, "total_params": 4000, "best_epoch": 2}),
@@ -310,7 +310,7 @@ def test_compare_shows_training_info_for_trained_folder(
         "seconds": 120.0, "trainable_params": 1000, "total_params": 4000, "best_epoch": 2
     }
     markdown = (tmp_path / "results" / "comparison.md").read_text(encoding="utf-8")
-    assert "| exp_002 |" in markdown and "25.0%" in markdown and "2분" in markdown
+    assert "| 001_baseline |" in markdown and "25.0%" in markdown and "2분" in markdown
 
 
 def test_compare_command_requires_models(tmp_path, corpus, questions) -> None:

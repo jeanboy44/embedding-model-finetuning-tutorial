@@ -50,7 +50,7 @@ PERIODS = {
     3: ("실습 0", "환경 · 완성품 · 학습 전후 비교"),
     4: ("선택", "질문 데이터 보기"),
     5: ("실습 1", "데이터 · 평가 · 기준 실험"),
-    6: ("실습 2", "002 판정 · 오답 분석 · 001 기록"),
+    6: ("실습 2", "001 판정 · 오답 분석 · 002 기록"),
     7: ("실습 3", "ONNX · INT8 · 가지치기 · 서빙"),
     8: ("실습 4", "CLI · 스킬 · MCP · 웹"),
 }
@@ -203,8 +203,8 @@ def model_checks() -> list[Check]:
         Check(f"{rel(E5_DIR)} (학습 전 e5)", (E5_DIR / "config.json").exists(), "", GET_E5, ALL - {4}),
         Check(f"{rel(E5_DIR)}/onnx (ONNX 추론용)", (E5_DIR / "onnx" / "model.onnx").exists(), "", EXPORT_ONNX, ALL - {4}),
         Check(f"{rel(base_index)} (학습 전 e5 인덱스)", base_index.exists(), "", FROM_DRIVE, ALL - {4}, drive=E5_DIR.name),
-        finetuned_check("r001_A", "최종 모델", {3, 6, 8}),
-        finetuned_check("exp_002", "기준 실험", {5, 6}),
+        finetuned_check("002_hard_negatives", "최종 모델", {3, 6, 8}),
+        finetuned_check("001_baseline", "기본 실험", {5, 6}),
         Check(
             "INT8 · 가지치기 모델 3개 + 인덱스 2개",
             not optimized_missing,
@@ -271,9 +271,9 @@ def smoke_checks() -> list[Check]:
         len(json.loads(corpus.read_text(encoding="utf-8"))) if corpus.exists() else None
     )
     targets = [("학습 전 e5", {}, ALL - {4})]
-    if (FINETUNED / "r001_A" / "model.safetensors").exists():
+    if (FINETUNED / "002_hard_negatives" / "model.safetensors").exists():
         targets.append(
-            ("파인튜닝 r001_A", {"checkpoint": FINETUNED / "r001_A"}, {3, 6, 8})
+            ("파인튜닝 002_hard_negatives", {"checkpoint": FINETUNED / "002_hard_negatives"}, {3, 6, 8})
         )
     checks = []
     for label, kwargs, periods in targets:

@@ -1,45 +1,49 @@
 {
   "drive_folder": "https://drive.google.com/drive/folders/1vpGtkFmS5kPfRlu5f7pcGKf_gZ2AWHXK",
   "models": {
-    "r001_A": {
+    "002_hard_negatives": {
       "file": "finetuned-r001_A.zip",
-      "model_dir": "models/finetuned/r001_A",
-      "index": "data/processed/index/r001_A-20261002120228.sqlite",
-      "model_key": "r001_A-20261002120228",
+      "model_dir": "models/finetuned/002_hard_negatives",
+      "index": "data/processed/index/002_hard_negatives-20261002120228.sqlite",
+      "model_key": "002_hard_negatives-20261002120228",
       "weights_mtime": 1790942548.600959,
       "sha256": "d3b07a70959e833b3557ea2eee9f6a533f21b022b5f5ea3dc5cf0e49cae3d9c5",
       "size_mb": 358.5,
-      "file_id": "1BZDpsGyrtD6_NgKyra9ifDfuraULO8Fn"
+      "file_id": "1BZDpsGyrtD6_NgKyra9ifDfuraULO8Fn",
+      "pending_reupload": "Drive의 finetuned-r001_A.zip은 옛 폴더 이름 r001_A 그대로 묶여 있다. 강사가 upload로 다시 올려야 받을 수 있다"
     },
-    "exp_002": {
+    "001_baseline": {
       "file": "finetuned-exp_002.zip",
-      "model_dir": "models/finetuned/exp_002",
-      "index": "data/processed/index/exp_002-20260930142234.sqlite",
-      "model_key": "exp_002-20260930142234",
+      "model_dir": "models/finetuned/001_baseline",
+      "index": "data/processed/index/001_baseline-20260930142234.sqlite",
+      "model_key": "001_baseline-20260930142234",
       "weights_mtime": 1790778154.2225323,
       "sha256": "c45b25f04f2947b9eab0170c3fa20d58589cbc0c6f3dd2cef889210ec7e20a88",
       "size_mb": 358.4,
-      "file_id": "1fuvHutnkMxY7Jlh3DxZ2s2GmFGJEOniV"
+      "file_id": "1fuvHutnkMxY7Jlh3DxZ2s2GmFGJEOniV",
+      "pending_reupload": "Drive의 finetuned-exp_002.zip은 옛 폴더 이름 exp_002 그대로 묶여 있다. 강사가 upload로 다시 올려야 받을 수 있다"
     },
-    "exp_004": {
+    "004_lora": {
       "file": "finetuned-exp_004.zip",
-      "model_dir": "models/finetuned/exp_004",
-      "index": "data/processed/index/exp_004-20260930145821.sqlite",
-      "model_key": "exp_004-20260930145821",
+      "model_dir": "models/finetuned/004_lora",
+      "index": "data/processed/index/004_lora-20260930145821.sqlite",
+      "model_key": "004_lora-20260930145821",
       "weights_mtime": 1790780301.1197865,
       "sha256": "1434c7a9e8e871e4356db985b6eb9af50cfe777d6eb5cb4ffae0d5f3ba7645f9",
       "size_mb": 333.7,
-      "file_id": "19ilF-Ud_8DXSak9EjKlCsWPoONmK-_zE"
+      "file_id": "19ilF-Ud_8DXSak9EjKlCsWPoONmK-_zE",
+      "pending_reupload": "Drive의 finetuned-exp_004.zip은 옛 폴더 이름 exp_004 그대로 묶여 있다. 강사가 upload로 다시 올려야 받을 수 있다"
     },
-    "exp_006": {
+    "005_batch128": {
       "file": "finetuned-exp_006.zip",
-      "model_dir": "models/finetuned/exp_006",
-      "index": "data/processed/index/exp_006-20260930153413.sqlite",
-      "model_key": "exp_006-20260930153413",
+      "model_dir": "models/finetuned/005_batch128",
+      "index": "data/processed/index/005_batch128-20260930153413.sqlite",
+      "model_key": "005_batch128-20260930153413",
       "weights_mtime": 1790782453.8664248,
       "sha256": "558ddc12e8a3bcdf7a312d1fa5faccb8ef8b41f0a35c15069284ab970cc2f863",
       "size_mb": 358.4,
-      "file_id": "1J7AVUj_ikkZdUIOx4qCWFk6WjJMJCLCf"
+      "file_id": "1J7AVUj_ikkZdUIOx4qCWFk6WjJMJCLCf",
+      "pending_reupload": "Drive의 finetuned-exp_006.zip은 옛 폴더 이름 exp_006 그대로 묶여 있다. 강사가 upload로 다시 올려야 받을 수 있다"
     }
   },
   "indexes": {

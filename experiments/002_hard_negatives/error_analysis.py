@@ -1,7 +1,7 @@
-"""001 0단계 에러 분석: exp_009(현재 최고)의 dev 오답 유형과 hard negative 채굴 규모.
+"""002 0단계 에러 분석: 003_convergence(현재 최고)의 dev 오답 유형과 hard negative 채굴 규모.
 
-사용: uv run python runs/001_hard_negatives/error_analysis.py
-입력: artifacts/exp_009/topk_{dev,train}.jsonl (dump_topk.py), data/labels/dev.jsonl
+사용: uv run python experiments/002_hard_negatives/error_analysis.py
+입력: artifacts/003_convergence/topk_{dev,train}.jsonl (dump_topk.py), data/labels/dev.jsonl
 출력: 표준 출력 (00_error_analysis.md에 옮긴다)
 """
 
@@ -14,7 +14,7 @@ from ragkit.data import load_labels, question_key
 
 RUN = Path(__file__).parent
 sys.path.insert(0, str(RUN))
-ART = RUN / "artifacts" / "exp_009"
+ART = RUN / "artifacts" / "003_convergence"
 from common import by, pct, relation  # noqa: E402
 
 

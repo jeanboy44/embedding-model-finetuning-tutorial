@@ -32,7 +32,7 @@ def test_embeddinggemma_profile_uses_title_field() -> None:
 
 def test_unknown_model_falls_back_to_e5_style(tmp_path: Path) -> None:
     """파인튜닝 폴더처럼 모르는 이름은 e5 형식(Settings의 앞 문구)을 쓴다."""
-    p = get_profile(str(tmp_path / "exp_002_finetuned"))
+    p = get_profile(str(tmp_path / "001_baseline"))
 
     assert p.format_query("q") == "query: q"
     assert p.backends == ("onnx", "torch", "st")
@@ -46,13 +46,13 @@ def test_unknown_hub_model_is_rejected() -> None:
 
 def test_model_key_for_hub_name_and_checkpoint(tmp_path: Path) -> None:
     """허브 모델은 이름 끝부분, 체크포인트 폴더는 폴더 이름 + 가중치 수정 시각."""
-    ckpt = tmp_path / "exp_002_finetuned"
+    ckpt = tmp_path / "001_baseline"
     ckpt.mkdir()
     (ckpt / "model.safetensors").write_bytes(b"w")
     os.utime(ckpt / "model.safetensors", (1_790_000_000, 1_790_000_000))
 
     assert model_key("intfloat/multilingual-e5-small") == "multilingual-e5-small"
-    assert model_key("intfloat/multilingual-e5-small", ckpt).startswith("exp_002_finetuned-")
+    assert model_key("intfloat/multilingual-e5-small", ckpt).startswith("001_baseline-")
     assert model_key("intfloat/multilingual-e5-small", ckpt) == model_key("x", ckpt)
 
 

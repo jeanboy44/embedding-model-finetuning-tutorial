@@ -26,7 +26,7 @@ uv run python lecture/03_setup/01_doctor.py --fix   # 3~8교시에 쓸 것을 �
 uv run python scripts/data_version.py pull v1          # 코퍼스 · 질문 · 분할
 uv run python scripts/download_model_hf.py             # 학습 전 e5 (HF가 막히면 download_model_gdrive.py)
 uv run ragkit export-onnx models/multilingual-e5-small # ONNX 추론용 변환
-uv run python scripts/finetuned_drive.py download multilingual-e5-small r001_A exp_002 optimize   # 학습 전 e5 인덱스 · 파인튜닝 모델 2개 · 7교시 INT8 · 가지치기 모델 (각 인덱스 포함)
+uv run python scripts/finetuned_drive.py download multilingual-e5-small 002_hard_negatives 001_baseline optimize   # 학습 전 e5 인덱스 · 파인튜닝 모델 2개 · 7교시 INT8 · 가지치기 모델 (각 인덱스 포함)
 ```
 
 `GEMINI_API_KEY`는 없어도 된다. LLM 답변 단계만 건너뛴다.
@@ -53,12 +53,12 @@ uv run --package ragkit-search ragkit-search show 근로기준법_법률_제55�
 
 ## 3. 학습 전후 비교: 모델만 바꾼다
 
-같은 명령 뒤에 `--checkpoint models/finetuned/r001_A --backend torch`만 붙이면 파인튜닝한 모델(r001_A)로 찾는다. 인덱스는 자동으로 그 모델 것을 쓴다.
+같은 명령 뒤에 `--checkpoint models/finetuned/002_hard_negatives --backend torch`만 붙이면 파인튜닝한 모델(002_hard_negatives)로 찾는다. 인덱스는 자동으로 그 모델 것을 쓴다.
 
 ```bash
-uv run --package ragkit-search ragkit-search search "편의점 알바 3개월 했는데 주휴수당 받을 수 있나요?" --checkpoint models/finetuned/r001_A --backend torch
-uv run --package ragkit-search ragkit-search search "회사 그만뒀는데 퇴직금은 언제까지 받아야 해요?" --checkpoint models/finetuned/r001_A --backend torch
-uv run --package ragkit-search ragkit-search search "방문판매로 산 정수기 환불하고 싶어요" --checkpoint models/finetuned/r001_A --backend torch
+uv run --package ragkit-search ragkit-search search "편의점 알바 3개월 했는데 주휴수당 받을 수 있나요?" --checkpoint models/finetuned/002_hard_negatives --backend torch
+uv run --package ragkit-search ragkit-search search "회사 그만뒀는데 퇴직금은 언제까지 받아야 해요?" --checkpoint models/finetuned/002_hard_negatives --backend torch
+uv run --package ragkit-search ragkit-search search "방문판매로 산 정수기 환불하고 싶어요" --checkpoint models/finetuned/002_hard_negatives --backend torch
 ```
 
 말투만 바꿔서도 비교해 본다. 학습 전 모델은 법률 용어로 물어야 찾고, 파인튜닝한 모델은 평소 말투로도 찾는다.
@@ -66,8 +66,8 @@ uv run --package ragkit-search ragkit-search search "방문판매로 산 정수�
 ```bash
 uv run --package ragkit-search ragkit-search search "주휴일 유급휴일 1주 개근"                        # 학습 전 · 법률 용어
 uv run --package ragkit-search ragkit-search search "편의점 알바를 3개월 했는데 주휴수당을 받을 수 있나요?"        # 학습 전 · 일상어
-uv run --package ragkit-search ragkit-search search "편의점 알바를 3개월 했는데 주휴수당을 받을 수 있나요?" --checkpoint models/finetuned/r001_A --backend torch   # 파인튜닝 · 일상어
-uv run --package ragkit-search ragkit-search search "주휴일 유급휴일 1주 개근" --checkpoint models/finetuned/r001_A --backend torch   # 파인튜닝 · 법률 용어
+uv run --package ragkit-search ragkit-search search "편의점 알바를 3개월 했는데 주휴수당을 받을 수 있나요?" --checkpoint models/finetuned/002_hard_negatives --backend torch   # 파인튜닝 · 일상어
+uv run --package ragkit-search ragkit-search search "주휴일 유급휴일 1주 개근" --checkpoint models/finetuned/002_hard_negatives --backend torch   # 파인튜닝 · 법률 용어
 ```
 
 정답 근로기준법 제55조의 순위(문서 단위, 강사 PC): 학습 전 일상어 82위 · 법률 용어 3위 → 파인튜닝 일상어 2위 · 법률 용어 2위.

@@ -1,6 +1,6 @@
 """DS용 학습·평가 CLI: ragkit split | train | evaluate.
 
-순서: ragkit split → ragkit train --config experiments/exp_00X/config.yaml → ragkit evaluate <폴더>
+순서: ragkit split → ragkit train --config experiments/001_baseline/config.yaml → ragkit evaluate <폴더>
 """
 
 import json
@@ -131,7 +131,7 @@ def train(
     """실험 설정(config.yaml)대로 임베딩 모델을 파인튜닝한다. [train] extra 필요.
 
     Args:
-        config: 실험 설정 경로 (예: experiments/exp_002_finetuned/config.yaml).
+        config: 실험 설정 경로 (예: experiments/001_baseline/config.yaml).
         splits: ragkit split 출력 폴더. 기본값은 data/splits.
         corpus: 코퍼스 경로. 기본값은 data/processed/law_docs.json.
         model: 설정의 base 모델 대신 쓸 모델 이름 또는 폴더.
@@ -249,7 +249,7 @@ def evaluate(
         backend: 임베딩 백엔드 (onnx | torch | st). 기본값은 모델 프로필이 정한다.
             onnx는 {모델 폴더}/onnx/model.onnx가 필요하고, 없으면 torch로 바꾼다.
         index: 인덱스 파일 경로. 기본값은 ragkit index와 같은 data/processed/index/{모델 키}.sqlite
-            (학습한 폴더는 "exp_002-가중치수정시각", 허브 모델은 이름 끝부분).
+            (학습한 폴더는 "001_baseline-가중치수정시각", 허브 모델은 이름 끝부분).
         out: 결과 JSON 경로. 기본값은 experiments/results/{모델 이름}_{split}.json.
         expand: LLM 쿼리 확장을 쓴다(결과 파일 이름 끝에 _expand). 확장은 캐시에 있으면 재사용한다.
         expansion_cache: 확장 캐시 JSONL. 기본값은 data/processed/query_expansion/{LLM}.jsonl.
@@ -450,7 +450,7 @@ def compare(
     """실험 설정의 모델들을 같은 질문·같은 코퍼스로 평가해 비교표를 만든다 (학습 없음).
 
     Args:
-        config: 실험 설정 (예: experiments/exp_005_base_model_comparison/config.yaml).
+        config: 실험 설정 (예: experiments/archive/exp_005_base_model_comparison/config.yaml).
             models(모델 이름 또는 폴더 목록), questions(질문 파일 또는 폴더)를 적는다.
             models 항목을 {model: 이름, expand: true}로 쓰면 LLM 쿼리 확장으로 평가한다.
         questions: 설정의 questions 대신 쓸 질문 파일 또는 폴더.
@@ -607,7 +607,7 @@ TRAIN_FIELDS = ("seconds", "trainable_params", "total_params", "best_epoch")
 
 
 def _row_label(row: dict) -> str:
-    """표에 쓸 모델 이름. 학습한 폴더는 폴더 이름(exp_002 등), 허브 모델은 전체 이름. 확장이면 표시."""
+    """표에 쓸 모델 이름. 학습한 폴더는 폴더 이름(001_baseline 등), 허브 모델은 전체 이름. 확장이면 표시."""
     model = Path(row["model"]).name if Path(row["model"]).is_dir() else row["model"]
     return f"{model} + 쿼리 확장" if row.get("expansion") else model
 

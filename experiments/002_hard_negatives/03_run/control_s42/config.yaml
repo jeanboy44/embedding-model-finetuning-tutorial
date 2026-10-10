@@ -1,8 +1,8 @@
-# 001 대조군 (seed 42): 기존 LLM hard negative 1개. A·B·C와 같은 코드·같은 최대 epoch(4)로 다시 학습한다 (계획 검토 반영)
-name: r001_control_s42
+# 002 대조군 (seed 42): 기존 LLM hard negative 1개. A·B·C와 같은 코드·같은 최대 epoch(4)로 다시 학습한다 (계획 검토 반영)
+name: 002_hard_negatives_control_s42
 training:
   model: intfloat/multilingual-e5-small
-  output_dir: models/finetuned/r001_control_s42
+  output_dir: models/finetuned/002_hard_negatives_control_s42
   batch_size: 32
   loss: cached_mnrl
   mini_batch_size: 16

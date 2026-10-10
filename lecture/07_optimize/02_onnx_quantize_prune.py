@@ -56,8 +56,8 @@ RECEIVED = {
     "pruned": MODELS / "multilingual-e5-small-pruned",
     "pruned-int8": MODELS / "multilingual-e5-small-pruned-int8",
 }
-BENCH = SETTINGS.experiments_dir / "exp_008_deploy_bench" / "results" / "results.json"
-GRANULARITY = SETTINGS.experiments_dir / "exp_012_int8_granularity" / "results" / "comparison.md"
+BENCH = SETTINGS.experiments_dir / "008_deploy_bench" / "results" / "results.json"
+GRANULARITY = SETTINGS.experiments_dir / "009_int8_granularity" / "results" / "comparison.md"
 TEST = SETTINGS.data_dir / "splits" / "test.jsonl"
 SAMPLE = 200
 RUN = "--run" in sys.argv
@@ -184,7 +184,7 @@ with tempfile.TemporaryDirectory() as tmp:
             if variant in bench:
                 print(f"  {variant:<18} {bench[variant]['recall@5']:.3f}")
     if GRANULARITY.exists():
-        # 실험 012: 같은 test로 텐서 단위 INT8까지 잰 비교표 (comparison.md의 R@5 열)
+        # 실험 009: 같은 test로 텐서 단위 INT8까지 잰 비교표 (comparison.md의 R@5 열)
         r5 = {}
         for line in GRANULARITY.read_text(encoding="utf-8").splitlines():
             cells = [c.strip() for c in line.strip("|").split("|")]

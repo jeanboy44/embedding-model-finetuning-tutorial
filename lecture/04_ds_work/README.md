@@ -10,9 +10,9 @@
 |---|---|---|
 | ① 문제 정의 | 인터뷰 질문, 현황 파악, 선택지 비교, 결정 기록 | 정말 Agent가 필요한가 · 목표는 현실적인가 |
 | ② 데이터 | 질문 가이드(`.claude/skills/law-question-gen/SKILL.md`), 질문 한 건, 검증 결과 | 데이터가 실제 사용자를 닮았나 |
-| ③ 학습 실험 | 실험 계획서(`runs/001_hard_negatives/02_plan.md`), 설정 파일, 장부(`runs/ledger.tsv`) | 무엇을 바꾸고 무엇과 비교할까 |
-| ④ 평가 · 분석 | 질문 하나 해부, 틀린 질문 묶기(`runs/001_hard_negatives/00_error_analysis.md`) | 이 차이를 믿을까 |
-| ⑤ 공유 · 보고 | 보고서 고치기 전후, 건네는 방법(`runs/001_hard_negatives/04_results.md`, `05_retro.md`) | 무엇을 말하고 뺄까 |
+| ③ 학습 실험 | 실험 계획서(`experiments/002_hard_negatives/02_plan.md`), 설정 파일, 장부(`experiments/ledger.tsv`) | 무엇을 바꾸고 무엇과 비교할까 |
+| ④ 평가 · 분석 | 질문 하나 해부, 틀린 질문 묶기(`experiments/002_hard_negatives/00_error_analysis.md`) | 이 차이를 믿을까 |
+| ⑤ 공유 · 보고 | 보고서 고치기 전후, 건네는 방법(`experiments/002_hard_negatives/04_results.md`, `05_retro.md`) | 무엇을 말하고 뺄까 |
 
 방법의 원리와 숫자 해석은 5교시부터 직접 해 보며 본다.
 

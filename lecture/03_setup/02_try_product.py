@@ -4,7 +4,7 @@
 
 학습 목표:
 - 강의 끝에 만들 결과물(법령 검색 + 웹 · CLI · MCP)을 먼저 써 본다
-- 같은 질문을 학습 전 e5와 파인튜닝한 e5(r001_A)로 검색해 top-3를 나란히 본다
+- 같은 질문을 학습 전 e5와 파인튜닝한 e5(002_hard_negatives)로 검색해 top-3를 나란히 본다
 - 키워드 질문은 학습 전 모델도 잘 찾지만, 일상 말투의 상황 질문에서 차이가 커진다는 것을 확인한다
 - 파인튜닝해도 못 찾는 질문이 있다는 것도 함께 본다 (6교시 실습 2의 오답 분석으로 이어짐)
 
@@ -14,9 +14,9 @@
 
 사전 준비 (uv run python lecture/03_setup/01_doctor.py 로 한 번에 확인):
     models/multilingual-e5-small                                 # scripts/download_model_hf.py
-    models/finetuned/r001_A + 그 인덱스                           # scripts/finetuned_drive.py download
+    models/finetuned/002_hard_negatives + 그 인덱스                           # scripts/finetuned_drive.py download
     data/processed/index/multilingual-e5-small.sqlite            # (위 명령이 함께 받는다. 또는 uv run ragkit index)
-    data/processed/index/r001_A-<학습 시각>.sqlite                # (위 명령이 함께 받는다)
+    data/processed/index/002_hard_negatives-<학습 시각>.sqlite                # (위 명령이 함께 받는다)
     파인튜닝 모델은 ONNX로 바꾸지 않았으면 torch로 연다 (uv sync --all-packages --all-extras)
 
 실행:
@@ -39,10 +39,11 @@ from ragkit.service import Searcher
 
 ROOT = Path(__file__).resolve().parents[2]
 settings = get_settings()
-FINETUNED = settings.models_dir / "finetuned" / "r001_A"
+FINETUNED = settings.models_dir / "finetuned" / "002_hard_negatives"
 SPLIT_META = settings.data_dir / "splits" / "split_meta.json"
 COMPARISON = (
     settings.experiments_dir
+    / "archive"
     / "exp_010_lecture_comparison"
     / "results"
     / "comparison.md"
@@ -124,7 +125,7 @@ def test_laws() -> set[str]:
 # ============================================================
 # 1. 모델 두 개 열기
 # ============================================================
-section("1. 학습 전 e5 vs 파인튜닝 e5 (r001_A)")
+section("1. 학습 전 e5 vs 파인튜닝 e5 (002_hard_negatives)")
 start = time.perf_counter()
 base, tuned, backend = open_searchers()
 print(f"학습 전  {base.model_key:28s} 인덱스 {base.doc_count:,}개 조각 (onnx)")
@@ -155,13 +156,13 @@ for query, qtype, answer in QUESTIONS:
 
 
 # ============================================================
-# 3. 전체 test 질문에서는? (실험 010 결과 파일)
+# 3. 전체 test 질문에서는? (exp_010 결과 파일)
 # ============================================================
-section("3. 질문 몇 개가 아니라 test 전체로 보면 (실험 010)")
+section("3. 질문 몇 개가 아니라 test 전체로 보면 (exp_010)")
 if not COMPARISON.exists():
     print(f"결과 파일이 없습니다: {rel(COMPARISON)} (6교시 실습 2에서 다시 본다)")
 else:
-    # comparison.md의 표(모델별 지표, 질문 유형별 R@5)에서 학습 전 e5와 r001_A 행만 읽는다
+    # comparison.md의 표(모델별 지표, 질문 유형별 R@5)에서 학습 전 e5와 002_hard_negatives 행만 읽는다
     rows: dict[str, dict[str, str]] = {}
     header: list[str] = []
     for line in COMPARISON.read_text(encoding="utf-8").splitlines():

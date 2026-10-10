@@ -1,4 +1,4 @@
-# 001 hard negative 재채굴 — 2. 실험 계획 (v2, 검토 반영)
+# 002 hard negative 재채굴 — 2. 실험 계획 (v2, 검토 반영)
 
 ## 가설
 
@@ -10,19 +10,19 @@
 | 항목 | 값 | 근거 |
 |---|---|---|
 | 시작 모델 | base multilingual-e5-small (모든 run 공통) | 공정한 비교 |
-| 채굴 모델 | exp_009 (best epoch 4). 채굴에만 쓴다 | 제약: e5-small만 |
+| 채굴 모델 | 003_convergence (best epoch 4). 채굴에만 쓴다 | 제약: e5-small만 |
 | 후보 풀 | **train 법령 문서만**. dev·test 법령 문서(상위 후보의 15%)는 제외 | 처음 보는 법령 조건 유지 |
 | 후보 범위 | 정답과 복수 정답을 제외한 1~10위. 3개를 못 채우면 같은 풀의 11~30위로 채우고, 그래도 모자라면 있는 것을 반복한다. 반복한 경우는 `fill`로 기록 | NV-Retriever top-10 / IR 검토 |
 | negative 수 | 3개, 점수 순 | DPR, 시간 약 2배 |
 | 가짜 negative 의심 | 정답 점수의 95% 이상 | NV-Retriever TopK-PercPos |
-| 학습 | CachedMNRL mini 16, 배치 32, lr 3e-5, 최대 epoch 4, attention dropout 0, epoch 선택은 dev 복수 정답 R@5(간이) | 실험 009 |
+| 학습 | CachedMNRL mini 16, 배치 32, lr 3e-5, 최대 epoch 4, attention dropout 0, epoch 선택은 dev 복수 정답 R@5(간이) | 실험 003 |
 | 기존 LLM hard negative | 대조군에서만 쓴다 | 40%가 50위 밖 |
 
 ## run 구성
 
 | run | 내용 | seed |
 |---|---|---|
-| **대조군** | 기존 LLM negative 1개. 새 코드, 최대 epoch 4로 다시 학습한다. exp_009는 epoch 6 스케줄이라 대조군으로 쓰지 않는다 | 42, 43, 44 |
+| **대조군** | 기존 LLM negative 1개. 새 코드, 최대 epoch 4로 다시 학습한다. 003_convergence는 epoch 6 스케줄이라 대조군으로 쓰지 않는다 | 42, 43, 44 |
 | **A** | 1~10위 중 정답 점수 95% 이상은 판정 없이 버리고 나머지에서 점수 순 3개 (NV-Retriever 방식) | 42 |
 | **B** | 상위 3개 중 95% 이상 후보를 **전부 판정**한다(9,005쌍, 4,360문항). full은 (질문, full 문서, 같은 negative 3개) 학습 행을 추가하고 negative에서 뺀다. partial은 negative에서 빼기만 한다. no는 그대로 negative로 쓴다. 뺀 자리는 95% 미만 후보 중 다음 순위로 채운다 | 42 |
 | **C** | A와 B 중 dev 복수 정답 R@5가 높은 쪽과 같은 설정에 **negative 1개**. 출처(채굴)와 개수(1→3)의 효과를 분리한다 | 42 |
@@ -81,7 +81,7 @@
 |---|---|
 | 5% 기준을 점 추정으로 판정하면 경계에서 결과가 뒤집힌다 (200쌍이면 CI 2.4~9%) | 판정 분기를 없애고 9,005쌍을 전부 판정한다 |
 | 대조군과 A는 negative의 출처와 개수가 동시에 바뀐다 | C를 "더 나은 쪽 + negative 1개"로 고정해 두 효과를 분리한다 |
-| exp_009 대조군의 혼입(epoch 6 스케줄, 다른 코드) | 새 코드, 최대 epoch 4, seed 3개로 대조군을 다시 학습한다 |
+| 003_convergence 대조군의 혼입(epoch 6 스케줄, 다른 코드) | 새 코드, 최대 epoch 4, seed 3개로 대조군을 다시 학습한다 |
 | full을 negative에서 빼기만 하면 정보를 버린다 (RLHN: 다시 라벨을 붙이는 것이 가장 좋음) | full 문서로 학습 행을 추가한다 |
 | 3개를 못 채우는 663문항을 반복으로 채우면 같은 negative가 겹친다 | 11~30위로 먼저 채우고, 반복은 `fill`로 기록한다 |
 | Holm과 CI 조건이 섞여 계산할 수 없다 | 확증 family 3개, McNemar p에 Holm, CI는 별도 조건으로 정리했다 |

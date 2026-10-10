@@ -1,8 +1,8 @@
-"""001 hard negative 채굴: exp_009 임베딩으로 train 질문마다 train 법령 문서 중 상위 30개 후보를 뽑는다.
+"""002 hard negative 채굴: 003_convergence 임베딩으로 train 질문마다 train 법령 문서 중 상위 30개 후보를 뽑는다.
 
-사용: uv run python runs/001_hard_negatives/mine.py candidates   # 후보 manifest, A negative, B 판정 입력
-      uv run python runs/001_hard_negatives/mine.py finalize-b   # 판정 결과로 B negative와 추가 정답 행
-입력: artifacts/exp_009/{corpus_emb.npy, corpus_ids.json, query_emb_train.npy, topk_train.jsonl} (dump_topk.py)
+사용: uv run python experiments/002_hard_negatives/mine.py candidates   # 후보 manifest, A negative, B 판정 입력
+      uv run python experiments/002_hard_negatives/mine.py finalize-b   # 판정 결과로 B negative와 추가 정답 행
+입력: artifacts/003_convergence/{corpus_emb.npy, corpus_ids.json, query_emb_train.npy, topk_train.jsonl} (dump_topk.py)
 출력 (artifacts/):
   mined_candidates.jsonl  질문마다 후보 30개: id, 풀 안 순위, 점수, 정답 대비 점수비, 관계
   negatives_A.jsonl       qid, negative_ids, reasons (top / fill / repeat)
@@ -23,7 +23,7 @@ from ragkit.data import load_corpus, load_questions, question_key
 
 RUN = Path(__file__).parent
 ART = RUN / "artifacts"
-EMB = ART / "exp_009"
+EMB = ART / "003_convergence"
 K_NEG, WINDOW, POOL_TOP, MARGIN = 3, 10, 30, 0.95
 by = {d["id"]: d for d in load_corpus("data/processed/law_docs.json")}
 ref = re.compile(r"법\s*(제\d+조(?:의\d+)?)")

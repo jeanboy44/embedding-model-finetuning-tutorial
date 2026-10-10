@@ -1,8 +1,8 @@
-# 001 run B: 채굴 negative 3개 (95% 이상은 Claude 판정: no만 negative, full은 학습 행 추가). 02_plan.md 참고
-name: r001_B
+# 002 run B: 채굴 negative 3개 (95% 이상은 Claude 판정: no만 negative, full은 학습 행 추가). 02_plan.md 참고
+name: 002_hard_negatives_B
 training:
   model: intfloat/multilingual-e5-small
-  output_dir: models/finetuned/r001_B
+  output_dir: models/finetuned/002_hard_negatives_B
   batch_size: 32
   loss: cached_mnrl
   mini_batch_size: 16
@@ -15,4 +15,4 @@ training:
   seed: 42
   dev_labels: data/labels/dev.jsonl
   train_eval_sample: 800
-  negatives_file: runs/001_hard_negatives/artifacts/negatives_B.jsonl
+  negatives_file: experiments/002_hard_negatives/artifacts/negatives_B.jsonl

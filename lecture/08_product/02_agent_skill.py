@@ -12,19 +12,19 @@
 
 두 가지 모드:
 - 기본: 스킬을 임시 폴더에 설치해 보고, 에이전트가 할 첫 검색을 CLI로 재현해 두 모델을 비교한다.
-  실제 에이전트 비교는 받은 결과(experiments/exp_011_agent_skill/results/)를 읽는다 (1분 안쪽)
+  실제 에이전트 비교는 받은 결과(experiments/010_agent_skill/results/)를 읽는다 (1분 안쪽)
 - --run: claude가 설치돼 있으면 실제로 Claude Code를 헤드리스(claude -p)로 띄워 질문 --questions개를
   두 모델로 묻는다 (질문당 30~60초, 호출 비용이 든다). 결과는 experiments/results/lecture/08_product/에 쓴다
 
 사전 준비:
     uv run ragkit index                         # 또는 Drive에서 받은 data/processed/index/
-    models/finetuned/r001_A                     # 강사가 나눠 준 파인튜닝 모델과 그 인덱스
+    models/finetuned/002_hard_negatives                     # 강사가 나눠 준 파인튜닝 모델과 그 인덱스
     (--run) Claude Code (claude 명령) 로그인
 
 실행:
     uv run python lecture/08_product/02_agent_skill.py
     uv run python lecture/08_product/02_agent_skill.py --run                  # 질문 2개
-    uv run python lecture/08_product/02_agent_skill.py --run --questions 10   # 실험 011과 같은 설정
+    uv run python lecture/08_product/02_agent_skill.py --run --questions 10   # 실험 010과 같은 설정
 """
 
 import argparse
@@ -41,15 +41,15 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 ENV = {**os.environ, "MLFLOW_DISABLE_AGENT_HINT": "1"}
 CLI = ["uv", "run", "--directory", str(ROOT), "--package", "ragkit-search", "ragkit-search"]
-FINETUNED = ROOT / "models" / "finetuned" / "r001_A"
+FINETUNED = ROOT / "models" / "finetuned" / "002_hard_negatives"
 VARIANTS = {
     "학습 전 e5": [],
-    "파인튜닝 e5 (r001_A)": ["--checkpoint", str(FINETUNED), "--backend", "torch"],
+    "파인튜닝 e5 (002_hard_negatives)": ["--checkpoint", str(FINETUNED), "--backend", "torch"],
 }
 TEST = ROOT / "data" / "splits" / "test.jsonl"
-RECEIVED = ROOT / "experiments" / "exp_011_agent_skill" / "results" / "comparison.md"
+RECEIVED = ROOT / "experiments" / "010_agent_skill" / "results" / "comparison.md"
 OUT = ROOT / "experiments" / "results" / "lecture" / "08_product"
-SEED = 7  # 실험 011과 같은 질문을 고른다
+SEED = 7  # 실험 010과 같은 질문을 고른다
 
 parser = argparse.ArgumentParser(description="실습 4-2: 에이전트 스킬")
 parser.add_argument("--run", action="store_true", help="Claude Code로 실제 비교 (비용이 든다)")
@@ -74,7 +74,7 @@ def article_key(doc_id: str) -> str:
 
 
 def pick_questions(n: int) -> list[dict]:
-    """test의 situation(일상 상황) 질문에서 seed로 고른다. 실험 011과 같은 순서."""
+    """test의 situation(일상 상황) 질문에서 seed로 고른다. 실험 010과 같은 순서."""
     rows = [json.loads(line) for line in TEST.open(encoding="utf-8")]
     situation = [r for r in rows if r["query_type"] == "situation"]
     return random.Random(SEED).sample(situation, n)
@@ -105,7 +105,7 @@ with tempfile.TemporaryDirectory(prefix="lecture-5-2-") as tmp:
     for agent in ["claude", "gemini"]:
         proc = cli("skill", "install", "--agent", agent, "--project-dir", tmp)
         print(proc.stdout.splitlines()[0].replace(tmp, "<프로젝트>") if proc.returncode == 0 else proc.stderr)
-    proc = cli("skill", "install", "--agent", "claude", "--project-dir", tmp, *VARIANTS["파인튜닝 e5 (r001_A)"])
+    proc = cli("skill", "install", "--agent", "claude", "--project-dir", tmp, *VARIANTS["파인튜닝 e5 (002_hard_negatives)"])
     tuned_skill = (Path(tmp) / ".claude/skills/korean-law-search/SKILL.md").read_text(encoding="utf-8")
 search_line = next(line for line in tuned_skill.splitlines() if " search " in line)
 print("\n모델 옵션을 주고 설치하면 명령에 박힌다 (에이전트는 이 모델로 검색한다):")
@@ -114,7 +114,7 @@ print("""
 내 컴퓨터에 설치하려면 (모든 프로젝트에서 쓰기):
   uv run --package ragkit-search ragkit-search skill install --agent claude --user
   uv run --package ragkit-search ragkit-search skill install --agent gemini --user
-  (파인튜닝 모델로: 끝에 --checkpoint models/finetuned/r001_A --backend torch)
+  (파인튜닝 모델로: 끝에 --checkpoint models/finetuned/002_hard_negatives --backend torch)
 그 뒤 claude 또는 gemini를 열고 "편의점 알바도 주휴수당 받을 수 있는지 조문 근거로 알려줘".""")
 
 # ============================================================

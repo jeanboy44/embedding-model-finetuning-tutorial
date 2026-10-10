@@ -6,7 +6,7 @@
 
 | 들어 있는 것 | 내용 |
 |---|---|
-| 임베딩 모델 | 파인튜닝 모델 r001_A를 어휘 가지치기 → ONNX → INT8로 줄인 30MB 모델 |
+| 임베딩 모델 | 파인튜닝 모델 002_hard_negatives를 어휘 가지치기 → ONNX → INT8로 줄인 30MB 모델 |
 | 조문 벡터 | 코퍼스 25,967건을 같은 모델로 임베딩한 384차원 벡터. 행마다 배율을 둔 int8로 저장 |
 | 조문 원문 | 제목, 본문, 법령명, 테마, 법령 종류, 법제처 링크 (gzip) |
 | onnxruntime-web | 브라우저에서 ONNX를 돌리는 엔진(wasm) |
@@ -19,7 +19,7 @@
 
 ## 만들기
 
-저장소 루트에서 실행합니다. 파인튜닝 모델 `models/finetuned/r001_A`가 있어야 합니다
+저장소 루트에서 실행합니다. 파인튜닝 모델 `models/finetuned/002_hard_negatives`가 있어야 합니다
 (`uv run python scripts/finetuned_drive.py download`).
 
 ```bash
@@ -27,12 +27,12 @@
 pnpm --dir apps/offline-search install
 
 # 2. 파인튜닝 모델을 30MB로 줄이기: 어휘 가지치기 → ONNX → INT8
-uv run ragkit prune-vocab models/finetuned/r001_A
-uv run ragkit export-onnx models/finetuned/r001_A-pruned
-uv run ragkit quantize models/finetuned/r001_A-pruned
+uv run ragkit prune-vocab models/finetuned/002_hard_negatives
+uv run ragkit export-onnx models/finetuned/002_hard_negatives-pruned
+uv run ragkit quantize models/finetuned/002_hard_negatives-pruned
 
 # 3. 줄인 모델로 조문 벡터 만들기 (CPU 약 5분)
-uv run ragkit index --checkpoint models/finetuned/r001_A-pruned-int8 --backend onnx --out data/processed/index/r001_A-pruned-int8-onnx.sqlite
+uv run ragkit index --checkpoint models/finetuned/002_hard_negatives-pruned-int8 --backend onnx --out data/processed/index/002_hard_negatives-pruned-int8-onnx.sqlite
 # (--baseline으로 만들 때만) 학습 전 e5의 30MB판(7교시 명령으로 만든다)으로도 한 번 더
 uv run ragkit index --checkpoint models/multilingual-e5-small-pruned-int8 --backend onnx --out data/processed/index/multilingual-e5-small-pruned-int8-onnx.sqlite
 
@@ -53,8 +53,8 @@ int8로 저장한 조문 벡터와 비교한 값입니다.
 |---|---|---|---|---|---|
 | 학습 전 e5 (30MB) | 파이썬 | 0.287 | 0.515 | 0.602 | 0.383 |
 | 학습 전 e5 (30MB) | 브라우저 | 0.278 | 0.497 | 0.592 | 0.374 |
-| 파인튜닝 r001_A (30MB) | 파이썬 | 0.447 | 0.722 | 0.804 | 0.566 |
-| 파인튜닝 r001_A (30MB) | 브라우저 | 0.443 | 0.717 | 0.802 | 0.561 |
+| 파인튜닝 002_hard_negatives (30MB) | 파이썬 | 0.447 | 0.722 | 0.804 | 0.566 |
+| 파인튜닝 002_hard_negatives (30MB) | 브라우저 | 0.443 | 0.717 | 0.802 | 0.561 |
 
 브라우저 값이 조금 낮은 이유는 INT8 연산 방식 차이입니다. 파이썬 onnxruntime은 그래프 최적화(EXTENDED)에서
 양자화 행렬곱을 하나로 합친 커널을 쓰고, wasm은 합치지 않은 계산을 씁니다. 그래서 같은 ONNX 파일이어도 질문 벡터가

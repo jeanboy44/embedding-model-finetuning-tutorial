@@ -162,8 +162,8 @@ def model_payloads(key: str, label: str, model: Path, index: Path) -> tuple[dict
 
 @app.default
 def build(
-    model: Path = ROOT / "models" / "finetuned" / "r001_A-pruned-int8",
-    index: Path = ROOT / "data" / "processed" / "index" / "r001_A-pruned-int8-onnx.sqlite",
+    model: Path = ROOT / "models" / "finetuned" / "002_hard_negatives-pruned-int8",
+    index: Path = ROOT / "data" / "processed" / "index" / "002_hard_negatives-pruned-int8-onnx.sqlite",
     baseline_model: Path = ROOT / "models" / "multilingual-e5-small-pruned-int8",
     baseline_index: Path = ROOT / "data" / "processed" / "index" / "multilingual-e5-small-pruned-int8-onnx.sqlite",
     baseline: bool = False,

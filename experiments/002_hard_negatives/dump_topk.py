@@ -1,6 +1,6 @@
 """한 분할의 질문마다 상위 50개 검색 결과와 코퍼스·질문 임베딩을 저장한다 (error analysis, hard negative 채굴 재료).
 
-사용: uv run python runs/001_hard_negatives/dump_topk.py <모델 이름|폴더> <dev|train> <출력 폴더>
+사용: uv run python experiments/002_hard_negatives/dump_topk.py <모델 이름|폴더> <dev|train> <출력 폴더>
 먼저 인덱스가 있어야 한다 (ragkit evaluate가 data/processed/index/에 만든다).
 출력:
   topk_<split>.jsonl     질문마다 query, query_type, positive_id, related_ids, hard_negative_ids,

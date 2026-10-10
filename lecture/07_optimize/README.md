@@ -29,7 +29,7 @@ uv run ragkit quantize models/multilingual-e5-small-pruned
 - `quantize`: 채널별 INT8 → `models/multilingual-e5-small-int8` (471 → 118MB)
 - `prune-vocab`: 다국어 어휘 25만 개 중 한국어 법령에 필요한 약 1.9만 개만 남긴다 → `-pruned` → 변환·양자화 → `models/multilingual-e5-small-pruned-int8` (30MB)
 
-만든 모델을 비교한다: torch vs ONNX, 채널별 vs 텐서 단위 INT8(test R@5 0.514 vs 0.458, 실험 012), 가지치기 후 질문 토큰화가 원본과 같은지.
+만든 모델을 비교한다: torch vs ONNX, 채널별 vs 텐서 단위 INT8(test R@5 0.514 vs 0.458, 실험 009), 가지치기 후 질문 토큰화가 원본과 같은지.
 
 ```shell
 uv run python lecture/07_optimize/02_onnx_quantize_prune.py

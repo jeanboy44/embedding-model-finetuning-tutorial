@@ -37,7 +37,7 @@ uv run python lecture/08_product/01_search_cli.py --run
 
 ## 2. 에이전트 스킬: CLI에 SKILL.md 하나를 붙인다
 
-Claude Code와 Gemini CLI는 스킬 폴더의 `SKILL.md`를 읽고, 법령 질문이 오면 우리 CLI로 조문을 찾아 근거와 함께 답한다. 스킬을 보고, 임시 폴더에 설치해 보고, 에이전트의 첫 검색을 두 모델로 재현한 뒤, 강사가 잰 실제 에이전트 비교(실험 011)를 읽는다(1분 안쪽).
+Claude Code와 Gemini CLI는 스킬 폴더의 `SKILL.md`를 읽고, 법령 질문이 오면 우리 CLI로 조문을 찾아 근거와 함께 답한다. 스킬을 보고, 임시 폴더에 설치해 보고, 에이전트의 첫 검색을 두 모델로 재현한 뒤, 강사가 잰 실제 에이전트 비교(실험 010)를 읽는다(1분 안쪽).
 
 ```shell
 uv run python lecture/08_product/02_agent_skill.py
@@ -54,7 +54,7 @@ uv run --package ragkit-search ragkit-search skill install --agent gemini --user
 파인튜닝 모델로 검색하게 하려면 설치할 때 모델을 준다(같은 이름으로 다시 설치하면 덮어쓴다).
 
 ```shell
-uv run --package ragkit-search ragkit-search skill install --agent claude --user --checkpoint models/finetuned/r001_A --backend torch
+uv run --package ragkit-search ragkit-search skill install --agent claude --user --checkpoint models/finetuned/002_hard_negatives --backend torch
 ```
 
 그다음 `claude` 또는 `gemini`를 새로 열고 묻는다: "편의점 알바도 주휴수당 받을 수 있는지 조문 근거로 알려줘".
@@ -106,7 +106,7 @@ uv run python lecture/08_product/extra_monitoring.py
 | 파일 | 내용 |
 |---|---|
 | `01_search_cli.py` | 검색 CLI(laws · search · show · ask · --json), uvx 배포(--run) |
-| `02_agent_skill.py` | 에이전트 스킬 보기 · 설치, 첫 검색 재현, 실험 011(Claude Code + 스킬, 학습 전 vs 파인튜닝) |
+| `02_agent_skill.py` | 에이전트 스킬 보기 · 설치, 첫 검색 재현, 실험 010(Claude Code + 스킬, 학습 전 vs 파인튜닝) |
 | `03_mcp_server.py` | MCP: 연결 → 도구 목록 → 호출, Claude 등록, CLI + 스킬과 비교 |
 | `04_web_app.py` | 웹 빌드와 API 서버 한 주소 배포 |
 | `extra_monitoring.py` | MLflow: 실험 비교 → 모델 레지스트리 → 서비스 트레이스 · 세션 |

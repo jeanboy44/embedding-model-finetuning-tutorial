@@ -1,8 +1,8 @@
-# 001 run A: 채굴 negative 3개 (정답 점수 95% 이상은 판정 없이 버림). 02_plan.md 참고
-name: r001_A
+# 002 run A: 채굴 negative 3개 (정답 점수 95% 이상은 판정 없이 버림). 02_plan.md 참고
+name: 002_hard_negatives
 training:
   model: intfloat/multilingual-e5-small
-  output_dir: models/finetuned/r001_A
+  output_dir: models/finetuned/002_hard_negatives
   batch_size: 32
   loss: cached_mnrl
   mini_batch_size: 16
@@ -15,4 +15,4 @@ training:
   seed: 42
   dev_labels: data/labels/dev.jsonl
   train_eval_sample: 800
-  negatives_file: runs/001_hard_negatives/artifacts/negatives_A.jsonl
+  negatives_file: experiments/002_hard_negatives/artifacts/negatives_A.jsonl

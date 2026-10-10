@@ -1,10 +1,10 @@
-# 실험 002: 전체 학습 (모든 파라미터를 학습)
-# 실행: ragkit train --config experiments/exp_002_finetuned/config.yaml  (전체 실험은 just finetune-suite)
+# 실험 001: 전체 학습 (모든 파라미터를 학습)
+# 실행: ragkit train --config experiments/001_baseline/config.yaml  (전체 실험은 just finetune-suite)
 # epoch마다 dev R@5를 재고 가장 좋은 epoch를 저장한다. 비교표는 exp_007.
 name: finetuned
 training:
   model: intfloat/multilingual-e5-small
-  output_dir: models/finetuned/exp_002
+  output_dir: models/finetuned/001_baseline
   batch_size: 32
   # CachedMNRL = MNRL과 손실·기울기가 같고 mini_batch_size씩 계산해 메모리를 줄인다.
   # M4 Pro 24GB에서 MNRL 배치 32(길이 512)는 메모리가 부족하다.

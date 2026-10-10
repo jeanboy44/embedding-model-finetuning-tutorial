@@ -1,11 +1,11 @@
-# 001 hard negative 재채굴 — 0. 에러 분석
+# 002 hard negative 재채굴 — 0. 에러 분석
 
-대상: 현재 최고 모델 exp_009 (e5-small 전체 학습, lr 3e-5, best epoch 4). dev만 사용.
-재현: `uv run python runs/001_hard_negatives/dump_topk.py models/finetuned/exp_009 {dev,train} runs/001_hard_negatives/artifacts/exp_009` → `uv run python runs/001_hard_negatives/error_analysis.py` (출력 원문 `artifacts/error_analysis.out`)
+대상: 현재 최고 모델 003_convergence (e5-small 전체 학습, lr 3e-5, best epoch 4). dev만 사용.
+재현: `uv run python experiments/002_hard_negatives/dump_topk.py models/finetuned/003_convergence {dev,train} experiments/002_hard_negatives/artifacts/003_convergence` → `uv run python experiments/002_hard_negatives/error_analysis.py` (출력 원문 `artifacts/error_analysis.out`)
 
 ## 기준선
 
-| 지표 (dev 1,412문항, `ragkit evaluate --labels`) | exp_002 | exp_009 |
+| 지표 (dev 1,412문항, `ragkit evaluate --labels`) | 001_baseline | 003_convergence |
 |---|---|---|
 | doc R@5 | 0.702 | 0.720 |
 | **복수 정답 R@5** | 0.712 | **0.729** |
@@ -41,7 +41,7 @@ train 전체(8,294문항)의 R@5는 0.910이다. 학습한 질문은 대부분 �
 
 ## hard negative 채굴 규모 (train)
 
-- exp_009로 train 질문마다 상위 30개 후보(정답 제외)를 보면, **정답 점수의 95% 이상인 후보가 22,622개**다. 문항당 2.7개이고, 해당 질문은 4,567개(55%)다. 이 후보들은 실제로 정답일 수 있는 가짜 negative 후보라 판정이 필요하다.
+- 003_convergence로 train 질문마다 상위 30개 후보(정답 제외)를 보면, **정답 점수의 95% 이상인 후보가 22,622개**다. 문항당 2.7개이고, 해당 질문은 4,567개(55%)다. 이 후보들은 실제로 정답일 수 있는 가짜 negative 후보라 판정이 필요하다.
 - 판정 대상의 관계: 다른 법(같은 테마) 28%, 같은 법 같은 종류 23%, 같은 법 다른 종류(연결 없음) 20%, 다른 법(다른 테마) 15%, 위임 연결 9%, 같은 조 조각 6%
 - 0단계처럼 단어 겹침 필터를 쓰면 판정량을 줄일 수 있다. dev에서는 30%만 남았고, 버린 쌍 중 정답은 0/100건이었다.
 

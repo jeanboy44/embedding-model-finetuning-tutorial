@@ -19,7 +19,7 @@
 | `lecture/04_data/02_questions.py` | `lecture/04_ds_work/01_questions.py` (제목 "4교시", 실습 번호 없음) |
 | `lecture/04_data/01_corpus.py` · `03_split.py` | `lecture/05_data_eval/01_corpus.py` · `02_split.py` |
 | `lecture/05_evaluate/01_metrics.py` · `02_query_expansion.py` | `lecture/05_data_eval/03_metrics.py` · `04_query_expansion.py` |
-| `lecture/06_train/01_train_taste.py` (`--run`) | `lecture/05_data_eval/05_baseline_train.py` (`--run`, 실험 002) |
+| `lecture/06_train/01_train_taste.py` (`--run`) | `lecture/05_data_eval/05_baseline_train.py` (`--run`, 실험 001) |
 | `lecture/06_train/01_train_taste.py --lora` | `lecture/06_experiment/01_lora_train.py` (`--run`, 실험 004. `--lora` 플래그는 없어졌다) |
 | `lecture/06_train/02_compare_runs.py` · `03_error_analysis.py` | `lecture/06_experiment/02_compare_runs.py` · `03_error_analysis.py` |
 | `lecture/08_product/05_monitoring.py` | `lecture/08_product/extra_monitoring.py` |
@@ -32,8 +32,8 @@
 - 작업은 개별 git worktree(`refactor/python-guide` 브랜치)에서 한다. main에서 직접 고치지 않는다.
 - 모든 실행은 `uv run ...`.
 - CLI 플래그 이름·기본값·종료 코드는 지금과 같아야 한다 (강의 문서의 명령을 바꾸지 않는다).
-- 강의 스크립트(`lecture/**`)와 실험 기록(`runs/001_hard_negatives/`)은 자기 완결: 다른 강의 스크립트·다른 run을 import하지 않는다. 공용 헬퍼를 새로 만들지 않는다 (가이드의 "실험 독립성" 원칙을 교재에도 적용).
-- `runs/001_hard_negatives/`는 끝난 실험의 기록이다. 인자 해석과 파일 핸들만 고치고 계산 로직은 한 줄도 바꾸지 않는다.
+- 강의 스크립트(`lecture/**`)와 실험 기록(`experiments/002_hard_negatives/`)은 자기 완결: 다른 강의 스크립트·다른 run을 import하지 않는다. 공용 헬퍼를 새로 만들지 않는다 (가이드의 "실험 독립성" 원칙을 교재에도 적용).
+- `experiments/002_hard_negatives/`는 끝난 실험의 기록이다. 인자 해석과 파일 핸들만 고치고 계산 로직은 한 줄도 바꾸지 않는다.
 - `lecture/03_setup/00_download_offline_search.py`는 `uv sync` 전에도 도는 표준 라이브러리 전용 스크립트(PEP 723, 의존성 없음)라 제외한다.
 - 출력은 지금처럼 `print`를 쓴다. 강의 스크립트·CLI의 화면 출력은 로그가 아니라 결과물이다 (loguru 도입 대상 아님).
 - 커밋 메시지 형식: `refactor(<영역>): <한국어 요약>` + `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
@@ -54,7 +54,7 @@
 |---|---|---|
 | CLI = cyclopts | `src/`, `apps/`, `scripts/` 대부분은 이미 cyclopts. **argparse 11개 · `sys.argv` 직접 검사 8개**가 남음 (아래 표) | Task 1~5 |
 | 타입 힌트 | 테스트 밖 누락 44곳 (`ruff --select ANN001,ANN201,ANN202`): `training/train.py` 15, `tracking.py` 7, embeddings 4, 기타 | Task 6 + 각 Task |
-| `with`로 리소스 관리 | `open()`을 `with` 없이 쓰는 곳 8곳, 전부 `runs/001_hard_negatives/` (ruff SIM115) | Task 4 |
+| `with`로 리소스 관리 | `open()`을 `with` 없이 쓰는 곳 8곳, 전부 `experiments/002_hard_negatives/` (ruff SIM115) | Task 4 |
 | DRY (SSoT) | `EmbedFn = Callable[..., np.ndarray]`가 4곳에 중복 정의 (`rag/answer.py`, `retrieval/index.py`, `service.py`, `apps/bench/.../measure.py`) | Task 6 |
 | pathlib / f-string / polars / pandas / logging | `os.path` 0건, pandas 0건, `logging` 0건, `%` 포매팅 0건. `.format()`은 전부 템플릿 상수 채우기라 정상 | 없음 |
 | 클래스보다 함수 | 남은 일반 클래스는 상태를 가진 것뿐 (아래 표) | 없음 |
@@ -78,9 +78,9 @@
 | `lecture/08_product/02_agent_skill.py` | argparse | `--run`, `--questions N`, `--out PATH` |
 | `lecture/08_product/04_web_app.py` | `"--run"`, `"--check" in sys.argv` | `--run`, `--check` |
 | `lecture/08_product/05_monitoring.py` | `CHECK = "--check" in sys.argv` | `--check` |
-| `runs/001_hard_negatives/compare_runs.py` | `sys.argv[1], sys.argv[2]` | `<기준 run> <비교 run>` |
-| `runs/001_hard_negatives/dump_topk.py` | `sys.argv[1..3]` | `<모델> <split> <출력 폴더>` |
-| `runs/001_hard_negatives/mine.py` | `{...}[sys.argv[1]]()` | `candidates` / `finalize-b` |
+| `experiments/002_hard_negatives/compare_runs.py` | `sys.argv[1], sys.argv[2]` | `<기준 run> <비교 run>` |
+| `experiments/002_hard_negatives/dump_topk.py` | `sys.argv[1..3]` | `<모델> <split> <출력 폴더>` |
+| `experiments/002_hard_negatives/mine.py` | `{...}[sys.argv[1]]()` | `candidates` / `finalize-b` |
 | `scripts/deck_to_html.py` | argparse (`main()` 안) | `<deck_dir> <out>` |
 
 ### 클래스로 남기는 것 (변경 없음, 이유)
@@ -379,7 +379,7 @@ Run: `uv run pytest tests/test_lecture_cli.py -v -k 06_train` → PASS (기준�
 @Parameter(name="*")
 class Options(BaseModel):
     run: bool = Field(False, description=f"ragkit train으로 {RUN_STEPS} step만 직접 학습")
-    lora: bool = Field(False, description="실험 002 대신 LoRA 실험 004 설정으로 (6교시)")
+    lora: bool = Field(False, description="실험 001 대신 LoRA 실험 004 설정으로 (6교시)")
 
 
 def cli(*, options: Options = Options()) -> Options:
@@ -548,13 +548,13 @@ git commit -m "refactor(lecture): 7·8교시 sys.argv 직접 검사를 cyclopts 
 
 ---
 
-### Task 4: `runs/001_hard_negatives` — cyclopts, `with`, 타입 힌트
+### Task 4: `experiments/002_hard_negatives` — cyclopts, `with`, 타입 힌트
 
 **Files:**
-- Modify: `runs/001_hard_negatives/compare_runs.py:20,26`
-- Modify: `runs/001_hard_negatives/dump_topk.py:25`
-- Modify: `runs/001_hard_negatives/mine.py:65-74,121-127,152-153`
-- Modify: `runs/001_hard_negatives/error_analysis.py:21`
+- Modify: `experiments/002_hard_negatives/compare_runs.py:20,26`
+- Modify: `experiments/002_hard_negatives/dump_topk.py:25`
+- Modify: `experiments/002_hard_negatives/mine.py:65-74,121-127,152-153`
+- Modify: `experiments/002_hard_negatives/error_analysis.py:21`
 
 계산 로직은 바꾸지 않는다 (끝난 실험의 기록). 위치 인자 순서·이름, 서브커맨드 이름(`candidates`, `finalize-b`)은 docstring의 "사용:" 줄과 같게 유지한다.
 
@@ -563,7 +563,7 @@ git commit -m "refactor(lecture): 7·8교시 sys.argv 직접 검사를 cyclopts 
 ```python
 from cyclopts import App
 
-app = App(help="001 hard negative 채굴")
+app = App(help="002 hard negative 채굴")
 
 
 @app.command
@@ -608,9 +608,9 @@ def main(base_name: str, other_name: str) -> None:
     Parameters
     ----------
     base_name
-        기준 run (예: r001_control_s42).
+        기준 run (예: 002_hard_negatives_control_s42).
     other_name
-        비교 run (예: r001_A).
+        비교 run (예: 002_hard_negatives).
     """
     <20행 이후 모듈 최상위 본문>
 
@@ -647,19 +647,19 @@ def rows(split: str) -> list[dict]:
 - [ ] **Step 5: 확인**
 
 ```bash
-uv run ruff check runs --select SIM115,ANN001,ANN201,ANN202,F401   # 0건
-uv run python runs/001_hard_negatives/mine.py --help                # candidates, finalize-b 보임
-uv run python runs/001_hard_negatives/compare_runs.py --help
-uv run python runs/001_hard_negatives/dump_topk.py --help
-uv run python runs/001_hard_negatives/dump_topk.py m bogus /tmp/x; echo "exit=$?"   # split 검증 에러, ≠0
+uv run ruff check experiments/002_hard_negatives --select SIM115,ANN001,ANN201,ANN202,F401   # 0건
+uv run python experiments/002_hard_negatives/mine.py --help                # candidates, finalize-b 보임
+uv run python experiments/002_hard_negatives/compare_runs.py --help
+uv run python experiments/002_hard_negatives/dump_topk.py --help
+uv run python experiments/002_hard_negatives/dump_topk.py m bogus /tmp/x; echo "exit=$?"   # split 검증 에러, ≠0
 ```
-`artifacts/`가 남아 있으면(`runs/*/artifacts/`는 gitignore) `compare_runs.py r001_control_s42 r001_A`를 리팩토링 전후로 돌려 표준 출력을 `diff`한다. 같아야 한다.
+`artifacts/`가 남아 있으면(`experiments/*/artifacts/`는 gitignore) `compare_runs.py 002_hard_negatives_control_s42 002_hard_negatives`를 리팩토링 전후로 돌려 표준 출력을 `diff`한다. 같아야 한다.
 
 - [ ] **Step 6: 커밋**
 
 ```bash
-git add runs/001_hard_negatives
-git commit -m "refactor(runs): 001 스크립트 인자를 cyclopts로, 파일 핸들을 with로"
+git add experiments/002_hard_negatives
+git commit -m "refactor(runs): 002 스크립트 인자를 cyclopts로, 파일 핸들을 with로"
 ```
 
 ---

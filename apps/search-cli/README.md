@@ -56,7 +56,7 @@ ragkit-search search "주휴수당" --checkpoint models/my-finetuned --index dat
 ragkit-search skill show                                   # 설치될 내용 보기
 ragkit-search skill install --agent claude                 # ./.claude/skills/korean-law-search/SKILL.md
 ragkit-search skill install --agent gemini --user          # ~/.gemini/skills/korean-law-search/SKILL.md
-ragkit-search skill install --agent claude --checkpoint models/finetuned/r001_A --backend torch   # 파인튜닝 모델로
+ragkit-search skill install --agent claude --checkpoint models/finetuned/002_hard_negatives --backend torch   # 파인튜닝 모델로
 ```
 
 설치한 SKILL.md에는 이 저장소 환경으로 CLI를 부르는 명령(`uv run --directory <저장소> --package ragkit-search ragkit-search`)과

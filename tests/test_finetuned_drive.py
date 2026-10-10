@@ -38,14 +38,14 @@ def _fake_model(root: Path, name: str, *, with_index: bool = True) -> tuple[Path
 def test_bundle_keeps_repo_relative_paths(tmp_path) -> None:
     """zip 안 경로가 저장소 루트 기준이고, 인덱스가 함께 들어간다."""
     drive = _load_script("finetuned_drive")
-    _, index = _fake_model(tmp_path, "r001_A")
+    _, index = _fake_model(tmp_path, "002_hard_negatives")
 
-    entry = drive.bundle("r001_A", tmp_path, tmp_path / "dist" / "finetuned-r001_A.zip")
+    entry = drive.bundle("002_hard_negatives", tmp_path, tmp_path / "dist" / "finetuned-002_hard_negatives.zip")
 
-    with zipfile.ZipFile(tmp_path / "dist" / "finetuned-r001_A.zip") as zf:
+    with zipfile.ZipFile(tmp_path / "dist" / "finetuned-002_hard_negatives.zip") as zf:
         names = set(zf.namelist())
-    assert "models/finetuned/r001_A/model.safetensors" in names
-    assert "models/finetuned/r001_A/1_Pooling/config.json" in names
+    assert "models/finetuned/002_hard_negatives/model.safetensors" in names
+    assert "models/finetuned/002_hard_negatives/1_Pooling/config.json" in names
     assert index.relative_to(tmp_path).as_posix() in names
     assert entry["index"] == index.relative_to(tmp_path).as_posix()
     assert entry["model_key"] == index.stem
@@ -54,9 +54,9 @@ def test_bundle_keeps_repo_relative_paths(tmp_path) -> None:
 def test_bundle_without_index(tmp_path) -> None:
     """인덱스가 없으면 모델만 묶는다."""
     drive = _load_script("finetuned_drive")
-    _fake_model(tmp_path, "exp_002", with_index=False)
+    _fake_model(tmp_path, "001_baseline", with_index=False)
 
-    entry = drive.bundle("exp_002", tmp_path, tmp_path / "out.zip")
+    entry = drive.bundle("001_baseline", tmp_path, tmp_path / "out.zip")
 
     assert entry["index"] is None
 
@@ -65,15 +65,15 @@ def test_install_restores_model_key(tmp_path) -> None:
     """푼 뒤 가중치 수정 시각을 되돌려, 모델 키가 받은 인덱스 이름과 같다."""
     drive = _load_script("finetuned_drive")
     src, dst = tmp_path / "src", tmp_path / "dst"
-    _fake_model(src, "r001_A")
+    _fake_model(src, "002_hard_negatives")
     zip_path = tmp_path / "m.zip"
-    entry = drive.bundle("r001_A", src, zip_path)
+    entry = drive.bundle("002_hard_negatives", src, zip_path)
 
     drive.install(zip_path, entry, dst)
 
-    model_dir = dst / "models" / "finetuned" / "r001_A"
+    model_dir = dst / "models" / "finetuned" / "002_hard_negatives"
     assert (model_dir / "model.safetensors").read_bytes() == b"weights"
-    assert model_key("r001_A", model_dir) == entry["model_key"]
+    assert model_key("002_hard_negatives", model_dir) == entry["model_key"]
     assert (dst / entry["index"]).exists()
 
 
@@ -92,14 +92,14 @@ def test_install_rejects_unsafe_paths(tmp_path) -> None:
 def test_download_skips_existing(tmp_path, monkeypatch) -> None:
     """모델과 인덱스가 이미 있으면 받지 않는다."""
     drive = _load_script("finetuned_drive")
-    _, index = _fake_model(tmp_path, "r001_A")
+    _, index = _fake_model(tmp_path, "002_hard_negatives")
     manifest = {
         "drive_folder": drive.DEFAULT_FOLDER_URL,
         "models": {
-            "r001_A": {
-                "file": "finetuned-r001_A.zip",
+            "002_hard_negatives": {
+                "file": "finetuned-002_hard_negatives.zip",
                 "file_id": "abc",
-                "model_dir": "models/finetuned/r001_A",
+                "model_dir": "models/finetuned/002_hard_negatives",
                 "index": index.relative_to(tmp_path).as_posix(),
                 "model_key": index.stem,
                 "weights_mtime": 1_759_000_000,

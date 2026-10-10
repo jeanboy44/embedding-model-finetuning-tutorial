@@ -1,4 +1,4 @@
-# 001 회고 검토 — 실험 운영·로깅·재현성 (ops 전문가)
+# 002 회고 검토 — 실험 운영·로깅·재현성 (ops 전문가)
 
 검토 대상: `05_retro.md`, `04_results.md`, `03_run/`, `*.py`, `run_one.sh`, `train_cli.py`. 학습은 돌리지 않았다.
 
@@ -12,7 +12,7 @@
 | run별 git commit과 dirty 여부 | data_digest.json에 commit 하나(`cefeeb6`)만 있다. 16:50에 한 번 기록했다 | A·B·C를 학습할 때 코드가 바뀌었는지 알 수 없다 |
 | 환경 | 라이브러리 3개 버전만 있다. `uv.lock` 해시, Python, macOS, MPS 정보가 없다 | MPS는 비결정적이라 같은 seed로도 수치가 달라질 수 있다. 그 크기를 모른다 |
 | 입력 해시와 run의 연결 | train_meta의 `data.digest`는 질문 해시(12자)다. `negatives_file`의 sha256은 run 쪽에 없다 | negatives_B가 판정 수정 뒤에 다시 만들어졌다면 알아챌 수 없다 |
-| 출력 모델 해시 | `models/finetuned/r001_*`의 safetensors 해시가 없다. exp_009만 있다 | 다음 실험의 채굴 모델(A)이 이 표의 A와 같은 파일인지 증명할 수 없다 |
+| 출력 모델 해시 | `models/finetuned/002_hard_negatives*`의 safetensors 해시가 없다. 003_convergence만 있다 | 다음 실험의 채굴 모델(A)이 이 표의 A와 같은 파일인지 증명할 수 없다 |
 | decision.json을 만든 코드 | 스크립트가 없다. 손으로 계산했다 | Δ는 대조군 평균 기준, CI와 p는 s42 기준이라 기준이 섞여 있다. 감사할 수 없다 |
 | 간이 평가 대 공식 평가 | train_meta `dev_after` 0.7557, 공식 0.761 | 표에서 어느 쪽인지 각주로만 구분된다 |
 | 판정 provenance | 출력 행에는 `qid, cand_id, label, reason`만 있다. 계획에 적은 "모델, 프롬프트 해시"가 없다. 프롬프트 원문도 저장하지 않았다 | B와 judge_summary를 재현할 수 없다 |
@@ -38,13 +38,13 @@
 
 | 파일 | 하는 일 |
 |---|---|
-| `runs/_template/` | 00~05 md 뼈대, `03_run/run_one.sh`, `reviews/.keep`. 02_plan 뼈대에 "결정 규칙(JSON)", "빈 negative 처리 규칙", "판정 Go/No-go"를 필수 칸으로 넣는다 |
-| `runs/_tools/provenance.py` | `provenance.json`을 쓴다: argv, 시작·종료 시각, git commit과 `git status --porcelain` 해시, `uv.lock` sha256, Python·OS·torch·MPS 정보, 입력 파일 sha256(config, negatives_file, splits, labels), 출력 model.safetensors sha256 |
+| `experiments/_template/` | 00~05 md 뼈대, `03_run/run_one.sh`, `reviews/.keep`. 02_plan 뼈대에 "결정 규칙(JSON)", "빈 negative 처리 규칙", "판정 Go/No-go"를 필수 칸으로 넣는다 |
+| `experiments/_tools/provenance.py` | `provenance.json`을 쓴다: argv, 시작·종료 시각, git commit과 `git status --porcelain` 해시, `uv.lock` sha256, Python·OS·torch·MPS 정보, 입력 파일 sha256(config, negatives_file, splits, labels), 출력 model.safetensors sha256 |
 | `run_one.sh` 수정 | 학습 전에 `provenance.py start`, 끝나면 `provenance.py end`를 부르고 `03_run/run_summary.tsv`에 한 줄을 덧붙인다(run, seed, commit, 입력 negatives 해시, 학습 행 수, 빠진 질문 수, best epoch, 간이·공식 R@5, Δ, p, 시간, 모델 해시). 마지막에 `touch $d/DONE` 또는 `FAILED`를 남긴다 |
-| `runs/_tools/validate_judgments.py` | 입력·출력 manifest를 대조한다: (qid, cand_id) 커버리지, 중복, `input_row_sha` 일치(내용 오염), 라벨 값, shard별 분포·gold 정확도·χ² drift 표. 실패하면 0이 아닌 코드로 끝난다. 판정 직후 자동으로 돌린다 |
-| `runs/_tools/decision.py` | 02_plan의 결정 규칙(`03_run/decision_rule.json`으로 사전 등록)과 eval/paired JSON을 읽어 Holm, Δ, CI, 법령 조건을 계산한다. `decision.json`에 입력 해시를 함께 쓴다. 손 계산을 없앤다 |
+| `experiments/_tools/validate_judgments.py` | 입력·출력 manifest를 대조한다: (qid, cand_id) 커버리지, 중복, `input_row_sha` 일치(내용 오염), 라벨 값, shard별 분포·gold 정확도·χ² drift 표. 실패하면 0이 아닌 코드로 끝난다. 판정 직후 자동으로 돌린다 |
+| `experiments/_tools/decision.py` | 02_plan의 결정 규칙(`03_run/decision_rule.json`으로 사전 등록)과 eval/paired JSON을 읽어 Holm, Δ, CI, 법령 조건을 계산한다. `decision.json`에 입력 해시를 함께 쓴다. 손 계산을 없앤다 |
 | `ragkit train` 수정 (1줄 수준) | `_replace_negatives`에서 negative가 빈 질문 수와 qid를 train_meta에 쓴다. 0보다 크면 `--allow-empty-negatives` 없이 멈춘다 |
-| `runs/_tools/queue.sh` | 셸 루프로 파일을 기다리는 대신 run 목록을 순서대로 실행한다. 각 run의 DONE/FAILED, 경과 시간을 `queue.log`에 남긴다. 모니터는 30분짜리 log tail 대신 `run_summary.tsv`와 `queue.log`만 보면 된다 |
+| `experiments/_tools/queue.sh` | 셸 루프로 파일을 기다리는 대신 run 목록을 순서대로 실행한다. 각 run의 DONE/FAILED, 경과 시간을 `queue.log`에 남긴다. 모니터는 30분짜리 log tail 대신 `run_summary.tsv`와 `queue.log`만 보면 된다 |
 
 ## 회고 문서에 대한 의견
 

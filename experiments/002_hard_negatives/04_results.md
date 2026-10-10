@@ -1,10 +1,10 @@
-# 001 hard negative 재채굴 — 4. 결과
+# 002 hard negative 재채굴 — 4. 결과
 
 ## 결론
 
 **모델이 직접 채굴한 hard negative로 바꾸면 dev 복수 정답 R@5가 0.720에서 0.75~0.76으로 오른다. A, B, C 세 방식 모두 사전 등록한 개선 기준을 충족했다.**
 세 방식 사이의 차이(최대 0.010)는 seed 잡음 범위 안이라 단일 seed로는 구분할 수 없다. **판정 비용이 들지 않는 A(정답 점수 95% 이상은 판정 없이 버림, 0.761)를 채택한다.** (검토 반영으로 수정함, 아래 "검토 반영" 참고)
-지금까지의 최고였던 exp_009(0.729)보다도 +0.032 높다. 목표 0.95까지 남은 거리의 약 15%를 줄였다.
+지금까지의 최고였던 003_convergence(0.729)보다도 +0.032 높다. 목표 0.95까지 남은 거리의 약 15%를 줄였다.
 
 ## 결과표 (dev 1,412문항, 공식 평가 `ragkit evaluate --labels data/labels/dev.jsonl`)
 
@@ -74,8 +74,8 @@ epoch별 dev 복수 정답 R@5 (학습 중 간이 평가):
 - 공식 평가: `03_run/{control_s42,control_s43,control_s44,A,B,C}/eval_dev.json` (질문별 qid, 법령, 순위, top-10)
 - 대응 검정: `03_run/{A,B,C}/paired_test.json`, `03_run/B/paired_test_vs_A.json`, `03_run/C/paired_test_vs_A.json`, 종합 `03_run/decision.json`
 - 판정: `03_run/judge_summary.json` (원본은 `artifacts/judge/`)
-- 고친 질문과 망친 질문: `artifacts/fixed_broken_r001_control_s42_vs_r001_A.jsonl`, `artifacts/fixed_broken_r001_A_vs_r001_B.jsonl`
-- 모델: `models/finetuned/r001_A` (다음 실험의 기준이자 채굴 모델)
+- 고친 질문과 망친 질문: `artifacts/fixed_broken_002_hard_negatives_control_s42_vs_002_hard_negatives.jsonl`, `artifacts/fixed_broken_002_hard_negatives_vs_002_hard_negatives_B.jsonl`
+- 모델: `models/finetuned/002_hard_negatives` (다음 실험의 기준이자 채굴 모델)
 
 ## 검토 반영 (2026-10-03)
 

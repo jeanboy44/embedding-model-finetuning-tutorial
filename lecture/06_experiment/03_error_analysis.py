@@ -3,7 +3,7 @@
 ========================================================
 
 학습 목표:
-- 학습 전 e5-small과 파인튜닝 모델(001 다시 캔 오답 3개)을 질문 단위로 짝지어, 고친 질문과 새로 틀린 질문을 본다
+- 학습 전 e5-small과 파인튜닝 모델(002 다시 캔 오답 3개)을 질문 단위로 짝지어, 고친 질문과 새로 틀린 질문을 본다
 - 질문 유형 · 테마 · 법령 · 질문과 조문의 단어 겹침별로 어디가 얼마나 올랐는지 나눠 본다
 - 여전히 틀리는 질문의 1위 오답이 정답과 어떤 관계인지(엉뚱한 법령의 비슷한 조문, 법률↔시행령 혼동 등) 분류한다
 - 파인튜닝으로 안 고쳐지는 것(크게 놓친 질문, 말투 차이)을 확인하고 다음 가설을 한 문장으로 적는다
@@ -12,8 +12,8 @@
 분류(1위 오답과 정답의 관계, 순위 구간, 단어 겹침)는 ragkit.evaluation의 함수로 기계적으로 한다.
 
 사전 준비:
-    02_compare_runs.py를 먼저 실행해 실험 010 결과(질문별 순위)를 만든다
-    (또는 강사가 나눠 준 experiments/exp_010_lecture_comparison/results/*.json)
+    02_compare_runs.py를 먼저 실행해 exp_010 결과(질문별 순위)를 만든다
+    (또는 강사가 나눠 준 experiments/archive/exp_010_lecture_comparison/results/*.json)
 
 실행:
     uv run python lecture/06_experiment/03_error_analysis.py          # 받은(또는 02에서 만든) test 전체 결과로 분석 (몇 초)
@@ -51,14 +51,14 @@ ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "data"
 CORPUS = DATA / "processed" / "law_docs.json"
 TEST = DATA / "splits" / "test.jsonl"
-RECEIVED = ROOT / "experiments" / "exp_010_lecture_comparison" / "results"
+RECEIVED = ROOT / "experiments" / "archive" / "exp_010_lecture_comparison" / "results"
 LECTURE_OUT = ROOT / "experiments" / "results" / "lecture" / "06_experiment"
 FROM_02 = LECTURE_OUT / "exp_010"
 BASE, TUNED = (
     "multilingual-e5-small",
-    "r001_A",
-)  # 학습 전 / 실험 010에서 가장 좋은 파인튜닝 모델
-LABELS = {BASE: "학습 전", TUNED: "001 파인튜닝"}
+    "002_hard_negatives",
+)  # 학습 전 / exp_010에서 가장 좋은 파인튜닝 모델
+LABELS = {BASE: "학습 전", TUNED: "002 파인튜닝"}
 K = 5
 RUN_SAMPLE = 300
 SEED = 42
@@ -186,7 +186,7 @@ else:
             source = folder
             break
     if source is None:
-        print("실험 010의 질문별 결과가 없습니다. 먼저 실행:")
+        print("exp_010의 질문별 결과가 없습니다. 먼저 실행:")
         print("  uv run python lecture/06_experiment/02_compare_runs.py")
         print(f"  (또는 강사가 나눠 준 결과 JSON을 {rel(RECEIVED)}/ 에 둔다)")
         raise SystemExit(1)
