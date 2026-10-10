@@ -83,10 +83,12 @@ logs/
 !.claude/skills/
 .claude/skills/*
 !.claude/skills/law-question-gen/
+!.claude/skills/experiment-loop/
 data/questions/
 data/questions_test/
 data/questions_colloquial/
 data/splits/
+data/splits_article/
 
 # 앱 데이터 (노트북 저장소) / web 빌드
 data/app/
@@ -94,8 +96,11 @@ apps/web/node_modules/
 apps/offline-search/node_modules/
 apps/web/dist/
 
-# MLflow 로컬 저장소 (04_monitoring 실습)
+# MLflow 로컬 저장소 (04_monitoring 실습, experiment-loop 스킬의 실험 기록)
 /mlruns/
+
+# 실험 실행 결과 전부 (experiment-loop 스킬: 설정 · 로그 · 평가 JSON · 생성 데이터). 문서는 experiments/에 커밋
+/runs/
 
 # 실험 기록의 큰 파일 (experiments/README.md)
 experiments/*/artifacts/
