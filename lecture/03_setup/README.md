@@ -9,6 +9,12 @@ API 키는 쓰지 않는다. 명령은 모두 저장소 루트에서 실행하�
 오늘 만드는 파인튜닝 모델(정답이 10위 안에 드는 비율 60% → 80%)을 7교시 방법(ONNX · INT8 · 어휘 가지치기)으로 30MB까지 줄여
 조문 데이터와 함께 파일 하나에 넣은 것이다. 만드는 법은 [`apps/offline-search/README.md`](../../apps/offline-search/README.md).
 
+가장 먼저 이 파일부터 받는다. 표준 라이브러리만 쓰므로 `uv sync` 전에도 된다. 받은 뒤 브라우저로 열어 준다.
+
+```bash
+uv run lecture/03_setup/00_download_offline_search.py   # → dist/law-search-offline.html (uv가 없으면 python으로)
+```
+
 ## 1. 환경 점검
 
 ```bash
@@ -78,6 +84,7 @@ uv run --package ragkit-search ragkit-search search "편의점 알바를 3개월
 
 | 파일 | 내용 |
 |---|---|
+| `00_download_offline_search.py` | 가장 먼저 실행. `law-search-offline.html`을 Drive에서 받아 sha256 확인 후 브라우저로 연다. 설치 없이 돈다(PEP 723, 의존성 없음) |
 | `01_doctor.py` | 설치 · 데이터 · 모델 · 인덱스 점검, 받은 모델을 열어 검색해 보는 동작 확인, `--fix`로 받기 (`--quick`이면 동작 확인 생략) |
 | `02_try_product.py` | 위 질문 넷을 학습 전 · 파인튜닝 모델에 한 번에 던져 top-3와 정답 순위를 나란히 보여 준다. 웹 · CLI · MCP 띄우는 명령 안내 |
 | `extra_gemini_basics.py` | (선택) Gemini API 기초. `GEMINI_API_KEY`가 있어야 하고 한 번에 4회 호출한다 |
