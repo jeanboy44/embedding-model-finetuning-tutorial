@@ -1,5 +1,6 @@
-# 실험 001: 전체 학습 (모든 파라미터를 학습)
-# 실행: ragkit train --config experiments/001_baseline/config.yaml  (전체 실험은 just finetune-suite)
+# 실험 001: 전체 학습 (모든 파라미터를 학습), 조 단위 분할
+# 분할: ragkit split data/questions --unit article --test-ratio 0.15 --dev-ratio 0.1 --out data/splits_article
+# 실행: ragkit train experiments/001_baseline/config.yaml --splits data/splits_article
 # epoch마다 dev R@5를 재고 가장 좋은 epoch를 저장한다. 비교표는 exp_007.
 name: finetuned
 training:

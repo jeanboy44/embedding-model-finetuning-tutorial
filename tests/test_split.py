@@ -1,8 +1,16 @@
-"""법령 단위 분할 테스트."""
+"""법령 단위 · 조 단위 분할 테스트."""
 
 import json
 
-from ragkit.training.split import load_splits, split_by_law, split_summary, write_splits
+from ragkit.data import relevance_key
+from ragkit.training.split import (
+    drop_heldout_negatives,
+    load_splits,
+    split_by_article,
+    split_by_law,
+    split_summary,
+    write_splits,
+)
 
 
 def _laws(split, corpus_by_id) -> set[str]:
@@ -105,3 +113,47 @@ def test_write_and_load_splits(tmp_path, questions, corpus_by_id) -> None:
     assert meta["seed"] == 42
     assert meta["test"]["questions"] == 8
     assert len(meta["test"]["laws"]) == 2
+
+
+def _articles(split, corpus_by_id) -> set[str]:
+    return {relevance_key(corpus_by_id[q["positive_id"]]) for q in split}
+
+
+def test_split_by_article_keeps_fragments_together(questions, corpus_by_id) -> None:
+    """같은 조의 조각(제1조 제1항 · 제2항)은 같은 분할로 가고, 조는 분할 사이에 겹치지 않는다."""
+    for seed in range(10):
+        splits = split_by_article(questions, corpus_by_id, test_ratio=0.3, dev_ratio=0.3, seed=seed)
+
+        articles = {name: _articles(split, corpus_by_id) for name, split in splits.items()}
+        assert not articles["train"] & articles["dev"]
+        assert not articles["train"] & articles["test"]
+        assert not articles["dev"] & articles["test"]
+        assert sum(len(s) for s in splits.values()) == len(questions)
+
+
+def test_split_by_article_stratifies_by_law(questions, corpus_by_id) -> None:
+    """법령마다 질문 4개(조 3개): test 목표 1.2 → 1조, dev 목표 1.2 → 1조, train에 나머지."""
+    splits = split_by_article(questions, corpus_by_id, test_ratio=0.3, dev_ratio=0.3)
+
+    laws = {name: _laws(split, corpus_by_id) for name, split in splits.items()}
+    assert laws["train"] == laws["test"] == laws["dev"]
+    assert len(laws["train"]) == 7
+    assert split_by_article(questions, corpus_by_id, seed=7) == split_by_article(
+        questions, corpus_by_id, seed=7
+    )
+
+
+def test_drop_heldout_negatives(questions, corpus_by_id) -> None:
+    """train hard negative에 dev · test 정답 조 문서가 남지 않는다."""
+    splits = split_by_article(questions, corpus_by_id, test_ratio=0.3, dev_ratio=0.3)
+
+    cleaned, stats = drop_heldout_negatives(splits, corpus_by_id)
+
+    heldout = _articles(splits["dev"], corpus_by_id) | _articles(splits["test"], corpus_by_id)
+    for q in cleaned["train"]:
+        assert not {relevance_key(corpus_by_id[n]) for n in q["hard_negative_ids"]} & heldout
+    before = sum(len(q["hard_negative_ids"]) for q in splits["train"])
+    after = sum(len(q["hard_negative_ids"]) for q in cleaned["train"])
+    assert stats["train_negatives"] == before
+    assert stats["dropped_negatives"] == before - after > 0
+    assert cleaned["dev"] == splits["dev"] and cleaned["test"] == splits["test"]

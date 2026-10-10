@@ -29,7 +29,9 @@ from ragkit.rag.query_expansion import (
 )
 from ragkit.training.split import (
     SPLITS,
+    drop_heldout_negatives,
     load_splits,
+    split_by_article,
     split_by_law,
     split_summary,
     write_splits,
@@ -70,8 +72,9 @@ def split(
     test_ratio: float = 0.2,
     dev_ratio: float = 0.1,
     strict: bool = False,
+    unit: Literal["law", "article"] = "law",
 ) -> None:
-    """질문을 법령 단위로 train/dev/test에 나눈다.
+    """질문을 법령 단위(기본) 또는 조 단위로 train/dev/test에 나눈다.
 
     Args:
         questions: 질문 JSONL 파일 또는 폴더 (예: data/questions).
@@ -81,6 +84,8 @@ def split(
         test_ratio: 테마(그룹)별 test 질문 비율.
         dev_ratio: 테마(그룹)별 dev 질문 비율.
         strict: 코퍼스에 없는 질문이 하나라도 있으면 중단한다.
+        unit: law = 법령 단위(테마별), article = 조 단위(법령별 층화, train hard negative에서
+            dev · test 정답 조 문서를 뺀다).
     """
     corpus_path, out = _paths(corpus, out)
     if not Path(questions).exists():
@@ -98,20 +103,31 @@ def split(
     if not kept:
         _fail("남은 질문이 없습니다. 질문과 코퍼스가 같은 버전인지 확인하세요.")
 
-    splits = split_by_law(kept, corpus_by_id, test_ratio=test_ratio, dev_ratio=dev_ratio, seed=seed)
+    split_fn = split_by_article if unit == "article" else split_by_law
+    splits = split_fn(kept, corpus_by_id, test_ratio=test_ratio, dev_ratio=dev_ratio, seed=seed)
+    negative_stats = None
+    if unit == "article":
+        splits, negative_stats = drop_heldout_negatives(splits, corpus_by_id)
+        print(
+            f"train hard negative {negative_stats['train_negatives']}개 중 dev · test 조 문서 "
+            f"{negative_stats['dropped_negatives']}개를 뺐습니다 "
+            f"(negative가 없어진 질문 {negative_stats['no_negative_questions']}개)"
+        )
     summary = split_summary(splits, corpus_by_id)
     meta = {
+        "unit": unit,
         "seed": seed,
         "test_ratio": test_ratio,
         "dev_ratio": dev_ratio,
         "questions": str(questions),
         "corpus": str(corpus_path),
         "filter": stats,
+        **({"heldout_negatives": negative_stats} if negative_stats else {}),
         **summary,
     }
     write_splits(splits, out, meta)
     for name, info in summary.items():
-        print(f"  {name}: 질문 {info['questions']}개, 법령 {len(info['laws'])}개")
+        print(f"  {name}: 질문 {info['questions']}개, 조 {info['articles']}개, 법령 {len(info['laws'])}개")
         if not info["questions"]:
             print(f"  경고: {name}이 비었습니다 (법령이 적은 테마).")
     print(f"완료 → {out}")
