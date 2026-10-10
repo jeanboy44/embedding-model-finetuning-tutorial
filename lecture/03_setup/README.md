@@ -66,7 +66,10 @@ uv run --package ragkit-search ragkit-search search "방문판매로 산 정수�
 uv run --package ragkit-search ragkit-search search "주휴일 유급휴일 1주 개근"                        # 학습 전 · 법률 용어
 uv run --package ragkit-search ragkit-search search "편의점 알바를 3개월 했는데 주휴수당을 받을 수 있나요?"        # 학습 전 · 일상어
 uv run --package ragkit-search ragkit-search search "편의점 알바를 3개월 했는데 주휴수당을 받을 수 있나요?" --checkpoint models/finetuned/r001_A --backend torch   # 파인튜닝 · 일상어
+uv run --package ragkit-search ragkit-search search "주휴일 유급휴일 1주 개근" --checkpoint models/finetuned/r001_A --backend torch   # 파인튜닝 · 법률 용어
 ```
+
+정답 근로기준법 제55조의 순위(문서 단위, 강사 PC): 학습 전 일상어 82위 · 법률 용어 3위 → 파인튜닝 일상어 2위 · 법률 용어 2위.
 
 강사 PC에서 잰 정답 순위 (조 단위, 전체 2.6만 문서 중):
 
