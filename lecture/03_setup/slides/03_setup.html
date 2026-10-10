@@ -85,7 +85,7 @@
 <div style="display:flex;gap:48px">
 <div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #d6e0cc;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">0</p><h3 style="font-size:40px;font-weight:800;line-height:1.3">완성품 받아 열기</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">설치 전에 HTML 파일 하나를 받아 더블클릭으로 검색해 본다</p></div>
 <div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #d6e0cc;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">1</p><h3 style="font-size:40px;font-weight:800;line-height:1.3">환경 점검</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">설치 · 모델 · 데이터 · 인덱스가 준비됐는지 한 번에 확인</p></div>
-<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #d6e0cc;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">2</p><h3 style="font-size:40px;font-weight:800;line-height:1.3">완성품 써 보기</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">웹은 강사 시연으로 보고, CLI로 학습 전 모델을 직접 써 본다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #d6e0cc;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">2</p><h3 style="font-size:40px;font-weight:800;line-height:1.3">완성품 써 보기</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">CLI로 학습 전 모델에 질문 넷을 직접 던져 본다</p></div>
 <div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #d6e0cc;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">3</p><h3 style="font-size:40px;font-weight:800;line-height:1.3">학습 전후 비교</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">같은 질문을 파인튜닝 모델로 바꿔 정답 순위를 비교한다</p></div>
 </div>
 <aside>이번 시간에는 네 가지를 합니다. 맨 먼저, 아무것도 설치하기 전에 오늘의 완성품인 HTML 파일 하나를 받아 열어 봅니다. 그다음 환경 점검, 완성품 써 보기, 그리고 같은 질문을 파인튜닝한 모델로 바꿔 학습 전후를 비교하기.</aside>
@@ -186,24 +186,7 @@
 <p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">API 키 항목은 △(선택)로 나온다. 오늘은 키 없이 진행한다 · --quick이면 동작 확인을 건너뛴다</p>
 <aside>점검은 01_doctor.py 하나로 합니다. 설치, 데이터, 모델과 인덱스가 있는지 보고, 받은 두 모델을 실제로 열어 검색까지 해 봅니다. 파일이 있어도 깨졌거나 버전이 안 맞으면 여기서 걸립니다. 빠진 게 있으면 --fix를 붙여 다시 돌리세요. 받을 수 있는 것은 순서대로 받고 다시 점검합니다. API 키 항목은 선택이라 세모로 나오는데, 오늘은 키 없이 진행하니 괜찮습니다. 쉬는 시간 전에 전부 체크가 되도록 채워 두세요. 4교시부터는 이 환경을 계속 씁니다.</aside>
 </section>
-<section data-section="완성품 먼저: 웹은 강사 시연, CLI로 학습 전 모델에 질문 넷을 직접 던진다" id="web" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:56px">
-<div style="display:flex;flex-direction:column;gap:20px">
-<p style="font-size:26px;font-weight:700;color:#6b7480">2 · 완성품 맛보기 · 강사 시연</p>
-<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">같은 모델을 웹 화면으로도 건넨다</h2>
-</div>
-<div style="display:flex;align-items:stretch;gap:16px">
-<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">1</p><h3 style="font-size:32px;font-weight:800">노트북</h3><p style="font-size:24px;line-height:1.5;color:#4a5361">찾을 법령 묶음을 고른다</p></div>
-<p style="font-size:32px;color:#9aa3ad;padding:56px 0 0 0">→</p>
-<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">2</p><h3 style="font-size:32px;font-weight:800">채팅</h3><p style="font-size:24px;line-height:1.5;color:#4a5361">근거 조문이 [1] [2]로 뜬다. 답 생성은 API 키가 있을 때만</p></div>
-<p style="font-size:32px;color:#9aa3ad;padding:56px 0 0 0">→</p>
-<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">3</p><h3 style="font-size:32px;font-weight:800">원문</h3><p style="font-size:24px;line-height:1.5;color:#4a5361">인용을 누르면 조문이 열리고 그 항이 강조된다</p></div>
-<p style="font-size:32px;color:#9aa3ad;padding:56px 0 0 0">→</p>
-<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">4</p><h3 style="font-size:32px;font-weight:800">노트</h3><p style="font-size:24px;line-height:1.5;color:#4a5361">좋은 답은 인용째 저장한다</p></div>
-</div>
-<p style="font-size:30px;line-height:1.6;color:#4a5361">웹 화면 “법령 노트”. 8교시에 보는 세 가지 길(데스크톱 · 웹 · 에이전트) 중 하나로, 직접 띄우는 건 8교시. 오늘은 강사 화면으로만 본다.</p>
-<aside>같은 모델을 웹 화면으로 건네면 이렇게 됩니다. 법령 노트라는 화면입니다. 앞에서 본 HTML 파일 하나가 데스크톱으로 건네는 길이었다면, 이건 웹으로 건네는 길입니다. 8교시에 데스크톱, 웹, 에이전트 세 가지 길을 비교하고 이 화면도 직접 띄워 봅니다. 지금은 제 화면으로만 보세요. NotebookLM처럼 법령 묶음을 고르고 질문하면, 키가 있을 때는 인용 번호가 붙은 답이 나오고 누르면 조문 원문이 열립니다. 오늘은 API 키 없이 쓰니 답 대신 근거 조문 목록이 나옵니다. 그 목록이 바로 임베딩 검색 결과이고, 오늘 우리가 좋게 만들 부분입니다. 화면 뒤에서 도는 것은 오늘 다룰 임베딩 검색입니다. 이제 같은 검색을 여러분 터미널에서 CLI로 직접 써 봅니다.</aside>
-</section>
-<section id="quiz" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:48px">
+<section data-section="완성품 써 보기: CLI로 학습 전 모델에 질문 넷을 직접 던진다" id="quiz" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:48px">
 <div style="display:flex;flex-direction:column;gap:20px">
 <p style="font-size:26px;font-weight:700;color:#6b7480">2 · 던져 볼 질문</p>
 <h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">이 네 질문을 학습 전 모델에 던져 보자</h2>
