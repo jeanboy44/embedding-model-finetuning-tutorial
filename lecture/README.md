@@ -8,8 +8,8 @@
 | `02_concepts/` | 2 | 이론 | 용어·개념, 왜 임베딩 파인튜닝인가 |
 | `03_setup/` | 3 | 실습 0 | 완성품 HTML 받기, 환경 점검(doctor), 완성품 먼저 써 보기, CLI로 학습 전후 비교(README). 선택: Gemini 기초 |
 | `04_ds_work/` | 4 | 2022 vs 2026 | DS의 일 2022 vs 2026. 실습 없이 장표로, 예시 요청(공장 매뉴얼 검색)을 법령으로 따라가며 단계별 산출물과 판단. 선택: 받은 질문 보기 |
-| `05_data_eval/` | 5 | 실습 1 | 데이터(코퍼스 · 분할), 평가셋과 지표, 쿼리 확장, 기본 실험 001 한 바퀴(30 step 파일럿) |
-| `06_experiment/` | 6 | 실습 2 | 우리가 세운 가설 전부, LoRA(004) 한 바퀴(설정 · 파일럿 · 비교 · 검정), 오답 분석 |
+| `05_data_eval/` | 5 | 실습 1 | 데이터(코퍼스 · 분할), 평가셋과 지표, 기본 실험 001 한 바퀴(30 step 파일럿) |
+| `06_experiment/` | 6 | 실습 2 | 가설 전부, 001 판정과 오답 분석(직접), 002 기록(딸깍) |
 | `07_optimize/` | 7 | 실습 3 | API 복습, ONNX · INT8 · 어휘 가지치기, 비교표와 서빙. 선택: 임베딩 속도 옵션 |
 | `08_product/` | 8 | 실습 4 | 세 가지 길: 데스크톱(HTML 파일 하나) · 웹 · 에이전트(검색 CLI + 스킬, MCP). 선택: MLflow 모니터링 |
 
@@ -26,8 +26,8 @@
 | 2 | [용어 · 왜 임베딩 파인튜닝인가 · 실습 지도](https://claude.ai/artifact/YCojzoPbMkeAamJ7WQhSEG) |
 | 3 | [실습 0: 환경 · 완성품 · RAG 필요성](https://claude.ai/artifact/VuQyTKs7BHKu4Hsq5xy5Qc) |
 | 4 | [DS의 일, 2022와 2026](https://claude.ai/artifact/FvbbskQyEMrxWcMJeRKka8) |
-| 5 | [데이터 · 평가 · 기준 실험](https://claude.ai/artifact/EzELtdX3t269cS4DHsmX3p) |
-| 6 | [실험 한 바퀴: LoRA, 그리고 딸깍](https://claude.ai/artifact/MtviA3WTikxFfG4a7YrN43) |
+| 5 | [데이터 · 평가 · 기본 실험](https://claude.ai/artifact/EzELtdX3t269cS4DHsmX3p) |
+| 6 | [실험 두 개: 001은 손으로, 002는 딸깍](https://claude.ai/artifact/MtviA3WTikxFfG4a7YrN43) |
 | 7 | [실습 3: 서빙과 배포 최적화](https://claude.ai/artifact/F1mKY7iVNVaKZj5psadPvR) |
 | 8 | [실습 4: 제품화와 마무리](https://claude.ai/artifact/TgTkmnDgAnDHwvEFhUP2vE) |
 
@@ -57,7 +57,7 @@ API 키 같은 설정은 셸마다 문법이 다른 환경 변수 대신 `.env` 
 
 ## 두 가지 모드
 
-무거운 산출물(모델, 파인튜닝 모델, 인덱스, 질문, 분할, 쿼리 확장 캐시, 실험 결과)은 강사가 미리 만들어 Drive로 나눠 준다.
+무거운 산출물(모델, 파인튜닝 모델, 인덱스, 질문, 분할, 실험 결과)은 강사가 미리 만들어 Drive로 나눠 준다.
 
 - **기본: 받은 산출물로 확인.** 받은 파일을 읽어 결과를 보여 준다. 스크립트 하나가 몇 분 안에 끝난다.
 - **`--run`: 작은 부분집합으로 직접 실행.** 같은 일을 질문 몇십 개, 학습 몇 step처럼 작게 직접 돌려 본다. 결과는 임시 폴더나 `experiments/*/results/` 아래 별도 이름에 쓰고, 받은 산출물을 덮어쓰지 않는다.

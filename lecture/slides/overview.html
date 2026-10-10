@@ -104,26 +104,26 @@
       <tr class="y22">
         <td class="period">4</td>
         <td class="title"><span class="tag y22">2022 vs 2026</span><b>DS의 일, 2022와 2026</b></td>
-        <td>예시 요청(공장 라인 PC 매뉴얼 검색)을 법령으로 대신해 따라가며, 다섯 단계마다 손에 남는 산출물과 DS의 판단, 2022 vs 2026 → 끝까지 사람이 쥐는 판단 다섯 개</td>
+        <td>예시 요청 “AI Agent를 만들어 주세요” → 인터뷰 · 현황 파악으로 진짜 필요를 가려 임베딩 HTML로 결정 → 법령으로 대신해 다섯 단계마다 산출물과 DS의 판단, 2022 vs 2026</td>
         <td><span class="num">작업한 날 약 9일</span><br>질문 1.2만 개 · 실험 10여 개</td>
         <td><code>04_ds_work</code></td>
-        <td><a href="https://claude.ai/artifact/FvbbskQyEMrxWcMJeRKka8">29장</a></td>
+        <td><a href="https://claude.ai/artifact/FvbbskQyEMrxWcMJeRKka8">33장</a></td>
       </tr>
       <tr class="y22">
         <td class="period">5</td>
-        <td class="title"><span class="tag y22">실습 1 · 2022</span><b>데이터 · 평가 · 기준 실험</b></td>
-        <td>코퍼스 · 질문 가이드 · 법령 단위 분할 → 지표와 출발점, 쿼리 확장 → 기준 실험 002 한 바퀴(가설 → 파일럿 → 학습 → test 1회)</td>
-        <td><span class="num">0.513 → 0.669</span><br>기준선 test R@5</td>
+        <td class="title"><span class="tag y22">실습 1 · 2022</span><b>데이터 · 평가 · 기본 실험</b></td>
+        <td>0부 데이터 만들기(코퍼스 · 법령 단위 분할) → 1부 base 모델 평가(지표 → 기준선) → 2부 1차 기준 모델 학습(기본 실험 002: 계획서 → 파일럿 → 학습 → test 1회)</td>
+        <td><span class="num">0.513 → 0.669</span><br>기준선 → 002 test R@5</td>
         <td><code>05_data_eval</code></td>
-        <td><a href="https://claude.ai/artifact/EzELtdX3t269cS4DHsmX3p">28장</a></td>
+        <td><a href="https://claude.ai/artifact/EzELtdX3t269cS4DHsmX3p">27장</a></td>
       </tr>
       <tr class="y22">
         <td class="period">6</td>
-        <td class="title"><span class="tag y22">실습 2 · 2022</span><b>실험 한 바퀴: LoRA, 그리고 딸깍</b></td>
-        <td>우리가 세운 가설 전부 → LoRA 한 바퀴를 손으로(판정 기준 · 검정 · 비용) → 딸깍: 에이전트가 돈 실험 001, 사람은 기준 · 의심</td>
-        <td><span class="num">LoRA 0.641 · 001 0.723</span><br>test R@5 (기준 0.669)</td>
+        <td class="title"><span class="tag y22">실습 2 · 2022</span><b>실험 두 개: 002는 손으로, 001은 딸깍</b></td>
+        <td>우리가 세운 가설 전부(뺀 model soup 포함) → 002를 손으로(검정 · 오답 분석 → 다음 가설) → 딸깍: 그 가설을 에이전트가 돈 실험 001</td>
+        <td><span class="num">0.669 → 0.723</span><br>002 → 001 test R@5</td>
         <td><code>06_experiment</code></td>
-        <td><a href="https://claude.ai/artifact/MtviA3WTikxFfG4a7YrN43">23장</a></td>
+        <td><a href="https://claude.ai/artifact/MtviA3WTikxFfG4a7YrN43">18장</a></td>
       </tr>
       <tr class="y26">
         <td class="period">7</td>
@@ -143,7 +143,7 @@
       </tr>
     </tbody>
     <tfoot>
-      <tr><td></td><td>합계</td><td></td><td></td><td></td><td>235장</td></tr>
+      <tr><td></td><td>합계</td><td></td><td></td><td></td><td>233장</td></tr>
     </tfoot>
   </table>
   </div>
