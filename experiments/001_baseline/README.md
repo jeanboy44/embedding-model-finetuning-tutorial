@@ -14,6 +14,7 @@ uv run ragkit train experiments/001_baseline/config.yaml --splits data/splits_ar
 uv run ragkit evaluate intfloat/multilingual-e5-small --splits data/splits_article --out experiments/results/001_baseline/000_base_test.json
 uv run ragkit evaluate models/finetuned/001_baseline --splits data/splits_article --out experiments/results/001_baseline/001_test.json
 uv run ragkit paired-test experiments/results/001_baseline/000_base_test.json experiments/results/001_baseline/001_test.json --judge doc
+uv run python experiments/001_baseline/leak_check.py   # 누수 검사 (약 3분)
 ```
 
 ## 분할
@@ -28,7 +29,7 @@ uv run ragkit paired-test experiments/results/001_baseline/000_base_test.json ex
 
 - train hard negative 16,432개 중 dev · test 정답 조의 문서 2,072개(12.6%)를 뺐다. 그대로 두면 test 정답 조가 학습 때 오답으로 나온다.
 - 그 결과 hard negative가 하나도 남지 않은 질문 437개(4.8%)는 학습 예시에서 빠졌다(학습 코드가 오답 칸이 빈 행을 건너뛴다). 학습 예시는 8,689개다.
-- 법 ↔ 시행령의 비슷한 문장, test ↔ train 질문 중복 같은 누수는 아직 재지 않았다.
+- 법 ↔ 시행령의 비슷한 문장, test ↔ train 질문 중복은 아래 누수 검사에서 쟀다.
 
 ## 학습
 
@@ -60,5 +61,30 @@ paired-test (doc R@5): Δ **+0.199**, 95% CI [+0.177, +0.222], 고친 질문 448
 - 판정: 학습 전보다 좋다(개선 기준 Δ ≥ 0.02, CI 하한 > 0, p < 0.05 모두 충족).
 - 가장 많이 오른 곳은 일상 상황 질문(0.417 → 0.671)이다.
 - 이 숫자는 법령 단위 test(옛 001 0.669, 학습 전 0.513)와 test가 달라 직접 비교하지 않는다.
+
+## 누수 검사
+
+`leak_check.py`. test 질문마다 (1) 정답 문서와 가장 비슷한 train 정답 문서, (2) 가장 비슷한 train 질문을 찾는다. 유사도는 학습 전 e5 코사인과 글자 3-gram 자카드(코사인 상위 10개 중 최대).
+
+| | 코사인 중앙값 · 90% · 99% | 자카드 중앙값 · 90% · 99% | 자카드 0.8 이상 |
+|---|---|---|---|
+| 정답 문서 ↔ train 정답 문서 | 0.938 · 0.959 · 0.977 | 0.172 · 0.354 · 0.778 | 19개 |
+| 질문 ↔ train 질문 | 0.917 · 0.944 · 0.970 | 0.117 · 0.242 · 0.431 | 0개 |
+
+- e5 코사인은 관계없는 글끼리도 0.9 안팎이라 중복 판정에는 자카드가 낫다. 거의 같은 문서(자카드 0.8 이상)는 19개 질문뿐이다(예: 고용보험법 제77조의3 ③ ↔ 제77조의8 ③처럼 조만 다르고 문장이 같은 조문).
+- 질문은 자카드 0.8 이상이 없다. 다만 코사인 상위에는 말만 바꾼 쌍이 있다(예: "아버지가 실업급여 받으시다가 갑자기 돌아가셨어요…" ↔ "실업급여 받던 아버지가 갑자기 돌아가셨어요…", 코사인 0.998). 코사인 0.95 이상 질문은 108개(5.8%)다.
+
+가장 비슷한 train 정답 문서와의 관계별 test R@5:
+
+| 가장 비슷한 train 정답 문서 | 질문 | 000 | 001 | Δ |
+|---|---|---|---|---|
+| 같은 법령 · 법률 ↔ 시행령 등 | 764 | 0.579 | 0.768 | +0.189 |
+| 같은 법령 · 같은 종류 | 865 | 0.525 | 0.720 | +0.195 |
+| 다른 법령 | 234 | 0.509 | 0.752 | +0.243 |
+
+닮은 질문을 뺀 test(문서 · 질문 코사인 0.95 미만, 자카드 0.8 미만, 1,357개): 000 0.542 → 001 0.757, Δ **+0.214**, 95% CI [+0.188, +0.240], McNemar p < 0.0001.
+
+- 판정: 누수가 상승을 부풀린 흔적은 없다. 닮은 질문을 빼면 Δ가 오히려 조금 커지고(+0.199 → +0.214), 법 ↔ 시행령 쌍이 train에 있는 질문의 상승 폭이 전체보다 크지 않다. 정답 문서가 train 문서와 아주 닮은 구간(코사인 0.95 이상, 443개)은 001이 0.702로 오히려 낮다. 닮은 문서는 정답을 알려 주기보다 헷갈리는 오답이 된다.
+- 한계: 가장 닮은 이웃 하나만 본다. 학습 전 e5의 유사도라 여러 문서에 걸친 간접 누수는 잡지 못한다.
 
 모델: `models/finetuned/001_baseline/` (학습 기록 `train_meta.json`). 질문별 결과는 `experiments/results/001_baseline/`(커밋하지 않음).
