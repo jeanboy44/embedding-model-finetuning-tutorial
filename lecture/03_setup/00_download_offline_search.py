@@ -21,7 +21,7 @@ import urllib.request
 import webbrowser
 from pathlib import Path
 
-FILE_ID = "__FILE_ID__"
+FILE_ID = "1TzgE1mh2ZSyAjmPFJtb7OTuk05JFr3mt"
 SHA256 = "7eba32a0264af9c691466860f1348b9fcd29bed91a7ce26fd22842d0b0a9109f"
 URL = f"https://drive.usercontent.google.com/download?id={FILE_ID}&export=download&confirm=t"
 OUT = Path("dist/law-search-offline.html")
