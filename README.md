@@ -58,11 +58,10 @@ LLM 단계(답변 생성)는 `.env`에 `GEMINI_API_KEY`가 필요합니다. [Goo
 | 1 (5) | `lecture/05_data_eval/01_corpus.py` | 코퍼스 통계, 항·호 분할, 길이 분포 |
 | 1 (5) | `lecture/05_data_eval/02_split.py` | 법령 단위 분할과 왜 법령 단위인가 |
 | 1 (5) | `lecture/05_data_eval/03_metrics.py` | R@k · MRR · nDCG · doc/article/multi 판정, 학습 전 e5 test 평가 |
-| 1 (5) | `lecture/05_data_eval/04_query_expansion.py` | LLM 쿼리 확장: 정확도와 질문당 비용 (받은 캐시) |
-| 1 (5) | `lecture/05_data_eval/05_baseline_train.py` | 기본 실험 001: MNRL · in-batch negative · NO_DUPLICATES, 학습 기록, 30 step 파일럿 |
-| 2 (6) | `lecture/06_experiment/01_lora_train.py` | LoRA 실험 004: 설정 차이, 학습 파라미터 0.4%, 학습 기록, 30 step 파일럿 |
-| 2 (6) | `lecture/06_experiment/02_compare_runs.py` | exp_010 비교표, 가설 판정, paired-test |
-| 2 (6) | `lecture/06_experiment/03_error_analysis.py` | 고쳐진·새로 틀린·여전히 틀리는 질문, 파인튜닝의 한계 |
+| 1 (5) | `lecture/05_data_eval/04_baseline_train.py` | 기본 실험 001: MNRL · in-batch negative · NO_DUPLICATES, 학습 기록, 30 step 파일럿 |
+| 2 (6) | `lecture/06_experiment/01_compare_runs.py` | 가설 표(model soup을 뺀 이유), 학습 전 vs 001 test 평가와 paired-test 판정 |
+| 2 (6) | `lecture/06_experiment/02_error_analysis.py` | 001 오답 분석: 고쳐진·새로 틀린·여전히 틀리는 질문, 우리가 준 오답, 다음 가설 |
+| 2 (6) | `lecture/06_experiment/03_hard_negatives.py` | 실험 002 기록: 에이전트가 돈 바퀴, 사람이 남는 곳 |
 | 3 (7) | `lecture/07_optimize/01_api_review.py` | API 복습: 로딩, search·필터·422, SSE 스트리밍, 노트북 |
 | 3 (7) | `lecture/07_optimize/02_onnx_quantize_prune.py` | ONNX 변환, INT8 텐서 단위 vs 채널별, 어휘 가지치기 |
 | 3 (7) | `lecture/07_optimize/03_bench_and_serve.py` | 원본/ONNX/INT8/가지치기 비교표, API 백엔드 교체 |

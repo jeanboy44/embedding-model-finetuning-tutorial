@@ -1,43 +1,41 @@
 """
-실습 2-3 (6교시): 오답 분석, 무엇을 고쳤고 무엇이 남았나
-========================================================
+실습 2-2 (6교시): 001 오답 분석, 다음 가설 찾기
+===============================================
 
 학습 목표:
-- 학습 전 e5-small과 파인튜닝 모델(002 다시 캔 오답 3개)을 질문 단위로 짝지어, 고친 질문과 새로 틀린 질문을 본다
+- 학습 전 e5-small과 001을 질문 단위로 짝지어, 고친 질문과 새로 틀린 질문을 본다
 - 질문 유형 · 테마 · 법령 · 질문과 조문의 단어 겹침별로 어디가 얼마나 올랐는지 나눠 본다
 - 여전히 틀리는 질문의 1위 오답이 정답과 어떤 관계인지(엉뚱한 법령의 비슷한 조문, 법률↔시행령 혼동 등) 분류한다
-- 파인튜닝으로 안 고쳐지는 것(크게 놓친 질문, 말투 차이)을 확인하고 다음 가설을 한 문장으로 적는다
+- 학습 데이터에 우리가 준 오답(hard negative)이 모델에게 얼마나 쉬웠는지 보고, 다음 가설(실험 002)을 한 문장으로 적는다
 - 분류와 리포트는 AI에게 맡기고, DS는 가설과 판단에 집중하는 방식을 본다
 
 분류(1위 오답과 정답의 관계, 순위 구간, 단어 겹침)는 ragkit.evaluation의 함수로 기계적으로 한다.
 
 사전 준비:
-    02_compare_runs.py를 먼저 실행해 exp_010 결과(질문별 순위)를 만든다
+    01_compare_runs.py를 먼저 실행해 학습 전 / 001의 test 결과(질문별 순위)를 만든다
     (또는 강사가 나눠 준 experiments/archive/exp_010_lecture_comparison/results/*.json)
 
 실행:
-    uv run python lecture/06_experiment/03_error_analysis.py          # 받은(또는 02에서 만든) test 전체 결과로 분석 (몇 초)
-    uv run python lecture/06_experiment/03_error_analysis.py --run    # situation 질문 300개를 두 모델로 직접 평가해 분석 (1분 안쪽)
+    uv run python lecture/06_experiment/02_error_analysis.py          # 01의 test 결과로 분석 (몇 초)
+    uv run python lecture/06_experiment/02_error_analysis.py --run    # + train 질문 300개를 001로 검색해 우리가 준 오답의 순위를 직접 잰다 (1분 안쪽)
 
 여전히 틀리는 질문 목록은 experiments/results/lecture/06_experiment/ 아래 JSONL로 남긴다(AI에게 분류를 맡길 때 쓴다).
 """
 
 import argparse
 import json
-import os
 import random
-import subprocess
 import sys
-import tempfile
 import time
 import unicodedata
 from collections import Counter
 from pathlib import Path
 
 import numpy as np
-import yaml
 
 from ragkit.data import doc_text, load_corpus, load_questions, question_key
+from ragkit.embeddings import create_embedding_fn
+from ragkit.embeddings.profiles import get_profile
 from ragkit.evaluation import (
     RANK_BUCKETS,
     RELATIONS,
@@ -46,24 +44,26 @@ from ragkit.evaluation import (
     query_overlap,
     rank_bucket,
 )
+from ragkit.retrieval import VectorIndex, default_index_path, model_key
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "data"
 CORPUS = DATA / "processed" / "law_docs.json"
 TEST = DATA / "splits" / "test.jsonl"
-RECEIVED = ROOT / "experiments" / "archive" / "exp_010_lecture_comparison" / "results"
+TRAIN = DATA / "splits" / "train.jsonl"
+RECEIVED = ROOT / "experiments" / "exp_010_lecture_comparison" / "results"
 LECTURE_OUT = ROOT / "experiments" / "results" / "lecture" / "06_experiment"
-FROM_02 = LECTURE_OUT / "exp_010"
-BASE, TUNED = (
-    "multilingual-e5-small",
-    "002_hard_negatives",
-)  # 학습 전 / exp_010에서 가장 좋은 파인튜닝 모델
-LABELS = {BASE: "학습 전", TUNED: "002 파인튜닝"}
+FROM_01 = LECTURE_OUT / "exp_010"
+TUNED_DIR = ROOT / "models" / "finetuned" / "001_baseline"
+BASE, TUNED = "multilingual-e5-small", "001_baseline"  # 학습 전 / 기본 실험 001
+LABELS = {BASE: "학습 전", TUNED: "001"}
 K = 5
 RUN_SAMPLE = 300
 SEED = 42
+DEPTH = 50  # 오답 순위를 볼 깊이 (이보다 아래면 "50위 밖")
 
 GET_DATA = "uv run python scripts/data_version.py pull v1"
+GET_002 = "uv run python scripts/finetuned_drive.py download 001_baseline"
 
 
 def section(title: str) -> None:
@@ -83,26 +83,6 @@ def pad(text: str, width: int) -> str:
     """한글(전각)을 두 칸으로 세어 왼쪽 정렬한다."""
     used = sum(2 if unicodedata.east_asian_width(ch) in "WF" else 1 for ch in text)
     return text + " " * max(width - used, 1)
-
-
-def ragkit(*args: str) -> float:
-    """ragkit CLI를 저장소 루트에서 실행하고 걸린 시간(초)을 돌려준다."""
-    shown = [rel(Path(a)) if a.startswith(str(ROOT)) else a for a in args]
-    print(f"$ uv run ragkit {' '.join(shown)}")
-    env = {**os.environ, "MLFLOW_DISABLE_AGENT_HINT": "1"}
-    start = time.perf_counter()
-    done = subprocess.run(
-        [str(Path(sys.executable).parent / "ragkit"), *args],
-        cwd=ROOT,
-        env=env,
-        check=False,
-    )
-    if done.returncode != 0:
-        print(
-            f"ragkit {args[0]}이 실패했습니다 (종료 코드 {done.returncode}). 위 메시지를 확인하세요."
-        )
-        raise SystemExit(done.returncode)
-    return time.perf_counter() - start
 
 
 def load_results(folder: Path) -> dict[str, dict]:
@@ -125,20 +105,24 @@ def title(doc_id: str) -> str:
     return docs[doc_id]["title"] if doc_id in docs else doc_id
 
 
-sys.stdout.reconfigure(
-    line_buffering=True
-)  # ragkit 하위 프로세스 출력과 순서가 섞이지 않게
-parser = argparse.ArgumentParser(description="실습 2-3: 오답 분석")
+def negative_bucket(rank: int | None) -> str:
+    if rank is None:
+        return f"{DEPTH}위 밖"
+    return "1~5위" if rank <= 5 else "6~30위" if rank <= 30 else f"31~{DEPTH}위"
+
+
+sys.stdout.reconfigure(line_buffering=True)
+parser = argparse.ArgumentParser(description="실습 2-2: 001 오답 분석")
 parser.add_argument(
     "--run",
     action="store_true",
-    help=f"situation 질문 {RUN_SAMPLE}개를 두 모델로 직접 평가해 분석",
+    help=f"train 질문 {RUN_SAMPLE}개를 001로 검색해 우리가 준 오답의 순위를 직접 잰다",
 )
 args = parser.parse_args()
 
-for path in (CORPUS, TEST):
+for path, how in ((CORPUS, GET_DATA), (TEST, GET_DATA), (TRAIN, GET_DATA)):
     if not path.exists():
-        print(f"필요한 산출물이 없습니다: {rel(path)}\n  받기: {GET_DATA}")
+        print(f"필요한 산출물이 없습니다: {rel(path)}\n  받기: {how}")
         raise SystemExit(1)
 docs = {d["id"]: d for d in load_corpus(CORPUS)}
 questions = {question_key(q): q for q in load_questions(TEST)}
@@ -148,48 +132,17 @@ questions = {question_key(q): q for q in load_questions(TEST)}
 # 0. 질문별 결과 불러오기
 # ============================================================
 section("0. 질문별 결과")
-if args.run:
-    tmp = Path(tempfile.mkdtemp(prefix="lecture-03-3-"))
-    situation = [q for q in questions.values() if q.get("query_type") == "situation"]
-    sample = random.Random(SEED).sample(situation, RUN_SAMPLE)
-    subset = tmp / "situation_sample.jsonl"
-    subset.write_text(
-        "".join(json.dumps(q, ensure_ascii=False) + "\n" for q in sample),
-        encoding="utf-8",
-    )
-    config = tmp / "config.yaml"  # 두 모델만 비교하는 임시 실험 설정
-    tuned_dir = ROOT / "models" / "finetuned" / TUNED
-    if not tuned_dir.exists():
-        print(f"모델이 없습니다: {rel(tuned_dir)} (강사 Drive에서 받는다)")
-        raise SystemExit(1)
-    config.write_text(
-        yaml.safe_dump(
-            {
-                "name": "lecture_error_analysis",
-                "questions": str(subset),
-                "models": ["intfloat/multilingual-e5-small", str(tuned_dir)],
-            },
-            allow_unicode=True,
-        ),
-        encoding="utf-8",
-    )
-    print(f"situation 질문 {RUN_SAMPLE}개 (seed {SEED})를 학습 전 / {TUNED}로 평가한다")
-    seconds = ragkit("compare", str(config), "--out-dir", str(tmp / "results"))
-    print(f"  ({seconds:.0f}초)")
-    results = load_results(tmp / "results")
-    source = tmp / "results"
-else:
-    results, source = {}, None
-    for folder in (RECEIVED, FROM_02):
-        results = load_results(folder)
-        if BASE in results and TUNED in results:
-            source = folder
-            break
-    if source is None:
-        print("exp_010의 질문별 결과가 없습니다. 먼저 실행:")
-        print("  uv run python lecture/06_experiment/02_compare_runs.py")
-        print(f"  (또는 강사가 나눠 준 결과 JSON을 {rel(RECEIVED)}/ 에 둔다)")
-        raise SystemExit(1)
+results, source = {}, None
+for folder in (RECEIVED, FROM_01):
+    results = load_results(folder)
+    if BASE in results and TUNED in results:
+        source = folder
+        break
+if source is None:
+    print("학습 전 / 001의 질문별 결과가 없습니다. 먼저 실행:")
+    print("  uv run python lecture/06_experiment/01_compare_runs.py")
+    print(f"  (또는 강사가 나눠 준 결과 JSON을 {rel(RECEIVED)}/ 에 둔다)")
+    raise SystemExit(1)
 base, tuned = results[BASE], results[TUNED]
 print(f"결과: {rel(source)} · 질문 {base['n']:,}개 · 판정 doc · R@{K}")
 print(
@@ -377,12 +330,71 @@ print(
 
 
 # ============================================================
-# 5. AI에게 맡기고, DS는 판단한다
+# 5. 우리가 준 오답은 어땠나
 # ============================================================
-section("5. 분류와 리포트는 AI에게, 가설과 판단은 DS가")
-if not args.run:
-    LECTURE_OUT.mkdir(parents=True, exist_ok=True)
-out = (tmp if args.run else LECTURE_OUT) / f"failures_{TUNED}.jsonl"
+section("5. 우리가 준 오답(hard negative)은 모델이 헷갈리는 것이었나")
+train = load_questions(TRAIN)
+pairs = [(q, h) for q in train for h in q.get("hard_negative_ids", []) if h in docs]
+same_law = sum(
+    docs[h]["category"] == docs[q["positive_id"]]["category"] for q, h in pairs
+)
+print(
+    f"train 질문 {len(train):,}개에 붙은 오답 {len(pairs):,}개 중 정답과 같은 법: {same_law / len(pairs):.0%}"
+)
+print("  질문을 만들 때 LLM이 같은 법에서만 골랐다. 그런데 위 3에서 1위 오답은")
+print(
+    f"  다른 법령 문서가 {other_law / len(failures):.0%}였다. 모델이 실제로 헷갈리는 것과 우리가 연습시킨 것이 다르다"
+)
+
+if args.run:
+    if not TUNED_DIR.exists():
+        print(f"모델이 없습니다: {rel(TUNED_DIR)}\n  받기: {GET_002}")
+        raise SystemExit(1)
+    index_path = default_index_path(model_key(str(TUNED_DIR), TUNED_DIR))
+    if not index_path.exists():
+        print(f"001 인덱스가 없습니다: {rel(index_path)}\n  받기: {GET_002}")
+        raise SystemExit(1)
+    sample = random.Random(SEED).sample(
+        [q for q in train if q.get("hard_negative_ids")], RUN_SAMPLE
+    )
+    print(
+        f"\n--run: train 질문 {RUN_SAMPLE}개 (seed {SEED})를 001로 검색해 오답의 순위를 잰다"
+    )
+    start = time.perf_counter()
+    embed = create_embedding_fn(
+        str(TUNED_DIR), backend="torch"
+    )  # 받은 인덱스와 같은 백엔드
+    profile = get_profile(TUNED_DIR)
+    vectors = embed([profile.format_query(q["query"]) for q in sample])
+    index = VectorIndex.open(index_path)
+    ranks = Counter()
+    for q, vec in zip(sample, vectors):
+        order = [h.id for h in index.search(vec, k=DEPTH)]
+        for neg in q["hard_negative_ids"]:
+            ranks[negative_bucket(order.index(neg) + 1 if neg in order else None)] += 1
+    index.close()
+    total = sum(ranks.values())
+    print(
+        f"  ({time.perf_counter() - start:.0f}초) 오답 {total:,}개가 001 검색에서 몇 위인가"
+    )
+    for bucket in ("1~5위", "6~30위", f"31~{DEPTH}위", f"{DEPTH}위 밖"):
+        print(f"    {pad(bucket, 10)}{ranks[bucket]:5,}  ({ranks[bucket] / total:.0%})")
+    print(f"  → {DEPTH}위 밖 오답은 학습해도 배울 것이 거의 없다. 이미 쉬운 오답이다")
+else:
+    print(
+        "\n같은 설정에 더 오래 학습한 003으로 잰 기록 (experiments/002_hard_negatives/00_error_analysis.md):"
+    )
+    print("  · train의 기존 오답 중 이미 50위 밖 40%, 6~30위 33%, 1~5위 18%")
+    print("  · dev에서 틀린 질문의 1위 오답이 우리가 준 오답인 경우 4.7%")
+    print("  001로 직접 재려면 --run")
+
+
+# ============================================================
+# 6. AI에게 맡기고, DS는 판단한다
+# ============================================================
+section("6. 분류와 리포트는 AI에게, 가설과 판단은 DS가")
+LECTURE_OUT.mkdir(parents=True, exist_ok=True)
+out = LECTURE_OUT / f"failures_{TUNED}.jsonl"
 out.write_text(
     "".join(json.dumps(f, ensure_ascii=False) + "\n" for f in failures),
     encoding="utf-8",
@@ -398,11 +410,10 @@ print(
     '   질문이 모호한 경우, 진짜 검색 오류를 나누고, 유형별로 예시 3개와 비율을 표로 정리해 줘."'
 )
 print(
-    "이 강의의 실험도 그렇게 했다: dev 오답 분석을 에이전트 4개(정량 분해 · 라벨 품질 · 검색 파이프라인 · 학습 전략)에 나눠 맡겼다."
-)
-print(
     "DS가 하는 일: 어떤 숫자를 믿을지(오차 범위, dev 편중), 어떤 제약을 둘지, 다음에 무엇을 할지를 정한다."
 )
+print("\n다음 가설 (한 문장으로): '모델이 헷갈리는 조문을 오답으로 주면 오른다'")
 print(
-    "\n내 가설 하나 (한 문장으로): 예) '법률↔시행령 쌍을 오답으로 주면 같은 법 혼동이 줄어든다'"
+    "  근거: 1위 오답의 절반이 다른 법, 정답의 다수가 30위 안. 우리가 준 오답은 같은 법이고 쉽다"
 )
+print("  이 가설을 에이전트가 돈 바퀴가 실험 002이다 → 03_hard_negatives.py")
