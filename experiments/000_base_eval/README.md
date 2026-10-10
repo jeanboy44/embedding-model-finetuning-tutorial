@@ -12,7 +12,17 @@ uv run ragkit evaluate intfloat/multilingual-e5-small --split dev --labels data/
 
 코퍼스 임베딩은 `data/processed/index/multilingual-e5-small.sqlite`를 재사용한다(`scripts/finetuned_drive.py download`로 받는다). 없으면 처음 한 번 7~13분 걸려 만든다.
 
-## 값
+## 값: 조 단위 분할 (2026-10-11부터 기준)
+
+test (1,863개, `data/splits_article`, 데이터 버전 `227edaa3e96a`, 출처 `001_baseline/README.md`)
+
+| R@5 | 법령 평균 R@5 | R@1 | R@10 | MRR@10 | nDCG@10 | article R@5 |
+|---|---|---|---|---|---|---|
+| **0.545** | 0.551 | 0.284 | 0.630 | 0.392 | 0.449 | 0.627 |
+
+dev (1,243개) R@5 0.540 · MRR@10 0.409 (`models/finetuned/001_baseline/train_meta.json`의 학습 전 값)
+
+## 값: 법령 단위 분할 (옛 기준, 강의 5~6교시 숫자)
 
 이 폴더를 만들기 전에 이미 잰 값이다. 같은 모델 · 같은 분할이라 다시 재도 같다.
 
