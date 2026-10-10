@@ -7,11 +7,8 @@ API 키는 없어도 된다. 키가 없으면 답변(`ask`, 웹의 채팅)은 �
 
 ## 0. 데스크톱: HTML 파일 하나
 
-3교시에 받은 `dist/law-search-offline.html`을 더블클릭한다. 와이파이를 끄고 열어도 검색이 되는지 본다. 없으면 받는다.
-
-```shell
-uv run python lecture/03_setup/00_download_offline_search.py
-```
+3교시에 받은 `law-search-offline.html`을 더블클릭한다. 와이파이를 끄고 열어도 검색이 되는지 본다.
+없으면 [Google Drive](https://drive.google.com/file/d/1TzgE1mh2ZSyAjmPFJtb7OTuk05JFr3mt/view?usp=sharing)에서 받는다.
 
 만드는 법은 [`apps/offline-search/README.md`](../../apps/offline-search/README.md)에 있다.
 

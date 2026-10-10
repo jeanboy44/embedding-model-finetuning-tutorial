@@ -50,7 +50,7 @@ LLM 단계(답변 생성)는 `.env`에 `GEMINI_API_KEY`가 필요합니다. [Goo
 
 | 실습 (교시) | 파일 | 내용 |
 |---|---|---|
-| 0 (3) | `lecture/03_setup/00_download_offline_search.py` | 가장 먼저: 완성품 HTML(법령 검색 파일 하나)을 설치 없이 받아 연다 |
+| 0 (3) | [law-search-offline.html (Drive)](https://drive.google.com/file/d/1TzgE1mh2ZSyAjmPFJtb7OTuk05JFr3mt/view?usp=sharing) | 가장 먼저(저장소 받기 전): 완성품 HTML(법령 검색 파일 하나)을 받아 더블클릭. |
 | 0 (3) | `lecture/03_setup/01_doctor.py` | 설치·모델·데이터·인덱스·API 키 점검, 빠진 것을 받는 명령 |
 | 0 (3) | `lecture/03_setup/02_try_product.py` | 같은 질문을 학습 전 e5 vs 파인튜닝 모델로 나란히, 제품 띄우는 법 |
 | 0 (3) | `lecture/03_setup/README.md` | CLI로 질문 넷 → `--checkpoint`로 학습 전후 비교 (명령 모음) |

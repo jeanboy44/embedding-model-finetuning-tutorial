@@ -1,6 +1,6 @@
 # 실습 0 (3교시): 준비와 완성품 먼저 써 보기
 
-장표: [3교시 실습 0 준비](https://claude.ai/artifact/VuQyTKs7BHKu4Hsq5xy5Qc). 최종 목표(HTML 파일 하나) → 환경 점검 → 웹(강사 시연) → CLI로 질문 넷 → 학습 전후 비교 순서로 본다.
+장표: [3교시 실습 0 준비](https://claude.ai/artifact/VuQyTKs7BHKu4Hsq5xy5Qc). 최종 목표(HTML 파일 하나) → 환경 점검 → CLI로 질문 넷 → 학습 전후 비교 순서로 본다.
 API 키는 쓰지 않는다. 명령은 모두 저장소 루트에서 실행하고, Mac 터미널과 Windows PowerShell에서 그대로 돈다.
 
 ## 0. 설치 전에: 최종 목표
@@ -9,11 +9,9 @@ API 키는 쓰지 않는다. 명령은 모두 저장소 루트에서 실행하�
 오늘 만드는 파인튜닝 모델(정답이 10위 안에 드는 비율 60% → 80%)을 7교시 방법(ONNX · INT8 · 어휘 가지치기)으로 30MB까지 줄여
 조문 데이터와 함께 파일 하나에 넣은 것이다. 만드는 법은 [`apps/offline-search/README.md`](../../apps/offline-search/README.md).
 
-가장 먼저 이 파일부터 받는다. 표준 라이브러리만 쓰므로 `uv sync` 전에도 된다. 받은 뒤 브라우저로 열어 준다.
+가장 먼저, 저장소를 받기도 전에 이 파일부터 받는다. 아래 링크에서 내려받아 더블클릭한다.
 
-```bash
-uv run lecture/03_setup/00_download_offline_search.py   # → dist/law-search-offline.html (uv가 없으면 python으로)
-```
+**받기: [law-search-offline.html (Google Drive)](https://drive.google.com/file/d/1TzgE1mh2ZSyAjmPFJtb7OTuk05JFr3mt/view?usp=sharing)**
 
 ## 1. 환경 점검
 
@@ -87,9 +85,8 @@ uv run --package ragkit-search ragkit-search search "주휴일 유급휴일 1주
 
 | 파일 | 내용 |
 |---|---|
-| `00_download_offline_search.py` | 가장 먼저 실행. `law-search-offline.html`을 Drive에서 받아 sha256 확인 후 브라우저로 연다. 설치 없이 돈다(PEP 723, 의존성 없음) |
 | `01_doctor.py` | 설치 · 데이터 · 모델 · 인덱스 점검, 받은 모델을 열어 검색해 보는 동작 확인, `--fix`로 받기 (`--quick`이면 동작 확인 생략) |
 | `02_try_product.py` | 위 질문 넷을 학습 전 · 파인튜닝 모델에 한 번에 던져 top-3와 정답 순위를 나란히 보여 준다. 웹 · CLI · MCP 띄우는 명령 안내 |
 | `extra_gemini_basics.py` | (선택) Gemini API 기초. `GEMINI_API_KEY`가 있어야 하고 한 번에 4회 호출한다 |
 
-웹(법령 노트)은 3교시에 강사 화면으로만 보고, 직접 띄우는 것은 8교시(`lecture/08_product/04_web_app.py`)에서 한다. MCP도 8교시에 다룬다.
+웹(법령 노트)과 MCP는 8교시(`lecture/08_product/`)에서 직접 띄운다.
