@@ -1,0 +1,975 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>1교시 내 소개</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400..800&amp;display=swap">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { background: #2b2f36; overflow: hidden; font-family: 'Noto Sans KR', Arial, sans-serif; color: #1f2a37; }
+  #stage { position: absolute; left: 50%; top: 50%; width: 1920px; height: 1080px; transform-origin: 0 0; }
+  #stage > section { position: absolute; inset: 0; width: 1920px; height: 1080px; overflow: hidden;
+    font-size: 32px; line-height: 1.4; word-break: keep-all; opacity: 0; visibility: hidden; transition: opacity .25s; }
+  #stage > section.on { opacity: 1; visibility: visible; }
+  section:not([style*="display"]), section div:not([style*="display"]) { display: flex; flex-direction: column; }
+  section div { min-width: 0; }
+  h1, h2, h3, p, ul, ol { margin: 0; }
+  h1 { font-size: 96px; font-weight: 600; line-height: 1.1; }
+  h2 { font-size: 64px; font-weight: 600; line-height: 1.15; }
+  h3 { font-size: 44px; font-weight: 600; line-height: 1.2; }
+  p, li { font-size: inherit; }
+  ul, ol { padding-left: 1.2em; display: flex; flex-direction: column; gap: .3em; }
+  table { border-collapse: collapse; }
+  th, td { padding: .35em .6em; border-bottom: 1px solid rgba(31, 42, 55, .14); text-align: left; vertical-align: top; }
+  th { font-weight: 700; border-bottom: 2px solid rgba(31, 42, 55, .22); }
+  aside { display: none; }
+  x-icon, x-shape { display: block; flex: none; }
+  x-icon svg { width: 100%; height: 100%; display: block; }
+  x-connector { display: block; }
+  x-shape[kind="ellipse"] { border-radius: 50%; }
+  x-shape[kind="arrow-right"] { clip-path: polygon(0 30%, 60% 30%, 60% 0, 100% 50%, 60% 100%, 60% 70%, 0 70%); }
+  x-shape[kind="arrow-left"] { clip-path: polygon(100% 30%, 40% 30%, 40% 0, 0 50%, 40% 100%, 40% 70%, 100% 70%); }
+  x-shape[kind="arrow-down"] { clip-path: polygon(30% 0, 70% 0, 70% 60%, 100% 60%, 50% 100%, 0 60%, 30% 60%); }
+  x-shape[kind="arrow-up"] { clip-path: polygon(30% 100%, 70% 100%, 70% 40%, 100% 40%, 50% 0, 0 40%, 30% 40%); }
+  x-shape[kind="diamond"] { clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+  #bar { position: fixed; right: 16px; bottom: 12px; font: 13px/1.4 Arial, sans-serif; color: #c9ced6;
+    background: rgba(0, 0, 0, .35); padding: 4px 10px; border-radius: 6px; user-select: none; }
+  #notes { position: fixed; left: 0; right: 0; bottom: 0; max-height: 34vh; overflow: auto; display: none;
+    background: rgba(20, 23, 28, .94); color: #e8eaed; font: 16px/1.7 'Noto Sans KR', Arial, sans-serif; padding: 16px 24px 40px; }
+  body.show-notes #notes { display: block; }
+  @media print {
+    @page { size: 1920px 1080px; margin: 0; }
+    html, body { height: auto; overflow: visible; background: none; }
+    #stage { position: static; transform: none !important; width: auto; height: auto; }
+    #stage > section { position: relative; opacity: 1; visibility: visible; break-after: page; }
+    #bar, #notes { display: none !important; }
+  }
+</style>
+</head>
+<body>
+<!-- 장표 원본: claude.ai Slides 덱. 장 하나 = <section>, 발표 대본 = <aside>. 키: ← → 넘기기, N 대본, F 전체 화면 -->
+<div id="stage">
+<section data-section="표지와 1교시 흐름" id="cover" data-transition="fade" style="background:linear-gradient(160deg, #ffffff 0%, #f4f5f6 100%)">
+  <div id="e2-1ftwghs" style="position:absolute; right:0; bottom:0; left:0; height:8px; display:flex; flex-direction:column; background:linear-gradient(90deg, #ec9a3e 0%, #4f93d8 100%)">
+  </div>
+  <p id="e3-1ftwghs" style="position:absolute; bottom:64px; left:128px; width:900px; font-family:'Noto Sans KR', Arial, sans-serif; font-size:26px; color:#6b7480">류진걸 · LS ELECTRIC AX Lab</p>
+  <p id="27ccf905" style="position:absolute; top:283px; left:128px; width:1664px; font-family:'Noto Sans KR', Arial, sans-serif; font-size:28px; font-weight:700; color:#6b7480">AI 시대 생존법 · 내 업무 확장편 · 1교시</p>
+  <h1 id="a5625bae" style="position:absolute; top:358.42px; left:50%; width:1664px; font-family:'Noto Sans KR', Arial, sans-serif; font-size:112px; font-weight:800; line-height:1.15; letter-spacing:-3px; color:#1f2a37; transform:translateX(-50%)">데이터 사이언티스트의<br><span style="color:#b8650f">2022</span>와 <span style="color:#2d6db0">2026</span></h1>
+  <p id="eb562caa" style="position:absolute; top:658px; left:128px; width:1200px; font-family:'Noto Sans KR', Arial, sans-serif; font-size:34px; line-height:1.6; color:#6b7480">같은 직무, 같은 사람인데 하는 일의 방식과 범위가 달라졌습니다. 그 이야기로 시작합니다.</p>
+  <aside>인사. 오늘 8교시 동안 임베딩 모델 하나를 들고 DS의 업무가 2022년에서 2026년까지 어떻게 넓어졌는지 따라갑니다. 1교시는 제 소개와 그 변화를 제 경험으로 이야기합니다.</aside>
+</section>
+<section id="flow" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:72px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">1교시 흐름</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">세 가지를 이야기합니다</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #e89c6c;padding:28px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">하나</p>
+<h3 style="font-size:40px;font-weight:800;line-height:1.3">나는 어떤 일을 해 왔나</h3>
+<p style="font-size:30px;line-height:1.55;color:#4a5361">SI에서 제조, AX Lab까지. 환경마다 DS에게 요구된 것</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #e89c6c;padding:28px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">둘</p>
+<h3 style="font-size:40px;font-weight:800;line-height:1.3">무엇이 바뀌었나</h3>
+<p style="font-size:30px;line-height:1.55;color:#4a5361"><span style="color:#b8650f">2022</span>와 <span style="color:#2d6db0">2026</span>. 일하는 방식, 그리고 맡는 범위</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #e89c6c;padding:28px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">셋</p>
+<h3 style="font-size:40px;font-weight:800;line-height:1.3">그래서 오늘 무엇을 하나</h3>
+<p style="font-size:30px;line-height:1.55;color:#4a5361">8교시 동안 그 변화를 임베딩 모델 하나로 직접 해 본다</p>
+</div>
+</div>
+<aside>제 소개를 짧게 하고, 그동안 무엇이 바뀌었는지, 그래서 오늘 8교시 동안 무엇을 하는지 순서로 갑니다.</aside>
+</section>
+<section data-section="하나: 나는 어떤 일을 해 왔나 — SI, 제조지능화연구팀, AX Lab과 유니콘 DS" id="career" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:80px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">하나 · 나는 어떤 일을 해 왔나</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">데이터 일 10년, 세 번 바뀐 역할</h2>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1.1fr 1.3fr 1.3fr;gap:0">
+<div style="display:flex;flex-direction:column;gap:12px;border-top:4px solid #c9ced6;padding:32px 32px 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">학부 · 대학원</p>
+<h3 style="font-size:44px;font-weight:800;line-height:1.2">산업공학</h3>
+<p style="font-size:26px;line-height:1.55;color:#6b7480">학사 · 석사<br>컴퓨터공학 비전공</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;border-top:4px solid #e89c6c;padding:32px 32px 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">엔코아 · SI · 3년</p>
+<h3 style="font-size:44px;font-weight:800;line-height:1.2">데이터 분석</h3>
+<p style="font-size:26px;line-height:1.55;color:#6b7480">고객사 문제를 빠르게 이해하고 정리해서 납품</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;border-top:4px solid #ec9a3e;padding:32px 32px 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">LS ELECTRIC · 제조지능화연구팀</p>
+<h3 style="font-size:44px;font-weight:800;line-height:1.2">데이터 사이언스</h3>
+<p style="font-size:26px;line-height:1.55;color:#6b7480">현장 문제를 AI로 풀고 실제로 돌아가게</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;border-top:4px solid #4f93d8;padding:32px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">LS ELECTRIC · AX Lab</p>
+<h3 style="font-size:44px;font-weight:800;line-height:1.2;color:#2d6db0">AI Agent 개발</h3>
+<p style="font-size:26px;line-height:1.55;color:#6b7480">생성형 AI · 에이전트, 기획부터 운영까지</p>
+</div>
+</div>
+<aside>산업공학 학사·석사, 엔코아에서 3년, LS ELECTRIC에서 7년. 데이터 분석가로 시작해 데이터 사이언티스트, 지금은 AI 개발자에 가까운 일을 합니다. 모델만 만든 게 아니라 현장에 붙이고 운영하는 일까지 해 왔습니다.</aside>
+</section>
+<section id="dx-ax" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:72px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">하나 · 나는 어떤 일을 해 왔나</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">기술이 바뀌면 팀 이름도, 역할도 바뀐다</h2>
+</div>
+<div style="display:flex;align-items:stretch;gap:24px">
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:5px solid #e89c6c;padding:28px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">빅데이터</p>
+<h3 style="font-size:48px;font-weight:800;line-height:1.2">데이터 분석</h3>
+<p style="font-size:28px;line-height:1.5;color:#6b7480">쌓인 데이터에서 인사이트를 찾아 보고서로</p>
+</div>
+<p style="font-size:44px;color:#9aa3ad;padding:72px 0 0 0">→</p>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:5px solid #ec9a3e;padding:28px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">DX · 디지털 전환</p>
+<h3 style="font-size:48px;font-weight:800;line-height:1.2">데이터 사이언스</h3>
+<p style="font-size:28px;line-height:1.5;color:#6b7480">예측 · 검사 모델을 만들어 현장 공정에 붙인다</p>
+</div>
+<p style="font-size:44px;color:#9aa3ad;padding:72px 0 0 0">→</p>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:5px solid #4f93d8;padding:28px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">AX · AI 전환</p>
+<h3 style="font-size:48px;font-weight:800;line-height:1.2;color:#2d6db0">AI Agent</h3>
+<p style="font-size:28px;line-height:1.5;color:#6b7480">생성형 AI로 일하는 방식 자체를 바꾼다</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.6;color:#6b7480">대기업은 새 기술을 계속 탐색하고, 자사에 붙일 방법을 찾습니다. 그때마다 DS에게 기대하는 것도 같이 바뀝니다.</p>
+<aside>이런 직업은 다른 직업보다 하는 일이 특히 고정적이지 않습니다. 새 기술이 들어오면 역할도, 팀 이름도, 기대 역량도 바뀝니다. 한동안은 DX, 최근에는 AX라는 말이 자주 보입니다. 제가 거쳐 온 일을 세 단계로 나눠 보겠습니다.</aside>
+</section>
+<section id="si" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:72px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">커리어 1 · 엔코아 · SI 3년</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">고객사의 문제를 빨리 이해하고, 납품한다</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;border-top:4px solid #e89c6c;padding:28px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">하는 일</p>
+<ul style="font-size:28px;line-height:1.55">
+<li>고객사 문제 분석</li>
+<li>업종이 바뀔 때마다 새 도메인 공부</li>
+<li>제한된 시간 안에 결과물</li>
+</ul>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;border-top:4px solid #e89c6c;padding:28px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">좋았던 점 · 아쉬운 점</p>
+<ul style="font-size:28px;line-height:1.55">
+<li>다양한 산업을 빠르게 경험</li>
+<li>모르는 분야를 짧게 이해하는 훈련</li>
+<li><span style="color:#b8650f">아쉬움: 납품하면 끝. 현장에서 어떻게 쓰이고 망가지는지 못 본다</span></li>
+</ul>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;border-top:4px solid #e89c6c;padding:28px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">필요했던 역량</p>
+<ul style="font-size:28px;line-height:1.55">
+<li>빠른 이해력</li>
+<li>상대의 언어로 설명하는 힘</li>
+<li>짧은 시간에 구조화해서 결과를 내는 힘</li>
+</ul>
+</div>
+</div>
+<aside>SI에서는 고객사의 문제를 분석했습니다. 고객사가 바뀔 때마다 새 업종을 공부하고, 짧은 시간 안에 도메인과 비즈니스를 파악해야 했습니다. 다양한 산업을 빠르게 보는 장점이 있었지만, 납품하면 끝이라 만든 결과가 현장에서 어떻게 쓰이고 시간이 지나며 어떻게 망가지는지 끝까지 보기 어려웠습니다.</aside>
+</section>
+<section id="mfg" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:72px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">커리어 2 · LS ELECTRIC 제조지능화연구팀</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">현장 문제를 AI로 풀고, 실제로 돌아가게 한다</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;border-top:4px solid #ec9a3e;padding:28px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">하는 일</p>
+<ul style="font-size:28px;line-height:1.55">
+<li>제조 현장 문제 해결</li>
+<li>품질 검사 Vision AI, 발전량 예측</li>
+<li>모델을 현장 운영까지 연결</li>
+</ul>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;border-top:4px solid #ec9a3e;padding:28px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">좋았던 점 · 아쉬운 점</p>
+<ul style="font-size:28px;line-height:1.55">
+<li>데이터가 생기는 현장을 가까이서 본다</li>
+<li>만든 것이 돌아가고 비즈니스 가치로 이어진다</li>
+<li><span style="color:#b8650f">아쉬움: 문제가 구체적이고 좁다. 기술보다 문제 정의가 더 어렵다</span></li>
+</ul>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;border-top:4px solid #ec9a3e;padding:28px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">필요했던 역량</p>
+<ul style="font-size:28px;line-height:1.55">
+<li>도메인 이해</li>
+<li>지저분한 데이터를 버티는 힘</li>
+<li>운영까지 생각하는 책임감</li>
+</ul>
+</div>
+</div>
+<aside>제조지능화연구팀에서는 제조 현장의 문제를 AI로 풀고 실제로 돌아가게 만들었습니다. 데이터가 어떻게 생기고 결과가 비즈니스 가치로 이어지는지 직접 봅니다. 대신 문제가 구체적이고 좁고, 데이터는 지저분하고, 기술보다 문제 정의가 더 어려운 경우가 많았습니다.</aside>
+</section>
+<section id="projects" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:72px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">LS ELECTRIC에서 해 온 과제</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">연구용 예제가 아니라 현장 문제</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #ec9a3e;padding:28px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">Vision AI</p>
+<h3 style="font-size:44px;font-weight:800;line-height:1.3">품질 검사 자동화</h3>
+<p style="font-size:30px;line-height:1.55;color:#4a5361">차단기(MCCB) 외관 검사, 접촉기(MC) 소음 검사</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #ec9a3e;padding:28px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">시계열 예측</p>
+<h3 style="font-size:44px;font-weight:800;line-height:1.3">발전량 예측</h3>
+<p style="font-size:30px;line-height:1.55;color:#4a5361">태양광 · 풍력 발전소의 발전량을 미리 예측</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">생성형 AI</p>
+<h3 style="font-size:44px;font-weight:800;line-height:1.3">CS AI Agent</h3>
+<p style="font-size:30px;line-height:1.55;color:#4a5361">고객 응대를 돕는 상담 에이전트</p>
+</div>
+</div>
+<aside>공장 품질 검사를 자동화하는 Vision AI, 태양광·풍력 발전량 예측, 고객 응대를 돕는 CS AI Agent. 모두 사내 웹진과 기사로 공개된 과제입니다.</aside>
+</section>
+<section id="axlab" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:72px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">커리어 3 · LS ELECTRIC AX Lab</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">생성형 AI로, 더 빠르게 더 넓게</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;border-top:4px solid #4f93d8;padding:28px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">하는 일</p>
+<ul style="font-size:28px;line-height:1.55">
+<li>생성형 AI · AI Agent 개발</li>
+<li>조사 → 정리 → 초안 → 개선을 빠르게 반복</li>
+<li>실험량이 크게 늘었다</li>
+</ul>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;border-top:4px solid #4f93d8;padding:28px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">좋았던 점 · 아쉬운 점</p>
+<ul style="font-size:28px;line-height:1.55">
+<li>실험 속도가 매우 빨라졌다</li>
+<li>적은 인원으로 넓게 시도한다</li>
+<li><span style="color:#b8650f">아쉬움: 역할과 정답이 아직 정해지지 않았다. 더 자주 방향을 다시 잡는다</span></li>
+</ul>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;border-top:4px solid #4f93d8;padding:28px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">필요한 역량</p>
+<ul style="font-size:28px;line-height:1.55">
+<li>적응력</li>
+<li>판단력</li>
+<li>도구와 사람을 연결해 결과를 만드는 힘</li>
+</ul>
+</div>
+</div>
+<aside>AX Lab에서는 생성형 AI와 AI Agent가 중심입니다. 모델 하나를 만드는 데만 집중하기보다 조사, 정리, 초안, 반복 개선의 전 과정을 훨씬 빠르게 돌립니다. 실험이 빨라지고 적은 인원으로 넓게 시도하지만, 무엇이 정답인지, 어떤 업무가 남을지는 아직 정해지지 않았습니다.</aside>
+</section>
+<section id="venn" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:grid;grid-template-columns:640px 1fr;gap:96px;align-items:center">
+<div style="position:relative;width:640px;height:620px">
+<x-shape kind="ellipse" style="position:absolute;left:20px;top:0px;width:380px;height:380px;background:rgba(79,147,216,0.14);border:4px solid #4f93d8"></x-shape>
+<x-shape kind="ellipse" style="position:absolute;left:240px;top:0px;width:380px;height:380px;background:rgba(236,154,62,0.14);border:4px solid #ec9a3e"></x-shape>
+<x-shape kind="ellipse" style="position:absolute;left:130px;top:220px;width:380px;height:380px;background:rgba(214,224,204,0.35);border:4px solid #a9b89a"></x-shape>
+<p style="position:absolute;left:70px;top:90px;width:160px;font-size:32px;font-weight:800">코딩</p>
+<p style="position:absolute;left:420px;top:90px;width:200px;font-size:32px;font-weight:800;text-align:right">수학 · 통계</p>
+<p style="position:absolute;left:220px;top:500px;width:200px;font-size:32px;font-weight:800;text-align:center">도메인</p>
+<p style="position:absolute;left:270px;top:262px;width:100px;font-size:36px;font-weight:800;text-align:center">DS</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:36px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">하나 · 정리</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.3;letter-spacing:-1px">중요한 것은<br>“좋은 DS”가 아니라<br><span style="color:#2d6db0">“어디의 DS인가”</span></h2>
+<ul style="font-size:30px;line-height:1.6;color:#4a5361">
+<li>원래부터 DS는 넓은 역할이었다</li>
+<li>공장의 DS, 연구소의 DS, 사업부 옆의 DS는 요구가 다르다</li>
+</ul>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1200px;font-size:24px;color:#6b7480">그림: Drew Conway, The Data Science Venn Diagram (2010)</p>
+<aside>기업이 원하는 DS상은 원래부터 넓었습니다. 이 다이어그램처럼 코딩, 통계, 도메인을 다 조금씩 기대했죠. 그런데 실제로는 어디의 DS냐에 따라 요구가 다릅니다. 공장, 연구소, 사업 조직 옆. 내가 있는 환경이 어떤 DS를 원하는지 아는 게 중요합니다.</aside>
+</section>
+<section id="hbr" data-transition="fade" style="background:#f2f3f5;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:44px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">2012 · Harvard Business Review</p>
+<h1 style="font-size:104px;font-weight:800;line-height:1.2;letter-spacing:-3px">“21세기 가장 섹시한 직업”</h1>
+<p style="font-size:34px;line-height:1.6;color:#4a5361;width:1500px">기업이 원한 사람: 통계 + 코딩 + 도메인 + 배포까지 다 하는 사람.<br>그런 사람은 거의 없었다. 그래서 <b style="color:#1f2a37">유니콘</b>이라고 불렀다.</p>
+<aside>2012년 HBR 기사 "Data Scientist: The Sexiest Job of the 21st Century". 기업들이 갑자기 DS를 찾기 시작했는데, 통계와 수학을 알고 코딩도 잘하고 도메인 지식도 있고 배포까지 하는 사람은 거의 없었습니다. 그래서 유니콘이라고 불렀습니다.</aside>
+</section>
+<section id="unicorn-reality" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">유니콘의 현실</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">모델을 만들려고 뽑았는데</h2>
+</div>
+<div style="display:flex;flex-direction:column;gap:30px;width:1320px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;justify-content:space-between"><p style="font-size:30px">데이터 준비 · 정제</p><p style="font-size:30px;font-weight:800;color:#b8650f">38%</p></div>
+<div style="height:16px;background:#e6e8eb;border-radius:8px;display:flex"><div style="width:502px;height:16px;background:#ec9a3e;border-radius:8px"></div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;justify-content:space-between"><p style="font-size:30px">모델 학습</p><p style="font-size:30px;font-weight:800">약 15%</p></div>
+<div style="height:16px;background:#e6e8eb;border-radius:8px;display:flex"><div style="width:198px;height:16px;background:#8a939e;border-radius:8px"></div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;justify-content:space-between"><p style="font-size:30px">시각화 · 보고</p><p style="font-size:30px;font-weight:800">약 13%</p></div>
+<div style="height:16px;background:#e6e8eb;border-radius:8px;display:flex"><div style="width:172px;height:16px;background:#8a939e;border-radius:8px"></div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;justify-content:space-between"><p style="font-size:30px">모델 선택</p><p style="font-size:30px;font-weight:800">9%</p></div>
+<div style="height:16px;background:#e6e8eb;border-radius:8px;display:flex"><div style="width:119px;height:16px;background:#8a939e;border-radius:8px"></div></div>
+</div>
+</div>
+<p style="font-size:32px;line-height:1.6;color:#4a5361;width:1400px">업무 시간의 가장 큰 몫은 데이터 준비였다. 다 하는 사람은 없었고, 모델에 쓰는 시간은 적었다.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1600px;font-size:24px;color:#6b7480">출처: Anaconda, State of Data Science Report 2022 (데이터 사이언티스트의 업무 시간 비중)</p>
+<aside>실제로는 어땠을까요. Anaconda 조사에 따르면 DS는 업무 시간의 38%를 데이터 준비와 정제에 씁니다. 모델 선택은 9%. 모델을 만들려고 뽑았지만 실제로는 데이터 엔지니어에 가까운 일을 많이 했습니다. 여러분도 지금 업무 시간 대부분이 데이터 준비일 겁니다.</aside>
+</section>
+<section data-section="그래도 본업은 모델을 만드는 일 — 다섯 단계" id="work" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:72px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">그래도 데이터 사이언티스트가 하는 일</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">본업은 모델을 만드는 일</h2>
+</div>
+<div style="display:flex;align-items:flex-start;gap:16px">
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;border-top:4px solid #c9ced6;padding:24px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">1</p>
+<h3 style="font-size:38px;font-weight:800">문제 정의</h3>
+<p style="font-size:26px;line-height:1.5;color:#6b7480">현업 문제를 분석 문제로</p>
+</div>
+<p style="font-size:32px;color:#9aa3ad;padding:28px 0 0 0">→</p>
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;border-top:4px solid #c9ced6;padding:24px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">2</p>
+<h3 style="font-size:38px;font-weight:800">데이터</h3>
+<p style="font-size:26px;line-height:1.5;color:#6b7480">모으고 다듬고 나누기</p>
+</div>
+<p style="font-size:32px;color:#9aa3ad;padding:28px 0 0 0">→</p>
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;border-top:4px solid #c9ced6;padding:24px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">3</p>
+<h3 style="font-size:38px;font-weight:800">실험</h3>
+<p style="font-size:26px;line-height:1.5;color:#6b7480">가설 · 설정 · 학습</p>
+</div>
+<p style="font-size:32px;color:#9aa3ad;padding:28px 0 0 0">→</p>
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;border-top:4px solid #c9ced6;padding:24px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">4</p>
+<h3 style="font-size:38px;font-weight:800">평가</h3>
+<p style="font-size:26px;line-height:1.5;color:#6b7480">지표로 비교하고 실패 분석</p>
+</div>
+<p style="font-size:32px;color:#9aa3ad;padding:28px 0 0 0">→</p>
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;border-top:4px solid #c9ced6;padding:24px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">5</p>
+<h3 style="font-size:38px;font-weight:800">보고</h3>
+<p style="font-size:26px;line-height:1.5;color:#6b7480">결과를 설득하기</p>
+</div>
+</div>
+<p style="font-size:32px;line-height:1.6;color:#4a5361">이 흐름에서 두 가지가 바뀌었습니다. <b style="color:#2d6db0">① 같은 일을 하는 방식</b>, <b style="color:#2d6db0">② 내가 맡는 범위</b>.</p>
+<aside>그래도 DS의 본업은 모델을 만드는 일입니다. 문제 정의, 데이터, 실험, 평가, 보고. 다음 다섯 장에서 하나씩 짧게 보고, 이 흐름에서 무엇이 바뀌었는지로 넘어갑니다.</aside>
+</section>
+<section id="step-problem" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:112px 128px 200px;display:flex;flex-direction:column;justify-content:flex-start;gap:72px">
+<div style="display:flex;gap:12px">
+<p style="font-size:24px;font-weight:700;color:#ffffff;background:#1f2a37;padding:8px 22px;border-radius:999px">1 문제 정의</p>
+<p style="font-size:24px;font-weight:700;color:#6b7480;border:2px solid #e1e4e8;padding:6px 20px;border-radius:999px">2 데이터</p>
+<p style="font-size:24px;font-weight:700;color:#6b7480;border:2px solid #e1e4e8;padding:6px 20px;border-radius:999px">3 실험</p>
+<p style="font-size:24px;font-weight:700;color:#6b7480;border:2px solid #e1e4e8;padding:6px 20px;border-radius:999px">4 평가</p>
+<p style="font-size:24px;font-weight:700;color:#6b7480;border:2px solid #e1e4e8;padding:6px 20px;border-radius:999px">5 보고</p>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1.45fr;gap:110px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:150px;font-weight:800;line-height:0.9;color:#e1e4e8">1</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2">문제 정의</h2>
+<p style="font-size:32px;line-height:1.55;color:#6b7480">현업의 불편을 모델이 풀 수 있는 문제로 바꾼다</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;flex-direction:column;gap:8px;border-left:4px solid #e1e4e8;padding:0 0 0 28px"><h3 style="font-size:36px;font-weight:800">진짜 문제 찾기</h3><p style="font-size:28px;line-height:1.55;color:#6b7480">현업과 이야기해 누가 무엇에 불편한지 찾는다. 요청 그대로가 답이 아닐 때가 많다</p></div>
+<div style="display:flex;flex-direction:column;gap:8px;border-left:4px solid #e1e4e8;padding:0 0 0 28px"><h3 style="font-size:36px;font-weight:800">문제의 형태</h3><p style="font-size:28px;line-height:1.55;color:#6b7480">분류인가, 예측인가, 검색인가. 무엇을 넣고 무엇을 받을지 정한다</p></div>
+<div style="display:flex;flex-direction:column;gap:8px;border-left:4px solid #e1e4e8;padding:0 0 0 28px"><h3 style="font-size:36px;font-weight:800">성공 기준</h3><p style="font-size:28px;line-height:1.55;color:#6b7480">현업 지표(시간 · 비용)와 모델 지표(정확도 · Recall)를 잇는다</p></div>
+</div>
+</div>
+<div style="position:absolute;left:128px;right:128px;bottom:64px;display:flex;align-items:center;gap:24px;border-top:2px solid #e1e4e8;padding:24px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480;white-space:nowrap">이 강의에서는</p>
+<p style="flex:1;font-size:28px">“법을 찾기 어렵다” → 일상어 질문에 맞는 조문을 상위 5개 안에 → Recall@5</p>
+<p style="font-size:24px;font-weight:700;color:#6b7480;white-space:nowrap">→ 2교시에서</p>
+</div>
+<aside>문제 정의. 현업이 요청한 그대로가 답이 아닐 때가 많습니다. 분류인지, 예측인지, 검색인지 형태를 정하고, 현업 지표와 모델 지표를 잇습니다. 이 강의에서는 "법을 찾기 어렵다"를 "일상어 질문에 맞는 조문을 상위 5개 안에"로 바꾸고 Recall@5로 잽니다.</aside>
+</section>
+<section id="step-data" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:112px 128px 200px;display:flex;flex-direction:column;justify-content:flex-start;gap:72px">
+<div style="display:flex;gap:12px">
+<p style="font-size:24px;font-weight:700;color:#6b7480;border:2px solid #e1e4e8;padding:6px 20px;border-radius:999px">1 문제 정의</p>
+<p style="font-size:24px;font-weight:700;color:#ffffff;background:#1f2a37;padding:8px 22px;border-radius:999px">2 데이터</p>
+<p style="font-size:24px;font-weight:700;color:#6b7480;border:2px solid #e1e4e8;padding:6px 20px;border-radius:999px">3 실험</p>
+<p style="font-size:24px;font-weight:700;color:#6b7480;border:2px solid #e1e4e8;padding:6px 20px;border-radius:999px">4 평가</p>
+<p style="font-size:24px;font-weight:700;color:#6b7480;border:2px solid #e1e4e8;padding:6px 20px;border-radius:999px">5 보고</p>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1.45fr;gap:110px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:150px;font-weight:800;line-height:0.9;color:#e1e4e8">2</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2">데이터</h2>
+<p style="font-size:32px;line-height:1.55;color:#6b7480">모델이 배울 재료를 모으고, 다듬고, 나눈다</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;flex-direction:column;gap:8px;border-left:4px solid #e1e4e8;padding:0 0 0 28px"><h3 style="font-size:36px;font-weight:800">모으기</h3><p style="font-size:28px;line-height:1.55;color:#6b7480">원천 데이터와 정답(라벨). 정답이 없으면 만드는 것부터가 일이다</p></div>
+<div style="display:flex;flex-direction:column;gap:8px;border-left:4px solid #e1e4e8;padding:0 0 0 28px"><h3 style="font-size:36px;font-weight:800">다듬기</h3><p style="font-size:28px;line-height:1.55;color:#6b7480">지저분한 현장 데이터를 정리하고 모델이 읽을 길이 · 형식으로 맞춘다</p></div>
+<div style="display:flex;flex-direction:column;gap:8px;border-left:4px solid #e1e4e8;padding:0 0 0 28px"><h3 style="font-size:36px;font-weight:800">나누기</h3><p style="font-size:28px;line-height:1.55;color:#6b7480">train · dev · test. 시험 문제가 학습에 새지 않게 나눈다</p></div>
+</div>
+</div>
+<div style="position:absolute;left:128px;right:128px;bottom:64px;display:flex;align-items:center;gap:24px;border-top:2px solid #e1e4e8;padding:24px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480;white-space:nowrap">이 강의에서는</p>
+<p style="flex:1;font-size:28px">법령 54개 → 검색 문서 2.6만 개, 질문 1.2만 개, 법령 단위 분할</p>
+<p style="font-size:24px;font-weight:700;color:#6b7480;white-space:nowrap">→ 4교시에서</p>
+</div>
+<aside>데이터. 원천 데이터와 정답을 모으고, 정답이 없으면 만드는 것부터 일입니다. 모델이 읽을 형식으로 다듬고, 시험 문제가 학습에 새지 않게 나눕니다. 이 강의에서는 법령 54개를 검색 문서 2.6만 개로 만들고, 질문 1.2만 개를 만들어 법령 단위로 나눴습니다.</aside>
+</section>
+<section id="step-exp" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:112px 128px 200px;display:flex;flex-direction:column;justify-content:flex-start;gap:72px">
+<div style="display:flex;gap:12px">
+<p style="font-size:24px;font-weight:700;color:#6b7480;border:2px solid #e1e4e8;padding:6px 20px;border-radius:999px">1 문제 정의</p>
+<p style="font-size:24px;font-weight:700;color:#6b7480;border:2px solid #e1e4e8;padding:6px 20px;border-radius:999px">2 데이터</p>
+<p style="font-size:24px;font-weight:700;color:#ffffff;background:#1f2a37;padding:8px 22px;border-radius:999px">3 실험</p>
+<p style="font-size:24px;font-weight:700;color:#6b7480;border:2px solid #e1e4e8;padding:6px 20px;border-radius:999px">4 평가</p>
+<p style="font-size:24px;font-weight:700;color:#6b7480;border:2px solid #e1e4e8;padding:6px 20px;border-radius:999px">5 보고</p>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1.45fr;gap:110px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:150px;font-weight:800;line-height:0.9;color:#e1e4e8">3</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2">실험</h2>
+<p style="font-size:32px;line-height:1.55;color:#6b7480">가설을 세우고, 한 번에 하나씩 바꿔 본다</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;flex-direction:column;gap:8px;border-left:4px solid #e1e4e8;padding:0 0 0 28px"><h3 style="font-size:36px;font-weight:800">기준선 먼저</h3><p style="font-size:28px;line-height:1.55;color:#6b7480">학습 없이 쓸 수 있는 것부터 잰다. 이걸 넘어야 의미가 있다</p></div>
+<div style="display:flex;flex-direction:column;gap:8px;border-left:4px solid #e1e4e8;padding:0 0 0 28px"><h3 style="font-size:36px;font-weight:800">가설과 설정</h3><p style="font-size:28px;line-height:1.55;color:#6b7480">무엇을 바꾸면 왜 좋아질지 적고, 한 번에 하나만 바꾼다</p></div>
+<div style="display:flex;flex-direction:column;gap:8px;border-left:4px solid #e1e4e8;padding:0 0 0 28px"><h3 style="font-size:36px;font-weight:800">파일럿 → 학습</h3><p style="font-size:28px;line-height:1.55;color:#6b7480">작게 돌려 문제가 없는지 보고 나서 크게 돌린다</p></div>
+</div>
+</div>
+<div style="position:absolute;left:128px;right:128px;bottom:64px;display:flex;align-items:center;gap:24px;border-top:2px solid #e1e4e8;padding:24px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480;white-space:nowrap">이 강의에서는</p>
+<p style="flex:1;font-size:28px">학습 없는 기준선 → 전체 학습 vs LoRA, 배치 크기, 오답 다시 캐기</p>
+<p style="font-size:24px;font-weight:700;color:#6b7480;white-space:nowrap">→ 5–6교시에서</p>
+</div>
+<aside>실험. 학습 없이 쓸 수 있는 기준선부터 잽니다. 무엇을 바꾸면 왜 좋아질지 적고 한 번에 하나만 바꿉니다. 작게 돌려 보고 크게 돌립니다. 이 강의에서는 학습 없이 쓸 수 있는 기준선을 먼저 잰 뒤, 전체 학습과 LoRA, 배치 크기, 헷갈리는 오답을 다시 캐서 학습하는 것까지 바꿔 봅니다.</aside>
+</section>
+<section id="step-eval" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:112px 128px 200px;display:flex;flex-direction:column;justify-content:flex-start;gap:72px">
+<div style="display:flex;gap:12px">
+<p style="font-size:24px;font-weight:700;color:#6b7480;border:2px solid #e1e4e8;padding:6px 20px;border-radius:999px">1 문제 정의</p>
+<p style="font-size:24px;font-weight:700;color:#6b7480;border:2px solid #e1e4e8;padding:6px 20px;border-radius:999px">2 데이터</p>
+<p style="font-size:24px;font-weight:700;color:#6b7480;border:2px solid #e1e4e8;padding:6px 20px;border-radius:999px">3 실험</p>
+<p style="font-size:24px;font-weight:700;color:#ffffff;background:#1f2a37;padding:8px 22px;border-radius:999px">4 평가</p>
+<p style="font-size:24px;font-weight:700;color:#6b7480;border:2px solid #e1e4e8;padding:6px 20px;border-radius:999px">5 보고</p>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1.45fr;gap:110px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:150px;font-weight:800;line-height:0.9;color:#e1e4e8">4</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2">평가</h2>
+<p style="font-size:32px;line-height:1.55;color:#6b7480">숫자로 비교하고, 틀린 것을 들여다본다</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;flex-direction:column;gap:8px;border-left:4px solid #e1e4e8;padding:0 0 0 28px"><h3 style="font-size:36px;font-weight:800">지표 고르기</h3><p style="font-size:28px;line-height:1.55;color:#6b7480">문제에 맞는 지표를 고른다. 검색이면 Recall@k · MRR · nDCG</p></div>
+<div style="display:flex;flex-direction:column;gap:8px;border-left:4px solid #e1e4e8;padding:0 0 0 28px"><h3 style="font-size:36px;font-weight:800">공정한 비교</h3><p style="font-size:28px;line-height:1.55;color:#6b7480">설정은 dev로 고르고, test는 마지막에 한 번만 본다</p></div>
+<div style="display:flex;flex-direction:column;gap:8px;border-left:4px solid #e1e4e8;padding:0 0 0 28px"><h3 style="font-size:36px;font-weight:800">실패 분석</h3><p style="font-size:28px;line-height:1.55;color:#6b7480">어떤 유형에서 왜 틀렸나. 고칠 수 없는 한계도 안다</p></div>
+</div>
+</div>
+<div style="position:absolute;left:128px;right:128px;bottom:64px;display:flex;align-items:center;gap:24px;border-top:2px solid #e1e4e8;padding:24px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480;white-space:nowrap">이 강의에서는</p>
+<p style="flex:1;font-size:28px">질문 유형 · 테마별 비교, 파인튜닝으로 안 고쳐지는 질문</p>
+<p style="font-size:24px;font-weight:700;color:#6b7480;white-space:nowrap">→ 5–6교시에서</p>
+</div>
+<aside>평가. 문제에 맞는 지표를 고르고, 설정은 dev로 고르고 test는 마지막에 한 번만 봅니다. 숫자만 보지 않고 어떤 유형에서 왜 틀렸는지 들여다봅니다. 파인튜닝으로 고쳐지지 않는 한계도 압니다.</aside>
+</section>
+<section id="step-report" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:112px 128px 200px;display:flex;flex-direction:column;justify-content:flex-start;gap:72px">
+<div style="display:flex;gap:12px">
+<p style="font-size:24px;font-weight:700;color:#6b7480;border:2px solid #e1e4e8;padding:6px 20px;border-radius:999px">1 문제 정의</p>
+<p style="font-size:24px;font-weight:700;color:#6b7480;border:2px solid #e1e4e8;padding:6px 20px;border-radius:999px">2 데이터</p>
+<p style="font-size:24px;font-weight:700;color:#6b7480;border:2px solid #e1e4e8;padding:6px 20px;border-radius:999px">3 실험</p>
+<p style="font-size:24px;font-weight:700;color:#6b7480;border:2px solid #e1e4e8;padding:6px 20px;border-radius:999px">4 평가</p>
+<p style="font-size:24px;font-weight:700;color:#ffffff;background:#1f2a37;padding:8px 22px;border-radius:999px">5 보고</p>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1.45fr;gap:110px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:150px;font-weight:800;line-height:0.9;color:#e1e4e8">5</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2">보고</h2>
+<p style="font-size:32px;line-height:1.55;color:#6b7480">결과를 현업 언어로 바꿔 결정을 돕는다</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;flex-direction:column;gap:8px;border-left:4px solid #e1e4e8;padding:0 0 0 28px"><h3 style="font-size:36px;font-weight:800">현업 언어로</h3><p style="font-size:28px;line-height:1.55;color:#6b7480">“Recall@5 0.7”이 아니라 “10번 물으면 7번은 답이 화면에 뜬다”</p></div>
+<div style="display:flex;flex-direction:column;gap:8px;border-left:4px solid #e1e4e8;padding:0 0 0 28px"><h3 style="font-size:36px;font-weight:800">한계와 비용</h3><p style="font-size:28px;line-height:1.55;color:#6b7480">무엇이 안 되는지, 학습 · 서빙에 얼마가 드는지 같이 말한다</p></div>
+<div style="display:flex;flex-direction:column;gap:8px;border-left:4px solid #e1e4e8;padding:0 0 0 28px"><h3 style="font-size:36px;font-weight:800">다음 결정</h3><p style="font-size:28px;line-height:1.55;color:#6b7480">쓸 것인가, 무엇을 더 할 것인가. 결정할 거리를 건넨다</p></div>
+</div>
+</div>
+<div style="position:absolute;left:128px;right:128px;bottom:64px;display:flex;align-items:center;gap:24px;border-top:2px solid #e1e4e8;padding:24px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480;white-space:nowrap">이 강의에서는</p>
+<p style="flex:1;font-size:28px">base vs 파인튜닝 비교표 + 크기 · 속도 → “이 모델로 서비스한다”</p>
+<p style="font-size:24px;font-weight:700;color:#6b7480;white-space:nowrap">→ 6–7교시에서</p>
+</div>
+<aside>보고. 지표를 현업 언어로 바꿉니다. Recall@5 0.7이 아니라 10번 물으면 7번은 답이 화면에 뜬다. 무엇이 안 되는지, 비용이 얼마인지도 같이 말하고, 결정할 거리를 건넵니다. (0.7은 설명용 예시 숫자)</aside>
+</section>
+<section data-section="둘: 변화 ① 같은 일, 다른 방식 — 실험은 에이전트가 밤새 돌린다" id="div-change" data-transition="fade" style="background:#f2f3f5;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:48px">
+<p style="font-size:30px;font-weight:700;color:#6b7480">둘</p>
+<h1 style="font-size:120px;font-weight:800;line-height:1.1;letter-spacing:-3px">무엇이 바뀌었나</h1>
+<div style="display:flex;gap:72px">
+<p style="font-size:44px;font-weight:800;color:#1f2a37"><span style="color:#2d6db0">①</span> 같은 일, 다른 방식</p>
+<p style="font-size:44px;font-weight:800;color:#a3abb5"><span style="color:#a3abb5">②</span> 내가 맡는 범위</p>
+</div>
+<aside>두 번째 이야기. 무엇이 바뀌었나. 두 가지로 나눠 봅니다. 먼저 같은 일을 하는 방식, 그다음 내가 맡는 범위.</aside>
+</section>
+<section id="day-2022" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:104px 128px;display:flex;flex-direction:column;justify-content:center;gap:40px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">변화 ① 같은 일, 다른 방식</p>
+<div style="display:flex;align-items:center;gap:28px">
+<p style="font-size:36px;font-weight:800;color:#ffffff;background:#ec9a3e;padding:6px 22px;border-radius:12px">2022</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">실험은 내가 직접 돌린다</h2>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<div style="position:relative;width:1664px;height:200px">
+<div style="position:absolute;left:0px;top:44px;width:620px;height:156px;background:#f1f2f4;border-radius:12px"></div>
+<div style="position:absolute;left:624px;top:44px;width:1040px;height:156px;background:#e6e8eb;border-radius:12px"></div>
+<p style="position:absolute;left:0px;top:0px;width:300px;font-size:24px;font-weight:700;color:#6b7480">근무 시간</p>
+<p style="position:absolute;left:640px;top:0px;width:300px;font-size:24px;font-weight:700;color:#6b7480">퇴근 후</p>
+<p style="position:absolute;left:35px;top:66px;width:150px;font-size:24px;font-weight:800;color:#b8650f">1바퀴</p>
+<p style="position:absolute;left:260px;top:66px;width:150px;font-size:24px;font-weight:800;color:#b8650f">2바퀴</p>
+<p style="position:absolute;left:468px;top:66px;width:150px;font-size:24px;font-weight:800;color:#b8650f">3바퀴</p>
+<div style="position:absolute;left:35px;top:110px;width:173px;height:64px;display:flex;flex-direction:row"><div style="flex:1;background:#f6c99a;border-radius:8px 0 0 8px"></div><div style="flex:1;background:#ec9a3e"></div><div style="flex:1;background:#f3dcc2"></div><div style="flex:1;background:#c97a22;border-radius:0 8px 8px 0"></div></div>
+<div style="position:absolute;left:260px;top:110px;width:173px;height:64px;display:flex;flex-direction:row"><div style="flex:1;background:#f6c99a;border-radius:8px 0 0 8px"></div><div style="flex:1;background:#ec9a3e"></div><div style="flex:1;background:#f3dcc2"></div><div style="flex:1;background:#c97a22;border-radius:0 8px 8px 0"></div></div>
+<div style="position:absolute;left:468px;top:110px;width:140px;height:64px;display:flex;flex-direction:row"><div style="flex:1;background:#f6c99a;border-radius:8px 0 0 8px"></div><div style="flex:1;background:#ec9a3e"></div><div style="flex:1;background:#f3dcc2"></div><div style="flex:1;background:#c97a22;border-radius:0 8px 8px 0"></div></div>
+<div style="position:absolute;left:648px;top:96px;width:992px;height:84px;border:2px dashed #b3bac3;border-radius:10px;display:flex;align-items:center;justify-content:center"><p style="font-size:28px;font-weight:600;color:#6b7480">밤에는 아무것도 돌지 않는다</p></div>
+</div>
+<div style="position:relative;width:1664px;height:40px">
+<p style="position:absolute;left:0px;top:0px;width:60px;font-size:24px;color:#6b7480">09</p>
+<p style="position:absolute;left:178px;top:0px;width:60px;font-size:24px;color:#6b7480;text-align:center">12</p>
+<p style="position:absolute;left:386px;top:0px;width:60px;font-size:24px;color:#6b7480;text-align:center">15</p>
+<p style="position:absolute;left:594px;top:0px;width:60px;font-size:24px;color:#6b7480;text-align:center">18</p>
+<p style="position:absolute;left:802px;top:0px;width:60px;font-size:24px;color:#6b7480;text-align:center">21</p>
+<p style="position:absolute;left:1010px;top:0px;width:60px;font-size:24px;color:#6b7480;text-align:center">00</p>
+<p style="position:absolute;left:1218px;top:0px;width:60px;font-size:24px;color:#6b7480;text-align:center">03</p>
+<p style="position:absolute;left:1426px;top:0px;width:60px;font-size:24px;color:#6b7480;text-align:center">06</p>
+<p style="position:absolute;left:1604px;top:0px;width:60px;font-size:24px;color:#6b7480;text-align:right">09</p>
+</div>
+</div>
+<div style="display:flex;align-items:center;gap:14px">
+<div style="width:32px;height:18px;background:#f6c99a;border-radius:4px"></div><p style="font-size:24px;color:#6b7480">설정 고치기</p>
+<div style="width:32px;height:18px;background:#ec9a3e;border-radius:4px"></div><p style="font-size:24px;color:#6b7480">돌리기</p>
+<div style="width:32px;height:18px;background:#f3dcc2;border-radius:4px"></div><p style="font-size:24px;color:#6b7480">기다리기</p>
+<div style="width:32px;height:18px;background:#c97a22;border-radius:4px"></div><p style="font-size:24px;color:#6b7480">결과 보기 — 모두 내가</p>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;border-top:4px solid #ec9a3e;padding:22px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">누가 돌리나</p><p style="font-size:40px;font-weight:800;color:#b8650f">나</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;border-top:4px solid #ec9a3e;padding:22px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">하루에 몇 바퀴</p><p style="font-size:40px;font-weight:800;color:#b8650f">2~3바퀴</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;border-top:4px solid #ec9a3e;padding:22px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">내 시간은 어디에</p><p style="font-size:40px;font-weight:800;color:#b8650f">실행하고 기다리는 데</p></div>
+</div>
+<aside>2022년의 실험. 설정을 고치고, 돌리고, 기다리고, 결과를 보고, 다시 고칩니다. 모두 제가 합니다. 하루에 두세 바퀴. 퇴근하면 아무것도 돌지 않습니다. 다음 장은 같은 하루 축으로 2026년을 봅니다.</aside>
+</section>
+<section id="day-2026" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:104px 128px;display:flex;flex-direction:column;justify-content:center;gap:40px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">변화 ① 같은 일, 다른 방식</p>
+<div style="display:flex;align-items:center;gap:28px">
+<p style="font-size:36px;font-weight:800;color:#ffffff;background:#4f93d8;padding:6px 22px;border-radius:12px">2026</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">실험은 에이전트가 밤새 돌린다</h2>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<div style="position:relative;width:1664px;height:200px">
+<div style="position:absolute;left:0px;top:44px;width:620px;height:156px;background:#f1f2f4;border-radius:12px"></div>
+<div style="position:absolute;left:624px;top:44px;width:1040px;height:156px;background:#e6e8eb;border-radius:12px"></div>
+<p style="position:absolute;left:0px;top:0px;width:300px;font-size:24px;font-weight:700;color:#6b7480">근무 시간</p>
+<p style="position:absolute;left:0px;top:104px;width:620px;font-size:26px;color:#6b7480;text-align:center">낮에는 다른 일: 현업 미팅 · 기획 · 화면</p>
+<div style="position:absolute;left:657px;top:30px;width:4px;height:170px;background:#4f93d8"></div>
+<p style="position:absolute;left:672px;top:0px;width:720px;font-size:24px;font-weight:800;color:#2d6db0">18:30 “10번 돌리고 결과 저장해둬~~”</p>
+<x-shape kind="ellipse" style="position:absolute;left:690px;top:98px;width:48px;height:48px;background:#4f93d8"></x-shape>
+<x-shape kind="ellipse" style="position:absolute;left:780px;top:98px;width:48px;height:48px;background:#4f93d8"></x-shape>
+<x-shape kind="ellipse" style="position:absolute;left:870px;top:98px;width:48px;height:48px;background:#4f93d8"></x-shape>
+<x-shape kind="ellipse" style="position:absolute;left:960px;top:98px;width:48px;height:48px;background:#4f93d8"></x-shape>
+<x-shape kind="ellipse" style="position:absolute;left:1050px;top:98px;width:48px;height:48px;background:#4f93d8"></x-shape>
+<x-shape kind="ellipse" style="position:absolute;left:1140px;top:98px;width:48px;height:48px;background:#4f93d8"></x-shape>
+<x-shape kind="ellipse" style="position:absolute;left:1231px;top:98px;width:48px;height:48px;background:#4f93d8"></x-shape>
+<x-shape kind="ellipse" style="position:absolute;left:1321px;top:98px;width:48px;height:48px;background:#4f93d8"></x-shape>
+<x-shape kind="ellipse" style="position:absolute;left:1411px;top:98px;width:48px;height:48px;background:#4f93d8"></x-shape>
+<x-shape kind="ellipse" style="position:absolute;left:1501px;top:98px;width:48px;height:48px;background:#4f93d8"></x-shape>
+<div style="position:absolute;left:1660px;top:30px;width:4px;height:170px;background:#4f93d8"></div>
+<p style="position:absolute;left:1260px;top:0px;width:390px;font-size:24px;font-weight:800;color:#2d6db0;text-align:right">09:00 결과를 보고 판단</p>
+</div>
+<div style="position:relative;width:1664px;height:40px">
+<p style="position:absolute;left:0px;top:0px;width:60px;font-size:24px;color:#6b7480">09</p>
+<p style="position:absolute;left:178px;top:0px;width:60px;font-size:24px;color:#6b7480;text-align:center">12</p>
+<p style="position:absolute;left:386px;top:0px;width:60px;font-size:24px;color:#6b7480;text-align:center">15</p>
+<p style="position:absolute;left:594px;top:0px;width:60px;font-size:24px;color:#6b7480;text-align:center">18</p>
+<p style="position:absolute;left:802px;top:0px;width:60px;font-size:24px;color:#6b7480;text-align:center">21</p>
+<p style="position:absolute;left:1010px;top:0px;width:60px;font-size:24px;color:#6b7480;text-align:center">00</p>
+<p style="position:absolute;left:1218px;top:0px;width:60px;font-size:24px;color:#6b7480;text-align:center">03</p>
+<p style="position:absolute;left:1426px;top:0px;width:60px;font-size:24px;color:#6b7480;text-align:center">06</p>
+<p style="position:absolute;left:1604px;top:0px;width:60px;font-size:24px;color:#6b7480;text-align:right">09</p>
+</div>
+</div>
+<div style="display:flex;align-items:center;gap:14px">
+<div style="width:24px;height:24px;background:#4f93d8;border-radius:12px"></div><p style="font-size:24px;color:#6b7480">실험 1번: 설정 → 학습 → 평가 → 기록 → 다음 설정 — 에이전트가</p>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;border-top:4px solid #4f93d8;padding:22px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">누가 돌리나</p><div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap"><p style="font-size:28px;color:#8a939e;text-decoration:line-through">나</p><p style="font-size:28px;color:#8a939e">→</p><p style="font-size:40px;font-weight:800;color:#2d6db0">에이전트</p></div></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;border-top:4px solid #4f93d8;padding:22px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">하루에 몇 바퀴</p><div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap"><p style="font-size:28px;color:#8a939e;text-decoration:line-through">2~3바퀴</p><p style="font-size:28px;color:#8a939e">→</p><p style="font-size:40px;font-weight:800;color:#2d6db0">10바퀴</p></div></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;border-top:4px solid #4f93d8;padding:22px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">내 시간은 어디에</p><div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap"><p style="font-size:28px;color:#8a939e;text-decoration:line-through">실행하고 기다리는 데</p><p style="font-size:28px;color:#8a939e">→</p><p style="font-size:40px;font-weight:800;color:#2d6db0">목적을 정하고 판단하는 데</p></div></div>
+</div>
+<aside>같은 하루 축으로 2026년. 낮에는 현업 미팅, 기획, 화면 같은 다른 일을 합니다. 퇴근 전에 에이전트에게 "10번 돌리고 결과 저장해둬"라고 맡기면, 밤사이 에이전트가 설정, 학습, 평가, 기록을 열 번 돌립니다. 아침에 저는 결과를 보고 판단합니다. 아래 세 칸이 앞 장과 같은 질문입니다.</aside>
+</section>
+<section id="handoff" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:72px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:30px;font-weight:800;color:#2d6db0">18:30 · 퇴근 전</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">내가 주는 것은 네 가지</h2>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1.2fr;gap:96px;align-items:center">
+<div style="display:flex;flex-direction:column;gap:28px">
+<div style="display:flex;flex-direction:column;gap:4px;border-left:5px solid #4f93d8;padding:4px 0 4px 24px"><h3 style="font-size:36px;font-weight:800">목적</h3><p style="font-size:26px;color:#6b7480">처음 보는 법령에서도 검색이 잘 되게</p></div>
+<div style="display:flex;flex-direction:column;gap:4px;border-left:5px solid #4f93d8;padding:4px 0 4px 24px"><h3 style="font-size:36px;font-weight:800">환경</h3><p style="font-size:26px;color:#6b7480">GPU 1장, 오늘 밤 안에</p></div>
+<div style="display:flex;flex-direction:column;gap:4px;border-left:5px solid #4f93d8;padding:4px 0 4px 24px"><h3 style="font-size:36px;font-weight:800">세팅</h3><p style="font-size:26px;color:#6b7480">베이스 모델, 바꿔 볼 범위</p></div>
+<div style="display:flex;flex-direction:column;gap:4px;border-left:5px solid #4f93d8;padding:4px 0 4px 24px"><h3 style="font-size:36px;font-weight:800">측정</h3><p style="font-size:26px;color:#6b7480">dev Recall@5 · MRR</p></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:20px;background:#e8f1fa;border-radius:32px;padding:56px 56px">
+<p style="font-size:60px;font-weight:800;line-height:1.3;color:#2d6db0;letter-spacing:-1px">10번 돌리고<br>결과 저장해둬~~</p>
+<p style="font-size:26px;font-weight:600;color:#6b7480">그리고 퇴근</p>
+</div>
+</div>
+<aside>제가 주는 건 거의 이 네 가지뿐입니다. 실험 목적, 환경, 세팅, 측정 지표. iteration은 에이전트가 직접 합니다. 그리고 "10번 돌리고 결과 저장해둬~~" 하고 퇴근합니다.</aside>
+</section>
+<section id="morning" data-transition="fade" style="background:#f2f3f5;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:28px">
+<p style="font-size:36px;font-weight:800;color:#2d6db0">09:00</p>
+<h1 style="font-size:140px;font-weight:800;line-height:1.1;letter-spacing:-4px">다음날 출근.</h1>
+<aside>(잠깐 멈춘다) 다음날 출근하면...</aside>
+</section>
+<section id="results" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:64px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#2d6db0">변화 ① 같은 일, 다른 방식 · 2026</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">결과는 이미 와 있다. 나는 판단한다</h2>
+</div>
+<div style="display:grid;grid-template-columns:1.1fr 1fr;gap:110px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;gap:18px"><p style="font-size:24px;color:#6b7480;width:60px">#1</p><div style="flex:1;height:22px;background:#e6e8eb;border-radius:5px;display:flex"><div style="width:52%;height:22px;background:#a7c9ec;border-radius:5px"></div></div></div>
+<div style="display:flex;align-items:center;gap:18px"><p style="font-size:24px;color:#6b7480;width:60px">#2</p><div style="flex:1;height:22px;background:#e6e8eb;border-radius:5px;display:flex"><div style="width:58%;height:22px;background:#a7c9ec;border-radius:5px"></div></div></div>
+<div style="display:flex;align-items:center;gap:18px"><p style="font-size:24px;color:#6b7480;width:60px">#3</p><div style="flex:1;height:22px;background:#e6e8eb;border-radius:5px;display:flex"><div style="width:49%;height:22px;background:#a7c9ec;border-radius:5px"></div></div></div>
+<div style="display:flex;align-items:center;gap:18px"><p style="font-size:24px;color:#6b7480;width:60px">#4</p><div style="flex:1;height:22px;background:#e6e8eb;border-radius:5px;display:flex"><div style="width:63%;height:22px;background:#a7c9ec;border-radius:5px"></div></div></div>
+<div style="display:flex;align-items:center;gap:18px"><p style="font-size:24px;color:#6b7480;width:60px">#5</p><div style="flex:1;height:22px;background:#e6e8eb;border-radius:5px;display:flex"><div style="width:66%;height:22px;background:#a7c9ec;border-radius:5px"></div></div></div>
+<div style="display:flex;align-items:center;gap:18px"><p style="font-size:24px;font-weight:800;color:#2d6db0;width:60px">#6</p><div style="flex:1;height:22px;background:#e6e8eb;border-radius:5px;display:flex"><div style="width:74%;height:22px;background:#4f93d8;border-radius:5px"></div></div></div>
+<div style="display:flex;align-items:center;gap:18px"><p style="font-size:24px;color:#6b7480;width:60px">#7</p><div style="flex:1;height:22px;background:#e6e8eb;border-radius:5px;display:flex"><div style="width:71%;height:22px;background:#a7c9ec;border-radius:5px"></div></div></div>
+<div style="display:flex;align-items:center;gap:18px"><p style="font-size:24px;color:#6b7480;width:60px">#8</p><div style="flex:1;height:22px;background:#e6e8eb;border-radius:5px;display:flex"><div style="width:60%;height:22px;background:#a7c9ec;border-radius:5px"></div></div></div>
+<div style="display:flex;align-items:center;gap:18px"><p style="font-size:24px;color:#6b7480;width:60px">#9</p><div style="flex:1;height:22px;background:#e6e8eb;border-radius:5px;display:flex"><div style="width:68%;height:22px;background:#a7c9ec;border-radius:5px"></div></div></div>
+<div style="display:flex;align-items:center;gap:18px"><p style="font-size:24px;color:#6b7480;width:60px">#10</p><div style="flex:1;height:22px;background:#e6e8eb;border-radius:5px;display:flex"><div style="width:70%;height:22px;background:#a7c9ec;border-radius:5px"></div></div></div>
+<p style="font-size:24px;color:#6b7480">밤사이 실험 10개 · #6이 가장 높음 (그림은 예시)</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:28px">
+<h3 style="font-size:40px;font-weight:800">출근해서 내가 하는 일</h3>
+<ol style="font-size:32px;line-height:1.6">
+<li>어느 설정이 <b>왜</b> 좋았나</li>
+<li>믿을 만한 비교인가 (dev로 고르고 test는 한 번만)</li>
+<li>다음 가설은 무엇인가</li>
+</ol>
+</div>
+</div>
+<aside>출근하면 결과가 이미 와 있습니다. 제가 하는 일은 판단입니다. 어느 설정이 왜 좋았는지, 비교가 믿을 만한지, 다음 가설은 무엇인지. 막대는 설명용 예시입니다.</aside>
+</section>
+<section id="shift" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:88px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">변화 ① 정리</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">실행하던 사람에서 판단하는 사람으로</h2>
+</div>
+<div style="display:grid;grid-template-columns:1fr auto 1fr;gap:64px;align-items:center">
+<div style="display:flex;flex-direction:column;gap:18px">
+<p style="font-size:52px;font-weight:800;color:#b8650f;letter-spacing:-1px">직접 돌린다</p>
+<p style="font-size:28px;line-height:1.55;color:#6b7480">설정을 고치고, 돌리고, 기다리고, 본다. 하루 몇 바퀴</p>
+</div>
+<p style="font-size:56px;color:#9aa3ad">→</p>
+<div style="display:flex;flex-direction:column;gap:18px">
+<p style="font-size:52px;font-weight:800;color:#2d6db0;letter-spacing:-1px">목적과 기준을 준다</p>
+<p style="font-size:28px;line-height:1.55;color:#6b7480">목적 · 환경 · 세팅 · 측정을 정하고, 아침에 결과를 판단한다. 하룻밤에 10바퀴</p>
+</div>
+</div>
+<aside>예전에는 제가 직접 하나하나 실행하던 일이 지금은 훨씬 빠르게 돌아갑니다. 대신 저는 실행자라기보다 목적과 기준을 주고 판단하고 승인하는 쪽으로 이동했습니다.</aside>
+</section>
+<section data-section="변화 ② 내가 맡는 범위 — 모델+API에서 기획부터 운영까지" id="scope-2022" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:72px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#b8650f">변화 ② 내가 맡는 범위 · 2022</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">내 일은 여기까지였다</h2>
+</div>
+<div style="display:flex;flex-direction:column;gap:20px">
+<div style="display:grid;grid-template-columns:repeat(6, 1fr);gap:12px">
+<div style="border:3px dashed #c9ced6;border-radius:12px;padding:80px 24px 24px"><p style="font-size:36px;font-weight:800;color:#8a939e">기획</p></div>
+<div style="background:#ec9a3e;border:3px solid #ec9a3e;border-radius:12px;padding:80px 24px 24px"><p style="font-size:36px;font-weight:800;color:#fcfcfb">모델</p></div>
+<div style="background:#ec9a3e;border:3px solid #ec9a3e;border-radius:12px;padding:80px 24px 24px"><p style="font-size:36px;font-weight:800;color:#fcfcfb">API</p></div>
+<div style="border:3px dashed #c9ced6;border-radius:12px;padding:80px 24px 24px"><p style="font-size:36px;font-weight:800;color:#8a939e">화면</p></div>
+<div style="border:3px dashed #c9ced6;border-radius:12px;padding:80px 24px 24px"><p style="font-size:36px;font-weight:800;color:#8a939e">배포</p></div>
+<div style="border:3px dashed #c9ced6;border-radius:12px;padding:80px 24px 24px"><p style="font-size:36px;font-weight:800;color:#8a939e">운영</p></div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(6, 1fr);gap:12px">
+<div></div>
+<div style="grid-column:span 2;border-top:3px solid #ec9a3e;padding:14px 0 0 0"><p style="font-size:26px;color:#b8650f">모델을 만들고 API로 감싸면 끝</p></div>
+</div>
+</div>
+<aside>이제 두 번째 변화, 내가 맡는 범위. 2022년에는 모델을 만들고 API로 감싸면 제 일은 끝이었습니다.</aside>
+</section>
+<section id="scope-after" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:72px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#b8650f">변화 ② 내가 맡는 범위 · 2022</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">그 뒤는 누가 했나</h2>
+</div>
+<div style="display:flex;flex-direction:column;gap:20px">
+<div style="display:grid;grid-template-columns:repeat(6, 1fr);gap:12px">
+<div style="border:3px dashed #c9ced6;border-radius:12px;padding:80px 24px 24px"><p style="font-size:36px;font-weight:800;color:#8a939e">기획</p></div>
+<div style="background:#ec9a3e;border:3px solid #ec9a3e;border-radius:12px;padding:80px 24px 24px"><p style="font-size:36px;font-weight:800;color:#fcfcfb">모델</p></div>
+<div style="background:#ec9a3e;border:3px solid #ec9a3e;border-radius:12px;padding:80px 24px 24px"><p style="font-size:36px;font-weight:800;color:#fcfcfb">API</p></div>
+<div style="border:3px dashed #c9ced6;border-radius:12px;padding:80px 24px 24px"><p style="font-size:36px;font-weight:800;color:#8a939e">화면</p></div>
+<div style="border:3px dashed #c9ced6;border-radius:12px;padding:80px 24px 24px"><p style="font-size:36px;font-weight:800;color:#8a939e">배포</p></div>
+<div style="border:3px dashed #c9ced6;border-radius:12px;padding:80px 24px 24px"><p style="font-size:36px;font-weight:800;color:#8a939e">운영</p></div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(6, 1fr);gap:12px">
+<div style="border-top:3px solid #c9ced6;padding:14px 0 0 0"><p style="font-size:26px;color:#6b7480">현업 · 기획 부서</p></div>
+<div style="grid-column:span 2"></div>
+<div style="grid-column:span 3;border-top:3px solid #c9ced6;padding:14px 0 0 0"><p style="font-size:26px;line-height:1.5;color:#6b7480">다른 팀이 하거나, 협력업체에 맡기거나,<br><b style="color:#1f2a37">아니면 시작하지 않았다</b></p></div>
+</div>
+</div>
+<aside>실제 서비스는 다른 팀이 하거나 협력업체에 맡겼습니다. 아니면 그런 서비스는 아예 시작하지 않았습니다.</aside>
+</section>
+<section id="scope-fe" data-transition="fade" style="background:#f2f3f5;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:44px">
+<p style="font-size:26px;font-weight:700;color:#b8650f">2022</p>
+<h1 style="font-size:84px;font-weight:800;line-height:1.3;letter-spacing:-2px">현업이 원한 기능의 대부분은<br><span style="color:#b8650f">화면</span>으로 만들어야 하는 것이었다.</h1>
+<p style="font-size:36px;line-height:1.6;color:#4a5361">그래서 그게 중요한 과제는 시작도 하지 않았다.</p>
+<aside>현업에서 요구하는 많은 기능은 사실 프론트엔드로 개발되어야 하는 것들이었습니다. 그게 중요했던 과제들은 시작도 하지 않았습니다.</aside>
+</section>
+<section id="scope-2026" data-transition="fade" style="background:#fcfcfb">
+  <div id="9d22871b" style="position:absolute; top:295px; left:128px; width:1664px; height:132px; display:flex; flex-direction:column; gap:20px">
+    <p style="font-family:'Noto Sans KR', Arial, sans-serif; font-size:26px; font-weight:700; color:#2d6db0">변화 ② 내가 맡는 범위 · 2026 · 과도기</p>
+    <h2 style="font-family:'Noto Sans KR', Arial, sans-serif; font-size:64px; font-weight:800; line-height:1.2; letter-spacing:-1px; color:#1f2a37">지금은 무엇이든 해 보는 중이다</h2>
+  </div>
+  <div id="c05bb303" style="position:absolute; top:499px; left:128px; width:1664px; height:160px; display:grid; gap:12px; grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr">
+    <div style="display:flex; flex-direction:column; padding:80px 24px 24px; background:#4f93d8; border:3px solid #4f93d8; border-radius:12px">
+      <p style="font-family:'Noto Sans KR', Arial, sans-serif; font-size:36px; font-weight:800; color:#fcfcfb">기획</p>
+    </div>
+    <div style="display:flex; flex-direction:column; padding:80px 24px 24px; background:#4f93d8; border:3px solid #4f93d8; border-radius:12px">
+      <p style="font-family:'Noto Sans KR', Arial, sans-serif; font-size:36px; font-weight:800; color:#fcfcfb">모델</p>
+    </div>
+    <div style="display:flex; flex-direction:column; padding:80px 24px 24px; background:#4f93d8; border:3px solid #4f93d8; border-radius:12px">
+      <p style="font-family:'Noto Sans KR', Arial, sans-serif; font-size:36px; font-weight:800; color:#fcfcfb">API</p>
+    </div>
+    <div style="display:flex; flex-direction:column; padding:80px 24px 24px; background:#4f93d8; border:3px solid #4f93d8; border-radius:12px">
+      <p style="font-family:'Noto Sans KR', Arial, sans-serif; font-size:36px; font-weight:800; color:#fcfcfb">화면</p>
+    </div>
+    <div style="display:flex; flex-direction:column; padding:80px 24px 24px; background:#4f93d8; border:3px solid #4f93d8; border-radius:12px">
+      <p style="font-family:'Noto Sans KR', Arial, sans-serif; font-size:36px; font-weight:800; color:#fcfcfb">배포</p>
+    </div>
+    <div style="display:flex; flex-direction:column; padding:80px 24px 24px; background:#4f93d8; border:3px solid #4f93d8; border-radius:12px">
+      <p style="font-family:'Noto Sans KR', Arial, sans-serif; font-size:36px; font-weight:800; color:#fcfcfb">운영</p>
+    </div>
+  </div>
+  <p id="58c9877e" style="position:absolute; top:731px; left:128px; width:1664px; font-family:'Noto Sans KR', Arial, sans-serif; font-size:34px; line-height:1.6; color:#4a5361">FE 개발자가 없는 팀인데 기획부터 운영까지 직접 해 보고 있다. 이렇게 굳어진 것은 아니다. 어디까지 내 업무로 남아있을 지는 아직 모른다.</p>
+  <aside>2026년 지금은 무엇이든 해 보고 있습니다. FE 개발자가 없는 팀인데도 기획, 모델, API, 화면, 배포, 운영까지 직접 합니다. 다만 이게 정답으로 자리 잡았다는 뜻은 아닙니다. 도구가 갑자기 좋아지면서 생긴 과도기에 가깝고, 어디까지 DS가 맡고 어디서부터 다른 직군과 나눌지는 아직 계속 다시 잡고 있습니다. 앞에서 AX Lab 이야기를 할 때 역할과 정답이 아직 정해지지 않았다고 한 것과 같은 이야기입니다.</aside>
+</section>
+<section id="scope-how" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:72px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#2d6db0">변화 ② 내가 맡는 범위 · 2026</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">어떻게 가능해졌나</h2>
+</div>
+<div style="display:flex;gap:72px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">기획 · API · 화면</p>
+<h3 style="font-size:44px;font-weight:800">AI 코딩 도구</h3>
+<p style="font-size:30px;line-height:1.55;color:#4a5361">낯선 언어와 프레임워크도 만들 수 있게 됐다. 화면을 직접 그려 보며 현업과 기획한다</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">배포 · 운영</p>
+<h3 style="font-size:44px;font-weight:800">사내 플랫폼</h3>
+<p style="font-size:30px;line-height:1.55;color:#4a5361">서버를 직접 꾸리지 않아도 배포하고 운영할 수 있는 기반이 있다</p>
+</div>
+</div>
+<aside>구현은 AI 코딩 도구 덕분입니다. 낯선 프레임워크도 만들 수 있고, 화면을 직접 그려 보며 현업과 기획합니다. 배포와 운영은 사내 플랫폼이 있어서 어느 정도 가능합니다.</aside>
+</section>
+<section id="scope-inhouse" data-transition="fade" style="background:#1f2a37;color:#f5f6f7;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:48px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#8fbdeb">잠깐 곁가지 · 사내 서비스와 고객용 서비스</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">범위를 빨리 넓힐 수 있었던 건, 사내 서비스여서다</h2>
+</div>
+<div style="display:flex;gap:40px">
+<div style="flex:1;display:flex;flex-direction:column;gap:20px;background:#2c3b4e;border-top:6px solid #4f93d8;border-radius:0 0 16px 16px;padding:32px 36px">
+<h3 style="font-size:36px;font-weight:800;color:#8fbdeb">사내 서비스 · 지금 내 경우</h3>
+<p style="font-size:28px;line-height:1.5"><b>보안 · 인증</b> <span style="color:#c9ced6">사내망이 1차 방어선, 쓰는 사람은 동료뿐</span></p>
+<p style="font-size:28px;line-height:1.5"><b>소통</b> <span style="color:#c9ced6">메신저로 바로 조율한다. 계약서 · SLA(Service Level Agreement, 서비스 수준 협약) 압박이 없다</span></p>
+<p style="font-size:28px;line-height:1.5"><b>요구사항</b> <span style="color:#c9ced6">현업에게 바로 물어본다. 누가 쓸지 분명하다</span></p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:20px;border-top:6px solid #6b7480;padding:32px 36px">
+<h3 style="font-size:36px;font-weight:800;color:#9aa3ad">고객용 서비스</h3>
+<p style="font-size:28px;line-height:1.5;color:#9aa3ad"><b>보안 · 인증</b> 유출 위험과 권한 관리가 훨씬 무겁다</p>
+<p style="font-size:28px;line-height:1.5;color:#9aa3ad"><b>소통</b> 회사 대 회사. 계약과 SLA를 따진다</p>
+<p style="font-size:28px;line-height:1.5;color:#9aa3ad"><b>요구사항</b> 고객을 조사하고 짐작해야 한다</p>
+</div>
+</div>
+<div style="display:flex;flex-direction:row;align-items:center;gap:24px;border:2px solid #3d4b5e;border-radius:14px;padding:22px 32px">
+<p style="font-size:24px;font-weight:700;color:#ec9a3e;white-space:nowrap">대신 함정도</p>
+<p style="font-size:26px;line-height:1.5;color:#c9ced6">안 쓰면 끝이다(“그냥 엑셀 쓸게요”) · 담당자가 바뀌면 레거시가 된다 · 인프라 지원이 박하다</p>
+</div>
+<aside>잠깐 곁가지로 빠지겠습니다. 제가 짧은 기간에 기획부터 운영까지 범위를 넓힐 수 있었던 건, AI 도구 덕분이기도 하지만 만든 것이 사내 서비스였기 때문이기도 합니다. 사내 서비스는 사내망이 1차 방어선이고 쓰는 사람이 동료뿐이라 보안과 인증 부담이 훨씬 작습니다. 문제가 생기거나 요구가 바뀌면 메신저로 바로 연락해서 이렇게 고치면 되죠 하고 합의하면 끝입니다. 회사 대 회사 계약서나 SLA, 그러니까 서비스 수준 협약을 따질 일이 없습니다. 누가 쓸지도 분명하고, 현업 담당자에게 바로 물어볼 수 있습니다. 고객용 서비스였다면 이 세 가지가 전부 훨씬 무거웠을 겁니다. 그래서 DS가 화면과 배포, 운영까지 직접 해 볼 수 있었습니다. 다만 사내 서비스에도 함정이 있습니다. 강제성이 없어서, 귀찮으니 그냥 엑셀 쓸게요 하면 끝입니다. 내부용이니 빨리 만들자로 시작했다가 담당자가 바뀌면 아무도 손대지 않는 레거시가 되기 쉽고, 서버나 DB 같은 인프라 지원도 박한 편입니다. 범위를 넓힐 수 있었던 조건과 함께, 이런 함정도 같이 알아 두시면 좋겠습니다.</aside>
+</section>
+<section data-section="정리와 셋: 오늘 무엇을 하나" id="two-axes" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:72px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">정리</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">깊이와 넓이가 같이 바뀌었다</h2>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1.6fr;gap:80px;align-items:center">
+<div style="display:flex;flex-direction:column;gap:44px">
+<div style="display:flex;flex-direction:column;gap:8px"><p style="font-size:24px;font-weight:700;color:#6b7480">① 방식</p><p style="font-size:40px;font-weight:800;line-height:1.35">실행은 에이전트가,<br>판단은 내가</p></div>
+<div style="display:flex;flex-direction:column;gap:8px"><p style="font-size:24px;font-weight:700;color:#6b7480">② 범위</p><p style="font-size:40px;font-weight:800;line-height:1.35">기획부터 운영까지<br>넓어지는 중</p></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:24px">
+<div style="display:grid;grid-template-columns:120px 1fr;gap:24px;align-items:center">
+<p style="font-size:36px;font-weight:800;color:#b8650f">2022</p>
+<div style="display:grid;grid-template-columns:repeat(6, 1fr);gap:8px">
+<div style="border:3px dashed #c9ced6;border-radius:10px;padding:36px 12px 14px"><p style="font-size:26px;font-weight:800;color:#8a939e">기획</p></div>
+<div style="background:#ec9a3e;border:3px solid #ec9a3e;border-radius:10px;padding:36px 12px 14px"><p style="font-size:26px;font-weight:800;color:#fcfcfb">모델</p></div>
+<div style="background:#ec9a3e;border:3px solid #ec9a3e;border-radius:10px;padding:36px 12px 14px"><p style="font-size:26px;font-weight:800;color:#fcfcfb">API</p></div>
+<div style="border:3px dashed #c9ced6;border-radius:10px;padding:36px 12px 14px"><p style="font-size:26px;font-weight:800;color:#8a939e">화면</p></div>
+<div style="border:3px dashed #c9ced6;border-radius:10px;padding:36px 12px 14px"><p style="font-size:26px;font-weight:800;color:#8a939e">배포</p></div>
+<div style="border:3px dashed #c9ced6;border-radius:10px;padding:36px 12px 14px"><p style="font-size:26px;font-weight:800;color:#8a939e">운영</p></div>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:120px 1fr;gap:24px;align-items:center">
+<p style="font-size:36px;font-weight:800;color:#2d6db0">2026</p>
+<div style="display:grid;grid-template-columns:repeat(6, 1fr);gap:8px">
+<div style="background:#4f93d8;border:3px solid #4f93d8;border-radius:10px;padding:36px 12px 14px"><p style="font-size:26px;font-weight:800;color:#fcfcfb">기획</p></div>
+<div style="background:#4f93d8;border:3px solid #4f93d8;border-radius:10px;padding:36px 12px 14px"><p style="font-size:26px;font-weight:800;color:#fcfcfb">모델</p></div>
+<div style="background:#4f93d8;border:3px solid #4f93d8;border-radius:10px;padding:36px 12px 14px"><p style="font-size:26px;font-weight:800;color:#fcfcfb">API</p></div>
+<div style="background:#4f93d8;border:3px solid #4f93d8;border-radius:10px;padding:36px 12px 14px"><p style="font-size:26px;font-weight:800;color:#fcfcfb">화면</p></div>
+<div style="background:#4f93d8;border:3px solid #4f93d8;border-radius:10px;padding:36px 12px 14px"><p style="font-size:26px;font-weight:800;color:#fcfcfb">배포</p></div>
+<div style="background:#4f93d8;border:3px solid #4f93d8;border-radius:10px;padding:36px 12px 14px"><p style="font-size:26px;font-weight:800;color:#fcfcfb">운영</p></div>
+</div>
+</div>
+</div>
+</div>
+<aside>정리하면 두 가지가 같이 바뀌었습니다. 같은 일을 하는 방식은 실행은 에이전트가, 판단은 내가. 맡는 범위는 모델과 API에서 기획부터 운영까지 넓어지는 중입니다. 아직 정해진 모양은 아닙니다.</aside>
+</section>
+<section id="unicorn-again" data-transition="fade" style="background:#f2f3f5;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:44px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">다시, 유니콘</p>
+<h1 style="font-size:96px;font-weight:800;line-height:1.25;letter-spacing:-3px">다 하는 사람은 없었다.<br><span style="color:#2d6db0">이제는 AI와 함께 다 한다.</span></h1>
+<p style="font-size:34px;line-height:1.6;color:#4a5361;width:1500px">실행은 AI가 채운다. 문제를 정하고, 결과를 검증하고, 현장과 잇는 일은 여전히 사람의 몫이다.</p>
+<aside>앞에서 유니콘은 없다고 했습니다. AI 시대에는 이 이야기를 조금 다르게 봅니다. 코드, 파이프라인, 반복 구현은 AI가 많이 채워 줍니다. 대신 문제 정의, 결과 검증, 현장과 잇고 설득하는 일은 더 중요해졌습니다. 모든 걸 혼자 하는 사람이 아니라, AI로 실행을 채우고 사람 쪽 역할을 더 잘하는 사람이 새로운 유니콘입니다.</aside>
+</section>
+<section id="understand" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:44px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">그래도 남는 것</p>
+<h1 style="font-size:96px;font-weight:800;line-height:1.25;letter-spacing:-3px">사람은 자기가 이해하는 만큼만<br>만들 수 있다.</h1>
+<p style="font-size:34px;line-height:1.6;color:#4a5361;width:1500px">AI는 속도와 범위를 넓혀 준다. 품질의 천장은 여전히 내 이해와 판단이 정한다.</p>
+<aside>AI가 속도를 높이고 범위를 넓혀 주지만, 결과 품질이 자동으로 높아지지는 않습니다. 무엇을 남기고 버릴지, 어떤 결과가 믿을 만한지 정하는 건 결국 제 판단입니다. 사람은 자기가 이해하는 만큼만 만들 수 있습니다.</aside>
+</section>
+<section id="today" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:64px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">셋 · 그래서 오늘 무엇을 하나</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">임베딩 모델 하나로 여섯 칸을 채운다</h2>
+</div>
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="display:grid;grid-template-columns:repeat(6, 1fr);gap:12px">
+<p style="font-size:26px;font-weight:800;color:#6b7480;border-bottom:3px solid #9aa3ad;padding:0 0 8px 0">2교시</p>
+<p style="font-size:26px;font-weight:800;color:#b8650f;border-bottom:3px solid #b8650f;padding:0 0 8px 0">4–6교시</p>
+<p style="font-size:26px;font-weight:800;color:#2d6db0;border-bottom:3px solid #2d6db0;padding:0 0 8px 0">7교시</p>
+<p style="font-size:26px;font-weight:800;color:#2d6db0;border-bottom:3px solid #2d6db0;padding:0 0 8px 0">8교시</p>
+<p style="font-size:26px;font-weight:800;color:#2d6db0;border-bottom:3px solid #2d6db0;padding:0 0 8px 0">7교시</p>
+<p style="font-size:26px;font-weight:800;color:#2d6db0;border-bottom:3px solid #2d6db0;padding:0 0 8px 0">8교시</p>
+</div>
+<div style="display:grid;grid-template-columns:repeat(6, 1fr);gap:12px">
+<div style="background:#d6e0cc;border:3px solid #d6e0cc;border-radius:12px;padding:64px 24px 22px"><p style="font-size:34px;font-weight:800;color:#1f2a37">기획</p></div>
+<div style="background:#ec9a3e;border:3px solid #ec9a3e;border-radius:12px;padding:64px 24px 22px"><p style="font-size:34px;font-weight:800;color:#fcfcfb">모델</p></div>
+<div style="background:#4f93d8;border:3px solid #4f93d8;border-radius:12px;padding:64px 24px 22px"><p style="font-size:34px;font-weight:800;color:#fcfcfb">API</p></div>
+<div style="background:#4f93d8;border:3px solid #4f93d8;border-radius:12px;padding:64px 24px 22px"><p style="font-size:34px;font-weight:800;color:#fcfcfb">화면</p></div>
+<div style="background:#4f93d8;border:3px solid #4f93d8;border-radius:12px;padding:64px 24px 22px"><p style="font-size:34px;font-weight:800;color:#fcfcfb">배포</p></div>
+<div style="background:#4f93d8;border:3px solid #4f93d8;border-radius:12px;padding:64px 24px 22px"><p style="font-size:34px;font-weight:800;color:#fcfcfb">운영</p></div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(6, 1fr);gap:12px">
+<p style="font-size:24px;line-height:1.5;color:#6b7480">과제 정의</p>
+<p style="font-size:24px;line-height:1.5;color:#6b7480">데이터 · 평가 · 학습<br><b style="color:#b8650f">밤사이 실험 결과를 판단</b></p>
+<p style="font-size:24px;line-height:1.5;color:#6b7480">검색 API 복습</p>
+<p style="font-size:24px;line-height:1.5;color:#6b7480">CLI · MCP · 웹</p>
+<p style="font-size:24px;line-height:1.5;color:#6b7480">ONNX · INT8</p>
+<p style="font-size:24px;line-height:1.5;color:#6b7480">MLflow 모니터링</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:26px;color:#6b7480">3교시에 완성품을 먼저 써 보고, 4–6교시는 <span style="color:#b8650f">2022 파트</span>(①을 새 방식으로), 7–8교시는 <span style="color:#2d6db0">2026 파트</span>(②를 직접)</p>
+<aside>오늘 8교시 동안 이 여섯 칸을 임베딩 모델 하나로 채웁니다. 2교시에 과제를 정의하고, 3교시에 끝에 나올 완성품을 먼저 써 봅니다. 4~6교시는 DS 본업인 데이터, 평가, 학습을 하는데, 6교시에는 오늘 말한 밤사이 실험의 결과를 같이 읽고 판단해 봅니다. 7~8교시는 API, 배포 최적화, CLI·MCP·웹, 모니터링까지 갑니다.</aside>
+</section>
+<section id="break" data-transition="fade" style="background:#f2f3f5;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:44px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">1교시 끝</p>
+<h1 style="font-size:112px;font-weight:800;line-height:1.2;letter-spacing:-3px">질문 받고,<br><span style="color:#6b7480">10분 쉬겠습니다.</span></h1>
+<p style="font-size:34px;line-height:1.6;color:#4a5361">다음 2교시: 용어와 과제 정의 — 왜 임베딩 파인튜닝인가</p>
+<div style="position:absolute;left:0;right:0;bottom:0;height:8px;background:linear-gradient(90deg, #ec9a3e 0%, #4f93d8 100%)"></div>
+<aside>질문 받고 10분 쉽니다. 2교시에는 용어를 정리하고 왜 임베딩 파인튜닝인지 이야기합니다.</aside>
+</section>
+</div>
+<div id="bar"></div>
+<div id="notes"></div>
+<script>
+(() => {
+  // 덱 전용 요소: x-icon (Lucide 모양), x-connector (선 · 화살표)
+  const ICONS = {
+    Chart: '<path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>',
+    Chat: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+    Check: '<path d="M20 6 9 17l-5-5"/>',
+    CheckCircle: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+    Database: '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>',
+    Globe: '<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
+    Home: '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>',
+    Lightbulb: '<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>',
+    PaperPlane: '<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
+    Search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+    Settings: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+    Warning: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+  };
+  document.querySelectorAll('x-icon').forEach((el) => {
+    const body = ICONS[el.getAttribute('name')] || '<circle cx="12" cy="12" r="9"/>';
+    el.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + body + '</svg>';
+  });
+
+  const NS = 'http://www.w3.org/2000/svg';
+  let markerId = 0;
+  document.querySelectorAll('x-connector').forEach((el) => {
+    const host = el.parentElement;
+    if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
+    const cs = getComputedStyle(el);
+    const color = cs.color;
+    const w = parseFloat(el.style.borderWidth) || 2;
+    const dash = (el.style.borderStyle || '').includes('dash') ? `${w * 3} ${w * 2}` : (el.style.borderStyle || '').includes('dot') ? `${w} ${w * 1.5}` : '';
+    const num = (v, size) => (String(v).endsWith('%') ? (parseFloat(v) / 100) * size : parseFloat(v));
+    const hw = host.offsetWidth, hh = host.offsetHeight;
+    const x1 = num(el.getAttribute('x1'), hw), y1 = num(el.getAttribute('y1'), hh);
+    const x2 = num(el.getAttribute('x2'), hw), y2 = num(el.getAttribute('y2'), hh);
+    const head = el.getAttribute('head') || 'end';
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('style', 'position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;pointer-events:none');
+    const id = 'xc' + markerId++;
+    svg.innerHTML = `<defs><marker id="${id}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="${Math.max(4, 12 / w * 2)}" markerHeight="${Math.max(4, 12 / w * 2)}" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="${color}"/></marker></defs>`;
+    const line = document.createElementNS(NS, 'line');
+    Object.entries({ x1, y1, x2, y2, stroke: color, 'stroke-width': w }).forEach(([k, v]) => line.setAttribute(k, v));
+    if (dash) line.setAttribute('stroke-dasharray', dash);
+    if (head === 'end' || head === 'both') line.setAttribute('marker-end', `url(#${id})`);
+    if (head === 'both') line.setAttribute('marker-start', `url(#${id})`);
+    svg.appendChild(line);
+    el.replaceWith(svg);
+  });
+
+  // 넘기기 · 화면 맞춤 · 대본
+  const stage = document.getElementById('stage');
+  const slides = [...stage.children].filter((s) => s.tagName === 'SECTION');
+  const bar = document.getElementById('bar');
+  const notes = document.getElementById('notes');
+  let cur = 0;
+  const fit = () => {
+    const s = Math.min(innerWidth / 1920, innerHeight / 1080);
+    stage.style.transform = `scale(${s}) translate(-50%, -50%)`;
+  };
+  const show = (i) => {
+    cur = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach((s, k) => s.classList.toggle('on', k === cur));
+    bar.textContent = `${cur + 1} / ${slides.length}`;
+    const aside = slides[cur].querySelector('aside');
+    notes.textContent = aside ? aside.textContent.trim() : '(대본 없음)';
+    history.replaceState(null, '', '#' + slides[cur].id);
+  };
+  addEventListener('resize', fit);
+  addEventListener('keydown', (e) => {
+    if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)) { show(cur + 1); e.preventDefault(); }
+    else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { show(cur - 1); e.preventDefault(); }
+    else if (e.key === 'Home') show(0);
+    else if (e.key === 'End') show(slides.length - 1);
+    else if (e.key === 'n' || e.key === 'N') document.body.classList.toggle('show-notes');
+    else if (e.key === 'f' || e.key === 'F') document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+  });
+  stage.addEventListener('click', (e) => show(cur + (e.clientX > innerWidth / 3 ? 1 : -1)));
+  const fromHash = () => {
+    const i = slides.findIndex((s) => '#' + s.id === location.hash);
+    if (i >= 0 && i !== cur) show(i);
+  };
+  addEventListener('hashchange', fromHash);
+  fit();
+  const start = slides.findIndex((s) => '#' + s.id === location.hash);
+  show(start < 0 ? 0 : start);
+})();
+</script>
+</body>
+</html>

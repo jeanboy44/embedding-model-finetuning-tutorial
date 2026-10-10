@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>6교시 실험 한 바퀴: LoRA, 그리고 딸깍</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400..800&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;display=swap">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { background: #2b2f36; overflow: hidden; font-family: 'Noto Sans KR', Arial, sans-serif; color: #1f2a37; }
+  #stage { position: absolute; left: 50%; top: 50%; width: 1920px; height: 1080px; transform-origin: 0 0; }
+  #stage > section { position: absolute; inset: 0; width: 1920px; height: 1080px; overflow: hidden;
+    font-size: 32px; line-height: 1.4; word-break: keep-all; opacity: 0; visibility: hidden; transition: opacity .25s; }
+  #stage > section.on { opacity: 1; visibility: visible; }
+  section:not([style*="display"]), section div:not([style*="display"]) { display: flex; flex-direction: column; }
+  section div { min-width: 0; }
+  h1, h2, h3, p, ul, ol { margin: 0; }
+  h1 { font-size: 96px; font-weight: 600; line-height: 1.1; }
+  h2 { font-size: 64px; font-weight: 600; line-height: 1.15; }
+  h3 { font-size: 44px; font-weight: 600; line-height: 1.2; }
+  p, li { font-size: inherit; }
+  ul, ol { padding-left: 1.2em; display: flex; flex-direction: column; gap: .3em; }
+  table { border-collapse: collapse; }
+  th, td { padding: .35em .6em; border-bottom: 1px solid rgba(31, 42, 55, .14); text-align: left; vertical-align: top; }
+  th { font-weight: 700; border-bottom: 2px solid rgba(31, 42, 55, .22); }
+  aside { display: none; }
+  x-icon, x-shape { display: block; flex: none; }
+  x-icon svg { width: 100%; height: 100%; display: block; }
+  x-connector { display: block; }
+  x-shape[kind="ellipse"] { border-radius: 50%; }
+  x-shape[kind="arrow-right"] { clip-path: polygon(0 30%, 60% 30%, 60% 0, 100% 50%, 60% 100%, 60% 70%, 0 70%); }
+  x-shape[kind="arrow-left"] { clip-path: polygon(100% 30%, 40% 30%, 40% 0, 0 50%, 40% 100%, 40% 70%, 100% 70%); }
+  x-shape[kind="arrow-down"] { clip-path: polygon(30% 0, 70% 0, 70% 60%, 100% 60%, 50% 100%, 0 60%, 30% 60%); }
+  x-shape[kind="arrow-up"] { clip-path: polygon(30% 100%, 70% 100%, 70% 40%, 100% 40%, 50% 0, 0 40%, 30% 40%); }
+  x-shape[kind="diamond"] { clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+  #bar { position: fixed; right: 16px; bottom: 12px; font: 13px/1.4 Arial, sans-serif; color: #c9ced6;
+    background: rgba(0, 0, 0, .35); padding: 4px 10px; border-radius: 6px; user-select: none; }
+  #notes { position: fixed; left: 0; right: 0; bottom: 0; max-height: 34vh; overflow: auto; display: none;
+    background: rgba(20, 23, 28, .94); color: #e8eaed; font: 16px/1.7 'Noto Sans KR', Arial, sans-serif; padding: 16px 24px 40px; }
+  body.show-notes #notes { display: block; }
+  @media print {
+    @page { size: 1920px 1080px; margin: 0; }
+    html, body { height: auto; overflow: visible; background: none; }
+    #stage { position: static; transform: none !important; width: auto; height: auto; }
+    #stage > section { position: relative; opacity: 1; visibility: visible; break-after: page; }
+    #bar, #notes { display: none !important; }
+  }
+</style>
+</head>
+<body>
+<!-- 장표 원본: claude.ai Slides 덱. 장 하나 = <section>, 발표 대본 = <aside>. 키: ← → 넘기기, N 대본, F 전체 화면 -->
+<div id="stage">
+<section data-section="표지, 5교시 기준선(002 test R@5 0.669) 다시 보기" id="cover" data-transition="fade" style="background:linear-gradient(160deg, #ffffff 0%, #f4f5f6 100%);color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:40px">
+<p style="font-size:28px;font-weight:700;color:#6b7480">AI 시대 생존법 · 내 업무 확장편 · 6교시</p>
+<h1 style="font-size:112px;font-weight:800;line-height:1.15;letter-spacing:-3px">실험 한 바퀴:<br><span style="color:#b8650f">LoRA</span>, 그리고 <span style="color:#2d6db0">딸깍</span></h1>
+<p style="font-size:34px;line-height:1.6;color:#6b7480;width:1400px">기준 실험 위에 세운 가설들을 펼쳐 보고, 그중 하나를 손으로 한 바퀴 끝까지 돈 뒤, 같은 바퀴를 에이전트가 돈 기록과 비교합니다.</p>
+<div style="position:absolute;left:0;bottom:0;width:960px;height:8px;background:#ec9a3e"></div>
+<div style="position:absolute;left:960px;bottom:0;width:960px;height:8px;background:#4f93d8"></div>
+<p style="position:absolute;left:128px;bottom:64px;width:900px;font-size:26px;color:#6b7480">6교시 · 실험 한 바퀴</p>
+<aside>6교시입니다. 5교시에 기준 실험 하나를 끝까지 돌렸습니다. 오늘은 그 위에 가설을 쌓습니다. 먼저 이 과제에서 제가 세우고 돌린 가설을 전부 펼쳐 보고, 그중 LoRA 실험 하나를 2022년 방식으로, 사람이 손으로 한 바퀴 끝까지 따라갑니다. 마지막에는 같은 바퀴를 에이전트가 돈 실험, 이른바 딸깍을 봅니다.</aside>
+</section>
+<section id="recap" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:64px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">5교시 다시 보기 · test 2,526 질문</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">기준선은 0.669</h2>
+</div>
+<div style="display:flex;flex-direction:column;gap:32px;width:1400px">
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><p style="font-size:30px;font-weight:700">e5-small <span style="color:#6b7480">(학습 전)</span></p><p style="font-size:44px;font-weight:800;color:#4a5361">0.513</p></div>
+<div style="height:24px;background:#e6e8eb;border-radius:8px;display:flex"><div style="width:718px;height:24px;background:#8a939e;border-radius:8px"></div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><p style="font-size:30px;font-weight:700">002 기준 실험 <span style="color:#6b7480">(전체 학습)</span></p><p style="font-size:44px;font-weight:800;color:#b8650f">0.669</p></div>
+<div style="height:24px;background:#e6e8eb;border-radius:8px;display:flex"><div style="width:937px;height:24px;background:#ec9a3e;border-radius:8px"></div></div>
+</div>
+</div>
+<p style="font-size:34px;line-height:1.6;font-weight:700">오늘은 이 위에 <span style="color:#b8650f">가설</span>을 하나씩 쌓는다.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">R@5: 정답 조문이 검색 결과 상위 5개 안에 드는 질문의 비율</p>
+<aside>5교시에 기준 실험 002를 끝까지 돌렸습니다. 처음 보는 법령의 test 질문 2,526개로 재면 학습 전 e5-small이 0.513, 우리 데이터로 전체 학습한 002가 0.669였습니다. 이게 오늘의 기준선입니다. 앞으로 나오는 실험은 전부 이 002와 무엇 하나를 다르게 해서, 그 하나가 점수를 올리는지 보는 실험입니다.</aside>
+</section>
+<section data-section="우리가 세우고 돌린 가설 전부와 오늘 한 바퀴 볼 실험(LoRA)을 고른 이유" id="hyp-all" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">우리가 세우고 돌린 가설 · 1/2</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">002 위에 쌓은 실험들</h2>
+</div>
+<table style="width:1664px;font-size:28px;color:#1f2a37">
+<tr><th style="width:14%;text-align:left;color:#6b7480;font-size:24px">실험</th><th style="width:28%;text-align:left;color:#6b7480;font-size:24px">가설</th><th style="width:18%;text-align:left;color:#6b7480;font-size:24px">바꾼 것 (002 대비)</th><th style="width:26%;text-align:left;color:#6b7480;font-size:24px">결과</th><th style="width:14%;text-align:left;color:#6b7480;font-size:24px">판정</th></tr>
+<tr><td><b>002</b><br>기준 학습</td><td style="color:#4a5361">우리 데이터로 학습하면 오른다</td><td style="color:#4a5361">—</td><td style="color:#4a5361">test 0.669<br>(학습 전 0.513)</td><td>맞음<br>(5교시)</td></tr>
+<tr style="background:#fdf1e3"><td><b>004</b><br>LoRA</td><td style="color:#4a5361">가중치 0.4%만 학습해도 거의 따라간다</td><td style="color:#4a5361">LoRA r16,<br>lr 2e-4</td><td style="color:#4a5361">test 0.641</td><td><b style="color:#b8650f">오늘 본편</b></td></tr>
+<tr><td><b>006</b><br>배치 128</td><td style="color:#4a5361">배치 안 오답을 4배로 늘리면 오른다</td><td style="color:#4a5361">배치<br>32 → 128</td><td style="color:#4a5361">test 0.659<br>Δ −0.010, CI [−0.019, +0.000]</td><td>틀림</td></tr>
+</table>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">test R@5, 2,526 질문. Δ와 CI는 002 대비 질문 단위 대응 비교(95% 신뢰구간)</p>
+<aside>이 과제에서 제가 세우고 실제로 돌린 가설을 두 장에 걸쳐 전부 펼칩니다. 002는 우리 데이터로 학습하면 오른다는 가설이었고, 5교시에 0.513에서 0.669로 맞다는 걸 봤습니다. 004는 오늘 본편인 LoRA입니다. 가중치의 0.4%만 학습해도 거의 따라간다는 가설이고, test 0.641이 나왔습니다. 이게 맞았는지는 오늘 같이 판정합니다. 006은 배치를 32에서 128로 키워 배치 안의 공짜 오답을 네 배로 늘리면 오른다는 가설이었습니다. 0.659가 나왔고 002와의 차이가 −0.010, 신뢰구간이 −0.019에서 +0.000으로 0을 걸쳐서 오른다는 가설은 틀렸습니다.</aside>
+</section>
+<section id="hyp-all2" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">우리가 세우고 돌린 가설 · 2/2</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">틀린 가설이 다음 가설을 줬다</h2>
+</div>
+<table style="width:1664px;font-size:28px;color:#1f2a37">
+<tr><th style="width:14%;text-align:left;color:#6b7480;font-size:24px">실험</th><th style="width:28%;text-align:left;color:#6b7480;font-size:24px">가설</th><th style="width:18%;text-align:left;color:#6b7480;font-size:24px">바꾼 것 (002 대비)</th><th style="width:26%;text-align:left;color:#6b7480;font-size:24px">결과</th><th style="width:14%;text-align:left;color:#6b7480;font-size:24px">판정</th></tr>
+<tr><td><b>009</b><br>수렴 확인</td><td style="color:#4a5361">덜 학습됐다, epoch를 늘리면 오른다</td><td style="color:#4a5361">epoch 6,<br>lr 3e-5</td><td style="color:#4a5361">dev 0.729 (best epoch 4)<br>002 0.712 대비 +0.017, 이후 과적합</td><td>틀림<br>→ 병목은 학습 신호</td></tr>
+<tr style="background:#e8f1fb"><td><b>001</b><br>오답 다시 캐기</td><td style="color:#4a5361">모델이 헷갈리는 조문을 오답으로 주면 오른다</td><td style="color:#4a5361">모델이 캔 negative 3개</td><td style="color:#4a5361">dev 대조군 0.720 → 0.761<br>test 0.723</td><td><b style="color:#2d6db0">맞음</b><br>(뒤에 딸깍)</td></tr>
+<tr><td><b>model soup</b></td><td style="color:#4a5361">같은 설정 seed 여러 개의 가중치를 평균하면 오른다</td><td style="color:#4a5361">seed 43 추가 학습 중</td><td style="color:#4a5361">—</td><td>진행 중</td></tr>
+</table>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">dev는 복수 정답 R@5(1,412 질문). dev 표준오차 약 ±0.012라 0.02 미만의 차이는 잡음으로 본다</p>
+<aside>나머지 세 개입니다. 009는 혹시 덜 학습된 게 아닐까 해서 epoch를 6까지 늘려 본 실험입니다. dev에서 epoch 4가 가장 좋았고, 공식 평가로 0.729입니다. 002의 0.712보다 0.017 높지만 0.02보다 작아서 차이 없음으로 봅니다. 그 뒤 epoch에서는 과적합이었습니다. 학습량이 문제가 아니었던 겁니다. 006에서 오답 수를 늘려도 안 됐고, 009에서 오래 학습해도 안 됐으니, 남은 건 학습 신호, 즉 무엇을 오답으로 주느냐입니다. 그게 001입니다. 모델이 실제로 헷갈리는 조문을 오답으로 주자는 가설이고, 같은 설정의 대조군 0.720에서 0.761로, test로는 0.723으로 올랐습니다. 이 실험은 에이전트가 돈 바퀴라서 마지막 파트에서 딸깍으로 다시 봅니다. model soup는 같은 설정을 seed만 바꿔 여러 번 학습하고 가중치를 평균하는 실험인데, 지금 seed 43을 추가로 학습하고 있습니다. 틀린 가설이 쓸모없는 게 아니라, 다음 가설의 방향을 정해 줬다는 점을 기억해 두세요.</aside>
+</section>
+<section id="hyp-pick" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:64px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">오늘 한 바퀴 볼 실험</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">LoRA를 골랐다</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #ec9a3e;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#b8650f">이유 1</p><h3 style="font-size:40px;font-weight:800;line-height:1.3">현업에서 늘 나오는 질문</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">“더 싸게 학습할 수 없나”, “모델 파일이 너무 크다”. 학습 비용과 저장 크기는 어느 팀에서나 묻는다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #ec9a3e;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#b8650f">이유 2</p><h3 style="font-size:40px;font-weight:800;line-height:1.3">결과 해석이 흥미롭다</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">점수만 보면 “거의 같다”처럼 보이는데, 판정은 다르게 나온다. 숫자를 어떻게 읽는지 연습하기 좋다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px dashed #8a939e;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">아직 안 한 다음 후보</p><h3 style="font-size:40px;font-weight:800;line-height:1.3;color:#6b7480">손실 함수 · 합성 질문 · 맥락 헤더</h3><p style="font-size:28px;line-height:1.55;color:#6b7480">GISTEmbed 같은 손실 함수, 코퍼스 전체에 만든 구어체 질문, 조문 앞에 붙이는 법령 · 장 정보</p></div>
+</div>
+<aside>여섯 개 중 오늘 한 바퀴를 끝까지 따라갈 실험은 LoRA입니다. 이유는 두 가지입니다. 첫째, 학습을 더 싸게 할 수 없느냐, 모델 파일이 너무 크지 않느냐는 질문은 현업에서 정말 자주 나옵니다. 그 질문에 우리 과제의 숫자로 답해 볼 수 있습니다. 둘째, 결과 해석이 흥미롭습니다. 점수만 보면 거의 같아 보이는데, 미리 정한 기준으로 판정하면 다른 결론이 나옵니다. 숫자를 어떻게 읽어야 하는지 연습하기에 좋은 실험입니다. 오른쪽 회색 칸은 아직 돌리지 않은 다음 후보들입니다. 손실 함수를 GISTEmbed 같은 것으로 바꾸기, 코퍼스 전체에 구어체 질문을 합성하기, 조문 앞에 법령과 장 정보를 붙이는 맥락 헤더입니다. 여러분이 다음 가설을 세울 때 참고하시면 됩니다.</aside>
+</section>
+<section data-section="LoRA 실험 004 한 바퀴를 2022 방식으로: 원리, 가설과 판정 기준, 설정, 파일럿, 학습, test, 판정, 분석, 비용, 결론과 회고" id="lora-what" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#b8650f">2022 · LoRA 한 바퀴 · 원리</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">원래 가중치는 두고, 옆에 작은 행렬만 학습</h2>
+</div>
+<div style="display:flex;gap:72px;align-items:center">
+<div style="display:flex;gap:28px;align-items:center">
+<div style="width:300px;height:300px;background:#e6e8eb;border-radius:12px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px"><p style="font-size:36px;font-weight:800;color:#4a5361">W</p><p style="font-size:24px;color:#6b7480">384 × 384 · 고정</p></div>
+<p style="font-size:56px;font-weight:800;color:#6b7480">+</p>
+<div style="width:72px;height:300px;background:#ec9a3e;border-radius:8px;display:flex;justify-content:center;align-items:center"><p style="font-size:30px;font-weight:800;color:#1f2a37">B</p></div>
+<p style="font-size:36px;font-weight:800;color:#6b7480">×</p>
+<div style="width:300px;height:72px;background:#ec9a3e;border-radius:8px;display:flex;justify-content:center;align-items:center"><p style="font-size:30px;font-weight:800;color:#1f2a37">A</p></div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:22px">
+<p style="font-size:28px;line-height:1.5;color:#4a5361"><b style="color:#1f2a37">붙이는 곳</b>: attention의 query · key · value</p>
+<p style="font-size:28px;line-height:1.5;color:#4a5361"><b style="color:#1f2a37">크기</b>: r 16 · alpha 32 · dropout 0.1</p>
+<p style="font-size:28px;line-height:1.5;color:#4a5361"><b style="color:#1f2a37">끝나면</b>: W에 B×A를 합쳐 보통 모델로 저장</p>
+</div>
+</div>
+<p style="font-size:34px;line-height:1.5;font-weight:700">학습 파라미터 442,368 / 117,653,760 = <span style="color:#b8650f">0.4%</span></p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">LoRA: Low-Rank Adaptation. 12개 층 × query · key · value 3곳 × 16 × (384 + 384) = 442,368</p>
+<aside>LoRA가 무엇인지 짧게 봅니다. 전체 학습은 모델의 가중치 1억 1천7백만 개를 전부 바꿉니다. LoRA는 원래 가중치 W를 그대로 얼려 두고, 옆에 가늘고 긴 행렬 B와 납작한 행렬 A를 붙여서 이 둘만 학습합니다. 둘을 곱하면 W와 같은 모양이 되니까, W에 더해지는 변화량만 작게 배우는 셈입니다. 우리는 attention의 query, key, value 세 곳에 붙였고, 폭 r은 16, alpha 32, dropout 0.1을 썼습니다. 학습이 끝나면 B 곱하기 A를 W에 합쳐서 보통 모델과 똑같은 모양으로 저장합니다. 그래서 학습하는 파라미터는 44만 2천여 개, 전체 1억 1천7백만 개의 0.4%입니다.</aside>
+</section>
+<section id="hypothesis" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:64px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#b8650f">2022 · LoRA 한 바퀴 · 가설</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">“0.4%만 학습해도 002와 거의 같다”</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #ec9a3e;padding:28px 0 0 0"><h3 style="font-size:40px;font-weight:800;line-height:1.3">판정 기준을 먼저 적는다</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">002 대비 차이가 <b style="color:#1f2a37">0.02 미만</b>이고 95% 신뢰구간이 <b style="color:#1f2a37">0을 걸치면</b> “같다”</p><p style="font-size:24px;line-height:1.5;color:#6b7480">dev 표준오차가 약 ±0.012라 0.02 미만은 잡음으로 본다는 프로젝트 규칙</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #ec9a3e;padding:28px 0 0 0"><h3 style="font-size:40px;font-weight:800;line-height:1.3">왜 궁금한가</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">같다면 <b style="color:#1f2a37">학습 시간 · 메모리 · 저장 크기</b>를 줄일 수 있다</p><p style="font-size:24px;line-height:1.5;color:#6b7480">결과를 보기 전에 적어 둬야, 나온 숫자에 맞춰 기준을 바꾸지 않는다</p></div>
+</div>
+<aside>가설은 이렇게 씁니다. 0.4%만 학습해도 002와 거의 같다. 그런데 거의 같다는 말이 애매하죠. 그래서 결과를 보기 전에 판정 기준을 적어 둡니다. 002와의 차이가 0.02보다 작고, 95% 신뢰구간이 0을 걸치면 같다고 봅니다. 0.02라는 숫자는 이 프로젝트의 규칙에서 왔습니다. dev 점수의 표준오차가 약 ±0.012라서, 0.02보다 작은 차이는 잡음으로 보기로 했습니다. 왜 이게 궁금하냐면, 같다면 학습 시간과 메모리, 저장 크기를 줄일 수 있기 때문입니다. 기준을 먼저 적는 이유는 간단합니다. 숫자를 보고 나서 기준을 정하면, 보고 싶은 결론에 맞춰 기준을 고르게 됩니다.</aside>
+</section>
+<section id="setup" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:44px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#b8650f">2022 · LoRA 한 바퀴 · 설정</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">002와 다른 것은 딱 두 줄</h2>
+</div>
+<table style="width:1664px;font-size:28px;color:#1f2a37">
+<tr><th style="width:30%;text-align:left;color:#6b7480;font-size:24px">항목</th><th style="width:35%;text-align:left;color:#6b7480;font-size:24px">002 기준</th><th style="width:35%;text-align:left;color:#b8650f;font-size:24px">004 LoRA</th></tr>
+<tr style="background:#fdf1e3"><td><b>lora</b></td><td style="color:#4a5361">없음 (전체 학습)</td><td><b>r 16 · alpha 32 · dropout 0.1, query · key · value</b></td></tr>
+<tr style="background:#fdf1e3"><td><b>lr</b></td><td style="color:#4a5361">2e-5</td><td><b>2e-4</b> (학습할 게 적어 10배)</td></tr>
+<tr><td>나머지</td><td style="color:#4a5361">배치 32 · CachedMNRL mini 16 · 최대 3 epoch · negative 1 · 길이 512 · seed 42</td><td style="color:#4a5361">002와 같음</td></tr>
+</table>
+<div style="background:#f2f3f5;border-radius:14px;padding:32px 44px">
+<p style="font-family:'JetBrains Mono', 'Noto Sans KR', monospace;font-size:26px;line-height:1.7;color:#1f2a37"><span style="color:#6b7480"># experiments/exp_004_lora/config.yaml</span><br>uv run ragkit train --config experiments/exp_004_lora/config.yaml</p>
+</div>
+<aside>설정 파일을 봅니다. experiments/exp_004_lora/config.yaml입니다. 002와 다른 것은 두 줄뿐입니다. lora 블록이 생겼고, 학습률이 2e-5에서 2e-4로 열 배가 됐습니다. LoRA는 학습할 파라미터가 적어서 보통 전체 학습보다 큰 학습률을 씁니다. 나머지, 배치 32, CachedMNRL의 미니 배치 16, 최대 3 epoch, 오답 하나, 길이 512, seed 42는 전부 002와 같습니다. 한 번에 하나만 바꿔야 차이가 어디서 왔는지 말할 수 있습니다. 엄밀히는 lr도 같이 바뀌었으니 두 개를 바꾼 셈입니다. 그래서 이 실험은 LoRA와 거기에 맞춘 학습률, 이 한 묶음을 002와 비교한 것으로 읽어야 합니다. 명령은 ragkit train에 설정 파일만 넘기면 됩니다.</aside>
+</section>
+<section id="pilot" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#b8650f">2022 · LoRA 한 바퀴 · 파일럿</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">34분 걸기 전에 30 step만</h2>
+</div>
+<div style="background:#f2f3f5;border-radius:14px;padding:32px 44px">
+<p style="font-family:'JetBrains Mono', 'Noto Sans KR', monospace;font-size:26px;line-height:1.7;color:#1f2a37"><span style="color:#6b7480"># LoRA 설정(실험 004) 그대로 30 step, 출력은 임시 폴더</span><br>uv run python lecture/06_train/01_train_taste.py --run --lora</p>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;border-top:4px solid #ec9a3e;padding:24px 0 0 0"><p style="font-size:26px;font-weight:700;color:#6b7480">손실이 내려가나</p><p style="font-size:56px;font-weight:800;letter-spacing:-1px;color:#b8650f">1.385 → 1.085</p><p style="font-size:28px;line-height:1.55;color:#4a5361">배치 손실. lr 2e-4로 올렸어도 튀지 않고 내려간다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;border-top:4px solid #ec9a3e;padding:24px 0 0 0"><p style="font-size:26px;font-weight:700;color:#6b7480">step당 몇 초인가</p><p style="font-size:56px;font-weight:800;letter-spacing:-1px;color:#b8650f">2.2초</p><p style="font-size:28px;line-height:1.55;color:#4a5361">30 step에 65초. 이 속도면 3 epoch 약 28분</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;border-top:4px dashed #8a939e;padding:24px 0 0 0"><p style="font-size:26px;font-weight:700;color:#6b7480">실제 전체 학습</p><p style="font-size:56px;font-weight:800;letter-spacing:-1px;color:#4a5361">34분</p><p style="font-size:28px;line-height:1.55;color:#4a5361">epoch마다 dev 평가와 저장이 더해진다</p></div>
+</div>
+<aside>본 학습을 걸기 전에 파일럿을 돌립니다. 같은 맛보기 스크립트에 --run --lora를 붙이면 실험 004 설정 그대로 30 step만, 임시 폴더에 학습합니다. 받은 모델은 덮어쓰지 않습니다. 제가 돌려 보니 65초 걸렸습니다. 볼 건 두 가지입니다. 첫째, 손실이 내려가는지. 학습률을 열 배로 올렸으니 너무 크면 손실이 튀거나 꿈쩍 않을 수 있습니다. 배치 손실이 1.385에서 1.085로 내려갔으니 방향은 맞습니다. 둘째, step당 몇 초인지. 2.2초입니다. 이 속도를 전체 step 수에 곱하면 3 epoch에 약 28분으로 어림됩니다. 실제 전체 학습은 34분 걸렸는데, epoch마다 dev 평가하고 모델을 저장하는 시간이 더해져서 그렇습니다. 어림이 이 정도로 맞으면 충분합니다. 이 확인을 건너뛰면 34분을 기다린 뒤에야 설정 실수를 알게 됩니다.</aside>
+</section>
+<section id="run-dev" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#b8650f">2022 · LoRA 한 바퀴 · 학습</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">34분, 그리고 epoch마다 dev</h2>
+</div>
+<table style="width:1400px;font-size:30px;color:#1f2a37">
+<tr><th style="width:28%;text-align:left;color:#6b7480;font-size:24px">dev R@5 (학습 중 간이)</th><th style="width:18%;text-align:right;color:#6b7480;font-size:24px">epoch 1</th><th style="width:18%;text-align:right;color:#6b7480;font-size:24px">epoch 2</th><th style="width:18%;text-align:right;color:#6b7480;font-size:24px">epoch 3</th><th style="width:18%;text-align:right;color:#6b7480;font-size:24px">학습 시간</th></tr>
+<tr style="background:#fdf1e3"><td><b>004 LoRA</b></td><td style="text-align:right">0.670</td><td style="text-align:right">0.684</td><td style="text-align:right"><b>0.688</b></td><td style="text-align:right">34분</td></tr>
+<tr><td>002 전체 학습</td><td style="text-align:right">0.694</td><td style="text-align:right">0.700</td><td style="text-align:right"><b>0.702</b></td><td style="text-align:right">40분</td></tr>
+</table>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #ec9a3e;padding:28px 0 0 0"><h3 style="font-size:36px;font-weight:800;line-height:1.3">둘 다 best epoch 3</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">epoch는 dev로 고른다. test는 아직 열지 않는다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #ec9a3e;padding:28px 0 0 0"><h3 style="font-size:36px;font-weight:800;line-height:1.3">004는 아직 오르는 중</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">epoch 2 → 3에서 +0.004. 002는 +0.002로 거의 멈췄다</p></div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">학습 전 e5-small의 같은 dev 지표: 0.550</p>
+<aside>본 학습입니다. LoRA는 34분, 002는 40분 걸렸습니다. 학습 중에 epoch이 끝날 때마다 dev로 간이 평가를 합니다. 학습 전 모델이 0.550이었고, LoRA는 0.670, 0.684, 0.688로 올랐고, 002는 0.694, 0.700, 0.702였습니다. 둘 다 epoch 3이 가장 좋아서 그걸 최종 모델로 씁니다. 이 선택은 dev로만 합니다. test는 아직 열지 않습니다. 하나 눈여겨볼 건, 002는 마지막 epoch에 0.002 올라 거의 멈췄는데 LoRA는 0.004로 아직 오르는 중이라는 겁니다. 이건 회고에서 다시 나옵니다.</aside>
+</section>
+<section id="test-once" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:48px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#b8650f">2022 · LoRA 한 바퀴 · test는 한 번</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">0.641, 기준선 아래</h2>
+</div>
+<div style="display:flex;flex-direction:column;gap:24px;width:1400px">
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><p style="font-size:28px;font-weight:700">e5-small <span style="color:#6b7480">(학습 전)</span></p><p style="font-size:40px;font-weight:800;color:#4a5361">0.513</p></div>
+<div style="height:20px;background:#e6e8eb;border-radius:8px;display:flex"><div style="width:718px;height:20px;background:#8a939e;border-radius:8px"></div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><p style="font-size:28px;font-weight:700">004 LoRA</p><p style="font-size:40px;font-weight:800;color:#b8650f">0.641</p></div>
+<div style="height:20px;background:#e6e8eb;border-radius:8px;display:flex"><div style="width:897px;height:20px;background:#ec9a3e;border-radius:8px"></div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><p style="font-size:28px;font-weight:700">002 전체 학습</p><p style="font-size:40px;font-weight:800;color:#4a5361">0.669</p></div>
+<div style="height:20px;background:#e6e8eb;border-radius:8px;display:flex"><div style="width:937px;height:20px;background:#b8650f;border-radius:8px"></div></div>
+</div>
+</div>
+<table style="width:1400px;font-size:26px;color:#1f2a37">
+<tr><th style="width:25%;text-align:left;color:#6b7480;font-size:24px">test 2,526</th><th style="width:25%;text-align:right;color:#6b7480;font-size:24px">학습 전</th><th style="width:25%;text-align:right;color:#6b7480;font-size:24px">004 LoRA</th><th style="width:25%;text-align:right;color:#6b7480;font-size:24px">002</th></tr>
+<tr><td>R@1</td><td style="text-align:right">0.284</td><td style="text-align:right"><b>0.375</b></td><td style="text-align:right">0.405</td></tr>
+<tr><td>R@10</td><td style="text-align:right">0.601</td><td style="text-align:right"><b>0.732</b></td><td style="text-align:right">0.757</td></tr>
+</table>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">test: 학습 · 선택에 쓰지 않은 처음 보는 법령 16개의 질문. 모델을 고른 뒤 한 번만 연다</p>
+<aside>모델을 정했으니 이제 test를 한 번 엽니다. 학습에도 epoch 선택에도 쓰지 않은, 처음 보는 법령 16개의 질문 2,526개입니다. LoRA는 R@5 0.641로, 학습 전 0.513보다는 크게 올랐지만 기준선 002의 0.669보다는 아래입니다. R@1과 R@10도 같은 순서입니다. R@1은 0.375 대 0.405, R@10은 0.732 대 0.757입니다. 어느 지표로 봐도 학습 전과 002 사이, 002 쪽에 가깝게 있습니다. 자, 이게 거의 같은 걸까요, 다른 걸까요. 다음 장에서 미리 적어 둔 기준으로 판정합니다.</aside>
+</section>
+<section id="verdict" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:52px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#b8650f">2022 · LoRA 한 바퀴 · 판정</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">미리 적은 기준으로는 “같다”가 아니다</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;border-top:4px solid #ec9a3e;padding:24px 0 0 0"><p style="font-size:64px;font-weight:800;letter-spacing:-2px;color:#b8650f">−0.028</p><p style="font-size:28px;line-height:1.55;color:#4a5361">002 → 004 차이. 95% CI <b style="color:#1f2a37">[−0.040, −0.017]</b>, 0을 걸치지 않는다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;border-top:4px solid #ec9a3e;padding:24px 0 0 0"><p style="font-size:64px;font-weight:800;letter-spacing:-2px;color:#b8650f">78 / 149</p><p style="font-size:28px;line-height:1.55;color:#4a5361">고친 질문 / 망친 질문. McNemar p &lt; 0.0001</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;border-top:4px solid #ec9a3e;padding:24px 0 0 0"><p style="font-size:64px;font-weight:800;letter-spacing:-2px;color:#b8650f">9 / 16</p><p style="font-size:28px;line-height:1.55;color:#4a5361">나빠진 법령. 특정 법령 하나의 문제가 아니다</p></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;padding:28px 40px;background:#f2f3f5;border-radius:16px">
+<p style="font-size:30px;line-height:1.5;color:#1f2a37"><b>그러나</b> 학습으로 오른 폭의 <b style="color:#b8650f">82%</b>를 가져왔다 (+0.128 / +0.156). 점수 수준으로는 <b style="color:#b8650f">96%</b> (0.641 / 0.669)</p>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">uv run ragkit paired-test · 같은 test 질문을 두 모델이 맞혔는지 짝지어 비교</p>
+<aside>판정입니다. ragkit paired-test로 같은 test 질문을 두 모델이 각각 맞혔는지 짝지어 비교했습니다. 차이는 −0.028, 95% 신뢰구간이 −0.040에서 −0.017로 0을 걸치지 않습니다. 미리 적은 기준은 차이가 0.02 미만이고 구간이 0을 걸치는 것이었으니, 두 조건 모두 어긋납니다. 질문 단위로 보면 LoRA가 002보다 새로 맞힌 질문이 78개, 새로 틀린 질문이 149개이고 McNemar 검정 p가 0.0001보다 작습니다. 법령 16개 중 9개에서 나빠졌으니 어느 한 법령 탓도 아닙니다. 그래서 같다는 가설은 기각합니다. 그런데 반대쪽 숫자도 같이 봐야 합니다. 학습 전에서 002까지 오른 폭이 0.156인데 LoRA는 0.128, 그 82%를 가져왔습니다. 점수 자체로는 96%입니다. 96%라는 숫자만 보면 가설대로라고 말하고 싶어집니다. 하지만 미리 정한 기준으로 재면 분명히 다릅니다. 이 두 문장을 둘 다 말할 수 있어야 합니다. 같지는 않다, 그러나 대부분은 따라왔다.</aside>
+</section>
+<section id="where" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:48px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#b8650f">2022 · LoRA 한 바퀴 · 어디서 잃었나</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">거의 모든 곳에서 조금씩</h2>
+</div>
+<div style="display:flex;gap:64px;align-items:flex-start">
+<table style="width:640px;font-size:28px;color:#1f2a37">
+<tr><th style="width:40%;text-align:left;color:#6b7480;font-size:24px">질문 유형</th><th style="width:30%;text-align:right;color:#6b7480;font-size:24px">002</th><th style="width:30%;text-align:right;color:#b8650f;font-size:24px">004</th></tr>
+<tr><td>keyword</td><td style="text-align:right">0.795</td><td style="text-align:right">0.764</td></tr>
+<tr><td>question</td><td style="text-align:right">0.687</td><td style="text-align:right">0.653</td></tr>
+<tr><td>situation</td><td style="text-align:right">0.589</td><td style="text-align:right">0.568</td></tr>
+</table>
+<table style="width:960px;font-size:28px;color:#1f2a37">
+<tr><th style="width:40%;text-align:left;color:#6b7480;font-size:24px">테마</th><th style="width:30%;text-align:right;color:#6b7480;font-size:24px">002</th><th style="width:30%;text-align:right;color:#b8650f;font-size:24px">004</th></tr>
+<tr><td>consumer</td><td style="text-align:right">0.650</td><td style="text-align:right">0.596</td></tr>
+<tr><td>traffic</td><td style="text-align:right">0.663</td><td style="text-align:right">0.619</td></tr>
+<tr><td>tax</td><td style="text-align:right">0.630</td><td style="text-align:right">0.599</td></tr>
+<tr><td>youth</td><td style="text-align:right">0.676</td><td style="text-align:right">0.660</td></tr>
+<tr><td>finance</td><td style="text-align:right">0.684</td><td style="text-align:right">0.670</td></tr>
+<tr style="background:#fdf1e3"><td>electric</td><td style="text-align:right">0.834</td><td style="text-align:right"><b>0.841</b> (유일하게 위)</td></tr>
+</table>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">test R@5. electric은 157 질문으로 가장 작은 테마라 +0.007은 잡음으로 본다</p>
+<aside>어디서 잃었는지 쪼개 봅니다. 질문 유형별로는 키워드형, 질문형, 상황 설명형 세 가지 모두에서 002보다 낮습니다. 키워드형 0.795에서 0.764, 질문형 0.687에서 0.653, 상황 설명형 0.589에서 0.568입니다. 테마별로는 소비자 분야가 0.650에서 0.596으로 가장 많이 떨어졌고, 교통, 세금이 그다음입니다. 전기 테마만 0.834에서 0.841로 조금 위인데, 질문이 157개로 가장 작은 테마라 이 정도는 잡음으로 봅니다. 결국 LoRA는 특정 영역에서 크게 무너진 게 아니라, 거의 모든 곳에서 조금씩 덜 배웠습니다. 학습할 수 있는 폭이 좁으니 납득이 가는 모습입니다.</aside>
+</section>
+<section id="cost" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#b8650f">2022 · LoRA 한 바퀴 · 비용</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">아낀 것은 생각보다 작다</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;border-top:4px solid #ec9a3e;padding:24px 0 0 0"><p style="font-size:26px;font-weight:700;color:#6b7480">학습 시간</p><p style="font-size:56px;font-weight:800;letter-spacing:-1px;color:#b8650f">40 → 34분</p><p style="font-size:28px;line-height:1.55;color:#4a5361">−15%. 앞뒤 계산은 여전히 모델 전체를 지나가서 크게 못 줄인다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;border-top:4px solid #ec9a3e;padding:24px 0 0 0"><p style="font-size:26px;font-weight:700;color:#6b7480">저장</p><p style="font-size:56px;font-weight:800;letter-spacing:-1px;color:#b8650f">1.7MB</p><p style="font-size:28px;line-height:1.55;color:#4a5361">LoRA 어댑터만. 전체 모델은 449MB</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;border-top:4px dashed #8a939e;padding:24px 0 0 0"><p style="font-size:26px;font-weight:700;color:#6b7480">배포</p><p style="font-size:56px;font-weight:800;letter-spacing:-1px;color:#4a5361">449MB</p><p style="font-size:28px;line-height:1.55;color:#4a5361">배포는 합친 모델이라 크기가 같다</p></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;padding:28px 40px;background:#f2f3f5;border-radius:16px">
+<p style="font-size:30px;line-height:1.5;color:#1f2a37"><b>모델 하나를 배포하는 우리 과제에서는 이득이 작다.</b></p>
+<p style="font-size:28px;line-height:1.5;color:#4a5361">LoRA가 맞는 경우: 모델이 클 때 · GPU 메모리가 모자랄 때 · 버전 여러 개를 어댑터로 바꿔 끼울 때</p>
+</div>
+<aside>그럼 무엇을 아꼈을까요. 학습 시간은 40분에서 34분, 15% 줄었습니다. 생각보다 작죠. 학습하는 가중치는 0.4%지만, 질문을 넣고 손실을 계산하고 기울기를 되돌리는 계산은 여전히 모델 전체를 지나가야 해서 시간이 크게 줄지 않습니다. 저장은 LoRA 어댑터만 따로 두면 1.7MB로, 전체 모델 449MB와 비교가 안 되게 작습니다. 하지만 배포할 때는 어댑터를 원래 가중치에 합친 모델을 내보내니 결국 449MB로 같습니다. 그래서 모델 하나를 학습해서 하나를 배포하는 우리 과제에서는 LoRA의 이득이 작습니다. LoRA가 빛나는 건 다른 상황입니다. 모델이 커서 전체 학습이 버거울 때, GPU 메모리가 모자랄 때, 그리고 고객사별이나 용도별로 버전 여러 개를 만들어 기본 모델 하나에 어댑터만 바꿔 끼울 때입니다.</aside>
+</section>
+<section id="decision" data-transition="fade" style="background:#fdf1e3;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:44px">
+<p style="font-size:26px;font-weight:700;color:#b8650f">2022 · LoRA 한 바퀴 · 결정</p>
+<h1 style="font-size:96px;font-weight:800;line-height:1.2;letter-spacing:-3px">이 과제는<br>전체 학습으로 간다</h1>
+<p style="font-size:34px;line-height:1.6;color:#4a5361;width:1500px">LoRA는 점수에서 −0.028을 잃었고, 아낀 것은 학습 6분과 배포 전에만 쓰는 1.7MB였다. 잃은 것이 아낀 것보다 크다.</p>
+<div style="position:absolute;left:0;right:0;bottom:0;height:8px;background:#ec9a3e"></div>
+<aside>그래서 결정입니다. 이 과제는 전체 학습으로 갑니다. 저울에 올려 보면 간단합니다. LoRA는 test에서 0.028을 잃었고, 그 대가로 아낀 건 학습 6분과, 배포할 때는 어차피 합쳐서 쓰지 않는 1.7MB 어댑터입니다. 우리 상황에서는 잃은 게 더 큽니다. 여기서 중요한 건 결론이 LoRA는 나쁘다가 아니라는 겁니다. 이 과제, 이 모델 크기, 모델 하나를 배포하는 이 조건에서는 전체 학습이 낫다는 결론입니다.</aside>
+</section>
+<section id="retro" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:64px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#b8650f">2022 · LoRA 한 바퀴 · 회고</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">결론의 범위를 적는다</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px dashed #8a939e;padding:28px 0 0 0"><h3 style="font-size:36px;font-weight:800;line-height:1.3">해 보지 않은 것</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">lr과 r을 하나씩만 시도했다 (2e-4, r 16). epoch 3에서도 오르는 중이라 더 돌리면 차이가 줄 수도 있다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #ec9a3e;padding:28px 0 0 0"><h3 style="font-size:36px;font-weight:800;line-height:1.3">그래서 결론은</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">“LoRA는 002와 같지 않다”가 아니라 <b style="color:#1f2a37">“이 설정에서는” 같지 않다</b></p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0"><h3 style="font-size:36px;font-weight:800;line-height:1.3">다음 가설로</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">배치(006)도 epoch(009)도 아니었다. 남은 것은 학습 신호, 오답이 쉬웠다 → <b style="color:#2d6db0">001</b></p></div>
+</div>
+<aside>한 바퀴의 마지막은 회고입니다. 해 보지 않은 것부터 적습니다. 학습률은 2e-4 하나, r은 16 하나만 시도했습니다. 그리고 학습 중 dev 표에서 봤듯이 LoRA는 epoch 3에서도 아직 오르고 있었습니다. 더 돌리거나 학습률을 조정하면 차이가 줄 수도 있습니다. 그래서 결론에 범위를 붙입니다. LoRA는 전체 학습과 같지 않다가 아니라, 이 설정에서는 같지 않다. 이렇게 적어 두면 나중에 누가 다른 설정으로 LoRA를 다시 해 볼 때 어디서부터 시작하면 되는지 알 수 있습니다. 그리고 회고는 다음 가설로 이어져야 합니다. 배치를 키워도, epoch를 늘려도 안 됐습니다. 남은 건 학습 신호, 우리가 준 오답이 너무 쉬웠다는 의심입니다. 그 가설이 실험 001이고, 이 바퀴는 제가 손으로 돌지 않고 에이전트에게 맡겼습니다.</aside>
+</section>
+<section data-section="2026 딸깍: 같은 바퀴를 에이전트가 돈 실험 001, 사람이 남는 곳" id="div-2026" data-transition="fade" style="background:#e8f1fb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:40px">
+<p style="font-size:36px;font-weight:800;color:#ffffff;background:#2d6db0;padding:6px 22px;border-radius:12px;width:140px;text-align:center">2026</p>
+<h1 style="font-size:112px;font-weight:800;line-height:1.2;letter-spacing:-3px">딸깍:<br>같은 바퀴를 에이전트가 돈다</h1>
+<p style="font-size:34px;line-height:1.6;color:#4a5361;width:1400px">실험 001 오답 다시 캐기. 오답 분석부터 회고까지 한 바퀴를 에이전트가 돌았고, 기록은 runs/001_hard_negatives에 그대로 있습니다.</p>
+<div style="position:absolute;left:0;right:0;bottom:0;height:8px;background:#4f93d8"></div>
+<aside>이제 2026년 방식입니다. 방금 LoRA 한 바퀴를 손으로 돌았습니다. 가설을 쓰고, 기준을 적고, 설정을 고치고, 파일럿을 돌리고, 기다리고, 판정하고, 쪼개 보고, 회고했습니다. 같은 바퀴를 에이전트에게 맡기면 어떻게 되는지 실험 001로 봅니다. 과장 없이, 저장소의 runs/001_hard_negatives 폴더에 남은 문서 그대로입니다. 여러분도 열어 볼 수 있습니다.</aside>
+</section>
+<section id="who-does-what" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:36px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#2d6db0">2026 · 실험 한 바퀴 6단계 · 전문가 에이전트 검토 문서 7개 (검색 · 방법론 · 운영)</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">에이전트가 돌고, 사람은 고른다</h2>
+</div>
+<table style="width:1664px;font-size:24px;color:#1f2a37">
+<tr><th style="width:24%;text-align:left;color:#6b7480;font-size:24px">단계 · 문서</th><th style="width:42%;text-align:left;color:#6b7480;font-size:24px">에이전트가 한 일</th><th style="width:34%;text-align:left;color:#2d6db0;font-size:24px">사람이 한 일</th></tr>
+<tr><td><b>0 오답 분석</b><br>00_error_analysis.md</td><td style="color:#4a5361">dev 실패 382개를 관계 6유형으로 집계, 기존 오답의 현재 순위 계산</td><td style="color:#4a5361">틀린 질문 몇 개를 직접 열어 원인 확인</td></tr>
+<tr><td><b>1 문헌</b><br>01_research.md</td><td style="color:#4a5361">관련 논문의 효과 크기를 표로 정리, 우리 분석과 맞춰 봄</td><td style="color:#4a5361">제약 정하기: e5-small 하나, reranker 없음</td></tr>
+<tr><td><b>2 계획</b><br>02_plan.md</td><td style="color:#4a5361">가설 · run 구성 · 통과 기준을 미리 적음, 검토가 누수를 짚음</td><td style="color:#4a5361">통과 기준 정하기, 누수 처리 판단</td></tr>
+<tr><td><b>3 실행</b><br>03_run/</td><td style="color:#4a5361">run 6개를 밤새 순서대로, 오답 후보 9,009쌍 판정</td><td style="color:#4a5361">자는 동안 돈다</td></tr>
+<tr><td><b>4 결과</b><br>04_results.md</td><td style="color:#4a5361">결과표 · 대응 검정 · 고친 질문과 망친 질문</td><td style="color:#4a5361">결론이 근거보다 강하지 않은지 확인</td></tr>
+<tr><td><b>5 회고</b><br>05_retro.md</td><td style="color:#4a5361">검토 반영, 다음 실험 후보를 비용 · 근거와 함께 순위로</td><td style="color:#4a5361">다음에 무엇을 할지 고르기</td></tr>
+</table>
+<aside>runs/001 폴더의 문서 이름이 곧 바퀴의 여섯 단계입니다. 0번 오답 분석에서 에이전트는 dev에서 틀린 382개를 정답과의 관계로 여섯 유형으로 나눠 세고, 지금 쓰는 오답이 모델 기준으로 몇 위에 있는지 계산했습니다. 저는 틀린 질문 몇 개를 직접 열어 그 분류가 맞는지 봤습니다. 1번 문헌은 관련 논문들이 얼마나 올렸는지 효과 크기를 표로 정리하고 우리 분석과 맞춰 봤습니다. 저는 제약을 정했습니다. 모델은 e5-small 하나, reranker는 쓰지 않는다. 2번 계획에서는 가설과 run 구성, 통과 기준을 실행 전에 적었고, 여기서 검토 에이전트가 데이터 누수를 짚었습니다. 3번 실행은 run 6개를 밤새 순서대로 돌리고 오답 후보 9,009쌍을 판정했습니다. 저는 그동안 잤습니다. 4번 결과는 결과표와 대응 검정, 고친 질문과 망친 질문까지 정리합니다. 제 일은 결론이 근거보다 세게 쓰이지 않았는지 보는 겁니다. 5번 회고는 다음 실험 후보를 비용과 근거와 함께 순위로 내놓고, 저는 그중에서 고릅니다. 단계마다 검색, 방법론, 운영 관점의 전문가 역할 에이전트가 검토한 문서가 모두 7개 남아 있습니다.</aside>
+</section>
+<section id="result-001" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:48px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#2d6db0">2026 · 실험 001 결과</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">쉬운 오답을 헷갈리는 오답으로 바꿨다</h2>
+</div>
+<p style="font-size:30px;line-height:1.5;color:#4a5361">기존 오답의 <b style="color:#1f2a37">40%가 이미 50위 밖</b>(쉬움) → 학습한 모델로 채굴한 negative 3개로 교체. 대조군 seed 3개 + 후보 3개, <b style="color:#1f2a37">run 6개를 밤새</b></p>
+<div style="display:flex;gap:40px">
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;border-top:4px solid #c9ced6;padding:20px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">대조군 · 기존 오답</p><p style="font-size:56px;font-weight:800;color:#4a5361">0.720</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;border-top:4px solid #4f93d8;padding:20px 0 0 0"><p style="font-size:24px;font-weight:700;color:#2d6db0">A · 채굴 3개 (채택)</p><p style="font-size:56px;font-weight:800;color:#2d6db0">0.761</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;border-top:4px solid #4f93d8;padding:20px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">B · 판정 후 남김</p><p style="font-size:56px;font-weight:800;color:#1f2a37">0.756</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;border-top:4px solid #4f93d8;padding:20px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">C · 채굴 1개</p><p style="font-size:56px;font-weight:800;color:#1f2a37">0.751</p></div>
+</div>
+<div style="display:flex;gap:40px">
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;padding:24px 32px;background:#e8f1fb;border-radius:16px"><h3 style="font-size:32px;font-weight:800">검토가 누수를 잡았다</h3><p style="font-size:26px;line-height:1.5;color:#4a5361">채굴 후보의 15~19%가 dev · test 법령 문서. train 법령으로만 제한했다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;padding:24px 32px;background:#e8f1fb;border-radius:16px"><h3 style="font-size:32px;font-weight:800">test 0.723</h3><p style="font-size:26px;line-height:1.5;color:#4a5361">002의 0.669보다 위. 다만 001은 lr 3e-5 · 4 epoch로 학습 설정도 다르다</p></div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">dev 복수 정답 R@5, 1,412 질문. 출처: runs/001_hard_negatives/04_results.md, 05_retro.md</p>
+<aside>결과입니다. 오답 분석에서 지금 쓰는 오답의 40%가 이미 50위 밖, 즉 모델에게는 너무 쉬운 오답이라는 게 나왔습니다. 그래서 학습한 모델로 train 질문마다 상위 후보를 뽑고, 정답과 점수가 너무 비슷한 건 사실 정답일 수 있으니 버린 뒤, 3개를 오답으로 썼습니다. 차이가 seed 잡음이 아닌지 보려고 기존 오답 대조군을 seed 3개로, 후보 방식을 3개로, 모두 run 6개를 밤새 돌렸습니다. 대조군 0.720에 비해 A 0.761, 판정 에이전트가 걸러서 남긴 B 0.756, 채굴 오답을 1개만 쓴 C 0.751, 셋 다 올랐습니다. 셋 사이 차이는 잡음 범위라, 판정 비용이 들지 않는 A를 골랐습니다. 중요한 장면이 하나 있습니다. 계획 단계에서 방법론 검토 에이전트가, 채굴 후보의 15~19%가 dev와 test 법령 문서라는 걸 짚었습니다. 그대로 갔으면 처음 보는 법령 성적이 부풀었을 겁니다. 그래서 train 법령 문서에서만 캤습니다. test로는 0.723, 002의 0.669보다 높습니다. 다만 001은 학습률 3e-5에 4 epoch로 학습 설정도 002와 달라서, 오답 효과만의 크기는 같은 설정 대조군과 비교한 +0.041로 봐야 합니다.</aside>
+</section>
+<section id="human" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:48px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#2d6db0">2026 · 그래서 사람이 남는 곳</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">기준 · 제약 · 의심 · 규칙</h2>
+</div>
+<div style="display:flex;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:24px 0 0 0"><h3 style="font-size:40px;font-weight:800;color:#2d6db0">기준</h3><p style="font-size:26px;line-height:1.5;color:#4a5361">개선은 <b style="color:#1f2a37">Δ ≥ 0.02</b>이고 seed 흔들림의 <b style="color:#1f2a37">2배 초과</b>일 때</p><p style="font-size:26px;line-height:1.5;color:#4a5361">test는 마지막에 한 번만</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:24px 0 0 0"><h3 style="font-size:40px;font-weight:800;color:#2d6db0">제약</h3><p style="font-size:26px;line-height:1.5;color:#4a5361">모델은 <b style="color:#1f2a37">e5-small 하나</b>. 학습할 때도 다른 모델은 쓰지 않는다</p><p style="font-size:26px;line-height:1.5;color:#4a5361">reranker도 쓰지 않는다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:24px 0 0 0"><h3 style="font-size:40px;font-weight:800;color:#2d6db0">의심</h3><p style="font-size:26px;line-height:1.5;color:#4a5361"><b style="color:#1f2a37">누수</b>: 채굴 후보의 15~19%가 dev · test 법령이었다</p><p style="font-size:26px;line-height:1.5;color:#4a5361"><b style="color:#1f2a37">치팅</b>: test를 보고 고르지 않았나</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:24px 0 0 0"><h3 style="font-size:40px;font-weight:800;color:#2d6db0">규칙</h3><p style="font-size:26px;line-height:1.5;color:#4a5361"><b style="color:#1f2a37">“큰 판정은 300쌍 시범부터”</b></p><p style="font-size:26px;line-height:1.5;color:#4a5361">9,009쌍을 다 판정했는데 효과가 없었던 실수에서 생겼다</p></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;padding:28px 40px;background:#e8f1fb;border:2px solid #4f93d8;border-radius:16px">
+<h3 style="font-size:40px;font-weight:800;color:#1f2a37">손으로 돈 LoRA 바퀴에서 내가 한 일과 같다</h3>
+<p style="font-size:28px;line-height:1.5;color:#4a5361">기준을 먼저 적고, 범위를 정하고, 숫자를 의심하고, 다음을 고른다. 달라진 것은 그 사이를 누가 채우느냐다.</p>
+</div>
+<aside>에이전트가 바퀴를 돌면 사람은 어디에 남을까요. 네 군데입니다. 첫째, 기준. 차이가 0.02 이상이고 seed에 따른 흔들림의 두 배를 넘어야 개선으로 본다. test는 마지막에 한 번만 쓴다. 이건 제가 정했습니다. 둘째, 제약. 모델은 e5-small 하나, 학습할 때도 다른 모델은 쓰지 않고, reranker도 쓰지 않는다. 에이전트는 점수를 올리려고 더 큰 모델을 끌어오고 싶어 할 수 있는데, 그 선을 긋는 게 사람입니다. 셋째, 의심. 좋은 숫자가 나올수록 먼저 의심합니다. 이번에도 채굴 후보의 15~19%가 dev와 test 법령이었고, 그대로 갔으면 성적이 부풀었을 겁니다. test를 보고 고른 건 아닌지도 봅니다. 넷째, 규칙. 큰 판정 작업은 300쌍으로 먼저 시범을 돌린다. 이건 9,009쌍을 전부 판정하고 나서야 효과가 없다는 걸 안 실수에서 생긴 규칙입니다. 이 네 가지는 아까 LoRA 바퀴를 손으로 돌 때 제가 한 일과 똑같습니다. 기준을 먼저 적었고, 결론의 범위를 정했고, 96%라는 숫자를 의심했고, 다음 가설을 골랐죠. 달라진 건 그 사이의 설정 고치기, 기다리기, 표 만들기를 누가 하느냐입니다.</aside>
+</section>
+<section data-section="실습 명령, 7교시 예고, 휴식" id="run" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:40px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">실행</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">돌려 볼 명령</h2>
+</div>
+<div style="display:flex;flex-direction:column;gap:14px;background:#f2f3f5;border-radius:14px;padding:32px 44px">
+<p style="font-family:'JetBrains Mono', 'Noto Sans KR', monospace;font-size:24px;line-height:1.6;color:#1f2a37"><span style="color:#6b7480"># 0. 비교용 파인튜닝 모델 네 개 받기 (5교시 쉬는 시간에 받았으면 건너뜀)</span><br>uv run python scripts/finetuned_drive.py download --all<br><span style="color:#6b7480"># 1. LoRA 설정과 받은 모델의 학습 기록</span><br>uv run python lecture/06_train/01_train_taste.py --lora<br><span style="color:#6b7480"># 선택: 같은 설정으로 30 step 파일럿, 임시 폴더 (약 1분)</span><br>uv run python lecture/06_train/01_train_taste.py --run --lora<br><span style="color:#6b7480"># 2. 학습 전 · 002 · 004 · 006 · 001 A를 test로 비교 + 004 차이 검정</span><br>uv run python lecture/06_train/02_compare_runs.py<br><span style="color:#6b7480"># 3. 오답 분석: 무엇이 고쳐졌고 무엇이 여전히 틀리나 (2번 먼저)</span><br>uv run python lecture/06_train/03_error_analysis.py<br><span style="color:#6b7480"># 선택: 실험 기록 보기 (터미널 하나 더)</span><br>uv run --extra mlflow mlflow server --backend-store-uri sqlite:///mlruns/mlflow.db --artifacts-destination mlruns/artifacts --port 5050</p>
+</div>
+<aside>오늘 실습 명령입니다. 0번은 비교에 쓸 파인튜닝 모델 네 개를 받는 명령입니다. 5교시 쉬는 시간에 받으라고 안내드렸으니, 이미 받으셨으면 건너뛰면 됩니다. 1번은 LoRA 설정이 002와 어떻게 다른지, 그리고 받은 모델들의 학습 기록을 보여 줍니다. 그다음 줄은 선택입니다. --run을 붙이면 LoRA 설정 그대로 30 step만 임시 폴더에 학습해서, 아까 본 것처럼 손실이 내려가는지, step당 몇 초인지 직접 봅니다. 1분 남짓 걸리고 받은 모델은 덮어쓰지 않습니다. 2번은 학습 전 모델과 002, 004, 006, 001 A를 test로 비교해서 오늘 본 표를 다시 만들고, 004와 002의 차이를 질문 단위로 검정합니다. 3번은 그 결과로 무엇이 고쳐졌고 무엇이 여전히 틀리는지 나눠 봅니다. 2번을 먼저 돌려야 합니다. MLflow는 선택입니다. 터미널을 하나 더 열어 서버를 띄우면 실험마다 남은 설정과 지표를 나란히 볼 수 있습니다. 포트는 5000이 macOS AirPlay와 겹쳐서 5050을 씁니다.</aside>
+</section>
+<section id="next" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#2d6db0">다음 시간 · 7교시 · 2026 파트</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">만든 모델을 가볍고 빠르게</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">1</p><h3 style="font-size:36px;font-weight:800">API 복습</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">모델을 남이 부를 수 있게 감싼다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">2</p><h3 style="font-size:36px;font-weight:800">배포 최적화</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">ONNX · INT8 · 어휘 가지치기</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">3</p><h3 style="font-size:36px;font-weight:800">비교표</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">크기 · 속도 · 정확도를 한 표로</p></div>
+</div>
+<aside>오늘 LoRA에서 저장 크기 이야기가 나왔죠. 어댑터는 작아도 배포하는 모델은 449MB 그대로였습니다. 7교시에는 바로 그 배포하는 모델을 작고 빠르게 만듭니다. 여기까지가 모델을 만드는 2022 파트였고, 7교시부터는 만든 모델을 남에게 전달하는 2026 파트입니다. API는 이미 배우셨으니 짧게 복습하고, ONNX 변환과 INT8, 어휘 가지치기로 모델을 줄인 뒤, 크기와 속도와 정확도를 한 표로 비교합니다.</aside>
+</section>
+<section id="break" data-transition="fade" style="background:#f2f3f5;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:44px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">6교시 끝</p>
+<h1 style="font-size:112px;font-weight:800;line-height:1.2;letter-spacing:-3px">질문 받고,<br><span style="color:#6b7480">10분 쉬겠습니다.</span></h1>
+<p style="font-size:34px;line-height:1.6;color:#4a5361">여기까지 2022 파트. 다음 시간부터 2026 파트입니다.</p>
+<div style="position:absolute;left:0;right:0;bottom:0;height:8px;background:linear-gradient(90deg, #ec9a3e 0%, #4f93d8 100%)"></div>
+<aside>질문 받고 10분 쉽니다. 비교 스크립트가 돌고 있다면 그대로 두셔도 됩니다. 쉬고 나면 2026 파트, 만든 모델을 전달하는 시간입니다.</aside>
+</section>
+</div>
+<div id="bar"></div>
+<div id="notes"></div>
+<script>
+(() => {
+  // 덱 전용 요소: x-icon (Lucide 모양), x-connector (선 · 화살표)
+  const ICONS = {
+    Chart: '<path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>',
+    Chat: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+    Check: '<path d="M20 6 9 17l-5-5"/>',
+    CheckCircle: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+    Database: '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>',
+    Globe: '<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
+    Home: '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>',
+    Lightbulb: '<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>',
+    PaperPlane: '<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
+    Search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+    Settings: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+    Warning: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+  };
+  document.querySelectorAll('x-icon').forEach((el) => {
+    const body = ICONS[el.getAttribute('name')] || '<circle cx="12" cy="12" r="9"/>';
+    el.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + body + '</svg>';
+  });
+
+  const NS = 'http://www.w3.org/2000/svg';
+  let markerId = 0;
+  document.querySelectorAll('x-connector').forEach((el) => {
+    const host = el.parentElement;
+    if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
+    const cs = getComputedStyle(el);
+    const color = cs.color;
+    const w = parseFloat(el.style.borderWidth) || 2;
+    const dash = (el.style.borderStyle || '').includes('dash') ? `${w * 3} ${w * 2}` : (el.style.borderStyle || '').includes('dot') ? `${w} ${w * 1.5}` : '';
+    const num = (v, size) => (String(v).endsWith('%') ? (parseFloat(v) / 100) * size : parseFloat(v));
+    const hw = host.offsetWidth, hh = host.offsetHeight;
+    const x1 = num(el.getAttribute('x1'), hw), y1 = num(el.getAttribute('y1'), hh);
+    const x2 = num(el.getAttribute('x2'), hw), y2 = num(el.getAttribute('y2'), hh);
+    const head = el.getAttribute('head') || 'end';
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('style', 'position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;pointer-events:none');
+    const id = 'xc' + markerId++;
+    svg.innerHTML = `<defs><marker id="${id}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="${Math.max(4, 12 / w * 2)}" markerHeight="${Math.max(4, 12 / w * 2)}" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="${color}"/></marker></defs>`;
+    const line = document.createElementNS(NS, 'line');
+    Object.entries({ x1, y1, x2, y2, stroke: color, 'stroke-width': w }).forEach(([k, v]) => line.setAttribute(k, v));
+    if (dash) line.setAttribute('stroke-dasharray', dash);
+    if (head === 'end' || head === 'both') line.setAttribute('marker-end', `url(#${id})`);
+    if (head === 'both') line.setAttribute('marker-start', `url(#${id})`);
+    svg.appendChild(line);
+    el.replaceWith(svg);
+  });
+
+  // 넘기기 · 화면 맞춤 · 대본
+  const stage = document.getElementById('stage');
+  const slides = [...stage.children].filter((s) => s.tagName === 'SECTION');
+  const bar = document.getElementById('bar');
+  const notes = document.getElementById('notes');
+  let cur = 0;
+  const fit = () => {
+    const s = Math.min(innerWidth / 1920, innerHeight / 1080);
+    stage.style.transform = `scale(${s}) translate(-50%, -50%)`;
+  };
+  const show = (i) => {
+    cur = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach((s, k) => s.classList.toggle('on', k === cur));
+    bar.textContent = `${cur + 1} / ${slides.length}`;
+    const aside = slides[cur].querySelector('aside');
+    notes.textContent = aside ? aside.textContent.trim() : '(대본 없음)';
+    history.replaceState(null, '', '#' + slides[cur].id);
+  };
+  addEventListener('resize', fit);
+  addEventListener('keydown', (e) => {
+    if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)) { show(cur + 1); e.preventDefault(); }
+    else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { show(cur - 1); e.preventDefault(); }
+    else if (e.key === 'Home') show(0);
+    else if (e.key === 'End') show(slides.length - 1);
+    else if (e.key === 'n' || e.key === 'N') document.body.classList.toggle('show-notes');
+    else if (e.key === 'f' || e.key === 'F') document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+  });
+  stage.addEventListener('click', (e) => show(cur + (e.clientX > innerWidth / 3 ? 1 : -1)));
+  const fromHash = () => {
+    const i = slides.findIndex((s) => '#' + s.id === location.hash);
+    if (i >= 0 && i !== cur) show(i);
+  };
+  addEventListener('hashchange', fromHash);
+  fit();
+  const start = slides.findIndex((s) => '#' + s.id === location.hash);
+  show(start < 0 ? 0 : start);
+})();
+</script>
+</body>
+</html>

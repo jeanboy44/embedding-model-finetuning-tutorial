@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>5교시 데이터 · 평가 · 기준 실험</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400..800&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;display=swap">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { background: #2b2f36; overflow: hidden; font-family: 'Noto Sans KR', Arial, sans-serif; color: #1f2a37; }
+  #stage { position: absolute; left: 50%; top: 50%; width: 1920px; height: 1080px; transform-origin: 0 0; }
+  #stage > section { position: absolute; inset: 0; width: 1920px; height: 1080px; overflow: hidden;
+    font-size: 32px; line-height: 1.4; word-break: keep-all; opacity: 0; visibility: hidden; transition: opacity .25s; }
+  #stage > section.on { opacity: 1; visibility: visible; }
+  section:not([style*="display"]), section div:not([style*="display"]) { display: flex; flex-direction: column; }
+  section div { min-width: 0; }
+  h1, h2, h3, p, ul, ol { margin: 0; }
+  h1 { font-size: 96px; font-weight: 600; line-height: 1.1; }
+  h2 { font-size: 64px; font-weight: 600; line-height: 1.15; }
+  h3 { font-size: 44px; font-weight: 600; line-height: 1.2; }
+  p, li { font-size: inherit; }
+  ul, ol { padding-left: 1.2em; display: flex; flex-direction: column; gap: .3em; }
+  table { border-collapse: collapse; }
+  th, td { padding: .35em .6em; border-bottom: 1px solid rgba(31, 42, 55, .14); text-align: left; vertical-align: top; }
+  th { font-weight: 700; border-bottom: 2px solid rgba(31, 42, 55, .22); }
+  aside { display: none; }
+  x-icon, x-shape { display: block; flex: none; }
+  x-icon svg { width: 100%; height: 100%; display: block; }
+  x-connector { display: block; }
+  x-shape[kind="ellipse"] { border-radius: 50%; }
+  x-shape[kind="arrow-right"] { clip-path: polygon(0 30%, 60% 30%, 60% 0, 100% 50%, 60% 100%, 60% 70%, 0 70%); }
+  x-shape[kind="arrow-left"] { clip-path: polygon(100% 30%, 40% 30%, 40% 0, 0 50%, 40% 100%, 40% 70%, 100% 70%); }
+  x-shape[kind="arrow-down"] { clip-path: polygon(30% 0, 70% 0, 70% 60%, 100% 60%, 50% 100%, 0 60%, 30% 60%); }
+  x-shape[kind="arrow-up"] { clip-path: polygon(30% 100%, 70% 100%, 70% 40%, 100% 40%, 50% 0, 0 40%, 30% 40%); }
+  x-shape[kind="diamond"] { clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+  #bar { position: fixed; right: 16px; bottom: 12px; font: 13px/1.4 Arial, sans-serif; color: #c9ced6;
+    background: rgba(0, 0, 0, .35); padding: 4px 10px; border-radius: 6px; user-select: none; }
+  #notes { position: fixed; left: 0; right: 0; bottom: 0; max-height: 34vh; overflow: auto; display: none;
+    background: rgba(20, 23, 28, .94); color: #e8eaed; font: 16px/1.7 'Noto Sans KR', Arial, sans-serif; padding: 16px 24px 40px; }
+  body.show-notes #notes { display: block; }
+  @media print {
+    @page { size: 1920px 1080px; margin: 0; }
+    html, body { height: auto; overflow: visible; background: none; }
+    #stage { position: static; transform: none !important; width: auto; height: auto; }
+    #stage > section { position: relative; opacity: 1; visibility: visible; break-after: page; }
+    #bar, #notes { display: none !important; }
+  }
+</style>
+</head>
+<body>
+<!-- 장표 원본: claude.ai Slides 덱. 장 하나 = <section>, 발표 대본 = <aside>. 키: ← → 넘기기, N 대본, F 전체 화면 -->
+<div id="stage">
+<section data-section="표지와 오늘 만드는 것 셋: 데이터, 평가 기준과 출발점, 기준 실험 002" id="cover" data-transition="fade" style="background:linear-gradient(160deg, #ffffff 0%, #f4f5f6 100%);color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:40px">
+<p style="font-size:28px;font-weight:700;color:#b8650f">AI 시대 생존법 · 내 업무 확장편 · 5교시 · 2022 파트</p>
+<h1 style="font-size:112px;font-weight:800;line-height:1.15;letter-spacing:-3px">데이터 · 평가 ·<br>기준 실험</h1>
+<p style="font-size:34px;line-height:1.6;color:#6b7480;width:1400px">4교시에 만든 데이터를 확인하고, 무엇으로 잴지 정하고, 학습 없는 출발점을 잰 뒤, 작은 모델을 한 번 학습해 기준선을 세웁니다.</p>
+<div style="position:absolute;left:0;right:0;bottom:0;height:8px;background:#ec9a3e"></div>
+<p style="position:absolute;left:128px;bottom:64px;width:900px;font-size:26px;color:#6b7480">5교시 · 실험 한 바퀴를 손으로</p>
+<aside>5교시입니다. 4교시에는 DS의 일을 다섯 단계로 펼쳐 보고 2022년과 2026년 방식을 비교했습니다. 이번 시간은 2022 방식으로 실험 하나를 처음부터 끝까지 손으로 돌아 봅니다. 데이터가 어떻게 생겼는지 확인하고, 무엇을 좋은 검색이라고 부를지 정하고, 학습 없이 어디까지 되는지 잰 다음, 작은 모델을 한 번 학습해서 기준선을 세웁니다. 한 바퀴가 얼마나 무거운지 느껴 보는 시간입니다.</aside>
+</section>
+<section id="goals" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:72px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">이번 시간의 목표</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">세 가지를 만든다</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #ec9a3e;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">1</p><h3 style="font-size:40px;font-weight:800;line-height:1.3">데이터</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">코퍼스 · 질문 · 분할. 처음 보는 법령으로 잴 수 있게 나눈다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #ec9a3e;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">2</p><h3 style="font-size:40px;font-weight:800;line-height:1.3">평가 기준과 출발점</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">무엇을 좋은 검색이라 부를지 정하고, 학습 없이 어디까지 되는지 잰다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #ec9a3e;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">3</p><h3 style="font-size:40px;font-weight:800;line-height:1.3">기준 실험 002</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">가설부터 test 한 번까지, 실험 한 바퀴를 끝내고 기준선을 세운다</p></div>
+</div>
+<aside>이번 시간에 만드는 건 세 가지입니다. 첫째, 데이터. 4교시에 만든 질문이 어떤 코퍼스 위에 있고 어떻게 나뉘었는지 확인합니다. 둘째, 평가 기준과 출발점. 무엇을 좋은 검색이라고 부를지 지표를 정하고, 학습하지 않은 모델이 어디까지 되는지 잽니다. 셋째, 기준 실험 002. 가설을 세우고, 설정을 정하고, 파일럿을 돌리고, 학습하고, test로 한 번 재는 실험 한 바퀴를 끝까지 따라갑니다. 그 결과가 6교시의 기준선이 됩니다.</aside>
+</section>
+<section data-section="데이터: 코퍼스, 질문과 조문의 어휘 차이, 질문 가이드와 말투, hard negative, 결과, 법령 단위 분할" id="corpus" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:72px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">1 · 데이터 · 코퍼스</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">법령 54개, 검색 문서 2.6만 개</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #c9ced6;padding:26px 0 0 0"><p style="font-size:88px;font-weight:800;letter-spacing:-2px">54</p><p style="font-size:28px;line-height:1.5;color:#4a5361">법령 (법률 · 시행령 · 시행규칙). 사회 첫걸음 · 교통 · 세금 · 금융 · 소비자 · 전기 6개 테마</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #c9ced6;padding:26px 0 0 0"><p style="font-size:88px;font-weight:800;letter-spacing:-2px">11,723</p><p style="font-size:28px;line-height:1.5;color:#4a5361">조문</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #ec9a3e;padding:26px 0 0 0"><p style="font-size:88px;font-weight:800;letter-spacing:-2px;color:#b8650f">25,967</p><p style="font-size:28px;line-height:1.5;color:#4a5361">검색 문서. 긴 조문 2,596개를 항 · 호로 나눠 16,840조각. 512토큰 넘는 문서 18.6% → 1.0%</p></div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">출처: legalize-kr 법령 데이터 · scripts/prepare_law_data.py · 확인: lecture/04_data/01_corpus.py</p>
+<aside>먼저 검색 대상인 코퍼스입니다. 생활과 가까운 법령 54개, 여섯 테마입니다. 조문은 1만 1천여 개인데, 임베딩 모델은 512토큰까지만 읽기 때문에 긴 조문 2,596개를 항이나 호 단위로 잘라 1만 6천여 조각으로 만들었고, 그래서 검색 문서 2.6만 개가 됐습니다. 01_corpus.py로 길이 분포를 보면, 조 단위 그대로였다면 512토큰을 넘는 문서가 2,181개, 18.6%인데 나눈 뒤에는 247개, 1.0%뿐입니다. 잘린 조각에도 법령 이름과 조 제목을 붙여 두어 혼자 떨어져도 무슨 조문인지 알 수 있게 했습니다. --run을 붙이면 전기 테마만 인터넷에서 받아 임시 폴더에 직접 만들어 비교합니다.</aside>
+</section>
+<section id="words" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">1 · 데이터 · 왜 어려운가</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">질문과 조문은 다른 말을 쓴다</h2>
+</div>
+<div style="display:flex;gap:64px">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;border-top:4px solid #ec9a3e;padding:26px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">질문</p>
+<p style="font-size:36px;line-height:1.55;font-weight:700">1년 계약하고 카페에 들어갔는데 <span style="color:#b8650f">수습</span> 3개월 동안은 <span style="color:#b8650f">시급을 최저임금보다 덜 준대요</span>. 이게 되는 거예요?</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;border-top:4px solid #c9ced6;padding:26px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">정답: 최저임금법 제5조 ②</p>
+<p style="font-size:28px;line-height:1.75;color:#4a5361">1년 이상의 기간을 정하여 <b style="color:#1f2a37">근로계약</b>을 체결하고 <b style="color:#1f2a37">수습 중에 있는 근로자</b>로서 수습을 시작한 날부터 3개월 이내인 사람에 대하여는 대통령령으로 정하는 바에 따라 제1항에 따른 <b style="color:#1f2a37">최저임금액과 다른 금액</b>으로 최저임금액을 정할 수 있다.</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.6;color:#4a5361">“카페에 들어갔는데 · 시급 · 덜 준대요” ↔ “근로계약 · 최저임금액과 다른 금액”. 베이스 모델은 이 어휘 차이에서 약하다.</p>
+<aside>2교시에 본 예시를 다시 꺼냅니다. 사람은 "카페에 들어갔는데", "시급 덜 준대요"라고 묻고, 조문은 "근로계약", "최저임금액과 다른 금액"이라고 씁니다. 같은 이야기인데 겹치는 단어가 거의 없습니다. 4교시에 만든 질문 데이터는 바로 이 차이를 담으려고 만든 것이고, 오늘 학습이 노리는 것도 이 차이입니다.</aside>
+</section>
+<section id="guide" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">1 · 데이터 · 질문 가이드의 핵심</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">베이스 모델이 어려워할 질문을 쓴다</h2>
+</div>
+<table style="width:1664px;font-size:28px;color:#1f2a37">
+<tr><th style="width:32%;text-align:left;color:#6b7480;font-size:24px">규칙</th><th style="width:68%;text-align:left;color:#6b7480;font-size:24px">예</th></tr>
+<tr><td><b>일상 표현으로</b></td><td style="color:#4a5361">원동기장치자전거 → 전동킥보드</td></tr>
+<tr><td><b>질문자를 테마에 맞춰</b></td><td style="color:#4a5361">알바생, 초보 운전자, 연말정산 직장인</td></tr>
+<tr><td><b>조문 번호는 쓰지 않는다</b></td><td style="color:#4a5361">"제5조"는 정답 누설</td></tr>
+<tr><td><b>조문 하나로 답할 수 있게</b></td><td style="color:#4a5361">없는 금액 · 기간을 지어내지 않는다</td></tr>
+<tr><td><b>중요한 조문에만</b></td><td style="color:#4a5361">권리 · 의무 · 금액은 2~3개, 위원회 구성은 0개</td></tr>
+<tr><td><b>답도 함께</b></td><td style="color:#4a5361">나중에 RAG 답변 평가의 기준 답</td></tr>
+</table>
+<aside>4교시에 Claude 스킬로 질문을 만들었는데, 그 스킬에 넣은 가이드의 핵심이 이 표입니다. 일상어로 쓰게 하고, 질문자를 테마에 맞추고, 조문 번호처럼 정답을 흘리는 표현은 막습니다. 조문 하나로 답할 수 있는 질문만 쓰게 하고, 사람들이 실제로 물을 법한 중요한 조문에 질문을 몰아줍니다. 답도 같이 써 두면 나중에 RAG 답변을 평가할 기준이 됩니다. 한 줄로 줄이면, 베이스 모델이 어려워할 질문을 쓰라는 겁니다. 쉬운 질문만 모으면 학습해도 오를 곳이 없습니다.</aside>
+</section>
+<section id="types" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:48px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">1 · 데이터 · 질문 유형</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">세 가지 말투를 섞는다</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #ec9a3e;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">situation · 41%</p><h3 style="font-size:40px;font-weight:800;line-height:1.3">상황 설명</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">편의점 알바 3개월짜리로 계약했는데 사장님이 수습이라고 첫 달 시급을 깎겠대요.</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #ec9a3e;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">question · 36%</p><h3 style="font-size:40px;font-weight:800;line-height:1.3">궁금한 점</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">아이 키우느라 가게 접었는데 자영업자 실업급여 받을 수 있어요?</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #ec9a3e;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">keyword · 23%</p><h3 style="font-size:40px;font-weight:800;line-height:1.3">검색창 키워드</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">골드바 부가세 면제 순도 기준</p></div>
+</div>
+<div style="display:flex;flex-direction:row;align-items:center;gap:40px;background:#f2f3f5;border-radius:14px;padding:28px 36px">
+<p style="font-size:24px;font-weight:700;color:#6b7480;white-space:nowrap">실제 검색어와 대 보니</p>
+<p style="font-size:28px;line-height:1.5;color:#4a5361">2~3어절 비율이 KoAIO 명사구 검색어는 <b style="color:#2d6db0">70%</b>, 우리 keyword는 <b style="color:#b8650f">9%</b>(평균 5.6어절). 너무 길었다. 형식만 few-shot으로 넣고 keyword 목표를 35%로 올렸다</p>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">비율은 받은 질문(v1) 12,232개 기준(개선 전) · 출처: .claude/skills/law-question-gen/references/query-style.md</p>
+<aside>사람이 검색창에 치는 말투는 하나가 아닙니다. 상황을 길게 설명하는 사람, 궁금한 걸 바로 묻는 사람, 키워드만 치는 사람. 세 유형을 섞어야 모델이 한 말투에만 맞춰지지 않습니다. 만들고 나서 실제 검색어와 대 봤습니다. KoAIO 실제 검색어 7,288개 중 명사구 검색어가 53%로 가장 많았고, 그 명사구 검색어 중 두세 어절이 70%였습니다. 우리 키워드 질문 2,815개 중 두세 어절은 9%뿐이었습니다. 평균 5.6어절, 키워드라기엔 너무 길었죠. 그래서 실제 검색어에서 내용 말고 형식만 뽑아 예시로 넣고, 키워드 목표 비율도 35%로 올렸습니다. 다만 받은 v1 질문은 이 개선 전에 만든 데이터라 keyword가 23% 그대로입니다. 데이터를 만들고 끝이 아니라 실제와 대 보고 고치는 것, 이게 DS의 일입니다. 이 세 말투는 뒤에서 평가할 때 다시 쪼개 봅니다.</aside>
+</section>
+<section id="hard-neg" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:72px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">1 · 데이터 · hard negative</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">주제는 같지만 답은 아닌 조문</h2>
+</div>
+<div style="display:flex;gap:48px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #ec9a3e;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">질문</p><p style="font-size:32px;line-height:1.55;font-weight:700">수습이라고 첫 달 시급을 깎겠대요</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#2d6db0">좋은 negative</p><p style="font-size:28px;line-height:1.55;color:#4a5361">최저임금의 효력(제6조 ①) · 적용 제외(제7조). 같은 최저임금 이야기지만 수습 감액에는 답하지 않는다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px dashed #c9ced6;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">피할 negative</p><p style="font-size:28px;line-height:1.55;color:#4a5361">감액 비율을 정한 시행령 조문. 질문에 부분적으로 답하므로 오답으로 가르치면 틀린 신호가 된다</p></div>
+</div>
+<aside>hard negative는 주제는 같지만 정답은 아닌 조문입니다. 학습 때 "이건 비슷해 보여도 아니다"를 가르치는 재료이고, 뒤에서 볼 기준 실험에서도 질문마다 하나씩 씁니다. 최저임금의 효력이나 적용 제외는 좋은 negative입니다. 반대로 감액 비율을 정한 시행령은 질문에 일부 답하기 때문에 오답으로 가르치면 모델이 헷갈립니다. 이런 걸 걸러 내는 게 데이터 품질입니다.</aside>
+</section>
+<section id="result" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:72px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">1 · 데이터 · 결과</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">230개 파트, 질문 1.2만 개</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #ec9a3e;padding:26px 0 0 0"><p style="font-size:88px;font-weight:800;letter-spacing:-2px;color:#b8650f">12,232</p><p style="font-size:28px;line-height:1.5;color:#4a5361">질문</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #c9ced6;padding:26px 0 0 0"><p style="font-size:88px;font-weight:800;letter-spacing:-2px">9,704</p><p style="font-size:28px;line-height:1.5;color:#4a5361">정답으로 쓰인 검색 문서</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #c9ced6;padding:26px 0 0 0"><p style="font-size:88px;font-weight:800;letter-spacing:-2px">0</p><p style="font-size:28px;line-height:1.5;color:#4a5361">검증 오류 (전체 파일 함께 검사)</p></div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">파트 하나에 1~7분, 약 10만 토큰 (강사 생성 기록). 질문은 git이 아니라 Drive에 두고 pull v1로 받는다</p>
+<aside>230개 파트를 다 돌려 질문 1만 2천여 개를 만들었습니다. 정답으로 쓰인 검색 문서가 9,700개쯤이니 코퍼스의 3분의 1 정도에 질문이 붙은 셈입니다. 전체 파일을 함께 검사해 검증 오류는 0개, 경고는 1건(LOW-VALUE, 가치 낮은 조문에 만든 질문)입니다. 파트 하나에 1~7분, 약 10만 토큰이 들었는데, 제가 생성할 때 기록한 값입니다. 사람이 몇 주 걸리던 일이 하루 안에 끝납니다. 이 질문들은 데이터 버전 v1으로 묶여 있어서 pull v1 한 번에 받습니다. 오늘 학습과 평가는 모두 이 v1 질문으로 합니다.</aside>
+</section>
+<section id="split" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">1 · 데이터 · 분할</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">질문이 아니라 법령으로 나눈다</h2>
+</div>
+<table style="width:1300px;font-size:30px;color:#1f2a37">
+<tr><th style="width:20%;text-align:left;color:#6b7480;font-size:26px">split</th><th style="width:18%;text-align:right;color:#6b7480;font-size:26px">질문</th><th style="width:16%;text-align:right;color:#6b7480;font-size:26px">법령</th><th style="width:46%;text-align:left;color:#6b7480;font-size:26px">용도</th></tr>
+<tr><td>train</td><td style="text-align:right">8,294</td><td style="text-align:right">29</td><td>학습</td></tr>
+<tr><td>dev</td><td style="text-align:right">1,412</td><td style="text-align:right">9</td><td>epoch · 설정 고르기</td></tr>
+<tr style="background:#fdf1e3"><td><b>test</b></td><td style="text-align:right"><b>2,526</b></td><td style="text-align:right"><b>16</b></td><td><b>최종 비교에 한 번만</b></td></tr>
+</table>
+<p style="font-size:30px;line-height:1.6;color:#4a5361">정답 조문이 train에도 나온 test 질문: 법령 단위 <b style="color:#1f2a37">0.0%</b>, 질문 단위 무작위 <b style="color:#b8650f">64.6%</b>. 섞으면 외운 것을 맞히는 셈이라 점수가 부풀려진다.</p>
+<aside>나누는 기준이 중요합니다. 03_split.py가 숫자로 보여 줍니다. 질문 단위로 무작위로 섞으면 test 질문의 64.6%는 정답 조문이 train에도 나옵니다. 모델이 외운 걸 맞히는 셈이 되고 점수가 부풀려집니다. 법령 단위로 나누면 0.0%이고, 세 분할의 법령 교집합도 0입니다. test 법령 16개는 학습 때 한 번도 보지 않은 법령이고, 2교시에서 본 베이스 모델 0.513도 이 test로 잰 숫자입니다. 이 표의 숫자들이 오늘 끝까지 따라옵니다. 기준 실험은 train 8,294개로 학습하고, epoch는 dev로 고르고, test는 마지막에 한 번만 씁니다. --run을 붙이면 ragkit split을 임시 폴더에 돌려 받은 분할과 같은지 확인합니다.</aside>
+</section>
+<section data-section="평가: 지표와 평가 조건, 학습 없는 e5-small 출발점과 말투별 약점" id="metrics" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:72px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">2 · 평가 · 지표</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">정답이 몇 위에 나오나</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #ec9a3e;padding:28px 0 0 0"><h3 style="font-size:40px;font-weight:800;line-height:1.3;color:#b8650f">Recall@k</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">정답이 상위 k개 안에 있는 질문의 비율. <b style="color:#1f2a37">주요 지표는 R@5</b>: RAG가 LLM에 넘기는 조문이 5개라서</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #c9ced6;padding:28px 0 0 0"><h3 style="font-size:40px;font-weight:800;line-height:1.3">MRR@10</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">정답 순위의 역수 평균. 1위면 1, 2위면 0.5</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #c9ced6;padding:28px 0 0 0"><h3 style="font-size:40px;font-weight:800;line-height:1.3">nDCG@10</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">순위가 낮을수록 점수를 깎는다. 정답이 여럿일 때도 쓸 수 있다</p></div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">판정: doc(조각) · article(같은 조) · multi(복수 정답: dev 44개(3.1%)에 다른 정답 인정, test는 판정 파일이 없어 multi = doc)</p>
+<aside>데이터가 준비됐으니 무엇으로 잴지 정합니다. 지표는 결국 정답이 몇 위에 나오느냐를 재는 방법들입니다. 주요 지표는 Recall@5입니다. RAG가 LLM에게 넘기는 조문이 5개이니, 정답이 5위 안에 있어야 답할 수 있기 때문입니다. MRR과 nDCG는 순위까지 보는 보조 지표입니다. 긴 조문을 항·호로 나눴기 때문에 조각 단위가 기본이고, 조 단위로도 따로 봅니다. 판정이 하나 더 있습니다. multi는 판정으로 인정한 다른 정답이 나와도 맞힌 걸로 칩니다. dev 질문 44개, 3.1%에 다른 정답이 인정됐고, test에는 판정 파일이 없어 multi가 doc과 같습니다.</aside>
+</section>
+<section id="eval-setup" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:72px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">2 · 평가 · 조건</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">처음 보는 법령, 코퍼스 전체에서</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #ec9a3e;padding:26px 0 0 0"><p style="font-size:88px;font-weight:800;letter-spacing:-2px;color:#b8650f">2,526</p><p style="font-size:28px;line-height:1.5;color:#4a5361">test 질문 (법령 16개)</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #c9ced6;padding:26px 0 0 0"><p style="font-size:88px;font-weight:800;letter-spacing:-2px">25,967</p><p style="font-size:28px;line-height:1.5;color:#4a5361">검색 대상 문서 전체. 정답 법령 안에서만 찾지 않는다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #c9ced6;padding:26px 0 0 0"><p style="font-size:88px;font-weight:800;letter-spacing:-2px">1회</p><p style="font-size:28px;line-height:1.5;color:#4a5361">test는 최종 비교에만 쓴다. 고르는 일은 dev로</p></div>
+</div>
+<aside>평가 조건을 분명히 해 둡니다. 앞에서 본 분할의 test 질문 2,526개, 학습 때 본 적 없는 법령 16개입니다. 검색은 정답 법령 안에서만이 아니라 코퍼스 전체 2.6만 문서에서 합니다. 실제 사용자는 어느 법령인지 모르고 묻기 때문입니다. 그리고 test는 마지막에 한 번만 씁니다. 설정을 고르는 건 dev로 합니다. 이 약속은 뒤의 기준 실험에서 그대로 지킵니다.</aside>
+</section>
+<section id="baseline" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:64px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">2 · 평가 · 출발점</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">학습 없는 작은 모델</h2>
+</div>
+<div style="display:flex;flex-direction:column;gap:40px;width:1400px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><p style="font-size:30px;font-weight:700">multilingual-e5-small <span style="color:#6b7480">· 118M · 384차원 · R@5</span></p><p style="font-size:56px;font-weight:800;color:#b8650f">0.513</p></div>
+<div style="height:24px;background:#e6e8eb;border-radius:8px;display:flex"><div style="width:718px;height:24px;background:#ec9a3e;border-radius:8px"></div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><p style="font-size:30px;font-weight:700">같은 모델 <span style="color:#6b7480">· R@10</span></p><p style="font-size:56px;font-weight:800;color:#4a5361">0.601</p></div>
+<div style="height:24px;background:#e6e8eb;border-radius:8px;display:flex"><div style="width:841px;height:24px;background:#e89c6c;border-radius:8px"></div></div>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.6;color:#4a5361">질문 둘 중 하나에서 정답을 5위 안에 못 올린다. 이 강의는 이 작은 모델 하나로 끝까지 간다(CPU 배포를 생각해서).</p>
+<aside>출발점입니다. 오늘 파인튜닝할 e5-small을 학습 없이 재면 R@5가 0.513, 2교시에 본 그 숫자입니다. 질문 두 개 중 하나는 정답이 5위 안에 없습니다. 10위까지 넓혀도 0.601입니다. 이 강의는 7교시에 CPU로 배포하는 것까지 생각해서, 이 작은 모델 하나로 끝까지 갑니다. 이 0.513이 오늘 기준 실험이 넘어야 할 숫자입니다.</aside>
+</section>
+<section id="by-type" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">2 · 평가 · 어디서 틀리나</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">일상 말투일수록 어렵다</h2>
+</div>
+<table style="width:1300px;font-size:30px;color:#1f2a37">
+<tr><th style="width:28%;text-align:left;color:#6b7480;font-size:26px">R@5</th><th style="width:24%;text-align:right;color:#6b7480;font-size:26px">keyword</th><th style="width:24%;text-align:right;color:#6b7480;font-size:26px">question</th><th style="width:24%;text-align:right;color:#6b7480;font-size:26px">situation</th></tr>
+<tr><td><b>e5-small</b></td><td style="text-align:right">0.725</td><td style="text-align:right">0.517</td><td style="text-align:right;color:#b8650f"><b>0.403</b></td></tr>
+<tr><td style="color:#6b7480">질문 수</td><td style="text-align:right;color:#6b7480">542</td><td style="text-align:right;color:#6b7480">911</td><td style="text-align:right;color:#6b7480">1,073</td></tr>
+</table>
+<p style="font-size:30px;line-height:1.6;color:#4a5361">키워드는 조문과 단어가 겹쳐 쉽다. 상황 설명형에서 작은 모델이 무너진다. 파인튜닝이 노릴 곳이 여기다.</p>
+<aside>앞에서 본 세 말투별로 쪼개 보면 차이가 큽니다. 키워드형은 조문 단어와 겹치니 0.725까지 나오는데, 상황을 길게 설명하는 질문은 0.403입니다. 게다가 상황 설명형이 test에서 가장 많습니다. 파인튜닝이 노려야 할 곳이 여기입니다. 기준 실험 결과에서도 이 표를 다시 봅니다.</aside>
+</section>
+<section data-section="학습 없는 선택지: 쿼리 확장, 정확도와 질문당 비용, 그래서 작은 모델을 학습해 본다" id="expansion" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">학습 없는 선택지 · 쿼리 확장</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">LLM이 질문을 법령 말로 바꿔 준다</h2>
+</div>
+<div style="display:flex;gap:64px">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;border-top:4px solid #ec9a3e;padding:26px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">원래 질문</p>
+<p style="font-size:36px;line-height:1.55;font-weight:700">가게에 불이 나서 장부가 다 타버렸어요. 세금 신고 기한 좀 늘려줄 수 있나요?</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;border-top:4px solid #4f93d8;padding:26px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">확장 검색어 · gemini-2.5-flash-lite (원문과 함께 검색)</p>
+<p style="font-size:36px;line-height:1.55;font-weight:700;color:#2d6db0">국세기본법, 기한 연장, 천재지변</p>
+<p style="font-size:30px;font-weight:700">정답 순위 100위 밖 → <span style="color:#2d6db0">1위</span></p>
+<p style="font-size:26px;color:#6b7480">입력 131 · 출력 14 토큰, 약 1.0초 (캐시 17개 평균 2.4초, 최대 7.8초)</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.6;color:#4a5361">학습이 필요 없다. 대신 <b style="color:#1f2a37">질문마다 LLM을 한 번</b> 부른다. 사용자가 늘수록 비용과 지연이 함께 는다.</p>
+<p style="font-size:30px;line-height:1.6;color:#4a5361"><b style="color:#b8650f">부작용:</b> 17개 중 10개 좋아짐 · 3개 나빠짐 — 확장어가 엉뚱한 법령 이름을 대면 그쪽으로 끌려간다(예: 특수관계인)</p>
+<aside>학습하기 전에, 학습 없이 올릴 방법부터 봅니다. 2교시에 말로만 했던 쿼리 확장의 실제 예입니다. 가게에 불이 나서 장부가 다 탔다는 일상어 질문을 LLM이 "국세기본법, 기한 연장, 천재지변"처럼 법령 말로 바꿔 주고, 원래 질문과 함께 검색합니다. 원문만으로는 정답 조문이 100위 밖이었는데, 확장하니 1위로 올라옵니다. 이 질문은 1초쯤 걸렸지만, 받은 캐시 17개를 평균하면 질문당 2.4초, 길게는 7.8초까지 걸렸습니다. 토큰은 입력 120여 개, 출력 10여 개로 얼마 안 듭니다. 하지만 질문마다 붙는 비용이라 사용자가 늘면 그대로 늘어납니다. 늘 좋아지는 것도 아닙니다. 17개 중 10개는 좋아졌지만 3개는 나빠졌습니다. "세법에서 말하는 특수관계인은 누구까지예요?"는 LLM이 확장어로 상속세 및 증여세법을 대는 바람에 검색이 그 법령 쪽으로 끌려가, 45위였던 정답이 100위 밖으로 밀렸습니다. 02_query_expansion.py 출력 끝의 질문별 순위표에서 직접 확인할 수 있습니다.</aside>
+</section>
+<section id="options" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">학습 없는 선택지 · 비교</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">정확도와 질문당 비용</h2>
+</div>
+<table style="width:1664px;font-size:30px;color:#1f2a37">
+<tr><th style="width:32%;text-align:left;color:#6b7480;font-size:26px">선택지</th><th style="width:14%;text-align:right;color:#6b7480;font-size:26px">R@5</th><th style="width:14%;text-align:right;color:#6b7480;font-size:26px">R@10</th><th style="width:20%;text-align:right;color:#6b7480;font-size:26px">질문당 LLM 호출</th><th style="width:20%;text-align:right;color:#6b7480;font-size:26px">모델 크기</th></tr>
+<tr><td>e5-small</td><td style="text-align:right">0.513</td><td style="text-align:right">0.601</td><td style="text-align:right">0</td><td style="text-align:right">118M</td></tr>
+<tr><td>e5-small + 쿼리 확장</td><td style="text-align:right;color:#6b7480">측정 예정</td><td style="text-align:right;color:#6b7480">측정 예정</td><td style="text-align:right;color:#b8650f"><b>1</b></td><td style="text-align:right">118M + LLM</td></tr>
+</table>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">test 전체 확장은 무료 한도(하루 20회)로 아직 못 돌렸다. 받은 캐시 17개(국세기본법)로만 보면 R@5 0.294 → 0.471</p>
+<aside>학습 없이 고를 수 있는 선택지를 한 표에 놓았습니다. 그대로 쓰면 LLM 호출 0번에 0.513. 쿼리 확장은 질문마다 LLM을 한 번 부릅니다. 쿼리 확장의 test 전체 점수는 무료 등급 한도 때문에 아직 돌리지 못해 비워 뒀습니다. 하루 20회면 2,526개에 126일쯤 걸립니다. 받은 캐시에 있는 17개, 전부 국세기본법 질문으로만 비교하면 e5가 0.294, 확장을 붙이면 0.471로 오릅니다. 17개는 표본이 작으니 방향만 보세요. 이 표는 뒤에서 기준 실험 002를 한 줄 더 붙여 다시 봅니다.</aside>
+</section>
+<section id="decide" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:64px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">학습 없는 선택지 · 그래서</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">학습해야 하는가</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #c9ced6;padding:28px 0 0 0"><h3 style="font-size:36px;font-weight:800;line-height:1.3">그대로 쓰면</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">e5-small은 R@5 0.51. 검색에서 놓친 조문은 LLM도 답할 수 없다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #c9ced6;padding:28px 0 0 0"><h3 style="font-size:36px;font-weight:800;line-height:1.3">큰 모델로 바꾸면</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">모델이 크고 느려진다. 7교시의 CPU 배포 최적화가 어려워진다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #c9ced6;padding:28px 0 0 0"><h3 style="font-size:36px;font-weight:800;line-height:1.3">쿼리 확장을 붙이면</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">질문마다 LLM 비용을 낸다</p></div>
+</div>
+<p style="font-size:34px;line-height:1.6;font-weight:700">그래서 <span style="color:#b8650f">작은 모델을 한 번 학습해 본다</span> → 기준 실험 002</p>
+<aside>정리하면, 그대로 쓰기엔 절반을 놓치고, 더 큰 모델로 가면 배포가 무거워지고, 쿼리 확장은 질문마다 돈이 듭니다. 그래서 작은 모델을 한 번 학습해 봅니다. 모델 크기는 그대로 두고, 4교시에 만든 질문 데이터로 한 번 학습해서 얼마나 오르는지 보는 겁니다. 이게 오늘의 기준 실험 002입니다. 지금부터 실험 한 바퀴를 처음부터 끝까지 따라갑니다.</aside>
+</section>
+<section data-section="기준 실험 002 한 바퀴: 흐름, 원리, 가설과 설정, 파일럿, 학습과 dev, test 한 번, 학습 없는 선택지와 비교, 기준선 확정" id="loop" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:64px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">3 · 기준 실험 · 실험의 흐름</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">한 바퀴가 실험 하나</h2>
+</div>
+<div style="display:grid;grid-template-columns:repeat(7, 1fr);gap:20px">
+<div style="display:flex;flex-direction:column;gap:12px;border-top:4px solid #ec9a3e;padding:24px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">1</p><h3 style="font-size:32px;font-weight:800;line-height:1.3">가설</h3><p style="font-size:24px;line-height:1.5;color:#4a5361">틀릴 수 있는 문장으로 쓴다</p></div>
+<div style="display:flex;flex-direction:column;gap:12px;border-top:4px solid #ec9a3e;padding:24px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">2</p><h3 style="font-size:32px;font-weight:800;line-height:1.3">설정</h3><p style="font-size:24px;line-height:1.5;color:#4a5361">config.yaml 한 장에 적는다</p></div>
+<div style="display:flex;flex-direction:column;gap:12px;border-top:4px solid #ec9a3e;padding:24px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">3</p><h3 style="font-size:32px;font-weight:800;line-height:1.3">파일럿</h3><p style="font-size:24px;line-height:1.5;color:#4a5361">몇 step만 돌려 돌아가는지 본다</p></div>
+<div style="display:flex;flex-direction:column;gap:12px;border-top:4px solid #ec9a3e;padding:24px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">4</p><h3 style="font-size:32px;font-weight:800;line-height:1.3">학습</h3><p style="font-size:24px;line-height:1.5;color:#4a5361">전체 데이터로 끝까지</p></div>
+<div style="display:flex;flex-direction:column;gap:12px;border-top:4px solid #ec9a3e;padding:24px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">5</p><h3 style="font-size:32px;font-weight:800;line-height:1.3">dev로 epoch 선택</h3><p style="font-size:24px;line-height:1.5;color:#4a5361">고르는 일은 dev로만</p></div>
+<div style="display:flex;flex-direction:column;gap:12px;border-top:4px solid #b8650f;background:#fdf1e3;padding:24px 16px 20px 16px"><p style="font-size:24px;font-weight:700;color:#b8650f">6</p><h3 style="font-size:32px;font-weight:800;line-height:1.3">test 1회</h3><p style="font-size:24px;line-height:1.5;color:#4a5361">마지막에 한 번만 잰다</p></div>
+<div style="display:flex;flex-direction:column;gap:12px;border-top:4px solid #ec9a3e;padding:24px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">7</p><h3 style="font-size:32px;font-weight:800;line-height:1.3">분석 · 다음 가설</h3><p style="font-size:24px;line-height:1.5;color:#4a5361">어디서 틀렸는지가 다음 실험을 정한다</p></div>
+</div>
+<p style="font-size:30px;line-height:1.6;color:#4a5361">7에서 다시 1로 돈다. 오늘은 <b style="color:#1f2a37">기준 실험 002</b>로 이 바퀴를 한 번 끝까지 돈다.</p>
+<aside>실험 하나는 이 일곱 단계를 한 바퀴 도는 겁니다. 가설은 틀릴 수 있는 문장으로 씁니다. 설정은 config 파일 한 장에 적어 두어 나중에 누가 봐도 같은 실험을 다시 돌릴 수 있게 합니다. 전체 학습 전에 몇 step만 돌리는 파일럿으로 돌아가는지, 얼마나 걸릴지 봅니다. 그다음 전체 학습을 하고, epoch 같은 선택은 dev로만 합니다. test는 맨 마지막에 한 번만 씁니다. test를 보고 설정을 고치기 시작하면 test가 더 이상 처음 보는 데이터가 아니게 됩니다. 마지막으로 어디서 틀렸는지 분석하고, 그게 다음 가설이 됩니다. 오늘은 기준 실험 002로 이 바퀴를 한 번 끝까지 돌아 봅니다.</aside>
+</section>
+<section id="principle" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:64px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">3 · 기준 실험 · 학습 원리 짧게</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">질문을 정답 가까이, 오답에서 멀리</h2>
+</div>
+<div style="display:flex;gap:72px">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;border-top:4px solid #ec9a3e;padding:28px 0 0 0">
+<h3 style="font-size:40px;font-weight:800">MNRL</h3>
+<p style="font-size:30px;line-height:1.55;color:#4a5361">배치 안의 다른 질문의 정답을 모두 오답으로 쓴다. 배치 32면 질문 하나에 <b style="color:#1f2a37">오답 31개 + hard negative 1개</b></p>
+<p style="font-size:24px;line-height:1.55;color:#6b7480">NO_DUPLICATES: 같은 조문이 한 배치에 두 번 들어가 “정답을 오답으로” 가르치는 일을 막는다</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;border-top:4px solid #c9ced6;padding:28px 0 0 0">
+<h3 style="font-size:40px;font-weight:800">전체 학습</h3>
+<p style="font-size:30px;line-height:1.55;color:#4a5361">가중치 1.18억 개를 모두 바꾼다. 모델 크기(118M, 384차원)는 그대로</p>
+<p style="font-size:24px;line-height:1.55;color:#6b7480">e5 접두어(“query: ” · “passage: ”)는 데이터가 아니라 코드에서 붙인다</p>
+</div>
+</div>
+<aside>원리는 짧게만 봅니다. 학습은 질문 벡터를 정답 조문 가까이, 오답 조문에서 멀리 옮기는 일입니다. MNRL은 배치 안의 다른 질문들의 정답을 공짜 오답으로 씁니다. 배치가 32면 질문 하나에 오답이 31개 생기는 셈이고, 여기에 4교시에 만든 hard negative가 하나 더해집니다. 같은 조문이 한 배치에 두 번 들어가면 정답을 오답으로 가르치게 되니 NO_DUPLICATES로 막습니다. 오늘 기준 실험은 전체 학습입니다. 가중치 1.18억 개를 모두 바꾸지만, 모델의 크기와 차원은 그대로라 배포 조건도 그대로입니다. e5는 질문 앞에 "query: ", 조문 앞에 "passage: "를 붙여야 하는데, 이건 데이터에 넣지 않고 코드에서 붙입니다.</aside>
+</section>
+<section id="setup" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:48px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">3 · 기준 실험 · ① 가설 ② 설정</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">가설은 한 문장, 설정은 파일 한 장</h2>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:28px">
+<div style="display:flex;flex-direction:column;gap:14px;border-top:4px solid #ec9a3e;padding:24px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#b8650f">가설</p>
+<p style="font-size:40px;line-height:1.4;font-weight:800">우리 질문 데이터로 학습하면 처음 보는 법령에서도 오른다</p>
+<p style="font-size:26px;line-height:1.55;color:#4a5361">확인: test(법령 16개) R@5가 학습 전 0.513보다 오르는가</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px;background:#f2f3f5;border-radius:14px;padding:28px 28px">
+<p style="font-size:24px;font-weight:700;color:#6b7480">학습 명령</p>
+<p style="font-family:'JetBrains Mono', 'Noto Sans KR', monospace;font-size:24px;line-height:1.6;color:#1f2a37">uv run ragkit train<br>--config experiments/exp_002_finetuned/config.yaml</p>
+</div>
+</div>
+<table style="width:800px;font-size:24px;color:#1f2a37">
+<tr><th style="width:45%;text-align:left;color:#6b7480;font-size:24px">설정</th><th style="width:55%;text-align:left;color:#6b7480;font-size:24px">값</th></tr>
+<tr><td>시작 모델</td><td>multilingual-e5-small</td></tr>
+<tr><td>학습 데이터</td><td>train 8,294행</td></tr>
+<tr><td>배치</td><td>32</td></tr>
+<tr><td>손실</td><td>CachedMNRL (mini 16)</td></tr>
+<tr><td>학습률 · warmup</td><td>2e-5 · 0.1</td></tr>
+<tr><td>epoch</td><td>최대 3</td></tr>
+<tr><td>hard negative</td><td>질문당 1개</td></tr>
+<tr><td>최대 길이</td><td>512 토큰</td></tr>
+<tr><td>seed</td><td>42</td></tr>
+</table>
+</div>
+<aside>바퀴의 첫 두 칸입니다. 가설은 한 문장으로 씁니다. "우리 질문 데이터로 학습하면 처음 보는 법령에서도 오른다." 틀릴 수 있는 문장이어야 합니다. 학습한 법령에서만 오르고 처음 보는 법령에서는 그대로일 수도 있으니까요. 확인 방법도 미리 정해 둡니다. test 법령 16개에서 R@5가 학습 전 0.513보다 오르는지 봅니다. 설정은 experiments/exp_002_finetuned/config.yaml 한 장에 다 들어 있습니다. 시작 모델은 e5-small, 학습 데이터는 train 8,294행, 배치 32, 손실은 CachedMNRL입니다. CachedMNRL은 배치 32를 16개씩 나눠 계산해서 메모리를 아끼면서도 한 질문이 오답 31개를 보는 효과는 그대로 둡니다. 학습률 2e-5에 warmup 0.1, epoch는 최대 3, hard negative는 질문당 하나, 길이는 512토큰, seed는 42로 고정합니다. 명령은 ragkit train에 이 설정 파일을 주는 한 줄입니다.</aside>
+</section>
+<section id="pilot" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">3 · 기준 실험 · ③ 파일럿</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">40분 돌리기 전에 1.5분 먼저</h2>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#f2f3f5;border-radius:14px;padding:32px 44px">
+<p style="font-family:'JetBrains Mono', 'Noto Sans KR', monospace;font-size:28px;line-height:1.6;color:#1f2a37">uv run python lecture/06_train/01_train_taste.py --run</p>
+<p style="font-size:26px;line-height:1.5;color:#4a5361">002와 같은 설정으로 <b style="color:#1f2a37">30 step만</b> · 약 1.5분 · 결과는 임시 폴더에 (받은 모델은 그대로)</p>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #ec9a3e;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">확인 1</p><h3 style="font-size:36px;font-weight:800;line-height:1.3">손실이 줄어드나</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">안 줄면 데이터나 설정부터 의심한다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #ec9a3e;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">확인 2</p><h3 style="font-size:36px;font-weight:800;line-height:1.3">메모리</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">배치 32가 이 기계에 들어가나</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #ec9a3e;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">확인 3</p><h3 style="font-size:36px;font-weight:800;line-height:1.3">step당 시간</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">× 전체 step 수(학습 행 ÷ 배치 × epoch) → 전체 시간 추정</p></div>
+</div>
+<aside>세 번째 칸, 파일럿입니다. 전체 학습은 40분이 걸리는데, 40분 뒤에 메모리가 모자라서 죽었다거나 손실이 전혀 안 줄었다는 걸 알면 그 시간이 통째로 날아갑니다. 그래서 같은 설정으로 30 step만 먼저 돌립니다. 01_train_taste.py에 --run을 붙이면 기준 실험 002 설정 그대로 출력 폴더만 임시 폴더로 바꿔 돌리고, 1분 반쯤 걸립니다. 받은 모델은 덮어쓰지 않습니다. 파일럿에서는 세 가지를 봅니다. 손실이 줄어드는지, 메모리가 버티는지, 그리고 step 하나에 몇 초 걸리는지. step당 시간에 전체 step 수를 곱하면 전체 학습이 얼마나 걸릴지 미리 알 수 있습니다. 2022 방식에서는 이 추정이 하루 일정을 정합니다.</aside>
+</section>
+<section id="train-dev" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">3 · 기준 실험 · ④ 학습 ⑤ dev로 epoch 선택</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">40분 학습, epoch는 dev가 고른다</h2>
+</div>
+<div style="display:flex;flex-direction:row;gap:72px;align-items:center">
+<div style="width:400px;display:flex;flex-direction:column;gap:12px;border-top:4px solid #ec9a3e;padding:26px 0 0 0">
+<p style="font-size:88px;font-weight:800;letter-spacing:-2px;color:#b8650f">40분</p>
+<p style="font-size:28px;line-height:1.5;color:#4a5361">전체 학습 3 epoch (M4 Pro)</p>
+<p style="font-size:24px;line-height:1.5;font-weight:700;color:#1f2a37;background:#f2f3f5;border-radius:10px;padding:10px 16px">test는 아직 쓰지 않았다</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:24px">
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><p style="font-size:28px;font-weight:700">학습 전</p><p style="font-size:40px;font-weight:800;color:#4a5361">0.550</p></div>
+<div style="height:20px;background:#e6e8eb;border-radius:8px;display:flex"><div style="width:655px;height:20px;background:#8a939e;border-radius:8px"></div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><p style="font-size:28px;font-weight:700">epoch 1</p><p style="font-size:40px;font-weight:800;color:#4a5361">0.694</p></div>
+<div style="height:20px;background:#e6e8eb;border-radius:8px;display:flex"><div style="width:826px;height:20px;background:#f0bf86;border-radius:8px"></div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><p style="font-size:28px;font-weight:700">epoch 2</p><p style="font-size:40px;font-weight:800;color:#4a5361">0.700</p></div>
+<div style="height:20px;background:#e6e8eb;border-radius:8px;display:flex"><div style="width:833px;height:20px;background:#f0bf86;border-radius:8px"></div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><p style="font-size:28px;font-weight:700">epoch 3 <span style="color:#b8650f">· best, 저장</span></p><p style="font-size:40px;font-weight:800;color:#b8650f">0.702</p></div>
+<div style="height:20px;background:#e6e8eb;border-radius:8px;display:flex"><div style="width:835px;height:20px;background:#ec9a3e;border-radius:8px"></div></div>
+</div>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">학습 중 epoch마다 잰 간이 dev R@5 · 학습 기록은 01_train_taste.py(--run 없이)로 본다</p>
+<aside>네 번째와 다섯 번째 칸입니다. 전체 학습은 M4 Pro에서 40분 걸렸습니다. 학습하는 동안 epoch가 끝날 때마다 dev로 R@5를 간단히 잽니다. 학습 전 0.550에서 첫 epoch 뒤에 0.694로 크게 오르고, 두 번째 0.700, 세 번째 0.702입니다. 가장 좋은 epoch 3을 저장했습니다. 다만 epoch 1 이후의 차이는 아주 작습니다. dev 크기로 보면 0.02 미만 차이는 잡음이라, 거의 첫 epoch에서 다 배웠다고 읽는 게 맞습니다. 그리고 여기까지 test는 한 번도 쓰지 않았습니다. 고르는 일은 전부 dev로 했습니다. 이 학습 기록은 01_train_taste.py를 --run 없이 돌리면 받은 모델의 기록으로 볼 수 있습니다.</aside>
+</section>
+<section id="test-once" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">3 · 기준 실험 · ⑥ test 1회</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">처음 보는 법령에서 +0.156</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;border-top:4px solid #c9ced6;padding:24px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">R@1</p><p style="font-size:56px;font-weight:800;letter-spacing:-1px"><span style="color:#6b7480">0.284 →</span> 0.405</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;border-top:4px solid #ec9a3e;padding:24px 0 0 0"><p style="font-size:24px;font-weight:700;color:#b8650f">R@5 · 주요 지표</p><p style="font-size:56px;font-weight:800;letter-spacing:-1px"><span style="color:#6b7480">0.513 →</span> <span style="color:#b8650f">0.669</span></p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:10px;border-top:4px solid #c9ced6;padding:24px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">R@10</p><p style="font-size:56px;font-weight:800;letter-spacing:-1px"><span style="color:#6b7480">0.601 →</span> 0.757</p></div>
+</div>
+<table style="width:1300px;font-size:28px;color:#1f2a37">
+<tr><th style="width:28%;text-align:left;color:#6b7480;font-size:24px">R@5 말투별</th><th style="width:24%;text-align:right;color:#6b7480;font-size:24px">keyword</th><th style="width:24%;text-align:right;color:#6b7480;font-size:24px">question</th><th style="width:24%;text-align:right;color:#6b7480;font-size:24px">situation</th></tr>
+<tr><td style="color:#6b7480">학습 전 e5-small</td><td style="text-align:right;color:#6b7480">0.725</td><td style="text-align:right;color:#6b7480">0.517</td><td style="text-align:right;color:#6b7480">0.403</td></tr>
+<tr style="background:#fdf1e3"><td><b>002</b></td><td style="text-align:right">0.795</td><td style="text-align:right">0.687</td><td style="text-align:right"><b>0.589</b></td></tr>
+<tr><td style="color:#6b7480">오른 폭</td><td style="text-align:right;color:#6b7480">+0.070</td><td style="text-align:right;color:#6b7480">+0.170</td><td style="text-align:right;color:#b8650f"><b>+0.186 (가장 큼)</b></td></tr>
+</table>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">test 2,526 질문 · 학습 때 본 적 없는 법령 16개 · 코퍼스 전체 25,967 문서에서 검색</p>
+<aside>여섯 번째 칸, 이제 test를 딱 한 번 씁니다. 처음 보는 법령 16개, 2,526개 질문입니다. 주요 지표 R@5가 학습 전 0.513에서 0.669로, 0.156 올랐습니다. 질문 둘 중 하나만 맞히던 모델이 셋 중 둘을 맞히게 된 겁니다. R@1은 0.284에서 0.405로, R@10은 0.601에서 0.757로 올랐습니다. 가설대로 처음 보는 법령에서도 올랐습니다. 말투별로 보면 더 재미있습니다. 키워드형은 원래 잘하던 곳이라 0.070 오르는 데 그쳤고, 궁금한 점을 묻는 질문은 0.170, 상황을 길게 설명하는 일상 말투는 0.186으로 가장 많이 올랐습니다. 앞에서 파인튜닝이 노릴 곳이라고 했던 바로 그 자리입니다. 그래도 situation은 아직 0.589로 가장 낮습니다. 분석은 여기서 시작됩니다.</aside>
+</section>
+<section id="vs-no-train" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">3 · 기준 실험 · ⑦ 분석 · 학습 없는 선택지 표에 한 줄 더</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">학습 없는 선택지와 나란히</h2>
+</div>
+<table style="width:1664px;font-size:30px;color:#1f2a37">
+<tr><th style="width:28%;text-align:left;color:#6b7480;font-size:26px">선택지</th><th style="width:36%;text-align:right;color:#6b7480;font-size:26px">test R@5</th><th style="width:16%;text-align:right;color:#6b7480;font-size:26px">질문당 LLM 호출</th><th style="width:20%;text-align:right;color:#6b7480;font-size:26px">한 번 드는 비용</th></tr>
+<tr><td>e5-small (학습 전)</td><td style="text-align:right">0.513</td><td style="text-align:right">0</td><td style="text-align:right;color:#6b7480">-</td></tr>
+<tr><td>e5-small + 쿼리 확장</td><td style="text-align:right;color:#6b7480">측정 전 (17개 표본 0.294 → 0.471)</td><td style="text-align:right;color:#b8650f"><b>1</b></td><td style="text-align:right;color:#6b7480">-</td></tr>
+<tr style="background:#fdf1e3"><td><b>002 파인튜닝</b></td><td style="text-align:right"><b>0.669</b></td><td style="text-align:right"><b>0</b></td><td style="text-align:right"><b>학습 40분 1회</b></td></tr>
+</table>
+<p style="font-size:34px;line-height:1.6;font-weight:700">파인튜닝은 질문마다 내던 LLM 비용을 <span style="color:#b8650f">학습 1회</span>로 옮긴다.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">test 2,526 질문 · 쿼리 확장은 무료 한도로 test 전체를 아직 못 쟀다 · 모델 크기(118M, 384차원) 그대로</p>
+<aside>앞에서 학습 없는 선택지를 한 표에 놓았죠. 거기에 방금 끝낸 기준 실험 002를 한 줄 붙입니다. 학습 전 e5-small은 LLM 호출 없이 0.513입니다. 쿼리 확장은 질문마다 LLM을 한 번 부르는데, test 전체 점수는 무료 한도 때문에 아직 못 쟀습니다. 캐시에 있던 17개 표본에서만 0.294가 0.471로 올랐습니다. 002 파인튜닝은 질문당 LLM 호출 없이 test 전체에서 0.669입니다. 대신 학습에 40분을 한 번 썼습니다. 정리하면 파인튜닝은 질문마다 내던 LLM 비용과 지연을 학습 한 번으로 옮기는 선택입니다. 모델 크기는 118M, 384차원 그대로라 7교시 배포 최적화도 같은 조건에서 이어 갑니다.</aside>
+</section>
+<section id="baseline-done" data-transition="fade" style="background:#fdf1e3;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:44px">
+<p style="font-size:26px;font-weight:700;color:#b8650f">3 · 기준 실험 · 한 바퀴 끝</p>
+<h1 style="font-size:112px;font-weight:800;line-height:1.2;letter-spacing:-3px">기준선 확정<br><span style="color:#b8650f">002 = test 0.669</span></h1>
+<p style="font-size:34px;line-height:1.6;color:#4a5361;width:1400px">6교시는 이 기준선 위에서 가설을 세운다. 새 실험은 모두 이 숫자와 비교한다.</p>
+<div style="position:absolute;left:0;right:0;bottom:0;height:8px;background:#ec9a3e"></div>
+<aside>이렇게 실험 한 바퀴가 끝났습니다. 가설을 세우고, 설정을 정하고, 파일럿을 돌리고, 40분 학습하고, dev로 epoch를 고르고, test를 한 번 쟀습니다. 그 결과 기준선이 정해졌습니다. 기준 실험 002, test R@5 0.669. 6교시에는 이 기준선 위에서 가설을 세웁니다. 앞으로 어떤 실험을 하든 이 숫자보다 나은지로 판단합니다. 한 바퀴에 이만큼 손이 가고 시간이 든다는 것, 이게 오늘 몸으로 느껴 볼 2022 방식입니다.</aside>
+</section>
+<section data-section="실행 명령, 눈으로 볼 것, 6교시 예고, 휴식" id="run" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:48px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">실행</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">돌려 볼 명령</h2>
+</div>
+<div style="display:flex;flex-direction:column;gap:14px;background:#f2f3f5;border-radius:14px;padding:36px 44px">
+<p style="font-family:'JetBrains Mono', 'Noto Sans KR', monospace;font-size:24px;line-height:1.65;color:#1f2a37"><span style="color:#6b7480"># 0. 준비 확인: 데이터 · 모델 · 인덱스 (빠지면 --fix)</span><br>uv run python lecture/03_setup/01_doctor.py --quick<br><span style="color:#6b7480"># 1. 데이터: 코퍼스, 분할</span><br>uv run python lecture/04_data/01_corpus.py<br>uv run python lecture/04_data/03_split.py<br><span style="color:#6b7480"># 2. 평가: 지표와 학습 없는 e5-small, 쿼리 확장(받은 캐시 17개, API 키 없이)</span><br>uv run python lecture/05_evaluate/01_metrics.py<br>uv run python lecture/05_evaluate/02_query_expansion.py<br><span style="color:#6b7480"># 3. 기준 실험: 원리와 받은 모델의 학습 기록 / 선택: 파일럿 30 step (약 1.5분)</span><br>uv run python lecture/06_train/01_train_taste.py<br>uv run python lecture/06_train/01_train_taste.py --run</p>
+</div>
+<aside>명령은 위에서부터 순서대로입니다. 먼저 01_doctor.py --quick으로 3교시에 받은 데이터, 모델, 인덱스가 그대로 있는지 확인합니다. 빠진 것이 있으면 --fix가 받아 줍니다. 데이터는 01_corpus.py로 코퍼스 길이 분포를, 03_split.py로 분할과 겹침을 봅니다. 평가는 01_metrics.py로 지표를 직접 계산하고 학습 없는 e5-small을 test로 재고, 02_query_expansion.py로 받은 캐시의 17개 질문에서 쿼리 확장을 비교합니다. API 키가 없어도 됩니다. 마지막으로 01_train_taste.py는 그냥 돌리면 학습 원리와 받은 002 모델의 학습 기록을 보여 줍니다. 시간이 되면 --run을 붙여 30 step짜리 파일럿을 직접 돌려 보세요. 1분 반쯤 걸리고 결과는 임시 폴더에 쓰니 받은 모델은 그대로입니다. 40분짜리 전체 학습은 수업 시간에 돌리지 않고, 제가 미리 학습한 모델을 씁니다.</aside>
+</section>
+<section id="check" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:72px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">확인할 것</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">눈으로 보고 넘어간다</h2>
+</div>
+<div style="display:flex;gap:48px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #ec9a3e;padding:28px 0 0 0"><h3 style="font-size:36px;font-weight:800;line-height:1.3">분할 겹침 0</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">03_split.py에서 train · dev · test 법령이 겹치지 않는지</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #ec9a3e;padding:28px 0 0 0"><h3 style="font-size:36px;font-weight:800;line-height:1.3">말투별 점수</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">01_metrics.py에서 keyword · question · situation 차이</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #ec9a3e;padding:28px 0 0 0"><h3 style="font-size:36px;font-weight:800;line-height:1.3">situation 오답</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">질문별 결과에서 몇 개를 골라 정답 조문과 대 본다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #ec9a3e;padding:28px 0 0 0"><h3 style="font-size:36px;font-weight:800;line-height:1.3">파일럿 손실</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">--run을 돌렸다면 30 step 동안 손실이 줄었는지</p></div>
+</div>
+<aside>네 가지를 눈으로 확인합니다. 03_split.py에서 세 분할의 법령이 하나도 겹치지 않는지. 01_metrics.py에서 말투별로 점수가 얼마나 다른지. 질문별 결과 파일에서 상황 설명형 오답을 몇 개 골라 정답 조문과 직접 대 보기. 왜 틀렸는지 감이 오면 6교시 분석이 훨씬 잘 들어옵니다. 그리고 파일럿을 돌렸다면 30 step 동안 손실이 줄었는지 봅니다. 숫자보다 표본을 직접 읽는 습관이 실험을 지킵니다.</aside>
+</section>
+<section id="next" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">다음 시간 · 6교시</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">기준선 0.669 위에서 가설을 돌린다</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #ec9a3e;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">1</p><h3 style="font-size:36px;font-weight:800">우리가 세운 가설들</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">기준선 위에 세운 가설 전체를 한눈에</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #ec9a3e;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">2</p><h3 style="font-size:36px;font-weight:800">LoRA 실험 한 바퀴</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">오늘 돈 바퀴를 LoRA 설정으로 한 번 더</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;background:#e8f1fb;border-top:4px solid #4f93d8;border-radius:0 0 16px 16px;padding:26px 28px 32px 28px"><p style="font-size:24px;font-weight:700;color:#2d6db0">3 · 2026 방식</p><h3 style="font-size:36px;font-weight:800">“딸깍”</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">같은 바퀴를 에이전트에게 맡기면 무엇이 달라지나</p></div>
+</div>
+<aside>6교시에는 오늘 세운 기준선 0.669 위에서 시작합니다. 먼저 이 기준선 위에 세운 가설들을 한눈에 봅니다. 그다음 오늘 같이 돈 실험 한 바퀴를 LoRA 설정으로 한 번 더 돕니다. 오늘 바퀴를 손으로 돌아 봤기 때문에 무엇이 바뀌는지 바로 보일 겁니다. 마지막으로 2026 방식, 같은 바퀴를 에이전트에게 맡기는 "딸깍"을 봅니다. 오늘 한 바퀴가 얼마나 무거웠는지 기억해 두세요. 그 차이가 6교시의 주제입니다.</aside>
+</section>
+<section id="break" data-transition="fade" style="background:#f2f3f5;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:44px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">5교시 끝</p>
+<h1 style="font-size:112px;font-weight:800;line-height:1.2;letter-spacing:-3px">질문 받고,<br><span style="color:#6b7480">10분 쉬겠습니다.</span></h1>
+<p style="font-size:34px;line-height:1.6;color:#4a5361">6교시는 비교용 파인튜닝 모델 네 개(002 · 004 LoRA · 006 · r001_A)를 씁니다. 쉬는 동안 받아 두세요.</p>
+<p style="font-family:'JetBrains Mono', 'Noto Sans KR', monospace;font-size:28px;line-height:1.6;color:#1f2a37;background:#fcfcfb;border-radius:12px;padding:20px 28px">uv run python scripts/finetuned_drive.py download --all</p>
+<div style="position:absolute;left:0;right:0;bottom:0;height:8px;background:#ec9a3e"></div>
+<aside>질문 받고 10분 쉽니다. 파일럿을 돌리고 있다면 그대로 두셔도 됩니다. 6교시에는 비교용 파인튜닝 모델 네 개를 씁니다. 오늘 본 기준 실험 002, LoRA로 학습한 004, 그리고 006과 r001_A입니다. 쉬는 동안 화면의 finetuned_drive.py download --all 명령으로 네 개를 받아 두세요.</aside>
+</section>
+</div>
+<div id="bar"></div>
+<div id="notes"></div>
+<script>
+(() => {
+  // 덱 전용 요소: x-icon (Lucide 모양), x-connector (선 · 화살표)
+  const ICONS = {
+    Chart: '<path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>',
+    Chat: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+    Check: '<path d="M20 6 9 17l-5-5"/>',
+    CheckCircle: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+    Database: '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>',
+    Globe: '<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
+    Home: '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>',
+    Lightbulb: '<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>',
+    PaperPlane: '<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
+    Search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+    Settings: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+    Warning: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+  };
+  document.querySelectorAll('x-icon').forEach((el) => {
+    const body = ICONS[el.getAttribute('name')] || '<circle cx="12" cy="12" r="9"/>';
+    el.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + body + '</svg>';
+  });
+
+  const NS = 'http://www.w3.org/2000/svg';
+  let markerId = 0;
+  document.querySelectorAll('x-connector').forEach((el) => {
+    const host = el.parentElement;
+    if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
+    const cs = getComputedStyle(el);
+    const color = cs.color;
+    const w = parseFloat(el.style.borderWidth) || 2;
+    const dash = (el.style.borderStyle || '').includes('dash') ? `${w * 3} ${w * 2}` : (el.style.borderStyle || '').includes('dot') ? `${w} ${w * 1.5}` : '';
+    const num = (v, size) => (String(v).endsWith('%') ? (parseFloat(v) / 100) * size : parseFloat(v));
+    const hw = host.offsetWidth, hh = host.offsetHeight;
+    const x1 = num(el.getAttribute('x1'), hw), y1 = num(el.getAttribute('y1'), hh);
+    const x2 = num(el.getAttribute('x2'), hw), y2 = num(el.getAttribute('y2'), hh);
+    const head = el.getAttribute('head') || 'end';
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('style', 'position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;pointer-events:none');
+    const id = 'xc' + markerId++;
+    svg.innerHTML = `<defs><marker id="${id}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="${Math.max(4, 12 / w * 2)}" markerHeight="${Math.max(4, 12 / w * 2)}" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="${color}"/></marker></defs>`;
+    const line = document.createElementNS(NS, 'line');
+    Object.entries({ x1, y1, x2, y2, stroke: color, 'stroke-width': w }).forEach(([k, v]) => line.setAttribute(k, v));
+    if (dash) line.setAttribute('stroke-dasharray', dash);
+    if (head === 'end' || head === 'both') line.setAttribute('marker-end', `url(#${id})`);
+    if (head === 'both') line.setAttribute('marker-start', `url(#${id})`);
+    svg.appendChild(line);
+    el.replaceWith(svg);
+  });
+
+  // 넘기기 · 화면 맞춤 · 대본
+  const stage = document.getElementById('stage');
+  const slides = [...stage.children].filter((s) => s.tagName === 'SECTION');
+  const bar = document.getElementById('bar');
+  const notes = document.getElementById('notes');
+  let cur = 0;
+  const fit = () => {
+    const s = Math.min(innerWidth / 1920, innerHeight / 1080);
+    stage.style.transform = `scale(${s}) translate(-50%, -50%)`;
+  };
+  const show = (i) => {
+    cur = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach((s, k) => s.classList.toggle('on', k === cur));
+    bar.textContent = `${cur + 1} / ${slides.length}`;
+    const aside = slides[cur].querySelector('aside');
+    notes.textContent = aside ? aside.textContent.trim() : '(대본 없음)';
+    history.replaceState(null, '', '#' + slides[cur].id);
+  };
+  addEventListener('resize', fit);
+  addEventListener('keydown', (e) => {
+    if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)) { show(cur + 1); e.preventDefault(); }
+    else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { show(cur - 1); e.preventDefault(); }
+    else if (e.key === 'Home') show(0);
+    else if (e.key === 'End') show(slides.length - 1);
+    else if (e.key === 'n' || e.key === 'N') document.body.classList.toggle('show-notes');
+    else if (e.key === 'f' || e.key === 'F') document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+  });
+  stage.addEventListener('click', (e) => show(cur + (e.clientX > innerWidth / 3 ? 1 : -1)));
+  const fromHash = () => {
+    const i = slides.findIndex((s) => '#' + s.id === location.hash);
+    if (i >= 0 && i !== cur) show(i);
+  };
+  addEventListener('hashchange', fromHash);
+  fit();
+  const start = slides.findIndex((s) => '#' + s.id === location.hash);
+  show(start < 0 ? 0 : start);
+})();
+</script>
+</body>
+</html>

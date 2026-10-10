@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>7교시 실습 4 배포 최적화</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400..800&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;display=swap">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { background: #2b2f36; overflow: hidden; font-family: 'Noto Sans KR', Arial, sans-serif; color: #1f2a37; }
+  #stage { position: absolute; left: 50%; top: 50%; width: 1920px; height: 1080px; transform-origin: 0 0; }
+  #stage > section { position: absolute; inset: 0; width: 1920px; height: 1080px; overflow: hidden;
+    font-size: 32px; line-height: 1.4; word-break: keep-all; opacity: 0; visibility: hidden; transition: opacity .25s; }
+  #stage > section.on { opacity: 1; visibility: visible; }
+  section:not([style*="display"]), section div:not([style*="display"]) { display: flex; flex-direction: column; }
+  section div { min-width: 0; }
+  h1, h2, h3, p, ul, ol { margin: 0; }
+  h1 { font-size: 96px; font-weight: 600; line-height: 1.1; }
+  h2 { font-size: 64px; font-weight: 600; line-height: 1.15; }
+  h3 { font-size: 44px; font-weight: 600; line-height: 1.2; }
+  p, li { font-size: inherit; }
+  ul, ol { padding-left: 1.2em; display: flex; flex-direction: column; gap: .3em; }
+  table { border-collapse: collapse; }
+  th, td { padding: .35em .6em; border-bottom: 1px solid rgba(31, 42, 55, .14); text-align: left; vertical-align: top; }
+  th { font-weight: 700; border-bottom: 2px solid rgba(31, 42, 55, .22); }
+  aside { display: none; }
+  x-icon, x-shape { display: block; flex: none; }
+  x-icon svg { width: 100%; height: 100%; display: block; }
+  x-connector { display: block; }
+  x-shape[kind="ellipse"] { border-radius: 50%; }
+  x-shape[kind="arrow-right"] { clip-path: polygon(0 30%, 60% 30%, 60% 0, 100% 50%, 60% 100%, 60% 70%, 0 70%); }
+  x-shape[kind="arrow-left"] { clip-path: polygon(100% 30%, 40% 30%, 40% 0, 0 50%, 40% 100%, 40% 70%, 100% 70%); }
+  x-shape[kind="arrow-down"] { clip-path: polygon(30% 0, 70% 0, 70% 60%, 100% 60%, 50% 100%, 0 60%, 30% 60%); }
+  x-shape[kind="arrow-up"] { clip-path: polygon(30% 100%, 70% 100%, 70% 40%, 100% 40%, 50% 0, 0 40%, 30% 40%); }
+  x-shape[kind="diamond"] { clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+  #bar { position: fixed; right: 16px; bottom: 12px; font: 13px/1.4 Arial, sans-serif; color: #c9ced6;
+    background: rgba(0, 0, 0, .35); padding: 4px 10px; border-radius: 6px; user-select: none; }
+  #notes { position: fixed; left: 0; right: 0; bottom: 0; max-height: 34vh; overflow: auto; display: none;
+    background: rgba(20, 23, 28, .94); color: #e8eaed; font: 16px/1.7 'Noto Sans KR', Arial, sans-serif; padding: 16px 24px 40px; }
+  body.show-notes #notes { display: block; }
+  @media print {
+    @page { size: 1920px 1080px; margin: 0; }
+    html, body { height: auto; overflow: visible; background: none; }
+    #stage { position: static; transform: none !important; width: auto; height: auto; }
+    #stage > section { position: relative; opacity: 1; visibility: visible; break-after: page; }
+    #bar, #notes { display: none !important; }
+  }
+</style>
+</head>
+<body>
+<!-- 장표 원본: claude.ai Slides 덱. 장 하나 = <section>, 발표 대본 = <aside>. 키: ← → 넘기기, N 대본, F 전체 화면 -->
+<div id="stage">
+<section data-section="표지, 이 업무의 어제와 오늘" id="cover" data-transition="fade" style="background:linear-gradient(160deg, #ffffff 0%, #f4f5f6 100%);color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:40px">
+<p style="font-size:28px;font-weight:700;color:#2d6db0">AI 시대 생존법 · 내 업무 확장편 · 7교시 · 실습 4 · 2026 파트</p>
+<h1 style="font-size:112px;font-weight:800;line-height:1.15;letter-spacing:-3px">모델을<br>가볍게 만든다</h1>
+<p style="font-size:34px;line-height:1.6;color:#6b7480;width:1400px">만든 모델을 API로 띄우고, ONNX · INT8 · 어휘 가지치기로 줄인 뒤, 무엇을 얻고 무엇을 잃는지 표 하나로 판단합니다.</p>
+<div style="position:absolute;left:0;right:0;bottom:0;height:8px;background:#4f93d8"></div>
+<p style="position:absolute;left:128px;bottom:64px;width:900px;font-size:26px;color:#6b7480">실습 4 · 서빙과 배포 최적화</p>
+<aside>여기서부터 2026 파트입니다. 2022 파트에서 모델을 만들었다면, 이제는 그 모델을 남이 쓸 수 있게 전달하는 일입니다. 7교시는 서빙과 배포 최적화, 모델을 가볍게 만드는 시간입니다.</aside>
+</section>
+<section id="then-now" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:72px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">이 업무의 어제와 오늘</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">배포는 남의 일에서 내 일로</h2>
+</div>
+<div style="display:flex;gap:72px">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;border-top:4px solid #ec9a3e;padding:28px 0 0 0">
+<p style="font-size:28px;font-weight:800;color:#b8650f">2022</p>
+<p style="font-size:32px;line-height:1.6">학습한 모델 파일과 torch 환경을 통째로 넘긴다. 무겁고 느리다는 말이 돌아와도, 줄이는 일은 다른 팀의 몫이다</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;border-top:4px solid #4f93d8;padding:28px 0 0 0">
+<p style="font-size:28px;font-weight:800;color:#2d6db0">2026</p>
+<p style="font-size:32px;line-height:1.6">DS가 ONNX · INT8 · 어휘 가지치기로 직접 줄이고, 크기 · 속도 · 정확도를 한 표로 재서 어느 것을 내보낼지 정한다</p>
+</div>
+</div>
+<aside>예전에는 모델을 만들면 파일과 torch 환경을 그대로 넘기는 데서 DS의 일이 끝났습니다. 무겁다는 피드백이 와도 줄이는 건 다른 팀 일이었죠. 지금은 AI 도구 덕분에 변환, 양자화, 가지치기를 DS가 직접 해 보고, 정확도를 얼마나 잃고 무엇을 얻는지 숫자로 판단할 수 있습니다.</aside>
+</section>
+<section data-section="최적화가 무엇이고, 왜, 언제 필요한가" id="opt-what" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:64px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">최적화란</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">다 만든 모델을, 같은 답 그대로 더 가볍게</h2>
+</div>
+<div style="display:flex;gap:72px">
+<div style="flex:1;display:flex;flex-direction:column;gap:22px;border-top:4px solid #c9ced6;padding:28px 0 0 0">
+<p style="font-size:28px;font-weight:800;color:#6b7480">학습</p>
+<p style="font-size:30px;line-height:1.5"><span style="color:#6b7480">목표</span>  더 잘 맞히게</p>
+<p style="font-size:30px;line-height:1.5"><span style="color:#6b7480">바꾸는 것</span>  가중치의 값</p>
+<p style="font-size:30px;line-height:1.5"><span style="color:#6b7480">재는 것</span>  Recall이 올랐나</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:22px;border-top:4px solid #4f93d8;padding:28px 0 0 0">
+<p style="font-size:28px;font-weight:800;color:#2d6db0">배포 최적화</p>
+<p style="font-size:30px;line-height:1.5"><span style="color:#6b7480">목표</span>  같은 답을 더 싸고 빠르게</p>
+<p style="font-size:30px;line-height:1.5"><span style="color:#6b7480">바꾸는 것</span>  실행 형식 · 숫자 정밀도 · 어휘</p>
+<p style="font-size:30px;line-height:1.5"><span style="color:#6b7480">재는 것</span>  크기 · 메모리 · 지연, 그리고 Recall이 그대로인가</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.6;color:#4a5361">다시 학습하지 않는다. 학습 때의 optimizer(AdamW)와도 다른 이야기다. 줄인 뒤에는 정확도를 꼭 다시 잰다.</p>
+<aside>오늘 말하는 최적화가 무엇인지부터 정리합니다. 학습은 모델이 더 잘 맞히도록 가중치 값을 바꾸는 일이었습니다. 배포 최적화는 이미 다 만든 모델을, 같은 답을 내면서 더 싸고 빠르게 돌게 하는 일입니다. 다시 학습하지 않고, 모델을 담는 형식, 숫자를 몇 비트로 저장하는지, 모델이 들고 있는 어휘를 바꿉니다. 학습할 때 들은 optimizer, AdamW와 이름은 비슷하지만 전혀 다른 이야기입니다. 그리고 줄이면 정확도가 떨어질 수 있으니, 줄인 뒤에는 반드시 정확도를 다시 잽니다. 크기와 정확도를 같이 재는 것, 이게 오늘 내내 할 일입니다.</aside>
+</section>
+<section id="opt-why" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:48px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">왜 필요한가</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">만들 때는 한 번, 쓸 때는 매번</h2>
+</div>
+<p style="font-size:32px;line-height:1.6;color:#4a5361">학습은 GPU 한 대에서 한 번 끝난다. 서비스는 질문마다, 서버마다, 날마다 돈다. 임베딩 모델은 질문이 올 때마다 한 번, 문서를 새로 넣을 때마다 또 돈다.</p>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0"><h3 style="font-size:40px;font-weight:800">비용</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">메모리가 곧 서버 크기다. 서버를 여러 대 띄우면 그만큼 곱해진다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0"><h3 style="font-size:40px;font-weight:800">속도</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">검색은 답변 앞 단계라 사용자는 둘을 합친 시간을 기다린다. 서버를 새로 켤 때는 로딩 시간도 기다린다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0"><h3 style="font-size:40px;font-weight:800">놓을 수 있는 곳</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">GPU 없는 서버, 동료 노트북, 인터넷이 막힌 사내망. torch를 깔기 어렵거나 너무 무거운 곳</p></div>
+</div>
+<div style="display:flex;align-items:center;gap:40px;background:#e8f1fa;border-left:6px solid #4f93d8;border-radius:14px;padding:28px 36px">
+<p style="flex:1;font-size:32px;font-weight:800;line-height:1.4;color:#1f2a37">이걸 했기에, 3교시의 단일 HTML 임베딩 검색기가 가능했다</p>
+<div style="display:flex;flex-direction:column;gap:8px">
+<p style="font-size:26px;color:#1f2a37"><b style="color:#2d6db0">ONNX 변환</b> → 브라우저(JS) 위에서 실행</p>
+<p style="font-size:26px;color:#1f2a37"><b style="color:#2d6db0">양자화 + 어휘 가지치기</b> → 모델 30MB</p>
+</div>
+</div>
+<aside>왜 굳이 줄일까요. 학습은 GPU 한 대에서 한 번 하면 끝납니다. 그런데 서비스는 질문이 올 때마다, 띄운 서버마다, 매일 돕니다. 임베딩 모델은 질문마다 한 번, 문서를 새로 넣을 때마다 또 돕니다. 그래서 작은 차이가 계속 곱해집니다. 첫째는 비용입니다. 모델이 쓰는 메모리가 서버 크기를 정하고, 서버를 여러 대 띄우면 그대로 곱해집니다. 둘째는 속도입니다. 검색은 LLM 답변 앞 단계라 사용자는 검색과 답변을 합친 시간을 기다립니다. 요청이 몰릴 때 서버를 새로 켜면 모델 로딩 시간도 기다려야 합니다. 셋째는 놓을 수 있는 곳입니다. GPU 없는 서버, 동료 노트북, 인터넷이 막힌 사내망처럼 torch를 통째로 깔기 어려운 곳에도 모델을 보내야 할 때가 있습니다. 그리고 3교시에 보여 드린 HTML 파일 하나짜리 검색기를 기억하시나요? 더블클릭하면 Python도 서버도 인터넷도 없이 브라우저에서 법령을 검색하던 그 파일입니다. 그게 가능했던 게 바로 오늘 할 최적화 덕분입니다. 모델을 ONNX로 바꿨기 때문에 브라우저의 JavaScript 위에서 돌 수 있었고, 양자화에 어휘 가지치기까지 더해 모델을 30MB로 줄였기 때문에 HTML 파일 하나에 담을 수 있었습니다.</aside>
+</section>
+<section id="opt-when" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:48px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">언제 필요한가</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">모델이 어디에 놓이느냐가 정한다</h2>
+</div>
+<table style="width:1664px;font-size:28px;color:#1f2a37">
+<tr><th style="width:40%;text-align:left;color:#6b7480;font-size:24px">놓이는 곳</th><th style="width:27%;text-align:left;color:#6b7480;font-size:24px">걸리는 숫자</th><th style="width:33%;text-align:left;color:#6b7480;font-size:24px">먼저 볼 방법</th></tr>
+<tr><td>동료 노트북 · 사내 PC에 CLI로 설치</td><td>설치 크기 · 모델 파일</td><td><span style="color:#2d6db0">ONNX 변환 · 어휘 가지치기</span></td></tr>
+<tr><td>GPU 없는 CPU 서버</td><td>메모리 · 지연</td><td><span style="color:#2d6db0">ONNX 변환 · INT8 양자화</span></td></tr>
+<tr><td>요청 따라 자주 켜고 끄는 서버</td><td>로딩 시간</td><td><span style="color:#2d6db0">ONNX 변환 · 작은 모델</span></td></tr>
+<tr><td>서버를 여러 대 띄우는 서비스</td><td>메모리 (= 서버 비용)</td><td><span style="color:#2d6db0">INT8 양자화 · 어휘 가지치기</span></td></tr>
+<tr><td>문서를 대량으로 자주 다시 임베딩</td><td>처리량 (문서/초)</td><td><span style="color:#b8650f">GPU · 배치. 줄인 모델이 더 느릴 수도</span></td></tr>
+</table>
+<div style="display:flex;flex-direction:column;gap:10px;background:#f2f3f5;border-radius:14px;padding:28px 36px">
+<p style="font-size:28px;line-height:1.55"><b>아직은 아닐 때</b> <span style="color:#4a5361">정확도가 목표에 못 미칠 때, 사용자가 적은 내부 실험, GPU 서버가 이미 넉넉할 때. 줄이기는 정확도를 지킬 때만 의미가 있다.</span></p>
+</div>
+<aside>그럼 언제 필요할까요. 모델이 어디에 놓이느냐가 정합니다. 동료 노트북이나 사내 PC에 CLI로 깔아 준다면 설치 크기와 모델 파일이 문제라 torch를 빼는 ONNX 변환과 어휘 가지치기가 먼저입니다. GPU 없는 CPU 서버라면 메모리와 지연이, 요청에 따라 서버를 자주 켰다 껐다 한다면 로딩 시간이, 서버를 여러 대 띄운다면 메모리, 곧 서버 비용이 문제입니다. 반대로 문서를 대량으로 자주 다시 임베딩해야 한다면 처리량이 중요한데, 이때는 줄인 모델이 오히려 느릴 수 있어서 GPU와 배치 크기를 먼저 봅니다. 이건 뒤 비교표에서 숫자로 확인합니다. 아직 최적화할 때가 아닌 경우도 있습니다. 정확도가 목표에 못 미친다면 줄이기보다 정확도가 먼저고, 사용자가 적은 내부 실험이나 GPU가 넉넉한 환경이라면 굳이 할 필요가 없습니다. 오늘은 이 중 우리 상황, 즉 동료에게 CLI로 깔아 주고 CPU 서버에 API로 띄우는 경우를 기준으로 줄여 봅니다.</aside>
+</section>
+<section data-section="기술적으로: ONNX란, 런타임·모델·토크나이저 크기, 다른 선택지, 배포 환경(Python·C#·브라우저)별로 필요한 것" id="tech-onnx" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">조금 더 기술적으로 · ONNX란</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">모델을 담는 표준 파일 형식. 모델의 PDF</h2>
+</div>
+<div style="display:flex;align-items:stretch;gap:16px">
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">PyTorch 모델</p><h3 style="font-size:32px;font-weight:800">Python 코드 + 가중치</h3><p style="font-size:24px;line-height:1.5;color:#4a5361">코드가 있어야 돈다</p></div>
+<p style="font-size:32px;color:#9aa3ad;padding:56px 0 0 0">→</p>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px;background:#e8f1fa"><p style="font-size:24px;font-weight:700;color:#2d6db0">model.onnx</p><h3 style="font-size:32px;font-weight:800">계산 그래프 + 가중치</h3><p style="font-size:24px;line-height:1.5;color:#4a5361">MatMul · Add · Softmax 같은 연산의 순서도</p></div>
+<p style="font-size:32px;color:#9aa3ad;padding:56px 0 0 0">→</p>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">읽는 엔진</p><h3 style="font-size:32px;font-weight:800">ONNX Runtime</h3><p style="font-size:24px;line-height:1.5;color:#4a5361">OpenVINO(Intel) · TensorRT(NVIDIA)도 읽는다</p></div>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #4f93d8;padding:24px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">변환은 어떻게</p><p style="font-size:28px;line-height:1.55;color:#4a5361">예시 입력으로 모델을 한 번 돌리며 지나간 연산을 기록한다. 배치 크기 · 문장 길이는 바뀔 수 있는 축으로 표시해 둔다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #4f93d8;padding:24px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">형식 ≠ 엔진</p><p style="font-size:28px;line-height:1.55;color:#4a5361">ONNX는 파일 형식, ONNX Runtime은 그걸 돌리는 Microsoft의 엔진. 연산 사전의 판 번호를 opset이라 부른다</p></div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">Open Neural Network Exchange · 2017년 Facebook과 Microsoft가 발표 · 2019년부터 Linux Foundation AI &amp; Data 프로젝트</p>
+<aside>ONNX가 무엇인지부터 짚겠습니다. Open Neural Network Exchange의 줄임말로, 신경망 모델을 담는 표준 파일 형식입니다. 2017년에 Facebook과 Microsoft가 함께 발표했고, 지금은 Linux Foundation 산하 프로젝트입니다. 비유하자면 문서의 PDF입니다. 워드 파일은 워드가 있어야 열리지만 PDF는 어디서나 열리죠. PyTorch 모델은 가중치만으로는 돌지 않고, 그 모델을 정의한 Python 코드가 있어야 합니다. ONNX로 바꾸면 행렬곱, 덧셈, 소프트맥스 같은 연산이 어떤 순서로 이어지는지, 즉 계산 그래프와 가중치가 한 파일에 들어갑니다. 그래서 Python 코드 없이도 돕니다. 변환은 예시 문장을 넣고 모델을 한 번 돌리면서 지나간 연산을 기록하는 방식이고, 배치 크기나 문장 길이처럼 매번 달라지는 축은 바뀔 수 있다고 표시해 둡니다. 헷갈리기 쉬운 점 하나. ONNX는 파일 형식이고, ONNX Runtime은 그 파일을 돌리는 Microsoft의 엔진입니다. Intel의 OpenVINO나 NVIDIA의 TensorRT 같은 다른 엔진도 ONNX 파일을 읽습니다.</aside>
+</section>
+<section id="tech-weight" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">조금 더 기술적으로 · 무엇이 무거운가</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">배포하는 것 = 런타임 + 모델 + 토크나이저</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">런타임</p><h3 style="font-size:36px;font-weight:800;line-height:1.3">모델을 돌리는 엔진</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">PyTorch, ONNX Runtime. 어떤 엔진이냐가 쓸 수 있는 언어와 설치 크기를 정한다. 수십 MB에서 수 GB까지</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">모델 파일</p><h3 style="font-size:36px;font-weight:800;line-height:1.3">파라미터 수 × 바이트</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">1억 개면 fp32(4바이트) 400MB · fp16(2바이트) 200MB · int8(1바이트) 100MB</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">토크나이저</p><h3 style="font-size:36px;font-weight:800;line-height:1.3">글자 → 토큰 번호 사전</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">tokenizer.json 한 파일. 어휘가 수십만 개인 다국어 모델은 이것만 10MB가 넘는다</p></div>
+</div>
+<p style="font-size:30px;line-height:1.6;color:#4a5361">메모리는 셋을 올린 것에 계산 중간값(배치 × 문장 길이 × 차원)이 더해진다. 긴 문서를 크게 묶으면 모델보다 중간값이 더 커진다.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">세 가지를 따로 재야 어디를 줄일지 보인다</p>
+<aside>조금 더 기술적으로 들어가 보겠습니다. 모델을 배포한다고 하면 보통 모델 파일만 떠올리는데, 실제로 옮겨지는 건 세 덩어리입니다. 첫째는 런타임, 모델을 실제로 계산하는 엔진입니다. PyTorch냐 ONNX Runtime이냐에 따라 쓸 수 있는 언어와 설치 크기가 완전히 달라집니다. 둘째는 모델 파일인데, 크기는 단순합니다. 파라미터 수 곱하기 숫자 하나의 바이트 수입니다. 파라미터가 1억 개면 32비트 실수로 400MB, 16비트로 200MB, 8비트 정수로 100MB입니다. 양자화가 파일을 4분의 1로 줄이는 이유가 이겁니다. 셋째는 토크나이저입니다. 문장을 토큰 번호로 바꾸는 사전인데, 다국어 모델은 어휘가 수십만 개라 이 파일만 10MB가 넘습니다. 메모리는 이 셋을 올린 것에 계산하면서 생기는 중간값이 더해집니다. 중간값은 배치 크기, 문장 길이, 차원에 비례해서, 긴 문서를 한꺼번에 많이 넣으면 모델보다 커지기도 합니다.</aside>
+</section>
+<section id="tech-stack" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:48px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">조금 더 기술적으로 · 한 장으로 보는 층</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">torch는 Python 한 칸, ONNX는 세 언어 전부</h2>
+</div>
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;gap:16px;align-items:stretch"><div style="width:176px;display:flex;align-items:center"><p style="font-size:24px;font-weight:700;color:#6b7480">모델 파일</p></div><div style="width:353px;display:flex;flex-direction:column;justify-content:center;gap:4px;background:#fbeedd;border:2px solid #ec9a3e;border-radius:12px;padding:16px 22px"><p style="font-size:28px;font-weight:800;color:#b8650f">model.safetensors</p><p style="font-size:24px;color:#4a5361">+ 모델 정의 Python 코드</p></div><div style="width:1091px;display:flex;flex-direction:column;justify-content:center;gap:4px;background:#e8f1fa;border:2px solid #4f93d8;border-radius:12px;padding:16px 22px"><p style="font-size:28px;font-weight:800;color:#2d6db0">model.onnx</p><p style="font-size:24px;color:#4a5361">같은 파일 하나를 세 언어가 그대로 읽는다</p></div></div>
+<div style="display:flex;gap:16px;align-items:stretch"><div style="width:176px;display:flex;align-items:center"><p style="font-size:24px;font-weight:700;color:#6b7480">런타임</p></div><div style="width:353px;display:flex;flex-direction:column;justify-content:center;gap:4px;background:#fbeedd;border:2px solid #ec9a3e;border-radius:12px;padding:16px 22px"><p style="font-size:28px;font-weight:800;color:#b8650f">PyTorch</p><p style="font-size:24px;color:#4a5361">설치 약 560MB</p></div><div style="width:353px;display:flex;flex-direction:column;justify-content:center;gap:4px;background:#e8f1fa;border:2px solid #4f93d8;border-radius:12px;padding:16px 22px"><p style="font-size:28px;font-weight:800;color:#2d6db0">ONNX Runtime</p><p style="font-size:24px;color:#4a5361">pip · 설치 약 77MB</p></div><div style="width:353px;display:flex;flex-direction:column;justify-content:center;gap:4px;background:#e8f1fa;border:2px solid #4f93d8;border-radius:12px;padding:16px 22px"><p style="font-size:28px;font-weight:800;color:#2d6db0">ONNX Runtime</p><p style="font-size:24px;color:#4a5361">NuGet · 16~44MB</p></div><div style="width:353px;display:flex;flex-direction:column;justify-content:center;gap:4px;background:#e8f1fa;border:2px solid #4f93d8;border-radius:12px;padding:16px 22px"><p style="font-size:28px;font-weight:800;color:#2d6db0">ONNX Runtime Web</p><p style="font-size:24px;color:#4a5361">npm · .wasm 약 14MB</p></div></div>
+<div style="display:flex;gap:16px;align-items:stretch"><div style="width:176px;display:flex;align-items:center"><p style="font-size:24px;font-weight:700;color:#6b7480">언어</p></div><div style="width:722px;display:flex;flex-direction:column;justify-content:center;gap:4px;background:#f2f3f5;border:2px solid #d5d9df;border-radius:12px;padding:16px 22px"><p style="font-size:28px;font-weight:800;color:#1f2a37">Python</p><p style="font-size:24px;color:#4a5361">서버 · CLI</p></div><div style="width:353px;display:flex;flex-direction:column;justify-content:center;gap:4px;background:#f2f3f5;border:2px solid #d5d9df;border-radius:12px;padding:16px 22px"><p style="font-size:28px;font-weight:800;color:#1f2a37">C# · .NET</p><p style="font-size:24px;color:#4a5361">사내 데스크톱 앱 · 서버</p></div><div style="width:353px;display:flex;flex-direction:column;justify-content:center;gap:4px;background:#f2f3f5;border:2px solid #d5d9df;border-radius:12px;padding:16px 22px"><p style="font-size:28px;font-weight:800;color:#1f2a37">JavaScript</p><p style="font-size:24px;color:#4a5361">브라우저 · Node</p></div></div>
+<div style="display:flex;gap:16px;align-items:stretch"><div style="width:176px;display:flex;align-items:center"><p style="font-size:24px;font-weight:700;color:#6b7480">OS</p></div><div style="width:1460px;display:flex;flex-direction:column;justify-content:center;gap:4px;background:#e6e8eb;border:2px solid #c9ced6;border-radius:12px;padding:16px 22px"><p style="font-size:28px;font-weight:800;color:#1f2a37">Windows · macOS · Linux</p><p style="font-size:24px;color:#4a5361">같은 OS 위에서도 어떤 언어로 짜느냐에 따라 런타임이 달라진다</p></div></div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480"><span style="color:#b8650f">주황 = PyTorch 경로</span> · <span style="color:#2d6db0">파랑 = ONNX 경로</span> · 크기는 2026-10 torch 2.14 · onnxruntime 1.30 기준</p>
+<aside>지금까지 이야기한 걸 층으로 쌓아 보겠습니다. 맨 아래는 운영체제입니다. 윈도우든 맥이든 리눅스든 같은 OS 위에서도, 그 위에서 어떤 언어로 프로그램을 짜느냐가 다릅니다. Python으로 서버나 CLI를 만들 수도 있고, C#으로 사내 데스크톱 앱을 만들 수도 있고, JavaScript로 브라우저에서 돌릴 수도 있습니다. 그 위가 런타임입니다. 주황색 PyTorch는 Python 칸에만 있습니다. 설치가 약 560MB이고, 모델 파일만으로는 안 되고 모델을 정의한 Python 코드까지 같이 있어야 돕니다. 파란색 ONNX 경로를 보면, 런타임은 언어마다 따로 깔지만 이름은 모두 ONNX Runtime이고, 맨 위의 model.onnx는 같은 파일 하나입니다. Python에서는 pip로 77MB, C#에서는 NuGet으로 16에서 44MB, 브라우저에서는 14MB짜리 wasm을 한 번 내려받습니다. 그러니까 모델을 Python 밖으로 보내야 한다면 ONNX로 바꾸는 게 출발점이 됩니다.</aside>
+</section>
+<section id="tech-runtime" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">조금 더 기술적으로 · 런타임 크기</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">엔진만 바꿔도 수백 MB가 빠진다</h2>
+</div>
+<table style="width:1664px;font-size:28px;color:#1f2a37">
+<tr><th style="width:24%;text-align:left;color:#6b7480;font-size:24px">배포 환경</th><th style="width:36%;text-align:left;color:#6b7480;font-size:24px">런타임</th><th style="width:40%;text-align:left;color:#6b7480;font-size:24px">크기 (대략)</th></tr>
+<tr><td>Python</td><td>PyTorch (CPU)</td><td><span style="color:#b8650f">설치 약 560MB</span></td></tr>
+<tr><td>Python · 리눅스</td><td>PyTorch 기본판 (CUDA 포함)</td><td><span style="color:#b8650f">GPU 라이브러리까지 수 GB</span></td></tr>
+<tr><td>Python</td><td>ONNX Runtime</td><td><span style="color:#2d6db0">휠 약 23MB · 설치 약 77MB</span></td></tr>
+<tr><td>C# · .NET</td><td>ONNX Runtime (NuGet)</td><td><span style="color:#2d6db0">네이티브 라이브러리 16~44MB</span></td></tr>
+<tr><td>브라우저</td><td>ONNX Runtime Web (WASM)</td><td><span style="color:#2d6db0">.wasm 약 14MB 한 번 내려받기</span></td></tr>
+</table>
+<p style="font-size:30px;line-height:1.6;color:#4a5361">PyTorch는 사실상 Python 전용이다. ONNX는 표준 형식이라 같은 모델 파일을 Python · C# · 브라우저(JS)에서 같은 엔진으로 돌린다.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">2026-10 기준 torch 2.14 · onnxruntime 1.30 · NuGet 네이티브 = win-x64 16 · linux-x64 29 · osx-arm64 44MB (패키지 전체는 모든 OS 합쳐 157MB)</p>
+<aside>런타임 크기를 환경별로 놓아 봤습니다. Python에서 PyTorch를 CPU판으로 깔면 torch 폴더만 약 560MB입니다. 리눅스에서 그냥 pip install torch를 하면 GPU용 CUDA 라이브러리까지 따라와서 수 GB가 됩니다. GPU 없는 서버에서는 전부 쓰지 않는 짐입니다. 같은 일을 ONNX Runtime으로 하면 휠이 23MB 정도, 설치해도 77MB 정도입니다. 더 중요한 차이는 언어입니다. PyTorch는 사실상 Python 안에서만 돕니다. ONNX는 모델을 표준 형식으로 저장한 것이라, 같은 model.onnx 파일을 C#에서는 NuGet 패키지로, 브라우저에서는 WebAssembly로 돌릴 수 있습니다. C#은 운영체제별 네이티브 라이브러리 하나가 16에서 44MB, 브라우저는 14MB 정도의 wasm 파일을 한 번 내려받습니다. 그래서 Python 밖으로 나가야 한다면 ONNX 변환은 선택이 아니라 필수입니다.</aside>
+</section>
+<section id="tech-alt" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">조금 더 기술적으로 · 다른 선택지</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">ONNX만 있는 건 아니다</h2>
+</div>
+<table style="width:1664px;font-size:26px;color:#1f2a37">
+<tr><th style="width:28%;text-align:left;color:#6b7480;font-size:24px">선택지</th><th style="width:40%;text-align:left;color:#6b7480;font-size:24px">무엇</th><th style="width:32%;text-align:left;color:#6b7480;font-size:24px">이럴 때</th></tr>
+<tr><td>PyTorch 그대로</td><td>변환 없이 CPU판 torch로 배포</td><td>Python 서버, 빨리 내보낼 때</td></tr>
+<tr><td>OpenVINO</td><td>Intel의 엔진. ONNX도 읽는다</td><td>Intel CPU 서버를 더 빠르게</td></tr>
+<tr><td>TensorRT</td><td>NVIDIA GPU 전용 엔진. ONNX에서 빌드</td><td>GPU에서 지연 · 처리량 최대로</td></tr>
+<tr><td>Core ML · LiteRT</td><td>Apple · Google의 기기 안 엔진</td><td>아이폰 · 안드로이드 앱 내장</td></tr>
+<tr><td>llama.cpp (GGUF)</td><td>C/C++ 엔진. XLM-R 계열 임베딩도 돈다</td><td>이미 LLM을 GGUF로 돌리는 곳</td></tr>
+<tr><td>Hugging Face TEI</td><td>임베딩 전용 API 서버를 통째로</td><td>코드 없이 서버만 필요할 때</td></tr>
+<tr><td>정적 임베딩 (Model2Vec)</td><td>모델을 단어별 벡터 표로 증류</td><td><span style="color:#b8650f">아주 작고 빠르게. 정확도는 손해</span></td></tr>
+</table>
+<p style="font-size:28px;line-height:1.6;color:#4a5361">오늘 ONNX를 고른 이유: 언어 · OS · 하드웨어를 가장 넓게 덮고, OpenVINO · TensorRT도 ONNX에서 출발한다.</p>
+<aside>ONNX만 있는 건 아닙니다. 대표적인 선택지를 정리했습니다. 가장 쉬운 건 변환하지 않고 CPU판 torch로 그대로 내보내는 겁니다. Python 서버이고 빨리 내보내야 하면 충분합니다. Intel CPU 서버라면 Intel의 OpenVINO가, NVIDIA GPU라면 TensorRT가 각 하드웨어에 맞춰 더 빠르게 돌려 줍니다. 둘 다 ONNX 파일을 입력으로 받습니다. 모바일 앱 안에 넣으려면 Apple의 Core ML, Google의 LiteRT, 예전 이름 TensorFlow Lite가 있습니다. LLM을 로컬에서 돌릴 때 많이 쓰는 llama.cpp도 2024년부터 우리 모델과 같은 XLM-RoBERTa 계열 임베딩 모델을 GGUF 형식으로 돌립니다. 코드를 짜지 않고 임베딩 API 서버만 필요하다면 Hugging Face의 Text Embeddings Inference를 컨테이너로 띄우면 됩니다. 마지막으로 정적 임베딩은 모델을 단어별 벡터 표로 증류해서 트랜스포머 계산 자체를 없앱니다. 아주 작고 빠르지만 문맥을 보지 못해 정확도를 잃습니다. 오늘 ONNX를 고른 건 언어, 운영체제, 하드웨어를 가장 넓게 덮고, OpenVINO나 TensorRT로 가더라도 ONNX에서 출발하기 때문입니다.</aside>
+</section>
+<section id="tech-pipeline" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">조금 더 기술적으로 · Python 밖으로 나갈 때</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">모델 파일만 옮기면 같은 벡터가 안 나온다</h2>
+</div>
+<div style="display:flex;align-items:stretch;gap:16px">
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">1 · 접두어</p><h3 style="font-size:32px;font-weight:800">"query: "</h3><p style="font-size:24px;line-height:1.5;color:#4a5361">모델이 배운 약속</p></div>
+<p style="font-size:32px;color:#9aa3ad;padding:56px 0 0 0">→</p>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">2 · 토크나이저</p><h3 style="font-size:32px;font-weight:800">토큰 번호</h3><p style="font-size:24px;line-height:1.5;color:#4a5361">tokenizer.json</p></div>
+<p style="font-size:32px;color:#9aa3ad;padding:56px 0 0 0">→</p>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#e8f1fa;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#2d6db0">3 · 모델</p><h3 style="font-size:32px;font-weight:800">토큰별 벡터</h3><p style="font-size:24px;line-height:1.5;color:#4a5361">model.onnx는 여기만</p></div>
+<p style="font-size:32px;color:#9aa3ad;padding:56px 0 0 0">→</p>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">4 · 풀링</p><h3 style="font-size:32px;font-weight:800">평균 · 정규화</h3><p style="font-size:24px;line-height:1.5;color:#4a5361">문장 벡터 하나로</p></div>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #c9ced6;padding:24px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">Python</p><p style="font-size:28px;line-height:1.55;color:#4a5361">sentence-transformers가 1~4를 한 번에 해 준다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #c9ced6;padding:24px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">C# · 브라우저(JS)</p><p style="font-size:28px;line-height:1.55;color:#4a5361">1 · 2 · 4를 그 언어로 다시 짠다. 같은 문장의 벡터가 Python과 같은지 꼭 비교한다</p></div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">브라우저는 transformers.js(약 10MB)가 토크나이저와 ONNX Runtime Web을 묶어 2~4를 해 준다</p>
+<aside>Python 밖으로 나갈 때 가장 많이 빠지는 함정입니다. 임베딩 하나를 만드는 데는 네 단계가 있습니다. 접두어를 붙이고, 토크나이저로 토큰 번호를 만들고, 모델이 토큰마다 벡터를 내고, 그걸 평균 내서 정규화해 문장 벡터 하나로 만듭니다. ONNX 파일에 들어 있는 건 이 중 3번, 모델뿐입니다. Python에서는 sentence-transformers가 나머지를 알아서 해 주니 신경 쓸 일이 없었는데, C#이나 브라우저로 가면 접두어, 토크나이저, 풀링을 그 언어로 다시 짜야 합니다. 토크나이저가 한 글자만 다르게 잘라도 벡터가 달라지고, 인덱스와 맞지 않아 검색 품질이 조용히 떨어집니다. 그래서 같은 문장을 넣어 Python과 벡터가 같은지 꼭 비교합니다. 브라우저라면 transformers.js가 토크나이저와 ONNX Runtime Web을 묶어 주어서 접두어만 챙기면 됩니다.</aside>
+</section>
+<section id="tech-where" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">조금 더 기술적으로 · 어디까지 가야 하나</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">배포 환경이 필요한 최적화를 정한다</h2>
+</div>
+<table style="width:1664px;font-size:28px;color:#1f2a37">
+<tr><th style="width:30%;text-align:left;color:#6b7480;font-size:24px">모델이 도는 곳</th><th style="width:22%;text-align:left;color:#6b7480;font-size:24px">ONNX 변환</th><th style="width:48%;text-align:left;color:#6b7480;font-size:24px">더 줄여야 하나</th></tr>
+<tr><td>Python API 서버 (GPU)</td><td>선택</td><td>보통 불필요. 처리량이 먼저</td></tr>
+<tr><td>Python API 서버 (CPU)</td><td><span style="color:#2d6db0">권장</span></td><td>메모리 · 서버 대수가 문제면 INT8</td></tr>
+<tr><td>C# 앱 안에 내장</td><td><span style="color:#2d6db0">필수</span></td><td>앱 설치 크기에 그대로 더해진다</td></tr>
+<tr><td>브라우저 · 모바일</td><td><span style="color:#2d6db0">필수</span></td><td><span style="color:#b8650f">필수.</span> 내려받는 크기가 곧 첫 화면 대기 시간</td></tr>
+</table>
+<div style="display:flex;flex-direction:column;gap:10px;background:#f2f3f5;border-radius:14px;padding:28px 36px">
+<p style="font-size:28px;line-height:1.55"><b>API로 감싸면</b> <span style="color:#4a5361">C# · 웹 · 엑셀 매크로 어디서든 HTTP만 부르면 된다. 런타임 고민은 서버 한 곳에만 남는다. 대신 네트워크가 끊긴 곳에서는 못 쓴다.</span></p>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">오늘은 CPU의 Python API 서버와 동료 노트북 CLI를 기준으로 줄인다</p>
+<aside>정리하면, 모델이 어디서 도느냐가 어디까지 최적화해야 하는지를 정합니다. GPU가 있는 Python 서버라면 ONNX 변환은 선택이고, 줄이기보다 처리량이 먼저입니다. CPU 서버라면 torch를 빼는 ONNX 변환을 권하고, 메모리나 서버 대수가 문제일 때 INT8을 더합니다. C# 앱 안에 모델을 넣는다면 ONNX는 필수고, 모델 크기가 앱 설치 크기에 그대로 더해집니다. 브라우저나 모바일이라면 변환도 줄이기도 필수입니다. 사용자가 모델을 내려받는 시간이 곧 첫 화면을 기다리는 시간이기 때문입니다. 다른 길도 있습니다. 모델을 API 서버 하나로 감싸면 C#이든 웹이든 HTTP만 부르면 되니까 런타임 고민은 서버 한 곳에만 남습니다. 다만 네트워크가 없는 곳에서는 쓸 수 없죠. 오늘은 CPU에서 도는 Python API 서버와 동료 노트북의 CLI를 기준으로 줄여 보겠습니다.</aside>
+</section>
+<section data-section="너무 어렵죠? 전문가가 아니어도 AI 시대에 할 수 있는 이유: 목표와 기준이 분명하고 정답(원본 모델)이 있다. 그리고 이번 시간의 목표" id="too-hard" data-transition="fade" style="display:flex; flex-direction:column; gap:48px; justify-content:center; padding:128px; background:#1f2a37">
+  <p style="font-family:'Noto Sans KR', Arial, sans-serif; font-size:26px; font-weight:700; color:#8fbdeb">잠깐</p>
+  <h2 style="font-family:'Noto Sans KR', Arial, sans-serif; font-size:120px; font-weight:800; line-height:1.1; letter-spacing:-3px; color:#f5f6f7">너무 어렵죠?</h2>
+  <p style="font-family:'Noto Sans KR', Arial, sans-serif; font-size:40px; line-height:1.5; color:#c9ced6">솔직히 저도 런타임 · 양자화 전문가는 아닙니다.<br>그럼에도 불구하고 할 수 있는 이유는 역시.</p>
+  <aside>여기까지 ONNX, 런타임, 토크나이저, 양자화 이야기를 했는데요. 너무 어렵죠? 솔직히 말씀드리면 저도 런타임이나 양자화 전문가는 아닙니다. 몇 년 전이라면 이건 제 일이 아니었을 겁니다. 그런데 오늘 이걸 직접 해 봅니다. 어떻게 가능한지 다음 장에서 설명드리겠습니다.</aside>
+</section>
+<section id="why-doable" data-transition="fade" style="background:#1f2a37;color:#f5f6f7;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#8fbdeb">할 수 있는 이유는 역시</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">AI. 그리고 이 일이 AI가 잘하는 일이라서</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#9aa3ad">1</p><h3 style="font-size:40px;font-weight:800;line-height:1.3">목표가 숫자다</h3><p style="font-size:28px;line-height:1.55;color:#c9ced6">설치 · 모델 · 메모리 · 지연. 줄었는지 재 보면 안다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#9aa3ad">2</p><h3 style="font-size:40px;font-weight:800;line-height:1.3">기준이 분명하다</h3><p style="font-size:28px;line-height:1.55;color:#c9ced6">정확도(Recall@5)가 원본만큼 나와야 한다. 통과와 실패가 갈린다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#9aa3ad">3</p><h3 style="font-size:40px;font-weight:800;line-height:1.3">정답을 가지고 있다</h3><p style="font-size:28px;line-height:1.55;color:#c9ced6">원본 모델이 정답지. 같은 문장을 넣어 벡터가 같은지만 비교하면 된다</p></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px;background:#2c3b4e;border-radius:14px;padding:28px 36px">
+<p style="font-size:30px;line-height:1.55"><b>목표 · 기준 · 정답이 있으니, 에이전트에게 던져 주면 잘한다.</b> <span style="color:#c9ced6">시도하고, 재고, 정답과 비교하기를 스스로 반복한다. 사람은 목표와 기준을 정하고, 마지막 비교표를 보고 고른다.</span></p>
+</div>
+<aside>전문가가 아닌데도 할 수 있는 이유는, 역시 AI입니다. 다만 AI라서 무엇이든 되는 건 아니고, 이 일이 AI가 잘하는 종류의 일이라서 됩니다. 어떤 일이냐면 세 가지를 갖춘 일입니다. 첫째, 목표가 숫자입니다. 설치 크기, 모델 크기, 메모리, 지연. 줄었는지는 재 보면 바로 압니다. 둘째, 기준이 분명합니다. 줄인 모델의 정확도가 원본만큼 나와야 한다. 통과인지 실패인지 애매할 게 없습니다. 셋째, 정답을 이미 가지고 있습니다. 원본 모델이 정답지입니다. 같은 문장을 원본과 줄인 모델에 넣어서 벡터가 같은지만 비교하면 됩니다. 이렇게 목표와 기준이 분명하고 정답이 있는 일은 에이전트에게 던져 주면 정말 잘합니다. 변환하고, 재고, 정답과 비교하고, 안 맞으면 다른 방법을 시도하는 걸 스스로 반복하거든요. 제가 한 일은 무엇을 줄일지, 정확도를 어디까지 지킬지 정하고, 마지막에 비교표를 보고 무엇을 내보낼지 고른 것입니다. 반대로 목표가 흐릿하거나 정답을 모르는 일은 에이전트도 헤맵니다. 이 차이를 알아 두시면 다른 업무에도 써먹을 수 있습니다.</aside>
+</section>
+<section id="goals" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:72px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">이번 시간의 목표</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">세 가지를 한다</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">1</p><h3 style="font-size:40px;font-weight:800;line-height:1.3">API 복습</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">모델을 검색 API로 띄운다. 이미 배운 내용이라 짧게</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">2</p><h3 style="font-size:40px;font-weight:800;line-height:1.3">줄이기 세 단계</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">ONNX 변환 → INT8 양자화 → 어휘 가지치기</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">3</p><h3 style="font-size:40px;font-weight:800;line-height:1.3">비교표로 판단</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">크기 · 속도 · 메모리 · Recall을 한 표에 놓고 내보낼 모델을 고른다</p></div>
+</div>
+<aside>이번 시간에는 세 가지를 합니다. API는 이미 배우셨으니 짧게 복습하고, 모델을 세 단계로 줄이고, 마지막에 비교표 하나로 무엇을 내보낼지 정합니다.</aside>
+</section>
+<section data-section="API 짧은 복습과 출발점: torch로 띄운 검색 서버가 얼마나 무거운가" id="api-review" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">1 · API 복습</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">모델은 한 번 올리고, 요청마다 재사용한다</h2>
+</div>
+<div style="display:flex;align-items:stretch;gap:16px">
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">시작할 때</p><h3 style="font-size:32px;font-weight:800">모델 · 인덱스 로드</h3><p style="font-size:24px;line-height:1.5;color:#4a5361">lifespan에서 한 번만</p></div>
+<p style="font-size:32px;color:#9aa3ad;padding:56px 0 0 0">→</p>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">POST /search</p><h3 style="font-size:32px;font-weight:800">상위 k개 조문</h3><p style="font-size:24px;line-height:1.5;color:#4a5361">법령 필터도 함께</p></div>
+<p style="font-size:32px;color:#9aa3ad;padding:56px 0 0 0">→</p>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">답변</p><h3 style="font-size:32px;font-weight:800">SSE 스트리밍</h3><p style="font-size:24px;line-height:1.5;color:#4a5361">근거 조문 먼저, 답은 조각으로</p></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px;background:#f2f3f5;border-radius:14px;padding:28px 36px">
+<p style="font-family:'JetBrains Mono', 'Noto Sans KR', monospace;font-size:26px;line-height:1.6;color:#1f2a37">uv run --package ragkit-api ragkit-api --backend torch   <span style="color:#6b7480"># http://127.0.0.1:8000/docs</span></p>
+</div>
+<aside>API는 이미 배우셨으니 구조만 짚습니다. 서버가 시작할 때 모델과 인덱스를 한 번 올리고, 요청마다 그걸 재사용합니다. /search는 상위 k개 조문을 돌려주고, 답변은 SSE로 근거 조문을 먼저 보낸 뒤 답을 조각조각 흘려보냅니다. 일부러 torch 백엔드로 띄웁니다. 이게 오늘의 출발점입니다.</aside>
+</section>
+<section id="start-point" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:72px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">출발점 · torch로 띄운 검색 서버</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">검색 하나에 이만큼 든다</h2>
+</div>
+<div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:40px">
+<div style="display:flex;flex-direction:column;gap:12px;border-top:4px solid #c9ced6;padding:26px 0 0 0"><p style="font-size:88px;font-weight:800;letter-spacing:-2px">669</p><p style="font-size:28px;line-height:1.5;color:#4a5361">MB · 설치 크기 (torch 포함)</p></div>
+<div style="display:flex;flex-direction:column;gap:12px;border-top:4px solid #c9ced6;padding:26px 0 0 0"><p style="font-size:88px;font-weight:800;letter-spacing:-2px">471</p><p style="font-size:28px;line-height:1.5;color:#4a5361">MB · 모델 파일</p></div>
+<div style="display:flex;flex-direction:column;gap:12px;border-top:4px solid #c9ced6;padding:26px 0 0 0"><p style="font-size:88px;font-weight:800;letter-spacing:-2px">1,133</p><p style="font-size:28px;line-height:1.5;color:#4a5361">MB · 최대 메모리</p></div>
+<div style="display:flex;flex-direction:column;gap:12px;border-top:4px solid #c9ced6;padding:26px 0 0 0"><p style="font-size:88px;font-weight:800;letter-spacing:-2px">3.6s</p><p style="font-size:28px;line-height:1.5;color:#4a5361">모델 로딩</p></div>
+</div>
+<p style="font-size:30px;line-height:1.6;color:#4a5361">118M짜리 작은 모델인데도 이 정도다. 동료 노트북에 깔거나 서버를 여러 대 띄우려면 부담이 된다.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">실험 008 · torch-fp32 · CPU · test 질문 2,526개 · base e5-small 기준</p>
+<aside>torch로 띄운 지금 상태를 재 보면, 설치만 669MB, 모델 파일 471MB, 메모리는 1GB가 넘고 로딩에 3.6초가 걸립니다. 118M짜리 작은 모델인데도요. 동료 노트북에 CLI로 깔아 주거나 서버를 여러 대 띄우려면 이게 부담이 됩니다. 이 네 숫자를 줄이는 게 이번 시간의 목표입니다.</aside>
+</section>
+<section data-section="줄이기 세 단계: ONNX 변환, INT8 양자화, 어휘 가지치기" id="onnx" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">줄이기 ① · ONNX 변환</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">torch 없이 돌린다</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #4f93d8;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">설치 크기</p><p style="font-size:60px;font-weight:800;letter-spacing:-2px;color:#2d6db0">669 → 127<span style="color:#6b7480"> MB</span></p><p style="font-size:28px;line-height:1.5;color:#4a5361">torch 대신 onnxruntime만</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #4f93d8;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">로딩</p><p style="font-size:60px;font-weight:800;letter-spacing:-2px;color:#2d6db0">3.59 → 0.77<span style="color:#6b7480"> s</span></p><p style="font-size:28px;line-height:1.5;color:#4a5361">서버 시작이 빨라진다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #c9ced6;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">Recall@5</p><p style="font-size:60px;font-weight:800;letter-spacing:-2px">0.513</p><p style="font-size:28px;line-height:1.5;color:#4a5361">그대로. 계산 그래프만 옮겼다</p></div>
+</div>
+<p style="font-size:30px;line-height:1.6;color:#4a5361">모델 파일은 470MB로 그대로고, 최대 메모리는 1,782MB로 오히려 늘었다. 변환만으로는 모델이 작아지지 않는다.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">uv run ragkit export-onnx models/multilingual-e5-small · 실험 008</p>
+<aside>첫 단계는 ONNX 변환입니다. 모델의 계산 그래프를 표준 형식으로 옮겨서 torch 없이 onnxruntime으로 돌립니다. torch가 빠지니 설치가 669에서 127MB로 줄고 로딩도 빨라집니다. 결과는 원본과 같아서 Recall@5도 그대로입니다. 다만 모델 파일 자체는 그대로이고, 메모리는 오히려 늘었습니다. 변환은 짐을 덜었을 뿐 모델을 줄이지는 않습니다. 그래서 다음 단계가 필요합니다.</aside>
+</section>
+<section id="int8" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">줄이기 ② · INT8 양자화</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">숫자를 32비트에서 8비트로, 파일은 1/4</h2>
+</div>
+<div style="display:flex;gap:72px">
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #4f93d8;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">모델 파일</p><p style="font-size:72px;font-weight:800;letter-spacing:-2px;color:#2d6db0">470 → 118<span style="color:#6b7480"> MB</span></p><p style="font-size:28px;line-height:1.5;color:#4a5361">메모리 874MB, Recall@5 0.514</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;border-top:4px solid #c9ced6;padding:26px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">어떻게 줄이느냐가 정확도를 정한다 (R@5)</p>
+<div style="display:flex;justify-content:space-between;align-items:baseline"><p style="font-size:30px">텐서 단위: 행렬 전체에 스케일 하나</p><p style="font-size:40px;font-weight:800;color:#b8650f">0.458</p></div>
+<div style="display:flex;justify-content:space-between;align-items:baseline"><p style="font-size:30px">채널별: 열마다 스케일</p><p style="font-size:40px;font-weight:800;color:#2d6db0">0.514</p></div>
+<div style="display:flex;justify-content:space-between;align-items:baseline"><p style="font-size:30px;color:#6b7480">fp32 원본</p><p style="font-size:40px;font-weight:800;color:#6b7480">0.513</p></div>
+<p style="font-size:24px;line-height:1.5;color:#6b7480">R@10 0.601 · 0.601 · 0.546, MRR@10 0.381 · 0.383 · 0.340 (fp32 · 채널별 · 텐서 단위)</p>
+<p style="font-size:24px;line-height:1.5;color:#4a5361">채널별은 손실이 없고, 텐서 단위는 R@5가 0.055 떨어진다. fp32 대비 코사인 0.9859 vs 0.9994의 작은 차이가 검색 순위에서는 몇 점으로 커진다 (텐서 단위 코사인은 --run)</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">uv run ragkit quantize (채널별이 기본값) · 왼쪽 실험 008 · 오른쪽 실험 012 (test 2,526개, ONNX)</p>
+<aside>두 번째는 양자화입니다. 가중치를 32비트 실수에서 8비트 정수로 바꾸면 파일이 4분의 1이 됩니다. 정확도는 거의 그대로입니다. 그런데 어떻게 줄이느냐가 중요합니다. 실험 012에서 test 질문 2,526개, ONNX 백엔드로 같은 조건에서 쟀습니다. fp32 원본의 Recall@5가 0.513인데, 열마다 스케일을 두는 채널별 INT8은 0.514로 손실이 없었고, 행렬 전체에 스케일 하나를 쓰는 텐서 단위 INT8은 0.458로 0.055 떨어졌습니다. R@10과 MRR@10도 같은 모양입니다. fp32 대비 임베딩 코사인으로 보면 채널별 0.9994, 텐서 단위 0.9859로 차이가 아주 작아 보이지만, 이 작은 차이가 검색 순위에서는 몇 점으로 커집니다. 크기는 같아도 방식에 따라 정확도가 갈립니다. 그래서 ragkit quantize는 채널별이 기본값입니다. 실습 4-2 스크립트는 기본 모드에서 이 R@5 세 개를 출력하고, 텐서 단위의 코사인은 --run으로 직접 양자화할 때 나옵니다.</aside>
+</section>
+<section id="vocab" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">줄이기 ③ · 어휘 가지치기</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">100개 언어 어휘에서 한국어 법령에 쓰는 것만</h2>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;width:1500px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><p style="font-size:28px;font-weight:700">모델 파라미터 중 단어 임베딩 표</p><p style="font-size:48px;font-weight:800;color:#2d6db0">82%</p></div>
+<div style="height:28px;background:#e6e8eb;border-radius:8px;display:flex"><div style="width:1230px;height:28px;background:#4f93d8;border-radius:8px"></div></div>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #4f93d8;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">어휘</p><p style="font-size:56px;font-weight:800;letter-spacing:-2px;color:#2d6db0">25만 → 약 1.9만</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #4f93d8;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">INT8 모델 파일</p><p style="font-size:56px;font-weight:800;letter-spacing:-2px;color:#2d6db0">118 → 30 MB</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #c9ced6;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">test 질문 토큰화</p><p style="font-size:56px;font-weight:800;letter-spacing:-2px">100% 동일</p></div>
+</div>
+<p style="font-size:30px;line-height:1.6;color:#4a5361">쓰지 않는 행을 뺄 뿐 남은 가중치는 그대로라 결과가 같다. 대가는 범용성: 한국어 법령 전용 모델이 된다.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">uv run ragkit prune-vocab models/multilingual-e5-small → export-onnx → quantize · 실험 008</p>
+<aside>세 번째는 어휘 가지치기입니다. 모델을 열어 보면 파라미터의 82%가 단어 임베딩 표입니다. 다국어 모델이라 100개 언어의 어휘 25만 개를 들고 있죠. 층을 줄이기 전에 어휘부터 봅니다. 법령 코퍼스와 한글 조각, 짧은 기호만 남기면 약 1만 9천 개로 줄고, INT8 모델이 118MB에서 30MB가 됩니다. 양자화와 달리 가지치기는 쓰지 않는 행을 빼는 것이라, test 질문 전부가 원본과 똑같이 토큰화됐습니다. 대신 한국어 법령 전용 모델이 됩니다. 실제 사용자 질문을 얼마나 덮는지는 꼭 확인해야 합니다.</aside>
+</section>
+<section data-section="비교표로 판단하고 API에 적용한다" id="bench-table" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">비교표 · ragkit-bench</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">같은 조건에서 네 변형을 잰다</h2>
+</div>
+<table style="width:1664px;font-size:28px;color:#1f2a37">
+<tr><th style="width:22%;text-align:left;color:#6b7480;font-size:24px">변형</th><th style="width:11%;text-align:right;color:#6b7480;font-size:24px">설치 MB</th><th style="width:11%;text-align:right;color:#6b7480;font-size:24px">모델 MB</th><th style="width:12%;text-align:right;color:#6b7480;font-size:24px">메모리 MB</th><th style="width:10%;text-align:right;color:#6b7480;font-size:24px">로딩 s</th><th style="width:11%;text-align:right;color:#6b7480;font-size:24px">p50 ms</th><th style="width:11%;text-align:right;color:#6b7480;font-size:24px">p95 ms</th><th style="width:12%;text-align:right;color:#6b7480;font-size:24px">R@5</th></tr>
+<tr><td>torch-fp32</td><td style="text-align:right">669</td><td style="text-align:right">471</td><td style="text-align:right">1,133</td><td style="text-align:right">3.59</td><td style="text-align:right">19.7</td><td style="text-align:right">21.6</td><td style="text-align:right">0.513</td></tr>
+<tr><td>onnx-fp32</td><td style="text-align:right">127</td><td style="text-align:right">470</td><td style="text-align:right">1,782</td><td style="text-align:right">0.77</td><td style="text-align:right">16.5</td><td style="text-align:right">20.7</td><td style="text-align:right">0.513</td></tr>
+<tr><td>onnx-int8</td><td style="text-align:right">127</td><td style="text-align:right">118</td><td style="text-align:right">874</td><td style="text-align:right">0.54</td><td style="text-align:right">15.6</td><td style="text-align:right">17.6</td><td style="text-align:right">0.514</td></tr>
+<tr style="background:#e8f1fa"><td><b>int8 + 가지치기</b></td><td style="text-align:right"><b>127</b></td><td style="text-align:right"><b>30</b></td><td style="text-align:right"><b>403</b></td><td style="text-align:right"><b>0.30</b></td><td style="text-align:right">16.7</td><td style="text-align:right">34.7</td><td style="text-align:right"><b>0.515</b></td></tr>
+</table>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">실험 008 · CPU · test 질문 2,526개 · 전체 코퍼스 대상 · base e5-small</p>
+<aside>네 변형을 같은 조건에서 잰 표입니다. CPU에서 test 질문 2,526개로 지연, 메모리, 크기, 정확도를 한 번에 잽니다. 맨 아래 가지치기에 INT8을 더한 모델이 설치, 모델, 메모리, 로딩 네 가지에서 가장 작고, Recall@5는 원본과 사실상 같습니다. 대신 p95 지연은 오히려 늘었습니다. 이런 걸 표로 보고 판단하는 게 이번 시간의 핵심입니다.</aside>
+</section>
+<section id="decision" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:64px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">판단 · torch → int8 + 가지치기</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">정확도는 그대로, 무게는 몇 분의 일</h2>
+</div>
+<div style="display:flex;gap:72px">
+<div style="flex:1;display:flex;flex-direction:column;gap:18px;border-top:4px solid #4f93d8;padding:28px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#2d6db0">얻은 것</p>
+<p style="font-size:30px;line-height:1.5">설치 669 → 127MB · 모델 471 → 30MB</p>
+<p style="font-size:30px;line-height:1.5">메모리 1,133 → 403MB · 로딩 3.6 → 0.3s</p>
+<p style="font-size:30px;line-height:1.5">Recall@5 0.513 → 0.515 (같은 수준)</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:18px;border-top:4px solid #ec9a3e;padding:28px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#b8650f">잃은 것</p>
+<p style="font-size:30px;line-height:1.5">p95 지연 21.6 → 34.7ms</p>
+<p style="font-size:30px;line-height:1.5">문서 임베딩 처리량 80 → 38 문서/초</p>
+<p style="font-size:30px;line-height:1.5">범용성: 한국어 법령 전용</p>
+</div>
+</div>
+<p style="font-size:32px;line-height:1.6;color:#4a5361">무엇을 내보낼지는 표가 아니라 쓰임새가 정한다. 그 판단이 DS의 일이다.</p>
+<aside>표를 판단으로 바꿔 봅니다. 가지치기에 INT8을 더하면 설치, 모델, 메모리, 로딩이 몇 분의 일로 줄고 정확도는 같습니다. 잃는 것도 있습니다. 느린 쪽 지연이 늘고, 문서를 대량으로 임베딩하는 처리량이 절반으로 줄고, 한국어 법령 전용이 됩니다. 질문 하나씩 검색하는 서비스에 34ms는 문제가 안 될 수 있지만, 인덱스를 자주 새로 만들어야 한다면 이야기가 다릅니다. 어느 쪽을 내보낼지는 쓰임새를 보고 DS가 정합니다.</aside>
+</section>
+<section id="apply" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">API에 적용</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">고른 모델로 바꿔 띄운다</h2>
+</div>
+<div style="display:flex;flex-direction:column;gap:14px;background:#f2f3f5;border-radius:14px;padding:36px 40px">
+<p style="font-family:'JetBrains Mono', 'Noto Sans KR', monospace;font-size:26px;line-height:1.75;color:#1f2a37"><span style="color:#6b7480"># 처음: torch 백엔드</span><br>uv run --package ragkit-api ragkit-api --backend torch<br><span style="color:#6b7480"># 지금: 가지치기 + INT8 모델</span><br>uv run --package ragkit-api ragkit-api --model models/multilingual-e5-small-pruned-int8</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:26px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#2d6db0">MLflow 모델 레지스트리를 쓰면</p>
+<p style="font-family:'JetBrains Mono', 'Noto Sans KR', monospace;font-size:24px;line-height:1.7;color:#1f2a37">uv run ragkit register models/multilingual-e5-small-pruned-int8 --name law-embedder --alias champion<br>uv run --package ragkit-api ragkit-api --model models:/law-embedder@champion</p>
+<p style="font-size:28px;line-height:1.55;color:#4a5361">앱은 경로 대신 별칭으로 부른다. 더 나은 모델이 나오면 별칭만 옮긴다.</p>
+</div>
+<aside>고른 모델로 API를 다시 띄웁니다. 옵션 하나만 바뀌고 API 코드는 그대로입니다. 3번 스크립트가 백엔드를 바꿔 가며 시작 시간과 검색 속도를 직접 재는데, 여기 띄우는 가지치기 + INT8 모델 기준으로, 이 Mac에서는 시작 시간이 torch의 약 3.3초에서 0.1초로, 워밍업 후 20회 검색 중앙값이 약 15ms에서 9ms로 줄었습니다. 가지치기 없이 ONNX INT8만 쓰면 시작은 0.3~0.4초입니다. 돌릴 때마다 조금씩 달라지니 범위로 기억하세요. MLflow 레지스트리에 law-embedder라는 이름, champion이라는 별칭으로 등록해 두면 앱은 경로 대신 별칭으로 모델을 부르고, 더 나은 모델이 나오면 별칭만 옮기면 됩니다. 레지스트리와 모니터링은 8교시에 MLflow 서버(포트 5050)를 띄워 이어서 봅니다.</aside>
+</section>
+<section data-section="실행 명령, 확인할 것, 다음 시간" id="run" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:40px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">실행</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">돌려 볼 명령</h2>
+</div>
+<div style="display:flex;flex-direction:column;gap:14px;background:#f2f3f5;border-radius:14px;padding:32px 44px">
+<p style="font-family:'JetBrains Mono', 'Noto Sans KR', monospace;font-size:24px;line-height:1.6;color:#1f2a37"><span style="color:#6b7480"># 1. API 복습: 검색 · 법령 필터 · 422 · 스트리밍 답변</span><br>uv run python lecture/07_optimize/01_api_review.py<br><span style="color:#6b7480"># 2. ONNX → INT8 → 어휘 가지치기로 배포용 모델 세 개 만들고 비교 (각 수 초~수십 초)</span><br>uv run ragkit export-onnx models/multilingual-e5-small<br>uv run ragkit quantize models/multilingual-e5-small<br>uv run ragkit prune-vocab models/multilingual-e5-small<br>uv run ragkit export-onnx models/multilingual-e5-small-pruned<br>uv run ragkit quantize models/multilingual-e5-small-pruned<br>uv run python lecture/07_optimize/02_onnx_quantize_prune.py<br><span style="color:#6b7480"># 3. 새 모델의 인덱스 (몇 분씩) → 비교표 읽기 · API 백엔드 바꿔 재기</span><br>uv run ragkit index --model models/multilingual-e5-small-int8<br>uv run ragkit index --model models/multilingual-e5-small-pruned-int8<br>uv run python lecture/07_optimize/03_bench_and_serve.py</p>
+</div>
+<p style="font-size:30px;line-height:1.6;color:#4a5361">--run은 임시 폴더에서 처음부터 직접 (02 약 30초 · 03 약 1분, 받은 파일은 그대로).</p>
+<aside>위에서부터 순서대로 돌립니다. 1번은 API 복습입니다. 2번은 ragkit 명령 다섯 줄로 ONNX 변환, 채널별 INT8 양자화, 어휘 가지치기 뒤 다시 변환과 양자화를 해서 배포용 모델 세 개를 만들고, 02 스크립트로 만든 모델을 비교합니다. 3번은 새 모델마다 코퍼스 2.6만 문서를 다시 임베딩해 인덱스를 만들어야 해서 몇 분씩 걸립니다. 쉬는 시간 전에 걸어 두세요. 그다음 03 스크립트로 비교표를 읽고 API 백엔드를 바꿔 시작 시간과 검색 속도를 잽니다. 직접 해 보고 싶으면 --run을 붙이세요. 2번은 임시 폴더에서 ONNX 변환, 텐서 단위와 채널별 양자화, 어휘 가지치기를 직접 하고, 3번은 test 질문 200개로 ragkit-bench를 다시 잽니다. 2번 --run은 약 30초, 3번 --run은 약 1분 걸리고, 받은 모델과 결과는 덮어쓰지 않습니다. 선택: uv run python lecture/07_optimize/extra_embedding_speed.py (약 2분)</aside>
+</section>
+<section id="check" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:72px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">확인할 것</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">눈으로 보고 넘어간다</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0"><h3 style="font-size:36px;font-weight:800;line-height:1.3">변환이 같은가</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">torch와 ONNX 임베딩의 코사인 유사도가 사실상 1인지</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0"><h3 style="font-size:36px;font-weight:800;line-height:1.3">표 읽기</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">내 쓰임새라면 어느 변형을 고를지, 그 이유 한 줄</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0"><h3 style="font-size:36px;font-weight:800;line-height:1.3">API 시작 · 검색 속도</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">torch에서 바꾸면 시작 약 3.3s → ONNX INT8 0.3s · 가지치기+INT8 0.1s, 검색 약 15 → 9ms (워밍업 후 20회 중앙값, 이 Mac)</p></div>
+</div>
+<aside>세 가지를 확인합니다. 변환한 모델이 원본과 같은 결과를 내는지, 비교표를 보고 내 상황이라면 무엇을 고를지 한 줄로 써 보기, 그리고 3번 스크립트에서 API를 torch, ONNX INT8, 가지치기 + INT8로 바꿔 띄웠을 때 시작 시간과 검색 속도입니다. 검색은 첫 요청을 워밍업으로 버리고 20회 잰 중앙값인데, 이 Mac에서는 torch로 약 3.3초 걸리던 시작이 ONNX INT8에서 0.3~0.4초, 가지치기 + INT8에서 0.1초로 줄었고, 검색은 약 15ms에서 9ms로 줄었습니다. 여러분 노트북에서는 숫자가 다를 수 있습니다.</aside>
+</section>
+<section id="next" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#2d6db0">다음 시간 · 8교시 · 실습 5 · 2026 파트</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">제품으로 전달하고, 마무리한다</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">1</p><h3 style="font-size:36px;font-weight:800">제품화</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">CLI · MCP · 웹. 오늘 줄인 모델을 그대로 쓴다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">2</p><h3 style="font-size:36px;font-weight:800">운영 모니터링</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">MLflow로 요청 한 건, 대화 한 세션을 추적</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">3</p><h3 style="font-size:36px;font-weight:800">마무리</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">다시 2022 vs 2026</p></div>
+</div>
+<aside>마지막 8교시에는 3교시에 먼저 써 본 완성품, CLI와 MCP와 웹을 직접 만듭니다. 오늘 가볍게 만든 모델을 그대로 씁니다. MLflow로 요청과 대화를 추적하는 운영 모니터링을 보고, 2022와 2026을 다시 비교하며 마무리합니다.</aside>
+</section>
+<section id="break" data-transition="fade" style="background:#f2f3f5;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:44px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">7교시 끝</p>
+<h1 style="font-size:112px;font-weight:800;line-height:1.2;letter-spacing:-3px">질문 받고,<br><span style="color:#6b7480">10분 쉬겠습니다.</span></h1>
+<p style="font-size:34px;line-height:1.6;color:#4a5361">8교시 웹 화면은 받은 빌드로 바로 뜹니다. 직접 다시 빌드하려면 Node.js 20+와 pnpm이 필요합니다.</p>
+<div style="position:absolute;left:0;right:0;bottom:0;height:8px;background:#4f93d8"></div>
+<aside>질문 받고 10분 쉽니다. 8교시 웹 화면은 받은 빌드(apps/web/dist)가 있으면 그대로 띄우니 따로 준비할 건 없습니다. 화면을 직접 다시 빌드해 보고 싶은 분은 --run을 쓰게 되니, 쉬는 동안 Node.js 20 이상과 pnpm이 깔려 있는지 확인해 두세요.</aside>
+</section>
+</div>
+<div id="bar"></div>
+<div id="notes"></div>
+<script>
+(() => {
+  // 덱 전용 요소: x-icon (Lucide 모양), x-connector (선 · 화살표)
+  const ICONS = {
+    Chart: '<path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>',
+    Chat: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+    Check: '<path d="M20 6 9 17l-5-5"/>',
+    CheckCircle: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+    Database: '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>',
+    Globe: '<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
+    Home: '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>',
+    Lightbulb: '<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>',
+    PaperPlane: '<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
+    Search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+    Settings: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+    Warning: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+  };
+  document.querySelectorAll('x-icon').forEach((el) => {
+    const body = ICONS[el.getAttribute('name')] || '<circle cx="12" cy="12" r="9"/>';
+    el.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + body + '</svg>';
+  });
+
+  const NS = 'http://www.w3.org/2000/svg';
+  let markerId = 0;
+  document.querySelectorAll('x-connector').forEach((el) => {
+    const host = el.parentElement;
+    if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
+    const cs = getComputedStyle(el);
+    const color = cs.color;
+    const w = parseFloat(el.style.borderWidth) || 2;
+    const dash = (el.style.borderStyle || '').includes('dash') ? `${w * 3} ${w * 2}` : (el.style.borderStyle || '').includes('dot') ? `${w} ${w * 1.5}` : '';
+    const num = (v, size) => (String(v).endsWith('%') ? (parseFloat(v) / 100) * size : parseFloat(v));
+    const hw = host.offsetWidth, hh = host.offsetHeight;
+    const x1 = num(el.getAttribute('x1'), hw), y1 = num(el.getAttribute('y1'), hh);
+    const x2 = num(el.getAttribute('x2'), hw), y2 = num(el.getAttribute('y2'), hh);
+    const head = el.getAttribute('head') || 'end';
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('style', 'position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;pointer-events:none');
+    const id = 'xc' + markerId++;
+    svg.innerHTML = `<defs><marker id="${id}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="${Math.max(4, 12 / w * 2)}" markerHeight="${Math.max(4, 12 / w * 2)}" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="${color}"/></marker></defs>`;
+    const line = document.createElementNS(NS, 'line');
+    Object.entries({ x1, y1, x2, y2, stroke: color, 'stroke-width': w }).forEach(([k, v]) => line.setAttribute(k, v));
+    if (dash) line.setAttribute('stroke-dasharray', dash);
+    if (head === 'end' || head === 'both') line.setAttribute('marker-end', `url(#${id})`);
+    if (head === 'both') line.setAttribute('marker-start', `url(#${id})`);
+    svg.appendChild(line);
+    el.replaceWith(svg);
+  });
+
+  // 넘기기 · 화면 맞춤 · 대본
+  const stage = document.getElementById('stage');
+  const slides = [...stage.children].filter((s) => s.tagName === 'SECTION');
+  const bar = document.getElementById('bar');
+  const notes = document.getElementById('notes');
+  let cur = 0;
+  const fit = () => {
+    const s = Math.min(innerWidth / 1920, innerHeight / 1080);
+    stage.style.transform = `scale(${s}) translate(-50%, -50%)`;
+  };
+  const show = (i) => {
+    cur = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach((s, k) => s.classList.toggle('on', k === cur));
+    bar.textContent = `${cur + 1} / ${slides.length}`;
+    const aside = slides[cur].querySelector('aside');
+    notes.textContent = aside ? aside.textContent.trim() : '(대본 없음)';
+    history.replaceState(null, '', '#' + slides[cur].id);
+  };
+  addEventListener('resize', fit);
+  addEventListener('keydown', (e) => {
+    if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)) { show(cur + 1); e.preventDefault(); }
+    else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { show(cur - 1); e.preventDefault(); }
+    else if (e.key === 'Home') show(0);
+    else if (e.key === 'End') show(slides.length - 1);
+    else if (e.key === 'n' || e.key === 'N') document.body.classList.toggle('show-notes');
+    else if (e.key === 'f' || e.key === 'F') document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+  });
+  stage.addEventListener('click', (e) => show(cur + (e.clientX > innerWidth / 3 ? 1 : -1)));
+  const fromHash = () => {
+    const i = slides.findIndex((s) => '#' + s.id === location.hash);
+    if (i >= 0 && i !== cur) show(i);
+  };
+  addEventListener('hashchange', fromHash);
+  fit();
+  const start = slides.findIndex((s) => '#' + s.id === location.hash);
+  show(start < 0 ? 0 : start);
+})();
+</script>
+</body>
+</html>

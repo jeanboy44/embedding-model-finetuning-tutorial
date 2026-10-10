@@ -1,0 +1,726 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2교시 용어와 과제 정의</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400..800&amp;display=swap">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { background: #2b2f36; overflow: hidden; font-family: 'Noto Sans KR', Arial, sans-serif; color: #1f2a37; }
+  #stage { position: absolute; left: 50%; top: 50%; width: 1920px; height: 1080px; transform-origin: 0 0; }
+  #stage > section { position: absolute; inset: 0; width: 1920px; height: 1080px; overflow: hidden;
+    font-size: 32px; line-height: 1.4; word-break: keep-all; opacity: 0; visibility: hidden; transition: opacity .25s; }
+  #stage > section.on { opacity: 1; visibility: visible; }
+  section:not([style*="display"]), section div:not([style*="display"]) { display: flex; flex-direction: column; }
+  section div { min-width: 0; }
+  h1, h2, h3, p, ul, ol { margin: 0; }
+  h1 { font-size: 96px; font-weight: 600; line-height: 1.1; }
+  h2 { font-size: 64px; font-weight: 600; line-height: 1.15; }
+  h3 { font-size: 44px; font-weight: 600; line-height: 1.2; }
+  p, li { font-size: inherit; }
+  ul, ol { padding-left: 1.2em; display: flex; flex-direction: column; gap: .3em; }
+  table { border-collapse: collapse; }
+  th, td { padding: .35em .6em; border-bottom: 1px solid rgba(31, 42, 55, .14); text-align: left; vertical-align: top; }
+  th { font-weight: 700; border-bottom: 2px solid rgba(31, 42, 55, .22); }
+  aside { display: none; }
+  x-icon, x-shape { display: block; flex: none; }
+  x-icon svg { width: 100%; height: 100%; display: block; }
+  x-connector { display: block; }
+  x-shape[kind="ellipse"] { border-radius: 50%; }
+  x-shape[kind="arrow-right"] { clip-path: polygon(0 30%, 60% 30%, 60% 0, 100% 50%, 60% 100%, 60% 70%, 0 70%); }
+  x-shape[kind="arrow-left"] { clip-path: polygon(100% 30%, 40% 30%, 40% 0, 0 50%, 40% 100%, 40% 70%, 100% 70%); }
+  x-shape[kind="arrow-down"] { clip-path: polygon(30% 0, 70% 0, 70% 60%, 100% 60%, 50% 100%, 0 60%, 30% 60%); }
+  x-shape[kind="arrow-up"] { clip-path: polygon(30% 100%, 70% 100%, 70% 40%, 100% 40%, 50% 0, 0 40%, 30% 40%); }
+  x-shape[kind="diamond"] { clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+  #bar { position: fixed; right: 16px; bottom: 12px; font: 13px/1.4 Arial, sans-serif; color: #c9ced6;
+    background: rgba(0, 0, 0, .35); padding: 4px 10px; border-radius: 6px; user-select: none; }
+  #notes { position: fixed; left: 0; right: 0; bottom: 0; max-height: 34vh; overflow: auto; display: none;
+    background: rgba(20, 23, 28, .94); color: #e8eaed; font: 16px/1.7 'Noto Sans KR', Arial, sans-serif; padding: 16px 24px 40px; }
+  body.show-notes #notes { display: block; }
+  @media print {
+    @page { size: 1920px 1080px; margin: 0; }
+    html, body { height: auto; overflow: visible; background: none; }
+    #stage { position: static; transform: none !important; width: auto; height: auto; }
+    #stage > section { position: relative; opacity: 1; visibility: visible; break-after: page; }
+    #bar, #notes { display: none !important; }
+  }
+</style>
+</head>
+<body>
+<!-- 장표 원본: claude.ai Slides 덱. 장 하나 = <section>, 발표 대본 = <aside>. 키: ← → 넘기기, N 대본, F 전체 화면 -->
+<div id="stage">
+<section data-section="표지와 2교시 흐름" id="cover" data-transition="fade" style="background:linear-gradient(160deg, #ffffff 0%, #f4f5f6 100%);color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:40px">
+<p style="font-size:28px;font-weight:700;color:#6b7480">AI 시대 생존법 · 내 업무 확장편 · 2교시</p>
+<h1 style="font-size:112px;font-weight:800;line-height:1.15;letter-spacing:-3px">왜 임베딩<br>파인튜닝인가</h1>
+<p style="font-size:34px;line-height:1.6;color:#6b7480;width:1300px">임베딩 모델이 하는 일과 한계, 검색을 더 정확하게 만드는 방법들, 그 가운데 파인튜닝의 자리, 그리고 최근 흐름을 정리합니다.</p>
+<div style="position:absolute;left:0;right:0;bottom:0;height:8px;background:linear-gradient(90deg, #ec9a3e 0%, #4f93d8 100%)"></div>
+<p style="position:absolute;left:128px;bottom:64px;width:900px;font-size:26px;color:#6b7480">과제 정의</p>
+<aside>2교시는 이론 마지막 시간입니다. 임베딩 모델이 무엇을 하고 어디까지가 한계인지, 그 한계를 메우는 방법에는 무엇이 있는지, 그중 파인튜닝은 언제 쓰는지, 그리고 요즘 연구가 어디로 가는지 봅니다.</aside>
+</section>
+<section id="flow" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:72px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">2교시 흐름</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">다섯 가지를 정리합니다</h2>
+</div>
+<div style="display:flex;gap:28px">
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #e89c6c;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">하나</p><h3 style="font-size:36px;font-weight:800">임베딩 모델</h3><p style="font-size:26px;line-height:1.5;color:#6b7480">무엇을 하고, 왜 쓰고, 어디까지가 한계인가</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #e89c6c;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">둘</p><h3 style="font-size:36px;font-weight:800">검색을 더 정확하게</h3><p style="font-size:26px;line-height:1.5;color:#6b7480">방법 다섯 가지와 비용 비교</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #4f93d8;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">셋</p><h3 style="font-size:36px;font-weight:800">파인튜닝</h3><p style="font-size:26px;line-height:1.5;color:#6b7480">언제 쓰면 좋은가</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #4f93d8;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">넷</p><h3 style="font-size:36px;font-weight:800">최근 연구</h3><p style="font-size:26px;line-height:1.5;color:#6b7480">LLM이 만든 데이터, LoRA</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #e89c6c;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">다섯</p><h3 style="font-size:36px;font-weight:800">오늘의 과제</h3><p style="font-size:26px;line-height:1.5;color:#6b7480">법령 데이터, 모델, 출발점, 실습 지도</p></div>
+</div>
+<aside>오늘은 다섯 가지를 봅니다. 임베딩 모델이 무엇이고 한계가 어디인지, 검색을 더 정확하게 만드는 방법에는 무엇이 있는지, 그중 파인튜닝은 언제 쓰는지, 요즘 연구 흐름, 그리고 오늘 풀 과제, 법령 데이터와 모델과 실습 지도. 마지막에 오늘 나올 용어를 정리합니다.</aside>
+</section>
+<section data-section="하나 · 임베딩 모델: 무엇을 하고, 왜 쓰고, 어디까지가 한계인가" id="div-a" data-transition="fade" style="background:#f2f3f5;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:48px">
+<p style="font-size:30px;font-weight:700;color:#6b7480">하나 · 임베딩 모델</p>
+<h1 style="font-size:120px;font-weight:800;line-height:1.1;letter-spacing:-3px">임베딩 모델은<br><span style="color:#2d6db0">무엇을 하나</span></h1>
+<p style="font-size:36px;line-height:1.6;color:#4a5361">하는 일 · RAG에서의 자리 · 왜 거르나 · 장점 · 한계.</p>
+<aside>첫 번째는 임베딩 모델 자체입니다. 무엇을 하는지, RAG 전체 흐름에서 어느 자리에 있는지, 왜 LLM에 다 넣지 않고 임베딩으로 거르는지, 그리고 장점과 한계를 봅니다.</aside>
+</section>
+<section id="embedding" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:grid;grid-template-columns:1fr 800px;gap:96px;align-items:center">
+<div style="display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">하나 · 하는 일</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.25;letter-spacing:-1px">문장을 숫자 벡터로 바꾼다</h2>
+</div>
+<p style="font-size:32px;line-height:1.6;color:#4a5361">의미가 가까운 문장은 벡터도 가깝다. 단어가 달라도 뜻이 같으면 가까이 놓이는 것이 좋은 임베딩이다.</p>
+<div style="display:flex;flex-direction:column;gap:10px;background:#f2f3f5;border-radius:14px;padding:28px 32px">
+<p style="font-size:26px;color:#4a5361">“비밀번호를 까먹었어요”</p>
+<p style="font-size:26px;color:#6b7480">→ [0.12, −0.53, 0.08, … ] 수백 개의 숫자</p>
+</div>
+</div>
+<div style="position:relative;width:800px;height:620px;background:#f2f3f5;border-radius:20px">
+<x-shape kind="ellipse" style="position:absolute;left:150px;top:150px;width:300px;height:180px;background:rgba(236,154,62,0.12);border:2px dashed #ec9a3e"></x-shape>
+<x-shape kind="ellipse" style="position:absolute;left:400px;top:360px;width:330px;height:180px;background:rgba(79,147,216,0.12);border:2px dashed #4f93d8"></x-shape>
+<x-shape kind="ellipse" style="position:absolute;left:200px;top:200px;width:24px;height:24px;background:#ec9a3e"></x-shape>
+<x-shape kind="ellipse" style="position:absolute;left:330px;top:262px;width:24px;height:24px;background:#ec9a3e"></x-shape>
+<x-shape kind="ellipse" style="position:absolute;left:460px;top:410px;width:24px;height:24px;background:#4f93d8"></x-shape>
+<x-shape kind="ellipse" style="position:absolute;left:600px;top:470px;width:24px;height:24px;background:#4f93d8"></x-shape>
+<p style="position:absolute;left:150px;top:100px;width:420px;font-size:26px;font-weight:700;color:#b8650f">비밀번호를 까먹었어요</p>
+<p style="position:absolute;left:180px;top:300px;width:300px;font-size:26px;font-weight:700;color:#b8650f">계정 복구 절차</p>
+<p style="position:absolute;left:400px;top:310px;width:360px;font-size:26px;font-weight:700;color:#2d6db0;text-align:right">택배가 안 와요</p>
+<p style="position:absolute;left:330px;top:550px;width:440px;font-size:26px;font-weight:700;color:#2d6db0;text-align:right">배송 지연 안내</p>
+<p style="position:absolute;left:32px;top:28px;width:400px;font-size:24px;color:#6b7480">벡터 공간 (2차원으로 줄여 그림)</p>
+</div>
+<aside>임베딩 모델은 문장을 숫자 벡터로 바꿉니다. 보통 수백 개의 숫자입니다. 의미가 가까우면 벡터도 가깝게 놓입니다. "비밀번호를 까먹었어요"와 "계정 복구 절차"는 겹치는 단어가 없지만 가까이 놓이고, "택배가 안 와요"는 "배송 지연 안내" 근처에 놓이는 식입니다. 그림은 개념도입니다. 선택 실습: uv run python lecture/02_concepts/01_embedding_exploration.py. 직접 돌려 보면 관련 있는 두 문장이 0.909, 전혀 무관한 문장도 0.79처럼 높게 나옵니다. e5는 유사도가 전반적으로 높게 나오는 모델이라 절대값이 아니라 순위를 봐야 합니다.</aside>
+</section>
+<section id="search" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:72px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">하나 · RAG에서의 자리</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">질문과 가장 가까운 문서 k개를 가져온다</h2>
+</div>
+<div style="display:flex;flex-direction:column;gap:18px">
+<div style="display:flex;align-items:stretch;gap:16px">
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">1</p><h3 style="font-size:32px;font-weight:800">질문</h3><p style="font-size:24px;color:#6b7480">일상어 그대로</p></div>
+<p style="font-size:32px;color:#9aa3ad;padding:56px 0 0 0">→</p>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">2</p><h3 style="font-size:32px;font-weight:800">임베딩</h3><p style="font-size:24px;color:#6b7480">질문을 벡터로</p></div>
+<p style="font-size:32px;color:#9aa3ad;padding:56px 0 0 0">→</p>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">3</p><h3 style="font-size:32px;font-weight:800">가까운 k개</h3><p style="font-size:24px;color:#6b7480">미리 만든 문서 벡터 중에서</p></div>
+<p style="font-size:32px;color:#9aa3ad;padding:56px 0 0 0">→</p>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;border:2px dashed #c9ced6;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">4</p><h3 style="font-size:32px;font-weight:800">LLM 답변</h3><p style="font-size:24px;color:#6b7480">찾은 문서를 읽고</p></div>
+</div>
+<div style="display:grid;grid-template-columns:3fr 1fr;gap:16px">
+<div style="border-top:4px solid #4f93d8;padding:14px 0 0 0"><p style="font-size:26px;font-weight:800;color:#2d6db0">검색 (Retrieval) — 임베딩 모델이 맡는 부분</p></div>
+<div style="border-top:4px solid #c9ced6;padding:14px 0 0 0"><p style="font-size:26px;font-weight:700;color:#6b7480">생성 (Generation)</p></div>
+</div>
+</div>
+<aside>RAG는 이미 배우셨죠. 질문을 벡터로 바꾸고, 미리 만들어 둔 문서 벡터 중 가장 가까운 k개를 가져와 LLM에게 줍니다. 오늘 손대는 건 앞쪽, 검색입니다. LLM은 그대로 둡니다.</aside>
+</section>
+<section id="a-why" data-transition="fade" style="display:flex; flex-direction:column; gap:48px; justify-content:center; padding:128px 128px 160px; background:#fcfcfb">
+  <div style="display:flex; flex-direction:column; gap:20px">
+    <p style="font-family:'Noto Sans KR', Arial, sans-serif; font-size:26px; font-weight:700; color:#6b7480">하나 · 왜 거르나</p>
+    <h2 style="font-family:'Noto Sans KR', Arial, sans-serif; font-size:64px; font-weight:800; line-height:1.2; letter-spacing:-1px; color:#1f2a37">작으면 다 읽히고, 크면 걸러서 넣는다</h2>
+  </div>
+  <table style="width:1664px; font-family:'Noto Sans KR', Arial, sans-serif; font-size:28px; color:#1f2a37">
+    <tr><th style="width:20%; color:#6b7480"></th><th style="width:40%; color:#6b7480">LLM에 전부 넣기</th><th style="width:40%; color:#2d6db0">임베딩으로 걸러서 넣기 (RAG)</th></tr>
+    <tr><td>다 들어가면</td><td style="color:#4a5361">평균 정확도가 RAG보다 높다</td><td style="color:#4a5361">걸러질 때 정답을 놓치면 끝</td></tr>
+    <tr><td>길어지면</td><td style="color:#4a5361">길수록 떨어진다.</td><td style="color:#4a5361">문서가 늘어도 상위 몇 개만 넣는다</td></tr>
+    <tr><td>문서가 아주 많으면</td><td style="color:#b8650f">컨텍스트 한도를 넘어 들어가지 않는다</td><td style="color:#4a5361">문서 수와 상관없이 들어간다</td></tr>
+    <tr><td>질문당 비용</td><td style="color:#b8650f">매번 문서 전체를 읽는다</td><td style="color:#4a5361">임베딩 1번 + 문서 몇 개</td></tr>
+  </table>
+  <p style="font-family:'Noto Sans KR', Arial, sans-serif; font-size:30px; line-height:1.6; color:#4a5361">문서가 크거나 질문이 많으면 걸러야 한다. 그때 답의 품질을 정하는 것이 거르는 모델, 임베딩이다.</p>
+  <p style="position:absolute; bottom:64px; left:128px; width:1664px; font-family:'Noto Sans KR', Arial, sans-serif; font-size:24px; color:#6b7480">Li et al. (EMNLP 2024) · Chroma, Context Rot (2025) · OpenAI GPT-5.5 발표 (MRCR v2 8-needle: 128K 94.8% → 512K~1M 74.0%)</p>
+  <aside>LLM에 문서를 전부 넣고 찾게 하면 안 될까요. 다 들어가고 돈이 충분하면, 연구 결과로도 평균 정확도는 그쪽이 더 높습니다. 하지만 입력이 길어질수록 성능이 떨어집니다. 2025년 Chroma 실험에서 당시 최신 모델 18개가 모두 그랬고, 2026년 모델도 마찬가지입니다. 긴 문맥에서 여러 정보를 찾는 시험에서 OpenAI가 GPT-5.5를 발표하며 낸 숫자로, 12만 8천 토큰에서는 94.8%, 51만 2천~100만 토큰 구간에서는 74.0%였습니다. 폭은 줄었지만 여전히 떨어집니다. 문서가 아주 많으면 애초에 한도를 넘어 들어가지 않고, 들어가더라도 질문마다 전체를 읽혀야 합니다. 그래서 걸러서 넣습니다. 이때 답의 품질을 정하는 것이 거르는 모델, 임베딩입니다. 참고로 RAG로 먼저 답해 보고 안 되면 긴 컨텍스트로 넘기는 혼합 방식도 있습니다.</aside>
+</section>
+<section id="a-pros" data-transition="fade" style="display:flex; flex-direction:column; gap:48px; justify-content:center; padding:128px 128px 160px; background:#fcfcfb">
+  <div style="display:flex; flex-direction:column; gap:20px">
+    <p style="font-family:'Noto Sans KR', Arial, sans-serif; font-size:26px; font-weight:700; color:#6b7480">하나 · 장점</p>
+    <h2 style="font-family:'Noto Sans KR', Arial, sans-serif; font-size:64px; font-weight:800; line-height:1.2; letter-spacing:-1px; color:#1f2a37">임베딩 검색이 잘하는 네 가지</h2>
+  </div>
+  <table style="width:1664px; font-family:'Noto Sans KR', Arial, sans-serif; font-size:26px; color:#1f2a37">
+    <tr><th style="width:22%; color:#6b7480">잘하는 것</th><th style="width:38%; color:#6b7480">무슨 뜻인가</th><th style="width:40%; color:#6b7480">근거</th></tr>
+    <tr><td>뜻으로 찾는다</td><td style="color:#4a5361">단어가 달라도 뜻이 가까우면 찾는다. 키워드 검색은 같은 단어가 있어야 한다</td><td style="color:#4a5361">학습한 분야에서는 단어만 세는 BM25보다 7~18점 높았다</td></tr>
+    <tr><td>빠르다</td><td style="color:#4a5361">문서 벡터는 미리 만들어 둔다. 질문마다 벡터 하나만 계산해 가까운 것을 고른다</td><td style="color:#4a5361">전체 문서에서 후보 100개를 고르는 데 약 5ms</td></tr>
+    <tr><td>싸다</td><td style="color:#4a5361">질문마다 LLM에게 문서를 읽힐 필요가 없다</td><td style="color:#4a5361">STS · 군집 · 쌍 분류는 성능이 비슷하고, 분류는 임베딩 모델이 더 나았다. LLM은 최대 1,431배 비쌌다</td></tr>
+    <tr><td>작다</td><td style="color:#4a5361">LLM 없이 혼자 돈다. CPU · 사내망 · 기기 안에도 들어간다</td><td style="color:#4a5361">최신 계열도 가장 작은 모델은 0.6B. 더 작은 모델도 많다</td></tr>
+  </table>
+  <p style="position:absolute; bottom:64px; left:128px; width:1664px; font-family:'Noto Sans KR', Arial, sans-serif; font-size:24px; color:#6b7480">BEIR (NeurIPS 2021, MS MARCO) · ZeroEntropy, Bi vs Cross-Encoders · The Embedder's Dilemma (2026) · Qwen3 Embedding (2025)</p>
+  <aside>임베딩 검색이 잘하는 것은 네 가지입니다. 첫째, 뜻으로 찾습니다. 단어가 달라도 뜻이 가까우면 찾고, 학습한 분야에서는 단어만 세는 BM25보다 7에서 18점 높았습니다. 둘째, 빠릅니다. 문서 벡터는 미리 만들어 두고 질문마다 벡터 하나만 계산하면 되니, 전체에서 후보 100개를 고르는 데 5ms 정도입니다. 셋째, 쌉니다. 최근 연구에서 문장 유사도(STS), 군집, 문장 쌍 분류는 LLM과 임베딩 모델의 성능이 비슷했고, 분류는 오히려 임베딩 모델이 더 나았습니다. 그런데 비용은 LLM이 최대 1,431배였습니다. 넷째, 작습니다. LLM 없이 혼자 돌고, 최신 계열도 가장 작은 모델은 6억 파라미터, 이보다 작은 모델도 많아서 CPU나 기기 안에도 넣을 수 있습니다. 다음 장은 같은 형식으로 약한 점을 봅니다.</aside>
+</section>
+<section id="a-limits" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:48px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">하나 · 한계</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">임베딩 검색이 놓치는 네 가지 경우</h2>
+</div>
+<table style="width:1664px;font-size:26px;color:#1f2a37">
+<tr><th style="width:22%;text-align:left;color:#6b7480;font-size:24px">놓치는 경우</th><th style="width:38%;text-align:left;color:#6b7480;font-size:24px">무슨 뜻인가</th><th style="width:40%;text-align:left;color:#6b7480;font-size:24px">근거</th></tr>
+<tr><td><b>조건이 얽힌 질문</b></td><td style="color:#4a5361">문서 하나를 숫자 수백 개로 압축한다. 조건이 여러 개 얽히면 다 담지 못한다</td><td style="color:#4a5361">“퀘카를 좋아하는 사람은?” 같은 쉬운 질문에도 최신 모델들이 상위 100개 안에 정답의 <b style="color:#b8650f">20%도</b> 못 넣었다</td></tr>
+<tr><td><b>생각을 거쳐야 하는 질문</b></td><td style="color:#4a5361">질문과 답 문서가 겉으로 닮지 않고 추론으로만 이어지면 못 찾는다</td><td style="color:#4a5361">같은 모델이 일반 검색 시험 <b>59점</b>, 추론이 필요한 검색 시험 <b style="color:#b8650f">18.3점</b> (100점 만점)</td></tr>
+<tr><td><b>처음 보는 분야</b></td><td style="color:#4a5361">학습 때 못 본 분야의 용어와 말투를 모른다</td><td style="color:#4a5361">처음 보는 분야에서는 단어만 세는 옛 검색(BM25)보다 <b style="color:#b8650f">못한 경우가 많았다</b></td></tr>
+<tr><td><b>긴 문서</b></td><td style="color:#4a5361">한 번에 읽는 길이가 정해져 있다. 잘게 나누면 앞뒤 문맥이 사라진다</td><td style="color:#4a5361">많은 모델이 <b style="color:#b8650f">512토큰</b>까지만 읽는다</td></tr>
+</table>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">LIMIT (Google DeepMind, 2025) · BRIGHT (ICLR 2025, nDCG@10) · BEIR (NeurIPS 2021, 18개 데이터셋)</p>
+<aside>임베딩 검색이 놓치는 경우는 크게 네 가지입니다. 첫째, 조건이 얽힌 질문입니다. 문서 하나를 숫자 수백 개로 압축하다 보니 조건이 여러 개 얽히면 다 담지 못합니다. 구글 딥마인드가 "존은 퀘카와 사과를 좋아한다" 같은 문서를 잔뜩 만들고 "퀘카를 좋아하는 사람은?"이라고 물었더니, 최신 모델들이 상위 100개 안에 정답의 20%도 넣지 못했습니다. 둘째, 생각을 거쳐야 이어지는 질문입니다. 같은 모델이 보통 검색 시험에서는 59점인데, 추론이 필요한 검색 시험에서는 18.3점이었습니다. 셋째, 처음 보는 분야입니다. 18개 데이터셋으로 잰 연구에서, 학습 때 못 본 분야에 가면 신경망 검색이 단어만 세는 옛 방식보다 못한 경우가 많았습니다. 넷째, 긴 문서입니다. 많은 모델이 512토큰까지만 읽어서 잘게 나눠야 하고, 나누면 문맥이 사라집니다. 이렇게 거르는 단계에서 놓치면 뒤의 LLM이 아무리 좋아도 답할 수 없습니다. 그래서 검색을 더 정확하게 만드는 방법들이 나왔습니다.</aside>
+</section>
+<section data-section="둘 · 검색 성능을 높이는 방법: 쿼리 확장 · 하이브리드 · 리랭커 · 문맥 붙이기 · 에이전트, 그리고 비교" id="div-b" data-transition="fade" style="background:#f2f3f5;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:48px">
+<p style="font-size:30px;font-weight:700;color:#6b7480">둘 · 검색을 더 정확하게</p>
+<h1 style="font-size:120px;font-weight:800;line-height:1.1;letter-spacing:-3px">놓치는 검색,<br><span style="color:#2d6db0">어떻게 메우나</span></h1>
+<p style="font-size:36px;line-height:1.6;color:#4a5361">질문 · 검색 방식 · 결과 · 문서 · 검색 전체. 고치는 자리마다 방법이 있다.</p>
+<aside>그럼 놓치는 검색을 어떻게 메울까요. 방법은 여럿이고, 파이프라인의 어디를 고치느냐로 나눌 수 있습니다. 하나씩 보고, 마지막에 정확도와 비용으로 나란히 비교합니다.</aside>
+</section>
+<section id="methods-map" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:64px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">둘 · 방법 지도</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">어디를 고치느냐로 나눈다</h2>
+</div>
+<div style="display:grid;grid-template-columns:repeat(6, 1fr);gap:16px">
+<div style="display:flex;flex-direction:column;gap:12px;background:#f2f3f5;border-radius:16px;padding:28px 24px"><p style="font-size:24px;font-weight:700;color:#6b7480">질문</p><h3 style="font-size:30px;font-weight:800;line-height:1.3">쿼리 확장 · HyDE</h3><p style="font-size:24px;line-height:1.5;color:#4a5361">LLM이 질문을 다시 쓴다</p></div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#f2f3f5;border-radius:16px;padding:28px 24px"><p style="font-size:24px;font-weight:700;color:#6b7480">검색 방식</p><h3 style="font-size:30px;font-weight:800;line-height:1.3">하이브리드</h3><p style="font-size:24px;line-height:1.5;color:#4a5361">단어 검색과 뜻 검색을 섞는다</p></div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#f2f3f5;border-radius:16px;padding:28px 24px"><p style="font-size:24px;font-weight:700;color:#6b7480">결과</p><h3 style="font-size:30px;font-weight:800;line-height:1.3">리랭커</h3><p style="font-size:24px;line-height:1.5;color:#4a5361">후보를 다시 읽고 순서를 고친다</p></div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#f2f3f5;border-radius:16px;padding:28px 24px"><p style="font-size:24px;font-weight:700;color:#6b7480">문서</p><h3 style="font-size:30px;font-weight:800;line-height:1.3">문맥 붙이기</h3><p style="font-size:24px;line-height:1.5;color:#4a5361">조각마다 설명을 붙여 색인한다</p></div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#f2f3f5;border-radius:16px;padding:28px 24px"><p style="font-size:24px;font-weight:700;color:#6b7480">검색 전체</p><h3 style="font-size:30px;font-weight:800;line-height:1.3">에이전트형 탐색</h3><p style="font-size:24px;line-height:1.5;color:#4a5361">LLM이 찾고 읽기를 반복한다</p></div>
+<div style="display:flex;flex-direction:column;gap:12px;border:2px dashed #4f93d8;border-radius:16px;padding:28px 24px"><p style="font-size:24px;font-weight:700;color:#2d6db0">모델 자체</p><h3 style="font-size:30px;font-weight:800;line-height:1.3;color:#2d6db0">파인튜닝</h3><p style="font-size:24px;line-height:1.5;color:#4a5361">셋에서 따로 본다</p></div>
+</div>
+<aside>고치는 자리로 나누면 이렇습니다. 질문을 고치는 쿼리 확장과 HyDE, 검색 방식을 바꾸는 하이브리드, 결과를 다시 정렬하는 리랭커, 문서 쪽을 손보는 문맥 붙이기, 그리고 검색 전체를 LLM에게 맡기는 에이전트형 탐색. 모델 자체를 고치는 파인튜닝은 세 번째 이야기에서 따로 봅니다. 다섯 가지를 차례로 보겠습니다.</aside>
+</section>
+<section id="expansion" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">둘 · 방법 1 · 질문을 고친다</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">쿼리 확장 · HyDE: LLM이 질문을 다시 쓴다</h2>
+</div>
+<div style="display:flex;align-items:center;gap:24px">
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">질문</p><p style="font-size:28px;line-height:1.45">비밀번호를 까먹었어요</p></div>
+<p style="font-size:36px;color:#9aa3ad">→</p>
+<div style="display:flex;flex-direction:column;gap:8px;background:#fdf1e3;border:2px solid #ec9a3e;border-radius:14px;padding:28px;width:300px"><p style="font-size:24px;font-weight:700;color:#b8650f">LLM 호출</p><p style="font-size:28px;line-height:1.45">문서 용어로 다시 쓰기</p></div>
+<p style="font-size:36px;color:#9aa3ad">→</p>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">확장된 질문 (예시)</p><p style="font-size:28px;line-height:1.45">계정 비밀번호 재설정 절차</p></div>
+<p style="font-size:36px;color:#9aa3ad">→</p>
+<div style="display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px;width:220px"><p style="font-size:24px;font-weight:700;color:#6b7480">검색</p><p style="font-size:28px;line-height:1.45">상위 5개</p></div>
+</div>
+<div style="display:flex;gap:48px">
+<div style="flex:1;border-top:4px solid #c9ced6;padding:22px 0 0 0;display:flex;flex-direction:column;gap:8px"><p style="font-size:24px;font-weight:700;color:#6b7480">HyDE</p><p style="font-size:28px;line-height:1.5">질문 대신 LLM이 쓴 “가상의 답 문서”로 검색한다</p></div>
+<div style="flex:1;border-top:4px solid #4f93d8;padding:22px 0 0 0;display:flex;flex-direction:column;gap:8px"><p style="font-size:24px;font-weight:700;color:#6b7480">좋은 점</p><p style="font-size:28px;line-height:1.5">학습 없이 바로 쓴다. 어휘 차이를 LLM이 메운다</p></div>
+<div style="flex:1;border-top:4px solid #ec9a3e;padding:22px 0 0 0;display:flex;flex-direction:column;gap:8px"><p style="font-size:24px;font-weight:700;color:#6b7480">대가</p><p style="font-size:28px;line-height:1.5"><b style="color:#b8650f">질문마다 LLM 1번.</b> 비용과 지연이 검색보다 커진다</p></div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">Gao et al., HyDE: Precise Zero-Shot Dense Retrieval without Relevance Labels (ACL 2023)</p>
+<aside>첫 번째는 질문을 고치는 방법입니다. 쿼리 확장은 LLM이 일상어 질문을 문서에 쓰인 용어로 바꿔서 검색합니다. HyDE는 한발 더 나가서, LLM에게 그럴듯한 답 문서를 먼저 쓰게 하고 그 문서로 검색합니다. 가상의 답이 실제 문서와 말투가 비슷하니 더 잘 찾습니다. 둘 다 학습 없이 바로 쓸 수 있지만, 질문이 올 때마다 LLM을 한 번씩 불러야 합니다. 검색은 싸고 빠른데 앞에 비싼 호출이 붙는 셈입니다.</aside>
+</section>
+<section id="b-hybrid" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">둘 · 방법 2 · 검색 방식을 바꾼다</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">하이브리드: 단어 검색과 뜻 검색을 섞는다</h2>
+</div>
+<div style="display:flex;align-items:center;gap:24px">
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">BM25 · 단어 검색</p><p style="font-size:28px;line-height:1.45">같은 단어를 센다. 제품 코드 · 고유명사에 강하다</p></div>
+<p style="font-size:36px;color:#9aa3ad">+</p>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">학습한 모델 검색 · 임베딩 · ELSER</p><p style="font-size:28px;line-height:1.45">뜻을 본다. 바꿔 말한 질문에 강하다</p></div>
+<p style="font-size:36px;color:#9aa3ad">→</p>
+<div style="display:flex;flex-direction:column;gap:8px;background:#e8f1fa;border:2px solid #4f93d8;border-radius:14px;padding:28px;width:420px"><p style="font-size:24px;font-weight:700;color:#2d6db0">순위 합치기 (RRF)</p><p style="font-size:28px;line-height:1.45">두 목록의 순위를 섞어 하나로</p></div>
+</div>
+<div style="display:flex;gap:48px">
+<div style="flex:1;border-top:4px solid #c9ced6;padding:22px 0 0 0;display:flex;flex-direction:column;gap:8px"><p style="font-size:24px;font-weight:700;color:#6b7480">사례</p><p style="font-size:28px;line-height:1.5">BM25 + 학습형 키워드 검색(ELSER). BEIR 평균 nDCG@10이 BM25보다 18%, ELSER 단독보다 1.4% 올랐다</p></div>
+<div style="flex:1;border-top:4px solid #4f93d8;padding:22px 0 0 0;display:flex;flex-direction:column;gap:8px"><p style="font-size:24px;font-weight:700;color:#6b7480">좋은 점</p><p style="font-size:28px;line-height:1.5">학습도 LLM도 필요 없다. 싸고 오프라인에서 돈다</p></div>
+<div style="flex:1;border-top:4px solid #ec9a3e;padding:22px 0 0 0;display:flex;flex-direction:column;gap:8px"><p style="font-size:24px;font-weight:700;color:#6b7480">한계</p><p style="font-size:28px;line-height:1.5">질문과 문서의 <b style="color:#b8650f">단어 자체가 다르면</b> 단어 검색도 돕지 못한다</p></div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">Elastic Search Labs, Improving information retrieval in the Elastic Stack: Hybrid retrieval (BEIR, RRF)</p>
+<aside>두 번째는 검색 방식을 섞는 하이브리드입니다. 같은 단어를 세는 BM25와 뜻을 보는 임베딩 검색을 같이 돌리고, 두 순위를 합칩니다. 단어 검색은 제품 코드나 고유명사처럼 정확히 같은 말을 찾는 데 강하고, 임베딩은 바꿔 말한 질문에 강해서 서로 보완합니다. Elastic의 실험에서는 BM25와 학습형 키워드 검색인 ELSER의 순위만 합쳐도, BEIR 평균이 BM25 단독보다 18%, ELSER 단독보다 1.4% 올랐습니다. 임베딩 대신 ELSER를 섞은 사례지만 두 순위를 합치는 원리는 같습니다. 학습도 LLM도 필요 없어서 쌉니다. 다만 "비밀번호를 까먹었어요"와 "계정 복구 절차"처럼 단어 자체가 다르면 단어 검색이 도와줄 게 별로 없습니다.</aside>
+</section>
+<section id="b-rerank" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">둘 · 방법 3 · 결과를 고친다</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">리랭커: 후보를 다시 읽고 순서를 고친다</h2>
+</div>
+<div style="display:flex;align-items:center;gap:24px">
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">1단계 · 임베딩 검색</p><p style="font-size:28px;line-height:1.45">전체에서 후보 100개를 빠르게</p><p style="font-size:24px;color:#6b7480">약 5ms</p></div>
+<p style="font-size:36px;color:#9aa3ad">→</p>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#e8f1fa;border:2px solid #4f93d8;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#2d6db0">2단계 · 리랭커 (cross-encoder)</p><p style="font-size:28px;line-height:1.45">질문과 후보를 한 쌍씩 같이 읽고 다시 채점</p><p style="font-size:24px;color:#6b7480">약 50ms</p></div>
+<p style="font-size:36px;color:#9aa3ad">→</p>
+<div style="display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px;width:260px"><p style="font-size:24px;font-weight:700;color:#6b7480">결과</p><p style="font-size:28px;line-height:1.45">상위 5개</p></div>
+</div>
+<div style="display:flex;gap:48px">
+<div style="flex:1;border-top:4px solid #c9ced6;padding:22px 0 0 0;display:flex;flex-direction:column;gap:8px"><p style="font-size:24px;font-weight:700;color:#6b7480">사례</p><p style="font-size:28px;line-height:1.5">검색 실패율 감소가 −49%에서 리랭커를 더해 −67%로</p></div>
+<div style="flex:1;border-top:4px solid #4f93d8;padding:22px 0 0 0;display:flex;flex-direction:column;gap:8px"><p style="font-size:24px;font-weight:700;color:#6b7480">좋은 점</p><p style="font-size:28px;line-height:1.5">정확도가 크게 오른다. 기존 인덱스는 그대로 둔다</p></div>
+<div style="flex:1;border-top:4px solid #ec9a3e;padding:22px 0 0 0;display:flex;flex-direction:column;gap:8px"><p style="font-size:24px;font-weight:700;color:#6b7480">한계</p><p style="font-size:28px;line-height:1.5">질문마다 후보 수만큼 더 계산한다. <b style="color:#b8650f">후보에 없는 정답은 못 살린다</b></p></div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">지연은 ZeroEntropy, Bi-Encoders vs Cross-Encoders의 예시 · 실패율은 Anthropic, Contextual Retrieval (2024)</p>
+<aside>세 번째는 결과를 다시 정렬하는 리랭커입니다. 임베딩 검색으로 후보 100개쯤을 빠르게 뽑고, 리랭커가 질문과 후보를 한 쌍씩 같이 읽으면서 다시 점수를 매깁니다. 같이 읽으니 훨씬 정확하지만 느려서, 전체가 아니라 후보에만 씁니다. 예시로 후보 뽑기가 5ms, 다시 채점이 50ms 정도입니다. Anthropic 실험에서는 리랭커를 더하자 검색 실패가 더 줄었습니다. 중요한 한계가 하나 있는데, 리랭커는 순서만 고칩니다. 1단계 후보에 정답이 없으면 살릴 수 없습니다. 그래서 1단계 임베딩 검색의 성능이 여전히 중요합니다.</aside>
+</section>
+<section id="b-context" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">둘 · 방법 4 · 문서를 고친다</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">문맥 붙이기: 조각에 설명을 달아 색인한다</h2>
+</div>
+<div style="display:flex;align-items:center;gap:24px">
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">잘린 조각만</p><p style="font-size:28px;line-height:1.45">“매출은 전 분기보다 3% 늘었다.”</p></div>
+<p style="font-size:36px;color:#9aa3ad">→</p>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#e8f1fa;border:2px solid #4f93d8;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#2d6db0">문맥을 붙인 조각</p><p style="font-size:28px;line-height:1.45"><b>ACME사 2023년 2분기 실적 보고서 중:</b> 매출은 전 분기보다 3% 늘었다.</p></div>
+</div>
+<div style="display:flex;gap:48px">
+<div style="flex:1;border-top:4px solid #c9ced6;padding:22px 0 0 0;display:flex;flex-direction:column;gap:8px"><p style="font-size:24px;font-weight:700;color:#6b7480">사례</p><p style="font-size:28px;line-height:1.5">LLM이 조각마다 50~100토큰 설명을 쓰자 검색 실패율 5.7% → 3.7%</p></div>
+<div style="flex:1;border-top:4px solid #4f93d8;padding:22px 0 0 0;display:flex;flex-direction:column;gap:8px"><p style="font-size:24px;font-weight:700;color:#6b7480">좋은 점</p><p style="font-size:28px;line-height:1.5">색인할 때 한 번만 한다. 질문할 때는 비용이 없다</p></div>
+<div style="flex:1;border-top:4px solid #ec9a3e;padding:22px 0 0 0;display:flex;flex-direction:column;gap:8px"><p style="font-size:24px;font-weight:700;color:#6b7480">한계</p><p style="font-size:28px;line-height:1.5">문서가 바뀌면 다시 붙인다. <b style="color:#b8650f">질문 쪽 어휘 차이</b>는 그대로다</p></div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">Anthropic, Contextual Retrieval (2024) · 예시도 같은 글에서</p>
+<aside>네 번째는 문서 쪽을 손보는 방법입니다. 앞에서 임베딩 모델이 512토큰까지만 읽어서 문서를 잘게 나눈다고 했죠. 나누면 "매출은 전 분기보다 3% 늘었다"처럼 어느 회사, 언제 이야기인지 모르는 조각이 생깁니다. 그래서 조각마다 짧은 설명을 붙여 색인합니다. Anthropic은 LLM에게 문서 전체를 보고 조각마다 50~100토큰짜리 설명을 쓰게 했고, 검색 실패율이 5.7%에서 3.7%로 줄었습니다. 색인할 때 한 번만 하면 되니 질문할 때 비용은 없습니다. 다만 질문 쪽의 일상어 문제는 그대로 남습니다.</aside>
+</section>
+<section id="b-agent" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">둘 · 방법 5 · 검색 전체를 맡긴다</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">에이전트형 탐색: LLM이 찾고, 읽고, 다시 찾는다</h2>
+</div>
+<div style="display:flex;align-items:center;gap:20px">
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">1</p><p style="font-size:28px;line-height:1.45">질문을 보고 검색어를 정한다</p></div>
+<p style="font-size:36px;color:#9aa3ad">→</p>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">2</p><p style="font-size:28px;line-height:1.45">검색 도구를 부르고 결과를 읽는다</p></div>
+<p style="font-size:36px;color:#9aa3ad">→</p>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#f2f3f5;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#6b7480">3</p><p style="font-size:28px;line-height:1.45">모자라면 다른 말로 다시 찾는다</p></div>
+<p style="font-size:36px;color:#9aa3ad">→</p>
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;background:#fdf1e3;border:2px solid #ec9a3e;border-radius:14px;padding:28px"><p style="font-size:24px;font-weight:700;color:#b8650f">반복</p><p style="font-size:28px;line-height:1.45">충분할 때까지 LLM 호출 여러 번</p></div>
+</div>
+<div style="display:flex;gap:48px">
+<div style="flex:1;border-top:4px solid #c9ced6;padding:22px 0 0 0;display:flex;flex-direction:column;gap:8px"><p style="font-size:24px;font-weight:700;color:#6b7480">맞는 자리</p><p style="font-size:28px;line-height:1.5">여러 문서를 엮어야 하는, 추론이 필요한 질문</p></div>
+<div style="flex:1;border-top:4px solid #4f93d8;padding:22px 0 0 0;display:flex;flex-direction:column;gap:8px"><p style="font-size:24px;font-weight:700;color:#6b7480">좋은 점</p><p style="font-size:28px;line-height:1.5">임베딩이 약한 추론 검색을 LLM의 판단으로 메운다</p></div>
+<div style="flex:1;border-top:4px solid #ec9a3e;padding:22px 0 0 0;display:flex;flex-direction:column;gap:8px"><p style="font-size:24px;font-weight:700;color:#6b7480">대가</p><p style="font-size:28px;line-height:1.5"><b style="color:#b8650f">질문 하나에 LLM 여러 번.</b> 가장 비싸고 느리다</p></div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">8교시에 MCP로 Claude가 검색을 도구로 쓰는 모습을 본다</p>
+<aside>다섯 번째는 검색 전체를 LLM에게 맡기는 에이전트형 탐색입니다. LLM이 검색어를 정하고, 검색 도구를 부르고, 결과를 읽어 보고, 모자라면 다른 말로 다시 찾습니다. 앞에서 임베딩이 추론이 필요한 검색에 약하다고 했는데, 바로 그 부분을 LLM의 판단으로 메웁니다. 대신 질문 하나에 LLM을 여러 번 부르니 가장 비싸고 느립니다. 8교시에 MCP로 Claude가 검색을 도구로 쓰는 모습을 직접 봅니다. 그때도 Claude가 부르는 검색 도구 안쪽은 임베딩 모델입니다.</aside>
+</section>
+<section id="b-compare" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:40px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">둘 · 나란히 놓고 보기</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">정확도 · 개발비용 · 운영비용</h2>
+</div>
+<table style="width:1664px;font-size:26px;color:#1f2a37">
+<tr><th style="width:22%;text-align:left;color:#6b7480;font-size:24px">방법</th><th style="width:20%;text-align:left;color:#6b7480;font-size:24px">잘 메우는 것</th><th style="width:13%;text-align:center;color:#6b7480;font-size:24px">개발비용</th><th style="width:17%;text-align:center;color:#6b7480;font-size:24px">운영비용 (질문당)</th><th style="width:13%;text-align:center;color:#6b7480;font-size:24px">지연</th><th style="width:15%;text-align:center;color:#6b7480;font-size:24px">LLM 없이</th></tr>
+<tr><td>쿼리 확장 · HyDE</td><td style="color:#4a5361">어휘 차이</td><td style="text-align:center">낮음</td><td style="text-align:center;color:#b8650f">높음</td><td style="text-align:center;color:#b8650f">큼</td><td style="text-align:center">불가</td></tr>
+<tr><td>하이브리드</td><td style="color:#4a5361">같은 단어 · 번호</td><td style="text-align:center">낮음</td><td style="text-align:center">낮음</td><td style="text-align:center">작음</td><td style="text-align:center">가능</td></tr>
+<tr><td>리랭커</td><td style="color:#4a5361">상위 순서</td><td style="text-align:center">낮음</td><td style="text-align:center">중간</td><td style="text-align:center">중간</td><td style="text-align:center">가능</td></tr>
+<tr><td>문맥 붙이기</td><td style="color:#4a5361">잘린 조각</td><td style="text-align:center">중간</td><td style="text-align:center">없음</td><td style="text-align:center">없음</td><td style="text-align:center">가능</td></tr>
+<tr><td>에이전트형 탐색</td><td style="color:#4a5361">추론 · 여러 문서</td><td style="text-align:center">중간</td><td style="text-align:center;color:#b8650f">가장 높음</td><td style="text-align:center;color:#b8650f">가장 큼</td><td style="text-align:center">불가</td></tr>
+<tr style="background:#e8f1fa"><td><b>파인튜닝</b></td><td style="color:#4a5361"><b>어휘 차이 · 도메인 말</b></td><td style="text-align:center;color:#b8650f"><b>높음</b></td><td style="text-align:center;color:#2d6db0"><b>없음</b></td><td style="text-align:center;color:#2d6db0"><b>없음</b></td><td style="text-align:center;color:#2d6db0"><b>가능</b></td></tr>
+</table>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">상대 비교 · 강사 판단. 실제로는 섞어 쓴다 (하이브리드 + 리랭커, 파인튜닝한 모델 + 리랭커)</p>
+<aside>여섯 가지를 나란히 놓으면 이렇습니다. 쿼리 확장과 에이전트는 만들기는 쉽지만 질문이 올 때마다 LLM 값을 내고 느려집니다. 하이브리드와 리랭커는 싸고 LLM 없이 돌지만, 하이브리드는 단어가 같을 때, 리랭커는 후보 안에 정답이 있을 때만 효과가 있습니다. 문맥 붙이기는 색인할 때 한 번 비용을 냅니다. 파인튜닝은 반대로 만드는 비용이 가장 큽니다. 데이터를 만들고 학습하고 평가해야 하죠. 대신 질문할 때 추가 비용과 지연이 없고, LLM 없이 돕니다. 이 표는 상대 비교이고 제 판단이 섞여 있습니다. 실제로는 하나만 고르지 않고 섞어 씁니다.</aside>
+</section>
+<section data-section="셋 · 임베딩 모델 파인튜닝: 무엇인가, 좋은 점과 대가, 언제 쓰나" id="div-ft" data-transition="fade" style="background:#f2f3f5;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:48px">
+<p style="font-size:30px;font-weight:700;color:#6b7480">셋 · 임베딩 모델 파인튜닝</p>
+<h1 style="font-size:120px;font-weight:800;line-height:1.1;letter-spacing:-3px">모델이 내 도메인 말을<br><span style="color:#2d6db0">배우게 한다</span></h1>
+<p style="font-size:36px;line-height:1.6;color:#4a5361">무엇인가 · 좋은 점 · 대가 · 언제 쓰나.</p>
+<aside>세 번째는 오늘의 주제, 임베딩 모델 파인튜닝입니다. 앞의 방법들이 질문이나 문서나 결과를 손봤다면, 파인튜닝은 모델 자체가 내 도메인의 말을 배우게 합니다. 무엇인지, 좋은 점과 대가, 그리고 언제 쓰면 좋은지 봅니다.</aside>
+</section>
+<section id="finetune" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:48px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">셋 · 무엇인가</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">이미 학습된 모델을 내 데이터로 조금 더</h2>
+</div>
+<div style="display:flex;gap:48px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px">
+<p style="font-size:28px;font-weight:800;color:#6b7480">학습 전</p>
+<div style="position:relative;width:808px;height:380px;background:#f2f3f5;border-radius:18px">
+<x-shape kind="ellipse" style="position:absolute;left:110px;top:150px;width:30px;height:30px;background:#ec9a3e"></x-shape>
+<x-shape kind="ellipse" style="position:absolute;left:250px;top:220px;width:30px;height:30px;background:#9aa3ad"></x-shape>
+<x-shape kind="ellipse" style="position:absolute;left:640px;top:260px;width:30px;height:30px;background:#4f93d8"></x-shape>
+<p style="position:absolute;left:60px;top:96px;width:300px;font-size:26px;font-weight:700;color:#b8650f">질문</p>
+<p style="position:absolute;left:230px;top:262px;width:300px;font-size:26px;font-weight:700;color:#6b7480">비슷한 다른 문서</p>
+<p style="position:absolute;left:470px;top:304px;width:320px;font-size:26px;font-weight:700;color:#2d6db0;text-align:right">정답 문서</p>
+</div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px">
+<p style="font-size:28px;font-weight:800;color:#2d6db0">학습 후</p>
+<div style="position:relative;width:808px;height:380px;background:#f2f3f5;border-radius:18px">
+<x-shape kind="ellipse" style="position:absolute;left:300px;top:160px;width:30px;height:30px;background:#ec9a3e"></x-shape>
+<x-shape kind="ellipse" style="position:absolute;left:370px;top:190px;width:30px;height:30px;background:#4f93d8"></x-shape>
+<x-shape kind="ellipse" style="position:absolute;left:660px;top:300px;width:30px;height:30px;background:#9aa3ad"></x-shape>
+<p style="position:absolute;left:180px;top:106px;width:300px;font-size:26px;font-weight:700;color:#b8650f">질문</p>
+<p style="position:absolute;left:420px;top:184px;width:300px;font-size:26px;font-weight:700;color:#2d6db0">정답 문서</p>
+<p style="position:absolute;left:440px;top:240px;width:340px;font-size:26px;font-weight:700;color:#6b7480;text-align:right">비슷한 다른 문서</p>
+</div>
+</div>
+</div>
+<p style="font-size:32px;line-height:1.6;color:#4a5361">질문과 정답 문서 쌍을 보여 주며 정답은 당기고, 다른 문서는 민다. 학습하는 것은 LLM이 아니라 작은 검색 모델이다.</p>
+<aside>파인튜닝은 처음부터 만드는 게 아니라 이미 학습된 모델을 내 데이터로 조금 더 학습하는 겁니다. 질문과 정답 문서 쌍을 주면, 정답은 가까이 당기고 다른 문서는 밀어냅니다. LLM이 아니라 작은 임베딩 모델을 학습하므로 노트북에서도 됩니다.</aside>
+</section>
+<section id="ft-pros" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:72px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#2d6db0">셋 · 좋은 점</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">고치는 값을 학습 때 한 번 낸다</h2>
+</div>
+<div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:40px">
+<div style="display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:26px 0 0 0"><h3 style="font-size:36px;font-weight:800;line-height:1.3">운영비 그대로</h3><p style="font-size:26px;line-height:1.55;color:#4a5361">질문마다 더 붙는 호출이 없다. 쿼리 확장 · 에이전트와 다른 점</p></div>
+<div style="display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:26px 0 0 0"><h3 style="font-size:36px;font-weight:800;line-height:1.3">지연 그대로</h3><p style="font-size:26px;line-height:1.55;color:#4a5361">같은 크기의 모델을 바꿔 끼울 뿐이다</p></div>
+<div style="display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:26px 0 0 0"><h3 style="font-size:36px;font-weight:800;line-height:1.3">다른 방법과 겹친다</h3><p style="font-size:26px;line-height:1.55;color:#4a5361">하이브리드 · 리랭커가 받는 후보 자체가 좋아진다</p></div>
+<div style="display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:26px 0 0 0"><h3 style="font-size:36px;font-weight:800;line-height:1.3">어디에든 그대로</h3><p style="font-size:26px;line-height:1.55;color:#4a5361">사내망 · 오프라인 · 기기 안에도 들어간다</p></div>
+</div>
+<aside>파인튜닝의 좋은 점은 고치는 값을 학습할 때 한 번에 낸다는 겁니다. 쿼리 확장이나 에이전트는 질문이 올 때마다 LLM 값을 내지만, 파인튜닝한 모델은 질문할 때 더 붙는 게 없습니다. 같은 크기 모델로 바꿔 끼우는 것이라 지연도 그대로입니다. 그리고 하이브리드나 리랭커와 경쟁하는 게 아니라 겹쳐 쓸 수 있습니다. 1단계 후보 자체가 좋아지니 리랭커도 더 잘 됩니다. 마지막으로 외부 호출이 없으니 사내망, 오프라인, 기기 안에도 그대로 넣을 수 있습니다.</aside>
+</section>
+<section id="ft-cons" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:72px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">셋 · 대가</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">공짜는 아니다</h2>
+</div>
+<div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:40px">
+<div style="display:flex;flex-direction:column;gap:14px;border-top:4px solid #ec9a3e;padding:26px 0 0 0"><h3 style="font-size:36px;font-weight:800;line-height:1.3">데이터가 필요하다</h3><p style="font-size:26px;line-height:1.55;color:#4a5361">질문과 정답 문서 쌍. 만드는 것부터가 일이다</p></div>
+<div style="display:flex;flex-direction:column;gap:14px;border-top:4px solid #ec9a3e;padding:26px 0 0 0"><h3 style="font-size:36px;font-weight:800;line-height:1.3">평가 · 학습 체계</h3><p style="font-size:26px;line-height:1.55;color:#4a5361">나누고, 재고, 비교하는 과정을 갖춰야 한다</p></div>
+<div style="display:flex;flex-direction:column;gap:14px;border-top:4px solid #ec9a3e;padding:26px 0 0 0"><h3 style="font-size:36px;font-weight:800;line-height:1.3">바뀌면 다시</h3><p style="font-size:26px;line-height:1.55;color:#4a5361">도메인이나 문서가 크게 바뀌면 다시 학습해야 한다</p></div>
+<div style="display:flex;flex-direction:column;gap:14px;border-top:4px dashed #c9ced6;padding:26px 0 0 0"><h3 style="font-size:36px;font-weight:800;line-height:1.3">만능 아님</h3><p style="font-size:26px;line-height:1.55;color:#4a5361">추론, 수치 조건, 코퍼스에 없는 지식은 못 고친다</p></div>
+</div>
+<aside>물론 공짜는 아닙니다. 질문과 정답 쌍 데이터를 만들어야 하고, 나누고 재고 비교하는 체계를 갖춰야 합니다. 문서가 크게 바뀌면 다시 학습해야 합니다. 그리고 만능이 아닙니다. 추론이 필요한 질문, 금액이나 기간 같은 수치 조건, 코퍼스에 없는 지식은 검색 모델 학습으로 고쳐지지 않습니다. 오늘 실습의 4~6교시가 바로 이 대가를 치르는 과정입니다.</aside>
+</section>
+<section id="when-ft" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:48px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">셋 · 언제 쓰나</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">상황에 따라 고르고, 섞는다</h2>
+</div>
+<table style="width:1664px;font-size:28px;color:#1f2a37">
+<tr><th style="width:58%;text-align:left;color:#6b7480;font-size:24px">이런 상황이면</th><th style="width:42%;text-align:left;color:#6b7480;font-size:24px">먼저 볼 방법</th></tr>
+<tr><td>질문이 적고, 일단 빨리 확인하고 싶다</td><td style="color:#4a5361">쿼리 확장</td></tr>
+<tr><td>제품 코드 · 문서 번호처럼 같은 말을 정확히 찾는다</td><td style="color:#4a5361">하이브리드</td></tr>
+<tr><td>상위 몇 개의 순서가 중요하다</td><td style="color:#4a5361">리랭커</td></tr>
+<tr><td>여러 문서를 엮어 추론해야 한다</td><td style="color:#4a5361">에이전트형 탐색</td></tr>
+<tr><td>질문이 많고, 도메인 말이 일상어와 다르다</td><td style="color:#2d6db0"><b>파인튜닝</b></td></tr>
+<tr style="background:#e8f1fa"><td><b>제품에 심어야 한다 (기기 · 오프라인 · 사내망)</b></td><td style="color:#2d6db0"><b>파인튜닝. 사실상 이것뿐</b></td></tr>
+</table>
+<p style="font-size:28px;line-height:1.55;color:#4a5361;border-left:4px solid #c9ced6;padding:4px 0 4px 24px">사실 파인튜닝까지 가야 하는 경우는 많지 않다. 그래도 오늘 과제로 고른 건, 데이터 · 실험 · 평가 · 배포까지 DS의 일을 한 번에 보여 주기 좋은 주제라서다.</p>
+<aside>그래서 언제 쓰느냐. 질문이 적고 일단 빨리 보고 싶으면 쿼리 확장, 번호나 코드처럼 같은 말을 정확히 찾아야 하면 하이브리드, 상위 순서가 중요하면 리랭커, 여러 문서를 엮어야 하면 에이전트. 질문이 많고 도메인 말이 일상어와 많이 다르면 파인튜닝이 유리합니다. 특히 제품화해서 기기에 심어야 하거나 오프라인, 사내망처럼 LLM을 부를 수 없는 곳이라면, 작은 모델을 내 도메인에 맞추는 게 사실상 유일한 방법입니다. 파인튜닝이 LLM을 대체하는 게 아니라 비용과 리소스에 맞춰 자리를 나누는 겁니다. 이 기준은 제 경험에서 나온 것입니다. 솔직히 말하면 파인튜닝까지 가야 하는 경우는 그리 많지 않습니다. 대부분은 위쪽 방법들로 충분합니다. 그런데도 오늘 이 주제를 고른 건, 데이터를 만들고, 실험하고, 평가하고, 배포하는 데이터 사이언티스트의 일을 처음부터 끝까지 한 번에 보여 주기 좋은 주제이기 때문입니다.</aside>
+</section>
+<section data-section="넷 · 최근 연구 트렌드: LLM이 만든 학습 데이터, LoRA, 작은 모델, 배포 친화" id="div-d" data-transition="fade" style="background:#f2f3f5;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:48px">
+<p style="font-size:30px;font-weight:700;color:#6b7480">넷 · 최근 연구 트렌드</p>
+<h1 style="font-size:120px;font-weight:800;line-height:1.1;letter-spacing:-3px">임베딩 파인튜닝이<br><span style="color:#2d6db0">쉬워진 이유</span></h1>
+<p style="font-size:36px;line-height:1.6;color:#4a5361">LLM이 만든 학습 데이터 · 적게 학습하기 · 작은 모델 · 배포까지 생각한 학습.</p>
+<aside>네 번째는 요즘 연구 흐름입니다. 몇 년 전만 해도 임베딩 파인튜닝의 가장 큰 벽은 학습 데이터였습니다. 지금은 그 벽이 많이 낮아졌습니다. 네 가지 흐름으로 봅니다.</aside>
+</section>
+<section id="d-data" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:64px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">넷 · 트렌드 1</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">LLM이 학습 데이터를 만든다</h2>
+</div>
+<div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:40px">
+<div style="display:flex;flex-direction:column;gap:12px;border-top:4px solid #c9ced6;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">2022 · GPL</p><h3 style="font-size:32px;font-weight:800;line-height:1.3">질문을 생성한다</h3><p style="font-size:26px;line-height:1.55;color:#4a5361">문서마다 질문을 만들고 다른 모델이 점수를 매긴다. 도메인 적응에서 최대 +9.3 nDCG@10</p></div>
+<div style="display:flex;flex-direction:column;gap:12px;border-top:4px solid #c9ced6;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">2024 · E5-mistral</p><h3 style="font-size:32px;font-weight:800;line-height:1.3">합성 데이터만으로</h3><p style="font-size:26px;line-height:1.55;color:#4a5361">GPT-4가 만든 데이터만으로 학습해 MTEB 63.1. 지도 학습 모델에 근접</p></div>
+<div style="display:flex;flex-direction:column;gap:12px;border-top:4px solid #c9ced6;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">2024 · Gecko</p><h3 style="font-size:32px;font-weight:800;line-height:1.3">정답 · 오답도 LLM이</h3><p style="font-size:26px;line-height:1.55;color:#4a5361">질문을 만든 뒤 후보를 다시 읽고 정답과 헷갈리는 오답을 고른다</p></div>
+<div style="display:flex;flex-direction:column;gap:12px;border-top:4px solid #4f93d8;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#2d6db0">2025 · Qwen3-Embedding</p><h3 style="font-size:32px;font-weight:800;line-height:1.3">대규모 합성 학습</h3><p style="font-size:26px;line-height:1.55;color:#4a5361">자체 LLM으로 여러 언어 · 도메인의 학습 쌍을 대량으로 만든다</p></div>
+</div>
+<p style="font-size:30px;line-height:1.6;color:#4a5361">가장 큰 벽이던 “사람이 붙이는 정답”을 LLM이 대신한다.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">GPL (NAACL 2022) · E5-mistral (ACL 2024) · Gecko (2024) · Qwen3 Embedding (2025)</p>
+<aside>첫째, LLM이 학습 데이터를 만듭니다. 예전에는 사람이 질문과 정답을 붙이느라 몇 주가 걸렸습니다. 2022년 GPL은 문서마다 질문을 생성해서 도메인 적응을 했고, 2024년 마이크로소프트는 GPT-4가 만든 데이터만으로 지도 학습 모델에 가까운 성능을 냈습니다. 구글 Gecko는 정답과 헷갈리는 오답 고르기까지 LLM에게 맡겼고, 2025년 Qwen3-Embedding은 자체 LLM으로 학습 쌍을 대량으로 만들었습니다. 데이터를 만드는 벽이 그만큼 낮아졌습니다.</aside>
+</section>
+<section id="d-lora" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:64px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">넷 · 트렌드 2</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">적게 학습한다: LoRA · 어댑터</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #c9ced6;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">무엇인가</p><h3 style="font-size:36px;font-weight:800;line-height:1.3">작은 행렬만 학습</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">원래 가중치는 얼리고, 옆에 붙인 작은 행렬만 학습한다. 학습할 양과 저장할 파일이 크게 준다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#2d6db0">사례 · jina-embeddings-v3</p><h3 style="font-size:36px;font-weight:800;line-height:1.3">용도별 어댑터</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">모델 하나에 검색 · 분류 · 군집용 어댑터를 바꿔 끼워 쓴다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#2d6db0">연구 · 밀집 검색</p><h3 style="font-size:36px;font-weight:800;line-height:1.3">일반화에 유리할 때도</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">도메인 밖에서는 전체 학습보다 1.6~4.6점 높았고, 도메인 안에서는 전체 학습이 나았다</p></div>
+</div>
+<p style="font-size:30px;line-height:1.6;color:#4a5361">어느 쪽이 나은지는 데이터마다 다르다. 결국 내 데이터로 재 봐야 한다.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">jina-embeddings-v3 (2024) · Back to Basics: Out-of-Domain Retrieval in Dense Encoders (2023)</p>
+<aside>둘째, 적게 학습합니다. LoRA는 원래 모델은 얼려 두고 옆에 붙인 작은 행렬만 학습합니다. 학습할 양도, 저장할 파일도 크게 줄어듭니다. jina-embeddings-v3는 모델 하나에 검색용, 분류용, 군집용 어댑터를 바꿔 끼워 씁니다. 밀집 검색 연구에서는 LoRA가 도메인 밖 일반화에서 전체 학습보다 1.6에서 4.6점 높았고, 도메인 안에서는 전체 학습이 나았습니다. 어느 쪽이 나은지는 데이터마다 다르다는 얘기입니다. 그래서 결국 내 데이터로 재 봐야 합니다. 오늘 6교시에 우리 데이터로 둘을 비교해 봅니다.</aside>
+</section>
+<section id="d-small" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:64px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">넷 · 트렌드 3</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">큰 모델이 가르치고, 작은 모델이 일한다</h2>
+</div>
+<div style="display:flex;align-items:center;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;background:#f2f3f5;border-radius:18px;padding:40px"><p style="font-size:24px;font-weight:700;color:#6b7480">큰 LLM</p><h3 style="font-size:40px;font-weight:800">데이터와 정답을 만든다</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">학습할 때 한 번만 쓴다</p></div>
+<p style="font-size:48px;color:#9aa3ad">→</p>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;background:#e8f1fa;border:2px solid #4f93d8;border-radius:18px;padding:40px"><p style="font-size:24px;font-weight:700;color:#2d6db0">작은 임베딩 모델</p><h3 style="font-size:40px;font-weight:800">배우고, 서비스한다</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">질문마다 쓰는 것은 이쪽뿐이다</p></div>
+</div>
+<p style="font-size:30px;line-height:1.6;color:#4a5361">Gecko는 768차원 작은 모델로 7배 큰 모델과 겨뤘다. 비싼 LLM은 학습 때만, 서비스는 작은 모델이.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">Lee et al., Gecko: Versatile Text Embeddings Distilled from Large Language Models (2024)</p>
+<aside>셋째, 큰 모델이 가르치고 작은 모델이 일합니다. 큰 LLM은 학습 데이터와 정답을 만드는 데 한 번만 쓰고, 실제로 질문마다 도는 건 작은 임베딩 모델입니다. 구글 Gecko는 이렇게 해서 768차원짜리 작은 모델로 7배 큰 모델과 겨뤘습니다. 비싼 LLM은 학습할 때 한 번만 쓰고, 매일 도는 서비스는 작은 모델이 맡는 구조입니다.</aside>
+</section>
+<section id="d-deploy" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:64px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">넷 · 트렌드 4</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">배포까지 생각하고 학습한다</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">Matryoshka 임베딩</p><p style="font-size:72px;font-weight:800;color:#2d6db0;letter-spacing:-2px">약 98%</p><p style="font-size:28px;line-height:1.55;color:#4a5361">앞쪽 차원에 중요한 정보를 몰아 학습한다. 64차원만 잘라 써도 이만큼 성능이 남는다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:28px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">임베딩 양자화</p><p style="font-size:72px;font-weight:800;color:#2d6db0;letter-spacing:-2px">1/32 · 96%</p><p style="font-size:28px;line-height:1.55;color:#4a5361">벡터를 이진으로 바꾸면 저장 공간이 1/32. 다시 채점을 더하면 성능의 약 96%가 남는다</p></div>
+</div>
+<p style="font-size:30px;line-height:1.6;color:#4a5361">벡터가 작아지면 저장 · 검색 비용이 줄고, 모델 자체도 양자화해 기기 안에 넣는다.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">Sentence Transformers, Matryoshka Embeddings · Hugging Face · mixedbread, Embedding Quantization (2024)</p>
+<aside>넷째, 배포까지 생각하고 학습합니다. Matryoshka 임베딩은 앞쪽 차원에 중요한 정보를 몰아서 학습해서, 64차원만 잘라 써도 성능의 98% 정도가 남습니다. 벡터 자체를 줄이는 양자화도 있습니다. 숫자를 0과 1로 바꾸면 저장 공간이 32분의 1이 되고, 상위 후보만 원래 벡터로 다시 채점하면 성능의 96% 정도가 남습니다. 모델 자체도 양자화해서 줄일 수 있어서, 작은 기기 안에도 넣을 수 있습니다. 우리 모델은 7교시에 직접 줄여 봅니다.</aside>
+</section>
+<section id="d-now" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">넷 · 정리</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">지금 적용하기 좋은 이유: 벽 네 개가 낮아졌다</h2>
+</div>
+<table style="width:1664px;font-size:28px;color:#1f2a37">
+<tr><th style="width:16%;text-align:left;color:#6b7480;font-size:24px">벽</th><th style="width:38%;text-align:left;color:#6b7480;font-size:24px">예전</th><th style="width:46%;text-align:left;color:#2d6db0;font-size:24px">지금</th></tr>
+<tr><td><b>데이터</b></td><td style="color:#6b7480">사람이 질문과 정답을 붙인다. 몇 주</td><td>LLM이 질문 · 정답 · 헷갈리는 오답까지 만든다</td></tr>
+<tr><td><b>학습</b></td><td style="color:#6b7480">모델 전체를 학습하고 통째로 저장한다</td><td>LoRA로 일부만 학습하고 용도별로 바꿔 끼운다</td></tr>
+<tr><td><b>성능</b></td><td style="color:#6b7480">잘하려면 큰 모델이 필요하다</td><td>큰 LLM이 가르친 작은 모델이 따라간다</td></tr>
+<tr><td><b>배포</b></td><td style="color:#6b7480">모델과 벡터가 커서 서버가 필요하다</td><td>벡터를 잘라 쓰고 양자화해 기기에도 넣는다</td></tr>
+</table>
+<aside>네 가지 흐름을 한 장으로 모으면, 예전에 임베딩 파인튜닝을 막던 벽 네 개가 낮아졌다는 이야기입니다. 데이터는 사람이 몇 주 걸려 붙이던 정답을 LLM이 만들어 줍니다. 학습은 LoRA로 일부만 하고 용도별로 바꿔 끼웁니다. 성능은 큰 LLM이 가르친 작은 모델이 큰 모델을 따라갑니다. 배포는 벡터를 잘라 쓰고 양자화해서 기기에도 넣습니다. 그래서 지금이 적용하기 좋은 때입니다. 이제 이걸 오늘 실제로 어떤 과제로 해 볼지 보겠습니다.</aside>
+</section>
+<section data-section="다섯 · 오늘의 과제: 법령 데이터, e5-small, 출발점 0.513, 실습 지도" id="div-e" data-transition="fade" style="background:#f2f3f5;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:48px">
+<p style="font-size:30px;font-weight:700;color:#6b7480">다섯 · 오늘의 과제</p>
+<h1 style="font-size:120px;font-weight:800;line-height:1.1;letter-spacing:-3px">법령 검색을<br><span style="color:#2d6db0">파인튜닝으로 고친다</span></h1>
+<p style="font-size:36px;line-height:1.6;color:#4a5361">데이터 · 모델 · 출발점 · 실습 지도.</p>
+<aside>여기까지가 일반론이었습니다. 이제 오늘 실제로 풀 과제입니다. 어떤 데이터로, 어떤 모델을, 어디서 출발해서 어디까지 가는지 봅니다.</aside>
+</section>
+<section id="corpus" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:72px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">오늘의 코퍼스</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">생활 법령 54개, 검색 문서 2.6만 개</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #c9ced6;padding:26px 0 0 0"><p style="font-size:88px;font-weight:800;letter-spacing:-2px">54</p><p style="font-size:28px;line-height:1.5;color:#4a5361">법령 (법률 · 시행령 · 시행규칙)</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #c9ced6;padding:26px 0 0 0"><p style="font-size:88px;font-weight:800;letter-spacing:-2px">6</p><p style="font-size:28px;line-height:1.5;color:#4a5361">테마: 사회 첫걸음 · 교통 · 세금 · 금융 · 소비자 · 전기</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #c9ced6;padding:26px 0 0 0"><p style="font-size:88px;font-weight:800;letter-spacing:-2px">25,967</p><p style="font-size:28px;line-height:1.5;color:#4a5361">검색 문서. 긴 조문은 항 · 호 단위로 나눴다</p></div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">출처: legalize-kr 법령 데이터 · 자세한 만드는 과정은 4교시</p>
+<aside>오늘 쓰는 코퍼스는 생활과 가까운 법령 54개, 여섯 테마입니다. 조문 1만 1천여 개를 모델이 읽을 수 있는 길이로 나눠 검색 문서 2.6만 개가 됐습니다. 만드는 과정은 4교시에 봅니다.</aside>
+</section>
+<section id="words" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">왜 법령인가 1</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">질문과 조문은 다른 말을 쓴다</h2>
+</div>
+<div style="display:flex;gap:64px">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;border-top:4px solid #ec9a3e;padding:26px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">질문</p>
+<p style="font-size:36px;line-height:1.55;font-weight:700">1년 계약하고 카페에 들어갔는데 <span style="color:#b8650f">수습</span> 3개월 동안은 <span style="color:#b8650f">시급을 최저임금보다 덜 준대요</span>. 이게 되는 거예요?</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;border-top:4px solid #c9ced6;padding:26px 0 0 0">
+<p style="font-size:24px;font-weight:700;color:#6b7480">정답: 최저임금법 제5조 ②</p>
+<p style="font-size:28px;line-height:1.75;color:#4a5361">1년 이상의 기간을 정하여 <b style="color:#1f2a37">근로계약</b>을 체결하고 <b style="color:#1f2a37">수습 중에 있는 근로자</b>로서 수습을 시작한 날부터 3개월 이내인 사람에 대하여는 대통령령으로 정하는 바에 따라 제1항에 따른 <b style="color:#1f2a37">최저임금액과 다른 금액</b>으로 최저임금액을 정할 수 있다.</p>
+</div>
+</div>
+<p style="font-size:30px;line-height:1.6;color:#4a5361">“카페에 들어갔는데 · 시급 · 덜 준대요” ↔ “근로계약 · 최저임금액과 다른 금액”. 베이스 모델은 이 어휘 차이에서 약하다.</p>
+<aside>왜 법령인가. 사람은 일상어로 묻고 조문은 법률 용어로 씁니다. "카페에 들어갔는데", "시급 덜 준대요"와 "최저임금액과 다른 금액"은 같은 이야기인데 단어가 거의 안 겹칩니다. 베이스 모델이 약한 지점이고, 파인튜닝 효과가 잘 보이는 지점입니다.</aside>
+</section>
+<section id="why-law" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:72px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">왜 법령인가 2</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">파인튜닝을 보여 주기 좋은 네 가지 조건</h2>
+</div>
+<div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:40px">
+<div style="display:flex;flex-direction:column;gap:14px;border-top:4px solid #e89c6c;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">1</p><h3 style="font-size:36px;font-weight:800;line-height:1.3">어휘 차이가 크다</h3><p style="font-size:26px;line-height:1.55;color:#4a5361">일상어 질문과 법률 용어. 기본 모델이 자주 놓친다</p></div>
+<div style="display:flex;flex-direction:column;gap:14px;border-top:4px solid #e89c6c;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">2</p><h3 style="font-size:36px;font-weight:800;line-height:1.3">오를 여지가 크다</h3><p style="font-size:26px;line-height:1.55;color:#4a5361">학습 전 모델이 자주 틀린다. 학습으로 오른 만큼이 숫자로 크게 보인다</p></div>
+<div style="display:flex;flex-direction:column;gap:14px;border-top:4px solid #e89c6c;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">3</p><h3 style="font-size:36px;font-weight:800;line-height:1.3">데이터를 만들기 쉽다</h3><p style="font-size:26px;line-height:1.55;color:#4a5361">조 · 항 · 호로 나뉜 조문 하나가 정답 하나. LLM으로 질문 · 정답 쌍을 대량으로 만든다</p></div>
+<div style="display:flex;flex-direction:column;gap:14px;border-top:4px solid #e89c6c;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">4</p><h3 style="font-size:36px;font-weight:800;line-height:1.3">누구나 쓸 수 있다</h3><p style="font-size:26px;line-height:1.55;color:#4a5361">공개 데이터. 사내 문서 없이도 같은 문제를 그대로 연습한다</p></div>
+</div>
+<aside>법령은 파인튜닝을 보여 주기 좋은 조건을 다 갖췄습니다. 첫째, 일상어로 묻는 질문과 법률 용어 사이의 어휘 차이가 커서 기본 모델이 자주 놓칩니다. 둘째, 그래서 학습 전 모델이 자주 틀리고, 학습으로 오른 만큼이 숫자로 크게 보입니다. 출발점이 얼마인지는 잠시 뒤에 봅니다. 셋째, 학습 데이터를 만들기 쉽습니다. 파인튜닝에서 가장 무거운 일이 질문과 정답 쌍을 만드는 건데, 법령은 조, 항, 호로 잘게 나뉘어 있어서 조문 하나가 정답 하나가 됩니다. 그래서 LLM으로 질문과 정답 쌍을 대량으로 만들 수 있습니다. 4교시에 직접 해 봅니다. 넷째, 공개 데이터라 누구나 씁니다. 여러분 업무의 사내 문서 검색도 구조는 똑같습니다.</aside>
+</section>
+<section id="e5-model" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:72px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">다섯 · 오늘의 모델</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">multilingual-e5-small</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #4f93d8;padding:26px 0 0 0"><p style="font-size:88px;font-weight:800;letter-spacing:-2px;color:#2d6db0">118M</p><p style="font-size:28px;line-height:1.5;color:#4a5361">파라미터. 노트북에서 학습하고 CPU에서 서비스한다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #c9ced6;padding:26px 0 0 0"><p style="font-size:88px;font-weight:800;letter-spacing:-2px">384</p><p style="font-size:28px;line-height:1.5;color:#4a5361">차원 벡터. 문장 하나를 숫자 384개로</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #c9ced6;padding:26px 0 0 0"><p style="font-size:88px;font-weight:800;letter-spacing:-2px">512</p><p style="font-size:28px;line-height:1.5;color:#4a5361">토큰까지 읽는다. 그래서 긴 조문은 항 · 호로 나눴다</p></div>
+</div>
+<p style="font-size:30px;line-height:1.6;color:#4a5361">한국어를 포함한 다국어 모델이고 MIT 라이선스라 동의 절차 없이 받아 쓴다.</p>
+<aside>오늘 파인튜닝할 모델은 multilingual-e5-small입니다. 파라미터 1억 1,800만 개로 작아서 노트북에서 학습하고 CPU에서 서비스할 수 있습니다. 문장을 384개 숫자로 바꾸고, 512토큰까지 읽습니다. 그래서 코퍼스를 만들 때 긴 조문은 항과 호 단위로 나눴습니다. 한국어를 포함한 다국어 모델이고 MIT 라이선스라 계정이나 동의 없이 받을 수 있습니다.</aside>
+</section>
+<section id="base-reality" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:64px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">다섯 · 출발점</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">두 번에 한 번은 정답이 화면에 없다</h2>
+</div>
+<div style="display:flex;flex-direction:column;gap:20px;width:1400px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><p style="font-size:32px;font-weight:700">multilingual-e5-small <span style="color:#6b7480">· 118M · 오늘 파인튜닝할 모델</span></p><p style="font-size:96px;font-weight:800;color:#b8650f;letter-spacing:-2px">0.513</p></div>
+<div style="height:32px;background:#e6e8eb;border-radius:8px;display:flex"><div style="width:718px;height:32px;background:#ec9a3e;border-radius:8px"></div></div>
+<div style="display:flex;justify-content:space-between"><p style="font-size:26px;font-weight:700;color:#b8650f">상위 5개 안에 정답 있음 · 51%</p><p style="font-size:26px;font-weight:700;color:#6b7480">정답 없음 · 49%</p></div>
+</div>
+<p style="font-size:30px;line-height:1.6;color:#4a5361">Recall@5: 정답 조문이 검색 상위 5개 안에 든 질문의 비율. 이 절반을 파인튜닝으로 얼마나 메울 수 있는지가 오늘의 과제다.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">실험 010 · 학습에 쓰지 않은 법령 16개의 test 질문 2,526개 · 전체 코퍼스 2.6만 문서 대상</p>
+<aside>학습 없이 베이스 모델을 그대로 쓰면 어떨까요. 오늘 파인튜닝할 e5-small은 Recall@5가 0.513입니다. 질문 두 개 중 하나는 정답 조문이 상위 5개에 없다는 뜻입니다. 앞에서 말한 "못 본 말에 약하다"가 우리 코퍼스에서는 이 정도입니다. 걸러질 때 놓친 조문은 뒤의 LLM이 아무리 좋아도 답할 수 없으니, 이대로면 RAG 답변의 절반이 처음부터 막혀 있는 셈입니다. 이 절반을 파인튜닝으로 얼마나 메울 수 있는지가 오늘의 과제입니다. 이 숫자는 5교시에 직접 잽니다.</aside>
+</section>
+<section id="practice-map" data-transition="fade" style="display:flex; flex-direction:column; gap:48px; justify-content:center; padding:120px 128px; background:#fcfcfb">
+  <div style="display:flex; flex-direction:column; gap:20px">
+    <p style="font-family:'Noto Sans KR', Arial, sans-serif; font-size:26px; font-weight:700; color:#6b7480">실습 지도</p>
+    <h2 style="font-family:'Noto Sans KR', Arial, sans-serif; font-size:64px; font-weight:800; line-height:1.2; letter-spacing:-1px; color:#1f2a37">실습 계획</h2>
+  </div>
+  <table style="width:1664px; font-family:'Noto Sans KR', Arial, sans-serif; font-size:28px; color:#1f2a37">
+    <tr><th style="width:14%; color:#6b7480">실습</th><th style="width:10%; color:#6b7480">교시</th><th style="width:30%; color:#6b7480">하는 일</th><th style="width:46%; color:#6b7480">만들어지는 것</th></tr>
+    <tr><td style="color:#4a5361">0 준비</td><td>3교시</td><td>환경 점검, 완성품 먼저 써 보기</td><td>학습 전 e5와 파인튜닝 e5 결과를 나란히 체감</td></tr>
+    <tr><td style="color:#b8650f">1 2022</td><td>4교시</td><td>데이터</td><td>코퍼스, 질문 1.2만 개, 법령 단위 분할</td></tr>
+    <tr><td style="color:#b8650f">2 2022</td><td>5교시</td><td>평가</td><td>학습 없는 선택지 비교표 → 학습할지 판단</td></tr>
+    <tr><td style="color:#b8650f">3 2022</td><td>6교시</td><td>학습 실험과 분석</td><td>파인튜닝 모델, 실험 비교, 실패 분석</td></tr>
+    <tr><td style="color:#2d6db0">4 2026</td><td>7교시</td><td>서빙 · 배포 최적화</td><td>ONNX · INT8 · 가지치기 모델, 크기 · 속도 비교표</td></tr>
+    <tr><td style="color:#2d6db0">5 2026</td><td>8교시</td><td>제품화 · 마무리</td><td>검색 CLI · 에이전트 스킬 · MCP 서버 · 웹, MLflow 모니터링</td></tr>
+  </table>
+  <p style="font-family:'Noto Sans KR', Arial, sans-serif; font-size:28px; line-height:1.6; color:#4a5361">폴더 번호 = 교시 번호: lecture/01_introduction ~ 08_product</p>
+  <aside>실습은 0부터 5까지입니다. 3교시는 완성품을 먼저 써 보고, 4~6교시 2022 파트에서 데이터, 평가, 학습으로 모델을 만들고, 7~8교시 2026 파트에서 그 모델을 최적화하고 제품으로 만듭니다. 실습마다 손에 남는 결과물이 있습니다. 스크립트는 lecture 아래 교시 번호와 같은 번호의 폴더에 있습니다. 실습 0은 3교시라 03_setup, 실습 1은 4교시라 04_data, 이런 식이고, 선택 실습(extra_*.py)은 관련 교시 폴더에 함께 있습니다. 모델은 처음부터 끝까지 e5-small 하나입니다.</aside>
+</section>
+<section id="practice-mode" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:64px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">실습 방식</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">2026년의 내 업무를 같이 해 본다</h2>
+</div>
+<div style="display:flex;gap:56px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;background:#f2f3f5;border-radius:18px;padding:40px">
+<p style="font-size:24px;font-weight:700;color:#6b7480">기본</p>
+<h3 style="font-size:40px;font-weight:800">받은 산출물로 확인</h3>
+<p style="font-size:28px;line-height:1.55;color:#4a5361">모델 · 인덱스 · 질문 · 파인튜닝 모델은 미리 만들어 나눠 준다. 스크립트는 그 결과를 열어 본다</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;background:#f2f3f5;border-radius:18px;padding:40px">
+<p style="font-size:24px;font-weight:700;color:#6b7480">--run</p>
+<h3 style="font-size:40px;font-weight:800">작게 직접 실행</h3>
+<p style="font-size:28px;line-height:1.55;color:#4a5361">작은 부분집합으로 같은 과정을 임시 폴더에서 직접 돌린다. 받은 산출물은 덮어쓰지 않는다. 학습은 몇 step 맛보기만</p>
+</div>
+</div>
+<div style="display:flex;flex-direction:row;gap:48px;align-items:center;border-top:4px solid #4f93d8;padding:28px 0 0 0">
+<p style="font-size:26px;font-weight:700;color:#2d6db0;white-space:nowrap">이 강의의 초점</p>
+<p style="font-size:30px;line-height:1.55;color:#4a5361"><span style="color:#8a939e">코드를 어떻게 짜는지가 아니라,</span> <b style="color:#1f2a37">데이터 → 실험 → 평가 → 배포가 어떤 순서로 흘러가고 단계마다 무엇을 판단하는지</b>를 본다. 구현은 에이전트에게 맡겨도 된다.</p>
+</div>
+<aside>실습 설정은 2026년의 제 업무를 같이 해 보는 겁니다. 무거운 산출물은 미리 만들어 드리고, 스크립트는 기본으로 그 결과를 열어 봅니다. --run을 붙이면 작은 부분집합으로 직접 돌리는데, 임시 폴더에 쓰기 때문에 받은 모델이나 결과를 덮어쓰지 않습니다. 8교시 웹과 모니터링 스크립트에는 확인만 하고 끝내는 --check도 있습니다. 분명히 말씀드리면, 이 강의는 코드를 어떻게 구현하는지를 가르치는 강의가 아닙니다. 코드를 한 줄씩 따라 읽지 않습니다. 데이터를 만들고, 실험하고, 평가하고, 배포하는 일이 어떤 순서로 흘러가는지, 그리고 단계마다 무엇을 보고 판단하는지를 이해하는 게 목적입니다. 구현은 요즘 에이전트에게 맡겨도 됩니다. 사람이 해야 하는 건 흐름을 알고 판단하는 쪽입니다.</aside>
+</section>
+<section data-section="용어와 다음 시간" id="terms-band" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">용어 · 모델을 남이 쓰게 만드는 것</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">모델을 쓰는 창구 넷</h2>
+</div>
+<div style="display:flex;flex-direction:column;gap:14px">
+<p style="font-size:24px;font-weight:700;color:#6b7480">1교시 “내가 맡는 범위” 여섯 칸 중 API · 화면</p>
+<div style="display:grid;grid-template-columns:repeat(6, 1fr);gap:10px">
+<div style="border:3px dashed #c9ced6;border-radius:10px;padding:28px 18px 14px"><p style="font-size:28px;font-weight:800;color:#8a939e">기획</p></div>
+<div style="border:3px dashed #c9ced6;border-radius:10px;padding:28px 18px 14px"><p style="font-size:28px;font-weight:800;color:#8a939e">모델</p></div>
+<div style="background:#4f93d8;border:3px solid #4f93d8;border-radius:10px;padding:28px 18px 14px"><p style="font-size:28px;font-weight:800;color:#fcfcfb">API</p></div>
+<div style="background:#4f93d8;border:3px solid #4f93d8;border-radius:10px;padding:28px 18px 14px"><p style="font-size:28px;font-weight:800;color:#fcfcfb">화면</p></div>
+<div style="border:3px dashed #c9ced6;border-radius:10px;padding:28px 18px 14px"><p style="font-size:28px;font-weight:800;color:#8a939e">배포</p></div>
+<div style="border:3px dashed #c9ced6;border-radius:10px;padding:28px 18px 14px"><p style="font-size:28px;font-weight:800;color:#8a939e">운영</p></div>
+</div>
+</div>
+<div style="display:flex;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #4f93d8;padding:24px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">쓰는 쪽: 다른 프로그램</p><h3 style="font-size:36px;font-weight:800">백엔드 · API</h3><p style="font-size:26px;line-height:1.5;color:#4a5361">프로그램이 부르는 창구. 질문을 보내면 조문을 돌려준다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #4f93d8;padding:24px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">쓰는 쪽: 동료</p><h3 style="font-size:36px;font-weight:800">CLI</h3><p style="font-size:26px;line-height:1.5;color:#4a5361">터미널에서 치는 명령 한 줄로 검색</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #4f93d8;padding:24px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">쓰는 쪽: Claude 같은 AI</p><h3 style="font-size:36px;font-weight:800">MCP</h3><p style="font-size:26px;line-height:1.5;color:#4a5361">AI 에이전트가 도구를 부르는 표준 연결</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;border-top:4px solid #4f93d8;padding:24px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">쓰는 쪽: 현업</p><h3 style="font-size:36px;font-weight:800">프론트엔드</h3><p style="font-size:26px;line-height:1.5;color:#4a5361">브라우저에서 보는 웹 화면</p></div>
+</div>
+<aside>1교시에 제가 맡는 범위를 기획, 모델, API, 화면, 배포, 운영 여섯 칸으로 보여 드렸습니다. 그중 API와 화면 칸에 들어가는 용어들입니다. 모델을 만들어도 누군가 쓸 수 있어야 의미가 있죠. API는 다른 프로그램이 부르는 창구, CLI는 동료가 터미널에서 치는 명령, MCP는 Claude 같은 에이전트가 도구를 부르는 표준, 프론트엔드는 현업이 보는 웹 화면입니다. 누가 쓰느냐가 다릅니다. 7~8교시에 전부 직접 만듭니다.</aside>
+</section>
+<section id="next" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:56px">
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">다음 시간 · 3교시 · 실습 0</p>
+<h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">완성품부터 써 본다</h2>
+</div>
+<div style="display:flex;gap:48px">
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #d6e0cc;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">1</p><h3 style="font-size:36px;font-weight:800">완성품</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">약 56MB짜리 HTML 하나. 모델과 조문 사전이 모두 들어 있다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #d6e0cc;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">2</p><h3 style="font-size:36px;font-weight:800">환경 점검</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">설치 · 모델 · 인덱스가 준비됐는지 한 번에</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #d6e0cc;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">3</p><h3 style="font-size:36px;font-weight:800">완성품 써 보기</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">웹은 강사 시연, CLI로 학습 전 모델에 직접 질문</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #d6e0cc;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">4</p><h3 style="font-size:36px;font-weight:800">학습 전후 비교</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">같은 질문을 파인튜닝 모델로 바꿔 정답 순위 비교</p></div>
+</div>
+<aside>3교시에는 오늘 끝에 만들 완성품부터 봅니다. 설치를 시작하기 전에, 약 56MB짜리 HTML 파일 하나를 열어 봅니다. 임베딩 모델과 조문 사전이 모두 그 파일 하나에 들어 있어서, 더블클릭만 하면 서버도 인터넷도 없이 브라우저에서 법령을 검색합니다. 그다음 환경을 점검하고, 웹은 제가 시연하고, CLI로 학습 전 모델에 직접 질문해 봅니다. 마지막으로 같은 질문을 파인튜닝 모델로 바꿔 던져 보면 오늘 이야기가 눈에 보일 겁니다.</aside>
+</section>
+<section id="break" data-transition="fade" style="background:#f2f3f5;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:44px">
+<p style="font-size:26px;font-weight:700;color:#6b7480">2교시 끝</p>
+<h1 style="font-size:112px;font-weight:800;line-height:1.2;letter-spacing:-3px">질문 받고,<br><span style="color:#6b7480">10분 쉬겠습니다.</span></h1>
+<p style="font-size:34px;line-height:1.6;color:#4a5361">쉬는 동안 실습 환경을 켜 두세요. 3교시는 바로 실습으로 시작합니다.</p>
+<div style="position:absolute;left:0;right:0;bottom:0;height:8px;background:linear-gradient(90deg, #ec9a3e 0%, #4f93d8 100%)"></div>
+<aside>질문 받고 10분 쉽니다. 3교시는 바로 실습이라 쉬는 동안 노트북과 실습 환경을 켜 두시면 좋습니다.</aside>
+</section>
+</div>
+<div id="bar"></div>
+<div id="notes"></div>
+<script>
+(() => {
+  // 덱 전용 요소: x-icon (Lucide 모양), x-connector (선 · 화살표)
+  const ICONS = {
+    Chart: '<path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>',
+    Chat: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+    Check: '<path d="M20 6 9 17l-5-5"/>',
+    CheckCircle: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+    Database: '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>',
+    Globe: '<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
+    Home: '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>',
+    Lightbulb: '<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>',
+    PaperPlane: '<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
+    Search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+    Settings: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+    Warning: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+  };
+  document.querySelectorAll('x-icon').forEach((el) => {
+    const body = ICONS[el.getAttribute('name')] || '<circle cx="12" cy="12" r="9"/>';
+    el.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + body + '</svg>';
+  });
+
+  const NS = 'http://www.w3.org/2000/svg';
+  let markerId = 0;
+  document.querySelectorAll('x-connector').forEach((el) => {
+    const host = el.parentElement;
+    if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
+    const cs = getComputedStyle(el);
+    const color = cs.color;
+    const w = parseFloat(el.style.borderWidth) || 2;
+    const dash = (el.style.borderStyle || '').includes('dash') ? `${w * 3} ${w * 2}` : (el.style.borderStyle || '').includes('dot') ? `${w} ${w * 1.5}` : '';
+    const num = (v, size) => (String(v).endsWith('%') ? (parseFloat(v) / 100) * size : parseFloat(v));
+    const hw = host.offsetWidth, hh = host.offsetHeight;
+    const x1 = num(el.getAttribute('x1'), hw), y1 = num(el.getAttribute('y1'), hh);
+    const x2 = num(el.getAttribute('x2'), hw), y2 = num(el.getAttribute('y2'), hh);
+    const head = el.getAttribute('head') || 'end';
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('style', 'position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;pointer-events:none');
+    const id = 'xc' + markerId++;
+    svg.innerHTML = `<defs><marker id="${id}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="${Math.max(4, 12 / w * 2)}" markerHeight="${Math.max(4, 12 / w * 2)}" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="${color}"/></marker></defs>`;
+    const line = document.createElementNS(NS, 'line');
+    Object.entries({ x1, y1, x2, y2, stroke: color, 'stroke-width': w }).forEach(([k, v]) => line.setAttribute(k, v));
+    if (dash) line.setAttribute('stroke-dasharray', dash);
+    if (head === 'end' || head === 'both') line.setAttribute('marker-end', `url(#${id})`);
+    if (head === 'both') line.setAttribute('marker-start', `url(#${id})`);
+    svg.appendChild(line);
+    el.replaceWith(svg);
+  });
+
+  // 넘기기 · 화면 맞춤 · 대본
+  const stage = document.getElementById('stage');
+  const slides = [...stage.children].filter((s) => s.tagName === 'SECTION');
+  const bar = document.getElementById('bar');
+  const notes = document.getElementById('notes');
+  let cur = 0;
+  const fit = () => {
+    const s = Math.min(innerWidth / 1920, innerHeight / 1080);
+    stage.style.transform = `scale(${s}) translate(-50%, -50%)`;
+  };
+  const show = (i) => {
+    cur = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach((s, k) => s.classList.toggle('on', k === cur));
+    bar.textContent = `${cur + 1} / ${slides.length}`;
+    const aside = slides[cur].querySelector('aside');
+    notes.textContent = aside ? aside.textContent.trim() : '(대본 없음)';
+    history.replaceState(null, '', '#' + slides[cur].id);
+  };
+  addEventListener('resize', fit);
+  addEventListener('keydown', (e) => {
+    if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)) { show(cur + 1); e.preventDefault(); }
+    else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { show(cur - 1); e.preventDefault(); }
+    else if (e.key === 'Home') show(0);
+    else if (e.key === 'End') show(slides.length - 1);
+    else if (e.key === 'n' || e.key === 'N') document.body.classList.toggle('show-notes');
+    else if (e.key === 'f' || e.key === 'F') document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+  });
+  stage.addEventListener('click', (e) => show(cur + (e.clientX > innerWidth / 3 ? 1 : -1)));
+  const fromHash = () => {
+    const i = slides.findIndex((s) => '#' + s.id === location.hash);
+    if (i >= 0 && i !== cur) show(i);
+  };
+  addEventListener('hashchange', fromHash);
+  fit();
+  const start = slides.findIndex((s) => '#' + s.id === location.hash);
+  show(start < 0 ? 0 : start);
+})();
+</script>
+</body>
+</html>
