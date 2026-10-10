@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>8교시 실습 5 제품화</title>
+<title>8교시 실습 4 제품화</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400..800&amp;display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;display=swap">
 <style>
@@ -53,11 +53,11 @@
 <!-- 장표 원본: claude.ai Slides 덱. 장 하나 = <section>, 발표 대본 = <aside>. 키: ← → 넘기기, N 대본, F 전체 화면 -->
 <div id="stage">
 <section data-section="표지, 이 업무의 어제와 오늘, 같은 모델을 건네는 세 가지 길" id="cover" data-transition="fade" style="background:linear-gradient(160deg, #ffffff 0%, #f4f5f6 100%);color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:40px">
-<p style="font-size:28px;font-weight:700;color:#2d6db0">AI 시대 생존법 · 내 업무 확장편 · 8교시 · 실습 5 · 2026 파트</p>
+<p style="font-size:28px;font-weight:700;color:#2d6db0">AI 시대 생존법 · 내 업무 확장편 · 8교시 · 실습 4 · 2026 파트</p>
 <h1 style="font-size:112px;font-weight:800;line-height:1.15;letter-spacing:-3px">제품으로<br>내보낸다</h1>
 <p style="font-size:34px;line-height:1.6;color:#6b7480;width:1400px">같은 모델을 데스크톱 앱 · 웹 · 사용자의 에이전트, 세 가지 길로 건넵니다. 길마다 환경, 사용 케이스, 장단점과 주의할 점을 봅니다.</p>
 <div style="position:absolute;left:0;right:0;bottom:0;height:8px;background:#4f93d8"></div>
-<p style="position:absolute;left:128px;bottom:64px;width:900px;font-size:26px;color:#6b7480">실습 5 · 제품화와 마무리</p>
+<p style="position:absolute;left:128px;bottom:64px;width:900px;font-size:26px;color:#6b7480">실습 4 · 제품화와 마무리</p>
 <aside>마지막 시간입니다. 지금까지 만든 모델을 남에게 건네는 길 세 가지, 데스크톱 앱, 웹, 사용자의 에이전트를 봅니다. 3교시에 사용자로 써 봤던 HTML 파일, 웹, CLI, MCP를 이번에는 건네는 사람 입장에서 봅니다. 끝에는 오늘 하루를 처음 질문으로 돌아가 정리합니다.</aside>
 </section>
 <section id="then-now" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:72px">
@@ -334,7 +334,7 @@
 <p style="font-family:'JetBrains Mono', 'Noto Sans KR', monospace;font-size:24px;line-height:1.65;color:#1f2a37"><span style="color:#6b7480"># 0. 데스크톱: 받은 dist/law-search-offline.html을 더블클릭 (인터넷을 꺼 보고)</span><br><span style="color:#6b7480"># 1. CLI: laws · search · show · ask · --json (--run: 휠 빌드 + uvx)</span><br>uv run python lecture/08_product/01_search_cli.py<br><span style="color:#6b7480"># 2. 스킬: 보기 · 설치 · 첫 검색 재현 · 받은 실험 011 결과 (1분 안쪽)</span><br>uv run python lecture/08_product/02_agent_skill.py  <span style="color:#6b7480"># --run --questions N</span><br><span style="color:#6b7480"># 3. MCP: 연결 → 도구 목록 → 호출, Claude 등록 안내</span><br>uv run python lecture/08_product/03_mcp_server.py<br><span style="color:#6b7480"># 4. 웹: 받은 dist를 API 서버가 함께 제공 (--run: 다시 빌드)</span><br>uv run python lecture/08_product/04_web_app.py</p>
 </div>
 <p style="font-size:28px;line-height:1.6;color:#4a5361">스킬 --run은 claude 헤드리스로 실제 비교 (질문당 30~60초, 비용이 든다). 웹은 --check면 확인만 하고 끝난다.</p>
-<aside>먼저 받은 HTML 파일을 더블클릭해서 엽니다. 와이파이를 꺼도 검색이 되는지 보세요. 그다음 네 스크립트를 차례로 돌립니다. CLI는 기본이 명령 실행이고, --run을 붙이면 휠을 빌드해 uvx 격리 환경에서 torch 없이 도는지까지 봅니다. 스킬 스크립트는 기본 모드에서 SKILL.md를 보여 주고, 임시 폴더에 Claude Code용과 Gemini CLI용으로 설치해 보고, 에이전트가 할 첫 검색을 CLI로 두 모델에 재현한 뒤, 받은 실험 011 결과를 읽어 줍니다. 1분 안쪽입니다. --run을 붙이면 claude를 헤드리스로 띄워 실제로 두 모델을 비교합니다. 질문당 30초에서 1분, 호출 비용이 들고, 기본은 질문 2개, --questions 10이면 실험 011과 같은 설정입니다. MCP는 모드가 하나입니다. 웹은 받은 화면 빌드가 있으면 그대로 띄우고, --run이면 pnpm으로 다시 빌드합니다. 웹은 서버를 열어 두는 스크립트라, 급하면 --check로 확인만 하고 넘어가세요. MLflow 모니터링(05_monitoring.py)은 시간이 남을 때 해 보는 선택 실습으로 남겨 둡니다.</aside>
+<aside>먼저 받은 HTML 파일을 더블클릭해서 엽니다. 와이파이를 꺼도 검색이 되는지 보세요. 그다음 네 스크립트를 차례로 돌립니다. CLI는 기본이 명령 실행이고, --run을 붙이면 휠을 빌드해 uvx 격리 환경에서 torch 없이 도는지까지 봅니다. 스킬 스크립트는 기본 모드에서 SKILL.md를 보여 주고, 임시 폴더에 Claude Code용과 Gemini CLI용으로 설치해 보고, 에이전트가 할 첫 검색을 CLI로 두 모델에 재현한 뒤, 받은 실험 011 결과를 읽어 줍니다. 1분 안쪽입니다. --run을 붙이면 claude를 헤드리스로 띄워 실제로 두 모델을 비교합니다. 질문당 30초에서 1분, 호출 비용이 들고, 기본은 질문 2개, --questions 10이면 실험 011과 같은 설정입니다. MCP는 모드가 하나입니다. 웹은 받은 화면 빌드가 있으면 그대로 띄우고, --run이면 pnpm으로 다시 빌드합니다. 웹은 서버를 열어 두는 스크립트라, 급하면 --check로 확인만 하고 넘어가세요. MLflow 모니터링(extra_monitoring.py)은 시간이 남을 때 해 보는 선택 실습으로 남겨 둡니다.</aside>
 </section>
 <section id="check" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:56px">
 <div style="display:flex;flex-direction:column;gap:20px">

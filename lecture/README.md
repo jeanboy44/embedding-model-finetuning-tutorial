@@ -7,13 +7,13 @@
 | `01_introduction/` | 1 | 이론 | 내 소개: DS의 일, 2022 vs 2026. 스크립트 없이 장표(`slides/01_introduction.html`)만 둔다 |
 | `02_concepts/` | 2 | 이론 | 용어·개념, 왜 임베딩 파인튜닝인가 |
 | `03_setup/` | 3 | 실습 0 | 완성품 HTML 받기, 환경 점검(doctor), 완성품 먼저 써 보기, CLI로 학습 전후 비교(README). 선택: Gemini 기초 |
-| `04_data/` | 4 | 실습 1 | DS의 일 2022 vs 2026, 질문 생성을 손으로 vs 에이전트로. 코퍼스 · 분할 스크립트는 5교시에 |
-| `05_evaluate/` | 5 | 실습 2 | 데이터(코퍼스 · 분할) 확인, 평가셋과 지표, 쿼리 확장, 기준 실험 002 한 바퀴(파일럿은 `06_train/01_train_taste.py --run`) |
-| `06_train/` | 6 | 실습 3 | 우리가 세운 가설 전부, LoRA(004) 한 바퀴(`--run --lora` 파일럿 · 비교 · 검정), 오답 분석 |
-| `07_optimize/` | 7 | 실습 4 | API 복습, ONNX · INT8 · 어휘 가지치기, 비교표와 서빙. 선택: 임베딩 속도 옵션 |
-| `08_product/` | 8 | 실습 5 | 검색 CLI, 에이전트 스킬(CLI + SKILL.md), MCP, 웹, MLflow 모니터링 |
+| `04_ds_work/` | 4 | 2022 vs 2026 | DS의 일 2022 vs 2026. 실습은 질문 데이터 만들기 하나, 손으로 vs 에이전트로 |
+| `05_data_eval/` | 5 | 실습 1 | 데이터(코퍼스 · 분할), 평가셋과 지표, 쿼리 확장, 기준 실험 002 한 바퀴(30 step 파일럿) |
+| `06_experiment/` | 6 | 실습 2 | 우리가 세운 가설 전부, LoRA(004) 한 바퀴(설정 · 파일럿 · 비교 · 검정), 오답 분석 |
+| `07_optimize/` | 7 | 실습 3 | API 복습, ONNX · INT8 · 어휘 가지치기, 비교표와 서빙. 선택: 임베딩 속도 옵션 |
+| `08_product/` | 8 | 실습 4 | 세 가지 길: 데스크톱(HTML 파일 하나) · 웹 · 에이전트(검색 CLI + 스킬, MCP). 선택: MLflow 모니터링 |
 
-폴더 안의 `01_*.py`, `02_*.py` …는 수업 순서대로 실행하는 스크립트이고, `extra_*.py`는 시간이 남을 때 하는 선택 실습이다. 스크립트 제목의 "실습 N-k"는 실습 번호(0~5)다.
+폴더 안의 `01_*.py`, `02_*.py` …는 수업 순서대로 실행하는 스크립트이고, `extra_*.py`는 시간이 남을 때 하는 선택 실습이다. 스크립트 제목의 "실습 N-k"는 실습 번호다: 3교시가 실습 0, 5~8교시가 실습 1~4. 4교시는 실습 번호 없이 "4교시"로 쓴다.
 
 ## 장표
 
@@ -28,8 +28,8 @@
 | 4 | [DS의 일, 2022와 2026](https://claude.ai/artifact/FvbbskQyEMrxWcMJeRKka8) |
 | 5 | [데이터 · 평가 · 기준 실험](https://claude.ai/artifact/EzELtdX3t269cS4DHsmX3p) |
 | 6 | [실험 한 바퀴: LoRA, 그리고 딸깍](https://claude.ai/artifact/MtviA3WTikxFfG4a7YrN43) |
-| 7 | [실습 4: 서빙과 배포 최적화](https://claude.ai/artifact/F1mKY7iVNVaKZj5psadPvR) |
-| 8 | [실습 5: 제품화와 마무리](https://claude.ai/artifact/TgTkmnDgAnDHwvEFhUP2vE) |
+| 7 | [실습 3: 서빙과 배포 최적화](https://claude.ai/artifact/F1mKY7iVNVaKZj5psadPvR) |
+| 8 | [실습 4: 제품화와 마무리](https://claude.ai/artifact/TgTkmnDgAnDHwvEFhUP2vE) |
 
 ## 실행
 

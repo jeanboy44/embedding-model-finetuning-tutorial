@@ -1,5 +1,5 @@
 """
-실습 2-1 (5교시): 평가셋과 지표
+실습 1-3 (5교시): 평가셋과 지표
 ===============================
 
 학습 목표:
@@ -15,10 +15,10 @@
     data/labels/dev.jsonl                             # dev 복수 정답 판정 (강사 Drive)
 
 실행:
-    uv run python lecture/05_evaluate/01_metrics.py          # test 전체를 받은 인덱스로 평가 (약 1분)
-    uv run python lecture/05_evaluate/01_metrics.py --run    # 질문 일부로 test와 dev(복수 정답)를 직접 평가
+    uv run python lecture/05_data_eval/03_metrics.py          # test 전체를 받은 인덱스로 평가 (약 1분)
+    uv run python lecture/05_data_eval/03_metrics.py --run    # 질문 일부로 test와 dev(복수 정답)를 직접 평가
 
-결과는 experiments/results/lecture/05_evaluate/ (기본) 또는 임시 폴더(--run)에 쓴다. 받은 산출물은 건드리지 않는다.
+결과는 experiments/results/lecture/05_data_eval/ (기본) 또는 임시 폴더(--run)에 쓴다. 받은 산출물은 건드리지 않는다.
 """
 
 import argparse
@@ -48,7 +48,7 @@ MODEL = "intfloat/multilingual-e5-small"
 INDEX = default_index_path(
     "multilingual-e5-small"
 )  # ragkit evaluate가 재사용하는 인덱스
-OUT = ROOT / "experiments" / "results" / "lecture" / "05_evaluate"
+OUT = ROOT / "experiments" / "results" / "lecture" / "05_data_eval"
 RUN_SAMPLE = 300  # --run에서 쓸 질문 수 (분할마다)
 SEED = 42
 
@@ -118,7 +118,7 @@ def r5(group: dict, judge: str = "doc") -> str:
 sys.stdout.reconfigure(
     line_buffering=True
 )  # ragkit 하위 프로세스 출력과 순서가 섞이지 않게
-parser = argparse.ArgumentParser(description="실습 2-1: 평가셋과 지표")
+parser = argparse.ArgumentParser(description="실습 1-3: 평가셋과 지표")
 parser.add_argument(
     "--run", action="store_true", help=f"질문 {RUN_SAMPLE}개로 test·dev를 직접 평가한다"
 )
@@ -338,4 +338,4 @@ for row in random.Random(SEED).sample(misses, min(3, len(misses))):
     print(f"      정답 {by_id[row['positive_id']]['title']} → {rank_text}")
     print(f"      1위  {top1}")
 print(f"\n결과 JSON: {rel(out)} (질문별 순위·top-10은 per_question)")
-print("다음: 02_query_expansion.py — 학습 없이 LLM으로 질문을 고쳐 주면 얼마나 오르나")
+print("다음: 04_query_expansion.py — 학습 없이 LLM으로 질문을 고쳐 주면 얼마나 오르나")

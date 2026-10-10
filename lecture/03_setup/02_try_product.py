@@ -6,10 +6,10 @@
 - 강의 끝에 만들 결과물(법령 검색 + 웹 · CLI · MCP)을 먼저 써 본다
 - 같은 질문을 학습 전 e5와 파인튜닝한 e5(r001_A)로 검색해 top-3를 나란히 본다
 - 키워드 질문은 학습 전 모델도 잘 찾지만, 일상 말투의 상황 질문에서 차이가 커진다는 것을 확인한다
-- 파인튜닝해도 못 찾는 질문이 있다는 것도 함께 본다 (실습 3의 오답 분석으로 이어짐)
+- 파인튜닝해도 못 찾는 질문이 있다는 것도 함께 본다 (6교시 실습 2의 오답 분석으로 이어짐)
 
 검색은 앱(api · search-cli · mcp)과 같은 입구인 `ragkit.service.Searcher`를 쓴다.
-서버는 띄우지 않는다. 마지막에 제품 세 가지를 띄우는 명령과 실습 5 스크립트를 안내한다.
+서버는 띄우지 않는다. 마지막에 제품 세 가지를 띄우는 명령과 실습 4(8교시) 스크립트를 안내한다.
 받은 모델·인덱스로 검색만 하므로 `--run` 모드는 없다.
 
 사전 준비 (uv run python lecture/03_setup/01_doctor.py 로 한 번에 확인):
@@ -159,7 +159,7 @@ for query, qtype, answer in QUESTIONS:
 # ============================================================
 section("3. 질문 몇 개가 아니라 test 전체로 보면 (실험 010)")
 if not COMPARISON.exists():
-    print(f"결과 파일이 없습니다: {rel(COMPARISON)} (실습 3에서 다시 본다)")
+    print(f"결과 파일이 없습니다: {rel(COMPARISON)} (6교시 실습 2에서 다시 본다)")
 else:
     # comparison.md의 표(모델별 지표, 질문 유형별 R@5)에서 학습 전 e5와 r001_A 행만 읽는다
     rows: dict[str, dict[str, str]] = {}
@@ -185,7 +185,7 @@ print("  → 키워드 질문보다 상황 설명(situation) 질문에서 학습
 
 
 # ============================================================
-# 4. 제품 세 가지 (실습 5에서 직접 띄운다)
+# 4. 제품 세 가지 (8교시 실습 4에서 직접 띄운다)
 # ============================================================
 section("4. 완성품 세 가지: 웹 · CLI · MCP")
 ckpt = rel(FINETUNED)
@@ -196,23 +196,23 @@ print(f"""모두 같은 Searcher를 쓰고, --checkpoint {ckpt} --backend torch 
   uv run --package ragkit-search ragkit-search search "야간 근로 수당" -k 3
   uv run --package ragkit-search ragkit-search search "야간 근로 수당" -k 3 \\
       --checkpoint {ckpt} --backend torch
-  → 실습 5: uv run python lecture/08_product/01_search_cli.py
+  → 실습 4: uv run python lecture/08_product/01_search_cli.py
 
 [MCP] Claude Code 같은 에이전트가 법령을 검색하는 도구로 등록
   claude mcp add ragkit-law -e RAGKIT_PROJECT_ROOT={ROOT} -- \\
       uv run --directory {ROOT} --package ragkit-mcp ragkit-mcp
-  → 실습 5: uv run python lecture/08_product/03_mcp_server.py
+  → 실습 4: uv run python lecture/08_product/03_mcp_server.py
 
 [웹] 법령 노트 화면 (API 서버가 빌드한 화면을 함께 제공)
   cd apps/web && pnpm install && pnpm build && cd ../..
   uv run --package ragkit-api ragkit-api --web-dist apps/web/dist   # http://127.0.0.1:8000
-  → 실습 5: uv run python lecture/08_product/04_web_app.py
+  → 실습 4: uv run python lecture/08_product/04_web_app.py
 
 답변 생성(ask, 웹 채팅)은 .env의 GEMINI_API_KEY가 있어야 한다. 없으면 검색 결과만 보여 준다.""")
 
 print("""
 정리:
 - 같은 코퍼스, 같은 크기(e5-small)의 모델인데 학습한 모델이 일상 말투 질문에서 정답을 더 위로 올린다
-- 그래도 못 찾는 질문이 남는다 → 실습 2(평가)와 실습 3(오답 분석)에서 숫자로 본다
+- 그래도 못 찾는 질문이 남는다 → 실습 1(평가)과 실습 2(오답 분석)에서 숫자로 본다
 - 다음: lecture/03_setup/README.md의 명령으로 CLI에서 직접 학습 전후를 비교한다
 """)

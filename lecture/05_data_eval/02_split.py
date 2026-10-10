@@ -1,5 +1,5 @@
 """
-실습 1-3 (4교시): 분할 — 질문이 아니라 법령으로 나눈다
+실습 1-2 (5교시): 분할 — 질문이 아니라 법령으로 나눈다
 ======================================================
 
 학습 목표:
@@ -13,8 +13,8 @@
     uv run python scripts/data_version.py pull v1      # data/questions/ · data/splits/ · 코퍼스 (강사 Drive)
 
 실행:
-    uv run python lecture/04_data/03_split.py           # 받은 분할 확인 (몇 초)
-    uv run python lecture/04_data/03_split.py --run     # ragkit split을 임시 폴더에 실행해 비교 (몇 초)
+    uv run python lecture/05_data_eval/02_split.py           # 받은 분할 확인 (몇 초)
+    uv run python lecture/05_data_eval/02_split.py --run     # ragkit split을 임시 폴더에 실행해 비교 (몇 초)
 """
 
 import argparse
@@ -67,7 +67,7 @@ def ragkit_cmd() -> list[str]:
     return [str(exe)] if exe.exists() else ["uv", "run", "ragkit"]
 
 
-parser = argparse.ArgumentParser(description="실습 1-3: 법령 단위 분할")
+parser = argparse.ArgumentParser(description="실습 1-2: 법령 단위 분할")
 parser.add_argument(
     "--run", action="store_true", help="ragkit split을 임시 폴더에 실행해 비교"
 )
@@ -204,7 +204,7 @@ if args.run:
 
 print("""
 정리:
-- train · dev · test는 법령이 겹치지 않는다. test는 실습 3의 최종 비교에 한 번만 쓴다
+- train · dev · test는 법령이 겹치지 않는다. test는 실험마다 마지막에 한 번만 쓴다 (5 · 6교시)
 - 질문 단위로 나누면 test 정답 조문을 train에서 이미 본다 → 점수가 부풀려진다
-- 다음: 실습 2 (lecture/05_evaluate/) — 이 test 질문으로 학습 전 모델을 잰다
+- 다음: 03_metrics.py — 이 test 질문으로 학습 전 모델을 잰다
 """)

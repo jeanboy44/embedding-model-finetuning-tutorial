@@ -1,9 +1,19 @@
-# 실습 5 (8교시): 제품화 — CLI · 에이전트 스킬 · MCP · 웹 · 모니터링
+# 실습 4 (8교시): 제품화 — 데스크톱 · 웹 · 에이전트
 
-장표: [8교시 실습 5 제품화](https://claude.ai/artifact/TgTkmnDgAnDHwvEFhUP2vE). 같은 검색을 사람(CLI) → 에이전트(스킬, MCP) → 사용자 화면(웹)에 건네고, 운영(MLflow)까지 본다.
+장표: [8교시 실습 4 제품화](https://claude.ai/artifact/TgTkmnDgAnDHwvEFhUP2vE). 같은 모델을 건네는 세 가지 길을 본다: 데스크톱(HTML 파일 하나) · 웹 · 사용자의 에이전트(CLI + 스킬, MCP). 모니터링(MLflow)은 선택이다.
 
 명령은 모두 저장소 루트에서, 위에서부터 순서대로 실행한다. macOS 터미널과 Windows PowerShell에서 같은 명령 그대로 돈다.
 API 키는 없어도 된다. 키가 없으면 답변(`ask`, 웹의 채팅)은 근거 조문만 보여 준다.
+
+## 0. 데스크톱: HTML 파일 하나
+
+3교시에 받은 `dist/law-search-offline.html`을 더블클릭한다. 와이파이를 끄고 열어도 검색이 되는지 본다. 없으면 받는다.
+
+```shell
+uv run python lecture/03_setup/00_download_offline_search.py
+```
+
+만드는 법은 [`apps/offline-search/README.md`](../../apps/offline-search/README.md)에 있다.
 
 ## 1. 검색 CLI: 동료가 바로 쓰는 도구
 
@@ -83,13 +93,13 @@ uv run python lecture/08_product/04_web_app.py
 uv run python lecture/08_product/04_web_app.py --run
 ```
 
-## 5. 모니터링: MLflow로 실험 · 모델 · 서비스를 한곳에서
+## 선택: 모니터링 — MLflow로 실험 · 모델 · 서비스를 한곳에서
 
 MLflow 서버를 띄우고 → 비교 실험 기록 → 모델 등록(`champion`) → 등록된 모델로 API → 질문마다 남는 트레이스까지 한 번에 본다. 먼저 확인 모드로 돌리고(약 90초), 화면을 보려면 기본 모드로 실행한다(끝나면 MLflow 화면을 열어 둔다, Ctrl+C로 끝).
 
 ```shell
-uv run python lecture/08_product/05_monitoring.py --check
-uv run python lecture/08_product/05_monitoring.py
+uv run python lecture/08_product/extra_monitoring.py --check
+uv run python lecture/08_product/extra_monitoring.py
 ```
 
 브라우저에서 http://127.0.0.1:5050. 트레이스의 LLM 단계와 토큰 수는 `GEMINI_API_KEY`가 있을 때만 남는다. 기록은 `mlruns/`에 쌓이고, 처음부터 다시 하려면 이 폴더를 지운다.
@@ -102,4 +112,4 @@ uv run python lecture/08_product/05_monitoring.py
 | `02_agent_skill.py` | 에이전트 스킬 보기 · 설치, 첫 검색 재현, 실험 011(Claude Code + 스킬, 학습 전 vs 파인튜닝) |
 | `03_mcp_server.py` | MCP: 연결 → 도구 목록 → 호출, Claude 등록, CLI + 스킬과 비교 |
 | `04_web_app.py` | 웹 빌드와 API 서버 한 주소 배포 |
-| `05_monitoring.py` | MLflow: 실험 비교 → 모델 레지스트리 → 서비스 트레이스 · 세션 |
+| `extra_monitoring.py` | MLflow: 실험 비교 → 모델 레지스트리 → 서비스 트레이스 · 세션 |

@@ -10,6 +10,23 @@
 
 **Spec:** 별도 스펙 없음. 기준 문서는 `~/.claude/skills/jeanboy-python-design-guide/SKILL.md`, `~/.claude/skills/jeanboy-cyclopts-guide/SKILL.md`.
 
+## 실행 전에: lecture 경로가 바뀌었다 (2026-10-10)
+
+이 계획을 쓴 뒤 4~8교시 폴더를 장표에 맞춰 다시 나눴다. 아래 Task의 경로 · 줄 번호 · 실습 번호는 옛 구성 기준이므로, 실행할 때 새 경로로 바꿔 읽고 줄 번호는 다시 찾는다.
+
+| 옛 경로 | 새 경로 |
+|---|---|
+| `lecture/04_data/02_questions.py` | `lecture/04_ds_work/01_questions.py` (제목 "4교시", 실습 번호 없음) |
+| `lecture/04_data/01_corpus.py` · `03_split.py` | `lecture/05_data_eval/01_corpus.py` · `02_split.py` |
+| `lecture/05_evaluate/01_metrics.py` · `02_query_expansion.py` | `lecture/05_data_eval/03_metrics.py` · `04_query_expansion.py` |
+| `lecture/06_train/01_train_taste.py` (`--run`) | `lecture/05_data_eval/05_baseline_train.py` (`--run`, 실험 002) |
+| `lecture/06_train/01_train_taste.py --lora` | `lecture/06_experiment/01_lora_train.py` (`--run`, 실험 004. `--lora` 플래그는 없어졌다) |
+| `lecture/06_train/02_compare_runs.py` · `03_error_analysis.py` | `lecture/06_experiment/02_compare_runs.py` · `03_error_analysis.py` |
+| `lecture/08_product/05_monitoring.py` | `lecture/08_product/extra_monitoring.py` |
+
+- 실습 번호: 3교시 0, 5~8교시 1~4 (예: `03_metrics.py`는 "실습 1-3", `07_optimize`는 "실습 3-k", `08_product`는 "실습 4-k").
+- in-batch 점수표 · 여유 계산은 `ragkit.training.in_batch_scores` · `batch_margins`로 옮겼다(강의 스크립트에는 없다).
+
 ## Global Constraints
 
 - 작업은 개별 git worktree(`refactor/python-guide` 브랜치)에서 한다. main에서 직접 고치지 않는다.

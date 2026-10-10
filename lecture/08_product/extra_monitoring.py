@@ -1,5 +1,5 @@
 """
-실습 5-5 (8교시): 모니터링 — MLflow 3로 실험·모델·서비스를 한곳에서 본다
+실습 4 선택 (8교시): 모니터링 — MLflow 3로 실험·모델·서비스를 한곳에서 본다
 ==========================================================================
 
 학습 목표:
@@ -18,7 +18,7 @@
     uv sync --extra mlflow                    # 이 저장소 (ragkit[mlflow])
     uv pip install "ragkit-api[tracing]"      # 배포할 때 (mlflow-tracing, 레지스트리 기능 없음)
 
-사전 준비 (실습 4-2의 가지치기+INT8 모델 models/multilingual-e5-small-pruned-int8, Drive에서 받거나):
+사전 준비 (실습 3-2의 가지치기+INT8 모델 models/multilingual-e5-small-pruned-int8, Drive에서 받거나):
     uv run ragkit index
     uv run ragkit prune-vocab models/multilingual-e5-small
     uv run ragkit export-onnx models/multilingual-e5-small-pruned
@@ -26,8 +26,8 @@
     .env의 GEMINI_API_KEY (없으면 llm 스팬 없이 끝나고 트레이스가 ERROR로 남는다. 있으면 LLM 2회 호출)
 
 실행:
-    uv run python lecture/08_product/05_monitoring.py            # 끝나면 MLflow UI를 열어 둔다 (Ctrl+C로 끝)
-    uv run python lecture/08_product/05_monitoring.py --check    # 확인만 하고 종료 (bench는 test 질문 100개로, 약 90초)
+    uv run python lecture/08_product/extra_monitoring.py            # 끝나면 MLflow UI를 열어 둔다 (Ctrl+C로 끝)
+    uv run python lecture/08_product/extra_monitoring.py --check    # 확인만 하고 종료 (bench는 test 질문 100개로, 약 90초)
 
 MLflow 서버는 포트 5050에 띄운다 (macOS는 5000을 AirPlay 수신이 쓴다).
 
@@ -109,7 +109,7 @@ def post(path: str, body: dict) -> bytes:
 for need in (MODEL_DIR / "onnx" / "model.onnx", TEST):
     if not need.exists():
         sys.exit(
-            f"{need}가 없습니다. Drive에서 받거나 실습 4-2(lecture/07_optimize/02_onnx_quantize_prune.py)의 CLI로 만드세요."
+            f"{need}가 없습니다. Drive에서 받거나 실습 3-2(lecture/07_optimize/02_onnx_quantize_prune.py)의 CLI로 만드세요."
         )
 tmp = tempfile.TemporaryDirectory()  # --check용 질문 부분집합
 
@@ -146,7 +146,7 @@ try:
     )
 
     # ============================================================
-    # 2. 실험 추적: 실습 4-3의 배포 벤치를 다시 돌려 run으로 남긴다
+    # 2. 실험 추적: 실습 3-3의 배포 벤치를 다시 돌려 run으로 남긴다
     # ============================================================
     section("2. 실험 추적 — ragkit-bench (부모 run + 변형마다 자식 run)")
     questions = TEST

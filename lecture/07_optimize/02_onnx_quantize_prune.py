@@ -1,5 +1,5 @@
 """
-실습 4-2 (7교시): ONNX 변환, INT8 양자화, 어휘 가지치기
+실습 3-2 (7교시): ONNX 변환, INT8 양자화, 어휘 가지치기
 ========================================================
 
 학습 목표:
@@ -264,7 +264,7 @@ print(f"""
   (남기지 않은 문자는 더 잘게 쪼개지거나 <unk>. 실제 사용자 질문으로 덮는 비율을 꼭 확인할 것)
 - CLI: uv run ragkit prune-vocab models/multilingual-e5-small → export-onnx → quantize
 {"- (--run) 임시 폴더에 만든 모델은 지웠다. 받은 models/는 그대로다" + chr(10) if RUN else ""}
-다음(실습 4-3): 원본 / ONNX / INT8 / 가지치기+INT8을 속도·메모리·크기·정확도로 한 표에 비교하고, API에 적용한다.
+다음(실습 3-3): 원본 / ONNX / INT8 / 가지치기+INT8을 속도·메모리·크기·정확도로 한 표에 비교하고, API에 적용한다.
 """)
 
 # torch와 onnxruntime을 한 프로세스에서 쓰면 macOS에서 종료 처리 중 가끔

@@ -1,5 +1,5 @@
 """
-실습 5-2 (8교시): 에이전트 스킬 — CLI에 SKILL.md 하나를 붙여 Claude Code·Gemini CLI가 법령을 찾게 하기
+실습 4-2 (8교시): 에이전트 스킬 — CLI에 SKILL.md 하나를 붙여 Claude Code·Gemini CLI가 법령을 찾게 하기
 ================================================================================================
 
 학습 목표:
@@ -8,7 +8,7 @@
 - 스킬 설치: ragkit-search skill install. 모델 옵션(--checkpoint)을 주면 에이전트가 그 모델로 검색한다
 - 같은 에이전트에 학습 전 e5 / 파인튜닝 e5를 붙여 비교한다. 에이전트는 검색어를 스스로 고쳐 다시 찾으므로
   CLI 한 번 검색의 차이보다 줄어들지만, 처음 찾는 조문과 검색 횟수가 달라진다
-- 실습 5-3의 MCP와 비교: 같은 검색을 에이전트에 붙이는 두 방법
+- 실습 4-3의 MCP와 비교: 같은 검색을 에이전트에 붙이는 두 방법
 
 두 가지 모드:
 - 기본: 스킬을 임시 폴더에 설치해 보고, 에이전트가 할 첫 검색을 CLI로 재현해 두 모델을 비교한다.
@@ -51,7 +51,7 @@ RECEIVED = ROOT / "experiments" / "exp_011_agent_skill" / "results" / "compariso
 OUT = ROOT / "experiments" / "results" / "lecture" / "08_product"
 SEED = 7  # 실험 011과 같은 질문을 고른다
 
-parser = argparse.ArgumentParser(description="실습 5-2: 에이전트 스킬")
+parser = argparse.ArgumentParser(description="실습 4-2: 에이전트 스킬")
 parser.add_argument("--run", action="store_true", help="Claude Code로 실제 비교 (비용이 든다)")
 parser.add_argument("--questions", type=int, default=2, help="--run에서 물을 test 질문 수")
 parser.add_argument("--out", type=Path, default=OUT, help="--run 결과 폴더")
@@ -225,5 +225,5 @@ print("""
 - 3번(사용자 말 그대로 한 번 검색)에서는 파인튜닝의 차이가 크다. 에이전트는 검색어를 법률 용어로 고쳐 다시 찾으므로
   4번에서는 차이가 줄어든다. 똑똑한 에이전트가 쿼리 확장을 대신 해 주는 셈이고, 그 대가는 질문마다 드는 LLM 시간과 비용이다
 - 질문 10개는 작은 표본이다. 한두 개 차이는 우연일 수 있으니 질문별 답(agent_compare.jsonl)을 읽어 어디서 갈렸는지 본다
-- 다음(실습 5-3): 같은 검색을 MCP 서버로 붙이는 방법. 스킬은 셸 에이전트에 가볍게, MCP는 앱 어디에나
+- 다음(실습 4-3): 같은 검색을 MCP 서버로 붙이는 방법. 스킬은 셸 에이전트에 가볍게, MCP는 앱 어디에나
 """)

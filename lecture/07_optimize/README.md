@@ -1,6 +1,6 @@
-# 실습 4 (7교시): 서빙과 배포 최적화
+# 실습 3 (7교시): 서빙과 배포 최적화
 
-장표: [7교시 실습 4 배포 최적화](https://claude.ai/artifact/F1mKY7iVNVaKZj5psadPvR). API 복습 → ONNX 변환 · INT8 양자화 · 어휘 가지치기 → 비교표 → API에 적용 순서로 본다.
+장표: [7교시 실습 3 배포 최적화](https://claude.ai/artifact/F1mKY7iVNVaKZj5psadPvR). API 복습 → ONNX 변환 · INT8 양자화 · 어휘 가지치기 → 비교표 → API에 적용 순서로 본다.
 
 명령은 모두 저장소 루트에서, 위에서부터 순서대로 실행한다. macOS 터미널과 Windows PowerShell에서 같은 명령 그대로 돈다.
 API 키는 없어도 된다(있으면 1번에서 LLM을 1회 부른다).

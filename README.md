@@ -6,12 +6,12 @@
 
 | 단계 | 내용 | 코드 | 실습 |
 |---|---|---|---|
-| 1. DS 본업 | 왜 파인튜닝인가(RAG 비교) → 데이터 준비 → 평가 → 학습 | `src/ragkit/` | `lecture/03_setup` ~ `06_train` (실습 0~3) |
-| 2. +α 업무 | 모델을 검색 API로 감싸기 | `apps/api/` | `lecture/07_optimize/01_api_review.py` (실습 4 복습) |
-| 3. 배포 최적화 | ONNX 변환 · INT8 양자화 · 어휘 가지치기 · 속도/메모리/정확도 비교 | `ragkit` + `apps/bench/` | `lecture/07_optimize/` (실습 4) |
-| 4. 제품화 | 검색 CLI · MCP 서버 · React 화면 · MLflow 모니터링 | `apps/search-cli/`, `apps/mcp/`, `apps/web/`, `ragkit.tracking` | `lecture/08_product/` (실습 5) |
+| 1. DS 본업 | 왜 파인튜닝인가(RAG 비교) → 데이터 준비 → 평가 → 학습 | `src/ragkit/` | `lecture/03_setup` ~ `06_experiment` (실습 0~2, 4교시 2022 vs 2026) |
+| 2. +α 업무 | 모델을 검색 API로 감싸기 | `apps/api/` | `lecture/07_optimize/01_api_review.py` (실습 3 복습) |
+| 3. 배포 최적화 | ONNX 변환 · INT8 양자화 · 어휘 가지치기 · 속도/메모리/정확도 비교 | `ragkit` + `apps/bench/` | `lecture/07_optimize/` (실습 3) |
+| 4. 제품화 | 데스크톱 HTML 파일 하나 · React 화면 · 검색 CLI + 스킬 · MCP 서버 (선택: MLflow 모니터링) | `apps/search-cli/`, `apps/mcp/`, `apps/web/`, `ragkit.tracking` | `lecture/08_product/` (실습 4) |
 
-강의는 8교시(이론 2 + 실습 0~5)이고, `lecture/`의 폴더 하나가 교시 하나입니다(`01_introduction` ~ `08_product`). 교시마다 장표(claude.ai Slides 덱)와 스크립트 묶음이 짝입니다. 교시별 폴더와 실행 규칙은 [lecture/README.md](lecture/README.md)를 보세요.
+강의는 8교시(이론 2 + 4교시 2022 vs 2026 + 실습 0~4)이고, `lecture/`의 폴더 하나가 교시 하나입니다(`01_introduction` ~ `08_product`). 교시마다 장표(claude.ai Slides 덱)와 스크립트 묶음이 짝입니다. 교시별 폴더와 실행 규칙은 [lecture/README.md](lecture/README.md)를 보세요.
 
 자세한 흐름과 결정 사항은 [강의 계획](docs/PLAN.md)을 참고하세요.
 
@@ -54,23 +54,23 @@ LLM 단계(답변 생성)는 `.env`에 `GEMINI_API_KEY`가 필요합니다. [Goo
 | 0 (3) | `lecture/03_setup/01_doctor.py` | 설치·모델·데이터·인덱스·API 키 점검, 빠진 것을 받는 명령 |
 | 0 (3) | `lecture/03_setup/02_try_product.py` | 같은 질문을 학습 전 e5 vs 파인튜닝 모델로 나란히, 제품 띄우는 법 |
 | 0 (3) | `lecture/03_setup/README.md` | CLI로 질문 넷 → `--checkpoint`로 학습 전후 비교 (명령 모음) |
-| 1 (4) | `lecture/04_data/01_corpus.py` | 코퍼스 통계, 항·호 분할, 길이 분포 |
-| 1 (4) | `lecture/04_data/02_questions.py` | 질문 유형·테마, hard negative, 검증 스크립트 (질문 생성은 Claude 스킬, `lecture/04_data/README.md`) |
-| 1 (4) | `lecture/04_data/03_split.py` | 법령 단위 분할과 왜 법령 단위인가 |
-| 2 (5) | `lecture/05_evaluate/01_metrics.py` | R@k · MRR · nDCG · doc/article/multi 판정, 학습 전 e5 test 평가 |
-| 2 (5) | `lecture/05_evaluate/02_query_expansion.py` | LLM 쿼리 확장: 정확도와 질문당 비용 (받은 캐시) |
-| 3 (6) | `lecture/06_train/01_train_taste.py` | MNRL · in-batch negative · NO_DUPLICATES, 학습 기록, 몇 step 맛보기 |
-| 3 (6) | `lecture/06_train/02_compare_runs.py` | 실험 010 비교표, 가설 판정, paired-test |
-| 3 (6) | `lecture/06_train/03_error_analysis.py` | 고쳐진·새로 틀린·여전히 틀리는 질문, 파인튜닝의 한계 |
-| 4 (7) | `lecture/07_optimize/01_api_review.py` | API 복습: 로딩, search·필터·422, SSE 스트리밍, 노트북 |
-| 4 (7) | `lecture/07_optimize/02_onnx_quantize_prune.py` | ONNX 변환, INT8 텐서 단위 vs 채널별, 어휘 가지치기 |
-| 4 (7) | `lecture/07_optimize/03_bench_and_serve.py` | 원본/ONNX/INT8/가지치기 비교표, API 백엔드 교체 |
-| 5 (8) | `lecture/08_product/01_search_cli.py` | 검색 CLI, `--json`, uvx 배포 |
-| 5 (8) | `lecture/08_product/02_agent_skill.py` | 에이전트 스킬(SKILL.md)로 Claude Code·Gemini CLI에 CLI 붙이기, 학습 전 vs 파인튜닝 비교 |
-| 5 (8) | `lecture/08_product/03_mcp_server.py` | MCP: 연결 → 도구 목록 → 호출, Claude 등록 |
-| 5 (8) | `lecture/08_product/04_web_app.py` | 웹앱 빌드와 API 서버 한 주소 배포 |
-| 5 (8) | `lecture/08_product/05_monitoring.py` | MLflow: 실험 run 비교 → 모델 레지스트리(champion) → 서비스 트레이스·세션 |
-| 선택 | `lecture/03_setup/extra_gemini_basics.py` · `07_optimize/extra_embedding_speed.py` | Gemini 기초, 임베딩 속도 옵션 |
+| — (4) | `lecture/04_ds_work/01_questions.py` | 질문 유형·테마, hard negative, 검증. 질문 만들기를 손으로 vs 에이전트로 (`lecture/04_ds_work/README.md`) |
+| 1 (5) | `lecture/05_data_eval/01_corpus.py` | 코퍼스 통계, 항·호 분할, 길이 분포 |
+| 1 (5) | `lecture/05_data_eval/02_split.py` | 법령 단위 분할과 왜 법령 단위인가 |
+| 1 (5) | `lecture/05_data_eval/03_metrics.py` | R@k · MRR · nDCG · doc/article/multi 판정, 학습 전 e5 test 평가 |
+| 1 (5) | `lecture/05_data_eval/04_query_expansion.py` | LLM 쿼리 확장: 정확도와 질문당 비용 (받은 캐시) |
+| 1 (5) | `lecture/05_data_eval/05_baseline_train.py` | 기준 실험 002: MNRL · in-batch negative · NO_DUPLICATES, 학습 기록, 30 step 파일럿 |
+| 2 (6) | `lecture/06_experiment/01_lora_train.py` | LoRA 실험 004: 설정 차이, 학습 파라미터 0.4%, 학습 기록, 30 step 파일럿 |
+| 2 (6) | `lecture/06_experiment/02_compare_runs.py` | 실험 010 비교표, 가설 판정, paired-test |
+| 2 (6) | `lecture/06_experiment/03_error_analysis.py` | 고쳐진·새로 틀린·여전히 틀리는 질문, 파인튜닝의 한계 |
+| 3 (7) | `lecture/07_optimize/01_api_review.py` | API 복습: 로딩, search·필터·422, SSE 스트리밍, 노트북 |
+| 3 (7) | `lecture/07_optimize/02_onnx_quantize_prune.py` | ONNX 변환, INT8 텐서 단위 vs 채널별, 어휘 가지치기 |
+| 3 (7) | `lecture/07_optimize/03_bench_and_serve.py` | 원본/ONNX/INT8/가지치기 비교표, API 백엔드 교체 |
+| 4 (8) | `lecture/08_product/01_search_cli.py` | 검색 CLI, `--json`, uvx 배포 |
+| 4 (8) | `lecture/08_product/02_agent_skill.py` | 에이전트 스킬(SKILL.md)로 Claude Code·Gemini CLI에 CLI 붙이기, 학습 전 vs 파인튜닝 비교 |
+| 4 (8) | `lecture/08_product/03_mcp_server.py` | MCP: 연결 → 도구 목록 → 호출, Claude 등록 |
+| 4 (8) | `lecture/08_product/04_web_app.py` | 웹앱 빌드와 API 서버 한 주소 배포 |
+| 선택 | `lecture/03_setup/extra_gemini_basics.py` · `07_optimize/extra_embedding_speed.py` · `08_product/extra_monitoring.py` | Gemini 기초, 임베딩 속도 옵션, MLflow 모니터링(실험 run 비교 → 모델 레지스트리 → 서비스 트레이스) |
 
 ## 도구와 앱
 

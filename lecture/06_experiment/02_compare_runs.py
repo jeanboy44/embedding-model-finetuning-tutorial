@@ -1,5 +1,5 @@
 """
-실습 3-2 (6교시): 실험 비교, 가설은 맞았나
+실습 2-2 (6교시): 실험 비교, 가설은 맞았나
 ==========================================
 
 학습 목표:
@@ -14,10 +14,10 @@
     data/processed/index/*.sqlite                      # 강사 Drive (인덱스가 있으면 질문만 임베딩한다)
 
 실행:
-    uv run python lecture/06_train/02_compare_runs.py          # test 전체 비교 (처음 약 3분, 이후 결과 재사용)
-    uv run python lecture/06_train/02_compare_runs.py --run    # test 300개 표본으로 비교와 검정을 직접 (1분 안쪽)
+    uv run python lecture/06_experiment/02_compare_runs.py          # test 전체 비교 (처음 약 3분, 이후 결과 재사용)
+    uv run python lecture/06_experiment/02_compare_runs.py --run    # test 300개 표본으로 비교와 검정을 직접 (1분 안쪽)
 
-기본 모드 결과는 experiments/results/lecture/06_train/exp_010/ 에 쓴다(03_error_analysis.py가 이어서 읽는다).
+기본 모드 결과는 experiments/results/lecture/06_experiment/exp_010/ 에 쓴다(03_error_analysis.py가 이어서 읽는다).
 강사가 실험 010 결과 JSON(experiments/exp_010_lecture_comparison/results/*.json)을 나눠 줬으면 그것을 읽는다.
 받은 비교표(comparison.md)는 덮어쓰지 않는다.
 """
@@ -44,13 +44,13 @@ TEST = DATA / "splits" / "test.jsonl"
 EXPERIMENT = ROOT / "experiments" / "exp_010_lecture_comparison"
 CONFIG = EXPERIMENT / "config.yaml"
 RECEIVED = EXPERIMENT / "results"  # 강사가 나눠 준 결과 JSON이 있으면 여기
-OUT = ROOT / "experiments" / "results" / "lecture" / "06_train" / "exp_010"
+OUT = ROOT / "experiments" / "results" / "lecture" / "06_experiment" / "exp_010"
 EXPANSION = (
     ROOT
     / "experiments"
     / "results"
     / "lecture"
-    / "05_evaluate"
+    / "05_data_eval"
     / "query_expansion"
     / "comparison.json"
 )
@@ -153,7 +153,7 @@ def train_meta(name: str) -> dict | None:
 sys.stdout.reconfigure(
     line_buffering=True
 )  # ragkit 하위 프로세스 출력과 순서가 섞이지 않게
-parser = argparse.ArgumentParser(description="실습 3-2: 실험 비교")
+parser = argparse.ArgumentParser(description="실습 2-2: 실험 비교")
 parser.add_argument(
     "--run",
     action="store_true",

@@ -1,5 +1,5 @@
 """
-실습 1-1 (4교시): 코퍼스 — 법령 조문을 검색 문서로
+실습 1-1 (5교시): 코퍼스 — 법령 조문을 검색 문서로
 ==================================================
 
 학습 목표:
@@ -15,8 +15,8 @@
     토큰 길이를 재려면 extra [torch] (uv sync --all-packages --all-extras). 없으면 글자 수만 본다
 
 실행:
-    uv run python lecture/04_data/01_corpus.py           # 받은 코퍼스 확인 (몇 초)
-    uv run python lecture/04_data/01_corpus.py --run     # 전기(electric) 테마만 직접 받아 만들어 비교
+    uv run python lecture/05_data_eval/01_corpus.py           # 받은 코퍼스 확인 (몇 초)
+    uv run python lecture/05_data_eval/01_corpus.py --run     # 전기(electric) 테마만 직접 받아 만들어 비교
                                                          # (임시 폴더, 인터넷 필요, 수 초)
 """
 
@@ -242,5 +242,5 @@ print("""
 정리:
 - 검색 단위는 법령이 아니라 조문, 긴 조문은 다시 항·호로 나눈 조각이다 (숫자는 위 출력)
 - 긴 조문을 나누지 않으면 512토큰 뒤의 내용은 임베딩에 들어가지 않는다
-- 다음: uv run python lecture/04_data/02_questions.py (이 문서에 대한 질문 데이터)
+- 다음: uv run python lecture/05_data_eval/02_split.py (법령 단위 분할)
 """)

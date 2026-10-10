@@ -1,5 +1,5 @@
 """
-실습 1-2 (4교시): 질문 데이터 — Claude 스킬이 만든 질문 · 정답 · hard negative
+4교시: 질문 데이터 — Claude 스킬이 만든 질문 · 정답 · hard negative
 ==============================================================================
 
 학습 목표:
@@ -12,7 +12,7 @@
 2022: 라벨링 가이드를 쓰고 사람이 조문을 읽으며 질문을 직접 쓴다 (수천 개에 몇 주)
 2026: 가이드를 SKILL.md로 쓰고 Claude가 파트마다 질문을 쓴다. 검증 스크립트가 거르고, 사람은 가이드와 표본을 고친다
 
-질문 생성 자체는 이 스크립트가 아니라 Claude Code에서 한다 (lecture/04_data/README.md):
+질문 생성 자체는 이 스크립트가 아니라 Claude Code에서 한다 (lecture/04_ds_work/README.md):
     "최저임금법 파트 1 질문 데이터 만들어줘. data/questions_mine/ 에 써 줘"
     → 받은 질문(data/questions/)을 덮어쓰지 않게 다른 폴더를 지정한다
 
@@ -20,10 +20,10 @@
     uv run python scripts/data_version.py pull v1      # data/questions/ + 코퍼스 (강사 Drive)
 
 실행:
-    uv run python lecture/04_data/02_questions.py              # 받은 질문 확인 + 검증 (몇 초)
-    uv run python lecture/04_data/02_questions.py --run        # 일부러 틀린 질문 파일을 임시 폴더에 만들어
+    uv run python lecture/04_ds_work/01_questions.py              # 받은 질문 확인 + 검증 (몇 초)
+    uv run python lecture/04_ds_work/01_questions.py --run        # 일부러 틀린 질문 파일을 임시 폴더에 만들어
                                                                # 검증 스크립트가 무엇을 잡는지 본다
-    uv run python lecture/04_data/02_questions.py --run --file data/questions_mine/최저임금법__p01.jsonl
+    uv run python lecture/04_ds_work/01_questions.py --run --file data/questions_mine/최저임금법__p01.jsonl
                                                                # 내가 스킬로 만든 파일을 검증
 """
 
@@ -85,7 +85,7 @@ def validate(*files: Path, tail: int = 6) -> int:
     return result.returncode
 
 
-parser = argparse.ArgumentParser(description="실습 1-2: 질문 데이터")
+parser = argparse.ArgumentParser(description="4교시: 질문 데이터")
 parser.add_argument(
     "--run", action="store_true", help="틀린 질문 파일로 검증 스크립트 직접 돌려 보기"
 )
@@ -239,10 +239,10 @@ print(f"""
 직접 만들어 보기 (Claude Code를 저장소 루트에서 열고):
   uv run python {rel(SKILL / "scripts" / "law_parts.py")} list          # 법령·파트 목록
   "최저임금법 파트 1 질문 데이터 만들어줘. data/questions_mine/ 에 써 줘"
-  uv run python lecture/04_data/02_questions.py --run --file data/questions_mine/최저임금법__p01.jsonl
+  uv run python lecture/04_ds_work/01_questions.py --run --file data/questions_mine/최저임금법__p01.jsonl
 
 정리:
-- 질문 한 건 = 일상 말투 질문 + 정답 조문 + 같은 주제의 오답. 학습(실습 3)과 평가(실습 2)가 모두 이것을 쓴다
+- 질문 한 건 = 일상 말투 질문 + 정답 조문 + 같은 주제의 오답. 평가와 학습(5 · 6교시)이 모두 이것을 쓴다
 - 사람은 가이드(SKILL.md)와 표본을 고치고, 형식 오류는 검증 스크립트가 잡는다
-- 다음: uv run python lecture/04_data/03_split.py (법령 단위 분할)
+- 다음(5교시): uv run python lecture/05_data_eval/01_corpus.py (질문이 찾아야 할 코퍼스)
 """)

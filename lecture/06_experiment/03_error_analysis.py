@@ -1,5 +1,5 @@
 """
-실습 3-3 (6교시): 오답 분석, 무엇을 고쳤고 무엇이 남았나
+실습 2-3 (6교시): 오답 분석, 무엇을 고쳤고 무엇이 남았나
 ========================================================
 
 학습 목표:
@@ -16,10 +16,10 @@
     (또는 강사가 나눠 준 experiments/exp_010_lecture_comparison/results/*.json)
 
 실행:
-    uv run python lecture/06_train/03_error_analysis.py          # 받은(또는 02에서 만든) test 전체 결과로 분석 (몇 초)
-    uv run python lecture/06_train/03_error_analysis.py --run    # situation 질문 300개를 두 모델로 직접 평가해 분석 (1분 안쪽)
+    uv run python lecture/06_experiment/03_error_analysis.py          # 받은(또는 02에서 만든) test 전체 결과로 분석 (몇 초)
+    uv run python lecture/06_experiment/03_error_analysis.py --run    # situation 질문 300개를 두 모델로 직접 평가해 분석 (1분 안쪽)
 
-여전히 틀리는 질문 목록은 experiments/results/lecture/06_train/ 아래 JSONL로 남긴다(AI에게 분류를 맡길 때 쓴다).
+여전히 틀리는 질문 목록은 experiments/results/lecture/06_experiment/ 아래 JSONL로 남긴다(AI에게 분류를 맡길 때 쓴다).
 """
 
 import argparse
@@ -52,7 +52,7 @@ DATA = ROOT / "data"
 CORPUS = DATA / "processed" / "law_docs.json"
 TEST = DATA / "splits" / "test.jsonl"
 RECEIVED = ROOT / "experiments" / "exp_010_lecture_comparison" / "results"
-LECTURE_OUT = ROOT / "experiments" / "results" / "lecture" / "06_train"
+LECTURE_OUT = ROOT / "experiments" / "results" / "lecture" / "06_experiment"
 FROM_02 = LECTURE_OUT / "exp_010"
 BASE, TUNED = (
     "multilingual-e5-small",
@@ -128,7 +128,7 @@ def title(doc_id: str) -> str:
 sys.stdout.reconfigure(
     line_buffering=True
 )  # ragkit 하위 프로세스 출력과 순서가 섞이지 않게
-parser = argparse.ArgumentParser(description="실습 3-3: 오답 분석")
+parser = argparse.ArgumentParser(description="실습 2-3: 오답 분석")
 parser.add_argument(
     "--run",
     action="store_true",
@@ -187,7 +187,7 @@ else:
             break
     if source is None:
         print("실험 010의 질문별 결과가 없습니다. 먼저 실행:")
-        print("  uv run python lecture/06_train/02_compare_runs.py")
+        print("  uv run python lecture/06_experiment/02_compare_runs.py")
         print(f"  (또는 강사가 나눠 준 결과 JSON을 {rel(RECEIVED)}/ 에 둔다)")
         raise SystemExit(1)
 base, tuned = results[BASE], results[TUNED]

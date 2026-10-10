@@ -1,5 +1,5 @@
 """
-실습 2-2 (5교시): 학습 없는 선택지, LLM 쿼리 확장
+실습 1-4 (5교시): 학습 없는 선택지, LLM 쿼리 확장
 =================================================
 
 학습 목표:
@@ -19,8 +19,8 @@
     (--run에서 새로 확장하려면) .env에 GEMINI_API_KEY
 
 실행:
-    uv run python lecture/05_evaluate/02_query_expansion.py          # 캐시에 있는 질문으로 비교 (1분 안쪽)
-    uv run python lecture/05_evaluate/02_query_expansion.py --run    # 키가 있으면 질문 3개를 새로 확장해 함께 비교
+    uv run python lecture/05_data_eval/04_query_expansion.py          # 캐시에 있는 질문으로 비교 (1분 안쪽)
+    uv run python lecture/05_data_eval/04_query_expansion.py --run    # 키가 있으면 질문 3개를 새로 확장해 함께 비교
 
 받은 캐시는 고치지 않는다. --run의 새 확장은 임시 폴더의 캐시 사본에만 쌓는다.
 """
@@ -56,7 +56,7 @@ CONFIG = ROOT / "experiments" / "exp_003_llm_query_expansion" / "config.yaml"
 FINETUNED = (
     ROOT / "models" / "finetuned" / "r001_A"
 )  # exp_003 설정의 세 번째 모델 (다음 교시 미리보기)
-OUT = ROOT / "experiments" / "results" / "lecture" / "05_evaluate" / "query_expansion"
+OUT = ROOT / "experiments" / "results" / "lecture" / "05_data_eval" / "query_expansion"
 NEW_EXPANSIONS = 3  # --run에서 새로 부를 LLM 호출 수 (무료 등급 하루 20회)
 FREE_PER_DAY = 20  # gemini-2.5-flash-lite 무료 등급 하루 호출 한도 (2026-09 확인)
 FREE_RPM = 15  # 무료 등급 분당 호출 한도
@@ -164,7 +164,7 @@ def new_expansions(questions: list[dict], cache: Path) -> int:
 sys.stdout.reconfigure(
     line_buffering=True
 )  # ragkit 하위 프로세스 출력과 순서가 섞이지 않게
-parser = argparse.ArgumentParser(description="실습 2-2: LLM 쿼리 확장")
+parser = argparse.ArgumentParser(description="실습 1-4: LLM 쿼리 확장")
 parser.add_argument(
     "--run",
     action="store_true",
@@ -355,14 +355,14 @@ full = (
     / "experiments"
     / "results"
     / "lecture"
-    / "05_evaluate"
+    / "05_data_eval"
     / "multilingual-e5-small_test.json"
 )
 if full.exists():
     r = json.loads(full.read_text(encoding="utf-8"))
     e5_row = f"{r['doc']['recall@5']:.3f}  {r['doc']['recall@10']:.3f}"
 else:
-    e5_row = "01_metrics.py를 먼저 실행"
+    e5_row = "03_metrics.py를 먼저 실행"
 print("  " + pad("선택지", 24) + pad("R@5    R@10", 26) + "질문당 LLM 호출")
 print("  " + pad("e5-small", 24) + pad(e5_row, 26) + "0")
 print(
@@ -375,6 +375,6 @@ print(
     "\n확장 행은 무료 한도 때문에 비워 둔다. 질문 몇 개로 본 경향과 질문당 비용만 가지고 판단한다."
 )
 print(
-    "다음 시간(6교시): 작은 모델을 한 번 학습해 이 비용을 '학습 1회'로 옮기면 얼마나 오르나"
+    "다음(05_baseline_train.py): 작은 모델을 한 번 학습해 이 비용을 '학습 1회'로 옮기면 얼마나 오르나"
 )
 print(f"\n결과: {rel(out_dir)}")

@@ -6,7 +6,7 @@
 - 강의에 필요한 설치(ragkit, extra, 앱, pnpm, 디스크) · 모델 · 데이터 · 인덱스 · API 키를 한 번에 점검한다
 - 받은 모델과 인덱스가 실제로 열리고 검색되는지 확인한다 (동작 확인)
 - 빠진 것마다 어떤 명령으로 받거나 만드는지 보고, --fix로 받을 수 있는 것은 한 번에 받는다
-- 실습 0~5 중 지금 바로 할 수 있는 실습이 어디까지인지 본다
+- 실습 0~4 중 지금 바로 할 수 있는 실습이 어디까지인지 본다
 
 Gemini는 호출하지 않는다. 동작 확인에서 모델을 한 번씩 열어 검색해 보므로 수십 초 걸린다.
 
@@ -78,7 +78,7 @@ class Check:
             return ""
         if (
             self.labs == {4} or " ragkit index" in cmd
-        ):  # 실습 4에서 직접 만들거나 오래 걸리는 것
+        ):  # 실습 3(7교시)에서 직접 만들거나 오래 걸리는 것
             return ""
         return cmd
 
@@ -246,7 +246,7 @@ def model_checks() -> list[Check]:
             f"{rel(int8)} (INT8)",
             (int8 / "onnx" / "model.onnx").exists(),
             size_mb(int8) if int8.exists() else "",
-            f"uv run ragkit quantize {rel(E5_DIR)}   (실습 4에서 직접 만든다)",
+            f"uv run ragkit quantize {rel(E5_DIR)}   (실습 3(7교시)에서 직접 만든다)",
             {4},
         ),
         Check(
@@ -254,7 +254,7 @@ def model_checks() -> list[Check]:
             (pruned / "onnx" / "model.onnx").exists(),
             size_mb(pruned) if pruned.exists() else "",
             f"uv run ragkit prune-vocab {rel(E5_DIR)} → export-onnx → quantize"
-            "   (실습 4에서 직접 만든다)",
+            "   (실습 3(7교시)에서 직접 만든다)",
             {4},
         ),
     ]

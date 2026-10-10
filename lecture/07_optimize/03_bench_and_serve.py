@@ -1,12 +1,12 @@
 """
-실습 4-3 (7교시): 원본 / ONNX / INT8 / 가지치기+INT8 비교표, 그리고 API에 적용
+실습 3-3 (7교시): 원본 / ONNX / INT8 / 가지치기+INT8 비교표, 그리고 API에 적용
 ================================================================================
 
 학습 목표:
 - ragkit-bench로 네 변형을 같은 조건(CPU, 같은 질문)에서 잰 표를 읽는다
   지연(p50/p95) · 처리량 · 서비스 메모리 · 모델 크기 · 설치 크기 · Recall@k
 - 표를 읽고 "정확도를 얼마나 잃고 무엇을 얻는가"를 DS가 직접 판단한다
-- 실습 4-1 API의 백엔드를 torch → ONNX로 바꿔 시작 시간과 검색 속도를 비교한다
+- 실습 3-1 API의 백엔드를 torch → ONNX로 바꿔 시작 시간과 검색 속도를 비교한다
 
 두 가지 모드:
 - 기본: 받은 측정 결과(experiments/exp_008_deploy_bench/results/)를 읽고, API 비교만 직접 잰다 (약 10초)
@@ -16,7 +16,7 @@
 사전 준비:
     Drive에서 받은 models/ (multilingual-e5-small, -int8, -pruned-int8), data/processed/index/,
     data/splits/test.jsonl, experiments/exp_008_deploy_bench/results/
-    직접 만들려면 실습 4-2의 CLI(export-onnx → quantize → prune-vocab …)와 uv run ragkit index
+    직접 만들려면 실습 3-2의 CLI(export-onnx → quantize → prune-vocab …)와 uv run ragkit index
 
 실행:
     uv run python lecture/07_optimize/03_bench_and_serve.py
@@ -149,7 +149,7 @@ print("""
 # ============================================================
 section("3. API 백엔드 바꾸기: torch → ONNX")
 for label, kwargs in [
-    ("torch (실습 4-1)", {"backend": "torch"}),
+    ("torch (실습 3-1)", {"backend": "torch"}),
     (
         "ONNX INT8",
         {"model": str(MODELS / "multilingual-e5-small-int8"), "backend": "onnx"},
@@ -161,7 +161,7 @@ for label, kwargs in [
 ]:
     if "model" in kwargs and not Path(kwargs["model"]).is_dir():
         print(
-            f"{label}: {kwargs['model']}가 없어 건너뜁니다. Drive에서 models/를 받거나 실습 4-2의 CLI로 만드세요."
+            f"{label}: {kwargs['model']}가 없어 건너뜁니다. Drive에서 models/를 받거나 실습 3-2의 CLI로 만드세요."
         )
         continue
     start = time.perf_counter()
