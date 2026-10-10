@@ -143,3 +143,27 @@ def test_index_only_bundle_roundtrip(tmp_path) -> None:
     drive.install(zip_path, entry, tmp_path / "dst")
 
     assert (tmp_path / "dst" / entry["index"]).read_bytes() == b"base-index"
+
+
+def test_files_bundle_roundtrip(tmp_path) -> None:
+    """폴더와 파일을 함께 묶고 풀 수 있다 (INT8 모델 + 그 인덱스)."""
+    drive = _load_script("finetuned_drive")
+    src = tmp_path / "src"
+    model = src / "models" / "multilingual-e5-small-int8" / "onnx"
+    model.mkdir(parents=True)
+    (model / "model.onnx").write_bytes(b"int8")
+    index = src / "data" / "processed" / "index" / "multilingual-e5-small-int8.sqlite"
+    index.parent.mkdir(parents=True)
+    index.write_bytes(b"int8-index")
+    zip_path = tmp_path / "files.zip"
+
+    entry = drive.bundle_files(
+        ["models/multilingual-e5-small-int8", index.relative_to(src).as_posix()],
+        src,
+        zip_path,
+    )
+    drive.install(zip_path, entry, tmp_path / "dst")
+
+    dst = tmp_path / "dst"
+    assert (dst / "models/multilingual-e5-small-int8/onnx/model.onnx").read_bytes() == b"int8"
+    assert all((dst / p).exists() for p in entry["paths"])

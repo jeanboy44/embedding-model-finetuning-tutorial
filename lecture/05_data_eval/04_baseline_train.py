@@ -1,5 +1,5 @@
 """
-실습 1-5 (5교시): 기준 실험 002 — 학습 원리와 파일럿
+실습 1-4 (5교시): 기준 실험 002 — 학습 원리와 파일럿
 =====================================================
 
 학습 목표:
@@ -16,11 +16,11 @@
     (--run) uv sync --extra train                      # sentence-transformers
 
 실행:
-    uv run python lecture/05_data_eval/05_baseline_train.py          # 원리 + 받은 모델의 학습 기록 (1분 안쪽)
-    uv run python lecture/05_data_eval/05_baseline_train.py --run    # 실험 002 설정으로 30 step 파일럿 (약 1.5분)
+    uv run python lecture/05_data_eval/04_baseline_train.py          # 원리 + 받은 모델의 학습 기록 (1분 안쪽)
+    uv run python lecture/05_data_eval/04_baseline_train.py --run    # 실험 002 설정으로 30 step 파일럿 (약 1.5분)
 
 --run은 실험 002 설정 그대로 --output-dir만 임시 폴더로 줘서 돌린다. 받은 모델은 덮어쓰지 않는다.
-LoRA 실험 004의 파일럿은 6교시 lecture/06_experiment/01_lora_train.py에서 한다.
+6교시에는 학습 없이 이 002 모델을 판정하고 오답을 분석한다 (lecture/06_experiment/).
 """
 
 import argparse
@@ -122,7 +122,7 @@ sys.stdout.reconfigure(
     line_buffering=True
 )  # ragkit 하위 프로세스 출력과 순서가 섞이지 않게
 parser = argparse.ArgumentParser(
-    description="실습 1-5: 기준 실험 002, 학습 원리와 파일럿"
+    description="실습 1-4: 기준 실험 002, 학습 원리와 파일럿"
 )
 parser.add_argument(
     "--run", action="store_true", help=f"실험 002 설정으로 {RUN_STEPS} step 파일럿"
@@ -230,7 +230,7 @@ print(
 print(f"  epoch별 dev R@5 (학습 중 간이 평가): {start}{history}")
 print("  · epoch는 dev R@5로 자동으로 고른다(best epoch). test는 보지 않는다")
 print(
-    "  · test는 실험마다 마지막에 한 번만 잰다: 002는 R@5 0.513 → 0.669 (6교시 02_compare_runs.py)"
+    "  · test는 실험마다 마지막에 한 번만 잰다: 002는 R@5 0.513 → 0.669 (6교시 01_compare_runs.py)"
 )
 
 
@@ -240,12 +240,12 @@ print(
 if not args.run:
     section("5. 파일럿을 직접 돌려 보려면")
     print(
-        f"  uv run python lecture/05_data_eval/05_baseline_train.py --run   # {RUN_STEPS} step만 (약 1.5분)"
+        f"  uv run python lecture/05_data_eval/04_baseline_train.py --run   # {RUN_STEPS} step만 (약 1.5분)"
     )
     print(
         "  전체 학습은 just finetune-suite (분할 → 002·004·006 학습 → 비교표, 약 2시간)"
     )
-    print("다음(6교시): 기준선 002 위에서 가설을 세우고 LoRA 실험 004 한 바퀴를 돈다")
+    print("다음(6교시): 기준선 002를 판정하고 오답을 쪼개 다음 가설을 찾는다")
     raise SystemExit(0)
 
 section(f"5. --run: 실험 002 설정으로 {RUN_STEPS} step 파일럿")
@@ -304,4 +304,4 @@ print(
 )
 shutil.rmtree(tmp, ignore_errors=True)
 print(f"\n임시 폴더 {tmp}는 지웠다 (모델 약 470MB). 받은 모델은 그대로다.")
-print("다음(6교시): 기준선 002 위에서 가설을 세우고 LoRA 실험 004 한 바퀴를 돈다")
+print("다음(6교시): 기준선 002를 판정하고 오답을 쪼개 다음 가설을 찾는다")

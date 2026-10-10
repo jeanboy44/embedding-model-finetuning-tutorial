@@ -11,6 +11,7 @@ data/processed/index/<모델 키>.sqlite 가 저장소 루트 기준 경로로 �
     uv run python scripts/finetuned_drive.py download --all
     uv run python scripts/finetuned_drive.py upload r001_A exp_002   # (강사) zip → Drive, 목록 갱신
     uv run python scripts/finetuned_drive.py upload-index multilingual-e5-small   # (강사) 인덱스만
+    uv run python scripts/finetuned_drive.py upload-files multilingual-e5-small-int8 models/multilingual-e5-small-int8 data/processed/index/multilingual-e5-small-int8.sqlite   # (강사) 그 밖의 파일 묶음
 
 업로드는 rclone을 쓴다 (scripts/data_version.py와 같은 remote):
     brew install rclone
@@ -59,9 +60,10 @@ def folder_id(url: str) -> str:
 def load_manifest(path: Path = MANIFEST) -> dict:
     """올린 모델 목록. 없으면 빈 목록."""
     if not path.exists():
-        return {"drive_folder": DEFAULT_FOLDER_URL, "models": {}, "indexes": {}}
+        return {"drive_folder": DEFAULT_FOLDER_URL, "models": {}, "indexes": {}, "files": {}}
     manifest = json.loads(path.read_text(encoding="utf-8"))
     manifest.setdefault("indexes", {})
+    manifest.setdefault("files", {})
     return manifest
 
 
@@ -117,6 +119,29 @@ def bundle_index(key: str, root: Path, output: Path) -> dict:
     return {
         "file": output.name,
         "index": index.relative_to(root).as_posix(),
+        "sha256": sha256sum(output),
+        "size_mb": round(output.stat().st_size / 1e6, 1),
+    }
+
+
+def bundle_files(paths: list[str], root: Path, output: Path) -> dict:
+    """저장소 루트 기준 경로(파일 또는 폴더) 여러 개를 zip 하나로 묶는다.
+
+    INT8 모델 + 그 인덱스처럼 models/finetuned/ 밖에 있는 것을 받게 할 때 쓴다.
+    """
+    files = []
+    for rel_path in paths:
+        path = root / rel_path
+        if not path.exists():
+            raise SystemExit(f"없습니다: {path}")
+        files += sorted(p for p in path.rglob("*") if p.is_file()) if path.is_dir() else [path]
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as zf:
+        for path in files:
+            zf.write(path, path.relative_to(root).as_posix())
+    return {
+        "file": output.name,
+        "paths": [Path(p).as_posix() for p in paths],
         "sha256": sha256sum(output),
         "size_mb": round(output.stat().st_size / 1e6, 1),
     }
@@ -266,6 +291,41 @@ def upload_index(
     print(f"\n목록 갱신: {MANIFEST.relative_to(MANIFEST.parents[1])} (커밋하세요)")
 
 
+@app.command(name="upload-files")
+def upload_files(
+    name: str,
+    *paths: str,
+    folder_url: str = DEFAULT_FOLDER_URL,
+    remote: str = "gdrive",
+    transfer: bool = True,
+) -> None:
+    """(강사) 저장소의 파일 · 폴더 여러 개를 이름 하나로 묶어 올린다. 받을 때는 download <이름>.
+
+    Args:
+        name: 받을 때 쓸 이름 (예: multilingual-e5-small-int8).
+        paths: 저장소 루트 기준 경로. 폴더면 안의 파일을 모두 넣는다.
+        folder_url: 올릴 Drive 폴더 링크.
+        remote: rclone remote 이름.
+        transfer: False(--no-transfer)면 zip만 만들고, 브라우저로 올려 둔 파일의 ID를 찾아 적는다.
+    """
+    _require_rclone()
+    root = get_settings().project_root
+    zip_path = root / "dist" / f"files-{name}.zip"
+    print(f"묶는 중: {', '.join(paths)} → {zip_path.relative_to(root)}")
+    entry = bundle_files(list(paths), root, zip_path)
+    print(f"  {entry['size_mb']} MB")
+    entry["file_id"] = _upload_zip(zip_path, remote, folder_id(folder_url), transfer=transfer)
+    manifest = load_manifest()
+    manifest["files"][name] = entry
+    save_manifest(manifest)
+    print(f"\n목록 갱신: {MANIFEST.relative_to(MANIFEST.parents[1])} (커밋하세요)")
+
+
+def _have_files(entry: dict, root: Path) -> bool:
+    """파일 묶음(upload-files)의 경로가 모두 있는가. 다른 묶음은 늘 True."""
+    return all((root / p).exists() for p in entry.get("paths", []))
+
+
 def _fetch(entry: dict, root: Path) -> None:
     """zip 하나를 받아 sha256을 확인하고 저장소에 푼다."""
     with tempfile.TemporaryDirectory() as tmp:
@@ -295,31 +355,33 @@ def download(*names: str, all: bool = False, force: bool = False) -> None:
     """
     manifest = load_manifest()
     models, indexes = manifest["models"], manifest["indexes"]
-    if not models and not indexes:
+    bundles = {**indexes, **manifest.get("files", {})}
+    if not models and not bundles:
         raise SystemExit(
             f"{MANIFEST.name}에 올린 것이 없습니다. 강사가 먼저 upload 해야 합니다."
         )
     if all:
-        targets = [*models, *indexes]
+        targets = [*models, *bundles]
     elif names:
         targets = list(names)
     else:
         targets = [
-            n for n in (DEFAULT_MODEL, DEFAULT_INDEX) if n in models or n in indexes
+            n for n in (DEFAULT_MODEL, DEFAULT_INDEX) if n in models or n in bundles
         ]
-    if unknown := [n for n in targets if n not in models and n not in indexes]:
+    if unknown := [n for n in targets if n not in models and n not in bundles]:
         raise SystemExit(
-            f"목록에 없는 이름: {', '.join(unknown)} (있는 것: {', '.join([*models, *indexes])})"
+            f"목록에 없는 이름: {', '.join(unknown)} (있는 것: {', '.join([*models, *bundles])})"
         )
 
     root = get_settings().project_root
     for name in targets:
-        entry = models.get(name) or indexes[name]
+        entry = models.get(name) or bundles[name]
         model_dir = root / entry["model_dir"] if entry.get("model_dir") else None
         index = root / entry["index"] if entry.get("index") else None
         have_model = model_dir is None or (model_dir / WEIGHTS).exists()
         have_index = index is None or index.exists()
-        if have_model and have_index and not force:
+        have_files = _have_files(entry, root)
+        if have_model and have_index and have_files and not force:
             print(f"이미 있습니다: {name} (다시 받으려면 --force)")
             continue
         _fetch(entry, root)
@@ -327,6 +389,8 @@ def download(*names: str, all: bool = False, force: bool = False) -> None:
             print(f"  모델: {entry['model_dir']}")
         if index is not None:
             print(f"  인덱스: {entry['index']}")
+        for path in entry.get("paths", []):
+            print(f"  파일: {path}")
         if (
             model_dir is not None
             and index is not None
@@ -353,6 +417,11 @@ def list_models() -> None:
         have = (root / entry["index"]).exists()
         print(
             f"  인덱스 {key:22s} {entry['size_mb']:7.1f} MB  [{'받음' if have else '-'}]"
+        )
+    for name, entry in manifest["files"].items():
+        have = _have_files(entry, root)
+        print(
+            f"  파일   {name:22s} {entry['size_mb']:7.1f} MB  [{'받음' if have else '-'}]"
         )
 
 

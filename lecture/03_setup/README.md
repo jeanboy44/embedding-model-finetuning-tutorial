@@ -17,16 +17,19 @@ API 키는 쓰지 않는다. 명령은 모두 저장소 루트에서 실행하�
 
 ```bash
 uv sync --all-packages --all-extras
-uv run python lecture/03_setup/01_doctor.py --fix   # 빠진 데이터 · 모델 · 인덱스를 받고 다시 점검
+uv run python lecture/03_setup/01_doctor.py --fix   # 3~8교시에 쓸 것을 모두 받고 다시 점검 (처음 한 번, 약 1.5GB)
 ```
 
-`--fix`가 대신 돌리는 받기 명령은 아래와 같다. 로그인은 필요 없다.
+교시별로 준비됐는지(✓/✗)와 빠진 것만 보여 준다. 다 된 항목까지 보려면 `--all`. `--fix`가 대신 돌리는 받기 명령은 아래와 같다. 로그인은 필요 없다.
 
 ```bash
-uv run python scripts/data_version.py pull v1       # 코퍼스 · 질문 · 분할
-uv run python scripts/download_model_hf.py          # 학습 전 e5 (HF가 막히면 download_model_gdrive.py)
-uv run python scripts/finetuned_drive.py download   # 파인튜닝 r001_A + 인덱스 두 개 (학습 전 e5 · r001_A)
+uv run python scripts/data_version.py pull v1          # 코퍼스 · 질문 · 분할
+uv run python scripts/download_model_hf.py             # 학습 전 e5 (HF가 막히면 download_model_gdrive.py)
+uv run ragkit export-onnx models/multilingual-e5-small # ONNX 추론용 변환
+uv run python scripts/finetuned_drive.py download multilingual-e5-small r001_A exp_002 optimize   # 학습 전 e5 인덱스 · 파인튜닝 모델 2개 · 7교시 INT8 · 가지치기 모델 (각 인덱스 포함)
 ```
+
+`GEMINI_API_KEY`는 없어도 된다. LLM 답변 단계만 건너뛴다.
 
 ## 2. 질문 넷을 학습 전 모델에 던져 본다
 
@@ -85,7 +88,7 @@ uv run --package ragkit-search ragkit-search search "주휴일 유급휴일 1주
 
 | 파일 | 내용 |
 |---|---|
-| `01_doctor.py` | 설치 · 데이터 · 모델 · 인덱스 점검, 받은 모델을 열어 검색해 보는 동작 확인, `--fix`로 받기 (`--quick`이면 동작 확인 생략) |
+| `01_doctor.py` | 3~8교시 준비 상태를 교시별로 점검, 받은 모델을 열어 검색해 보는 동작 확인, `--fix`로 한 번에 받기 (`--quick`이면 동작 확인 생략, `--all`이면 전체 항목) |
 | `02_try_product.py` | 위 질문 넷을 학습 전 · 파인튜닝 모델에 한 번에 던져 top-3와 정답 순위를 나란히 보여 준다. 웹 · CLI · MCP 띄우는 명령 안내 |
 | `extra_gemini_basics.py` | (선택) Gemini API 기초. `GEMINI_API_KEY`가 있어야 하고 한 번에 4회 호출한다 |
 

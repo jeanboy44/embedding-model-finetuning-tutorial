@@ -338,4 +338,4 @@ for row in random.Random(SEED).sample(misses, min(3, len(misses))):
     print(f"      정답 {by_id[row['positive_id']]['title']} → {rank_text}")
     print(f"      1위  {top1}")
 print(f"\n결과 JSON: {rel(out)} (질문별 순위·top-10은 per_question)")
-print("다음: 04_query_expansion.py — 학습 없이 LLM으로 질문을 고쳐 주면 얼마나 오르나")
+print("다음: 04_baseline_train.py — 작은 모델을 한 번 학습하면 얼마나 오르나")

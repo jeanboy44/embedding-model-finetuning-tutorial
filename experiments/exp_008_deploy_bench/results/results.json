@@ -1,0 +1,118 @@
+{
+  "variants": [
+    {
+      "name": "torch-fp32",
+      "model": "models/multilingual-e5-small",
+      "backend": "torch",
+      "device": "cpu",
+      "deps": [
+        "torch",
+        "transformers"
+      ]
+    },
+    {
+      "name": "onnx-fp32",
+      "model": "models/multilingual-e5-small",
+      "backend": "onnx",
+      "device": "cpu",
+      "deps": [
+        "onnxruntime",
+        "tokenizers"
+      ]
+    },
+    {
+      "name": "onnx-int8",
+      "model": "models/multilingual-e5-small-int8",
+      "backend": "onnx",
+      "device": "cpu",
+      "deps": [
+        "onnxruntime",
+        "tokenizers"
+      ]
+    },
+    {
+      "name": "onnx-int8-pruned",
+      "model": "models/multilingual-e5-small-pruned-int8",
+      "backend": "onnx",
+      "device": "cpu",
+      "deps": [
+        "onnxruntime",
+        "tokenizers"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "variant": "torch-fp32",
+      "backend": "torch",
+      "model": "models/multilingual-e5-small",
+      "model_mb": 470.6416,
+      "install_mb": 668.52963,
+      "n_questions": 2526,
+      "load_s": 3.585484624840319,
+      "latency_ms_p50": 19.737500231713057,
+      "latency_ms_p95": 21.61950166337192,
+      "docs_per_s": 79.51870577673793,
+      "peak_rss_mb": 1133.150208,
+      "recall@1": 0.2838479809976247,
+      "recall@5": 0.5130641330166271,
+      "recall@10": 0.6013460015835312,
+      "mrr@10": 0.3812395530922847,
+      "ndcg@10": 0.4338542430947764
+    },
+    {
+      "variant": "onnx-fp32",
+      "backend": "onnx",
+      "model": "models/multilingual-e5-small",
+      "model_mb": 470.228862,
+      "install_mb": 126.83367,
+      "n_questions": 2526,
+      "load_s": 0.7713018748909235,
+      "latency_ms_p50": 16.46720850840211,
+      "latency_ms_p95": 20.726620219647884,
+      "docs_per_s": 44.07757990288159,
+      "peak_rss_mb": 1781.874688,
+      "recall@1": 0.2838479809976247,
+      "recall@5": 0.5130641330166271,
+      "recall@10": 0.6013460015835312,
+      "mrr@10": 0.3812395530922847,
+      "ndcg@10": 0.4338542430947764
+    },
+    {
+      "variant": "onnx-int8",
+      "backend": "onnx",
+      "model": "models/multilingual-e5-small-int8",
+      "model_mb": 118.276008,
+      "install_mb": 126.83367,
+      "n_questions": 2526,
+      "load_s": 0.5395958749577403,
+      "latency_ms_p50": 15.593208838254213,
+      "latency_ms_p95": 17.63110482133925,
+      "docs_per_s": 54.1776124140294,
+      "peak_rss_mb": 873.906176,
+      "recall@1": 0.28661916072842436,
+      "recall@5": 0.5142517814726841,
+      "recall@10": 0.6013460015835312,
+      "mrr@10": 0.38309407558219905,
+      "ndcg@10": 0.43521689192824586
+    },
+    {
+      "variant": "onnx-int8-pruned",
+      "backend": "onnx",
+      "model": "models/multilingual-e5-small-pruned-int8",
+      "model_mb": 29.666088,
+      "install_mb": 126.83367,
+      "n_questions": 2526,
+      "load_s": 0.29815362580120564,
+      "latency_ms_p50": 16.695937607437372,
+      "latency_ms_p95": 34.666475746780634,
+      "docs_per_s": 37.662010320644434,
+      "peak_rss_mb": 402.571264,
+      "recall@1": 0.28661916072842436,
+      "recall@5": 0.5146476642913698,
+      "recall@10": 0.601741884402217,
+      "mrr@10": 0.38314685995802383,
+      "ndcg@10": 0.4353434598009476
+    }
+  ]
+}
