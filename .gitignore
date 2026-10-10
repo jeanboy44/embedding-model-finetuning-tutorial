@@ -81,6 +81,7 @@ logs/
 !.claude/skills/law-question-gen/
 data/questions/
 data/questions_test/
+data/questions_colloquial/
 data/splits/
 
 # 앱 데이터 (노트북 저장소) / web 빌드
