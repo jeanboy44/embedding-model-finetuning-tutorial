@@ -58,10 +58,12 @@ PERIODS = {
 # 받는 명령. --fix는 이 순서로 돌린다 (설치 → 데이터 → 학습 전 모델 → ONNX → Drive)
 SYNC = "uv sync --all-packages --all-extras"
 GET_DATA = f"uv run python scripts/data_version.py pull {DATA_VERSION}"
+# 5교시 조 단위 분할: 질문에서 바로 만든다 (seed 42, 실험 001과 같은 분할)
+SPLIT_ARTICLE = "uv run ragkit split data/questions --unit article --test-ratio 0.15 --dev-ratio 0.1 --out data/splits_article"
 GET_E5 = "uv run python scripts/download_model_hf.py"
 EXPORT_ONNX = f"uv run ragkit export-onnx models/{E5_DIR.name}"
 FROM_DRIVE = "uv run python scripts/finetuned_drive.py download"
-FIX_ORDER = (SYNC, GET_DATA, GET_E5, EXPORT_ONNX, FROM_DRIVE)
+FIX_ORDER = (SYNC, GET_DATA, SPLIT_ARTICLE, GET_E5, EXPORT_ONNX, FROM_DRIVE)
 
 # 7교시: 가지치기 · 양자화한 모델과 그 인덱스. Drive의 묶음 하나(optimize)로 받는다
 OPTIMIZED = [
@@ -223,12 +225,22 @@ def data_checks() -> list[Check]:
         Check(rel(corpus), corpus.exists(), "", GET_DATA, ALL),
         Check(f"{rel(DATA / dv.QUESTIONS_DIR)}/", bool(questions), f"파일 {len(questions)}개" if questions else "", GET_DATA, {4}),
     ]  # fmt: skip
-    for name, periods in (("train", {5, 6}), ("dev", {5}), ("test", {5, 6, 7, 8})):
+    for name, periods in (("train", {6}), ("dev", {6}), ("test", {6, 7, 8})):
         path = DATA / "splits" / f"{name}.jsonl"
         detail = f"질문 {jsonl_rows(path):,}개" if path.exists() else ""
         checks.append(Check(rel(path), path.exists(), detail, GET_DATA, periods))
-    meta = DATA / "splits" / "split_meta.json"
-    checks.append(Check(rel(meta), meta.exists(), "", GET_DATA, {5}))
+    for name in ("train", "dev", "test", "split_meta"):
+        path = (
+            DATA
+            / "splits_article"
+            / f"{name}.{'json' if name == 'split_meta' else 'jsonl'}"
+        )
+        detail = (
+            f"질문 {jsonl_rows(path):,}개"
+            if path.exists() and name != "split_meta"
+            else ""
+        )
+        checks.append(Check(rel(path), path.exists(), detail, SPLIT_ARTICLE, {5}))
 
     manifest_path = dv.versions_dir(DATA) / f"{DATA_VERSION}.json"
     if manifest_path.exists():
@@ -273,7 +285,11 @@ def smoke_checks() -> list[Check]:
     targets = [("학습 전 e5", {}, ALL - {4})]
     if (FINETUNED / "002_hard_negatives" / "model.safetensors").exists():
         targets.append(
-            ("파인튜닝 002_hard_negatives", {"checkpoint": FINETUNED / "002_hard_negatives"}, {3, 6, 8})
+            (
+                "파인튜닝 002_hard_negatives",
+                {"checkpoint": FINETUNED / "002_hard_negatives"},
+                {3, 6, 8},
+            )
         )
     checks = []
     for label, kwargs, periods in targets:

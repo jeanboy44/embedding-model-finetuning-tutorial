@@ -3,13 +3,14 @@
 ===============================
 
 학습 목표:
-- 평가셋(test)이 법령 단위로 나뉘어, 학습 때 본 적 없는 법령으로만 이루어졌음을 확인한다
+- 평가셋(test)이 조 단위로 나뉘어, 학습 때 본 적 없는 조로만 이루어졌음을 확인한다 (법령은 54개 모두 학습에 있다)
 - Recall@k · MRR@10 · nDCG@10을 작은 예로 직접 계산해 본다
 - 판정 세 가지(doc: 정답 문서 일치 / article: 같은 조의 조각이면 정답 / multi: 판정으로 인정한 다른 정답도 정답)의 차이를 본다
 - 학습 전 e5-small의 test 성적(출발점)을 명령 하나로 재고, 어떤 말투에서 약한지 읽는다
 
 사전 준비 (없으면 스크립트가 받는 명령을 알려 주고 끝난다):
-    uv run python scripts/data_version.py pull v1     # 코퍼스 + train/dev/test 분할
+    uv run python scripts/data_version.py pull v1     # 코퍼스 + 질문
+    uv run python lecture/05_data_eval/02_split.py    # 조 단위 분할 data/splits_article/ (없으면 만든다)
     models/multilingual-e5-small                      # scripts/download_model_hf.py
     uv run python scripts/finetuned_drive.py download   # data/processed/index/multilingual-e5-small.sqlite
     data/labels/dev.jsonl                             # dev 복수 정답 판정 (강사 Drive)
@@ -42,7 +43,7 @@ from ragkit.training import load_splits
 ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "data"
 CORPUS = DATA / "processed" / "law_docs.json"
-SPLITS = DATA / "splits"
+SPLITS = DATA / "splits_article"  # 조 단위 분할 (02_split.py)
 LABELS = DATA / "labels" / "dev.jsonl"
 MODEL = "intfloat/multilingual-e5-small"
 INDEX = default_index_path(
@@ -53,6 +54,7 @@ RUN_SAMPLE = 300  # --run에서 쓸 질문 수 (분할마다)
 SEED = 42
 
 GET_DATA = "uv run python scripts/data_version.py pull v1"
+GET_SPLITS = "uv run python lecture/05_data_eval/02_split.py"
 FROM_DRIVE = "강사 Drive에서 받아 {path}에 둔다"
 
 
@@ -127,8 +129,8 @@ args = parser.parse_args()
 require(
     [
         (CORPUS, GET_DATA),
-        (SPLITS / "test.jsonl", GET_DATA),
-        (SPLITS / "split_meta.json", GET_DATA),
+        (SPLITS / "test.jsonl", GET_SPLITS),
+        (SPLITS / "split_meta.json", GET_SPLITS),
         (
             INDEX,
             "uv run python scripts/finetuned_drive.py download"
@@ -139,20 +141,26 @@ require(
 
 
 # ============================================================
-# 1. 평가셋: 법령 단위 분할
+# 1. 평가셋: 조 단위 분할
 # ============================================================
-section("1. 평가셋: 법령 단위로 나눈 train / dev / test")
+section("1. 평가셋: 조 단위로 나눈 train / dev / test")
 docs = load_corpus(CORPUS)
 by_id = {d["id"]: d for d in docs}
 splits = load_splits(SPLITS)
 meta = json.loads((SPLITS / "split_meta.json").read_text(encoding="utf-8"))
 for name in ("train", "dev", "test"):
     print(
-        f"  {name:5s} 질문 {len(splits[name]):6,}개 · 법령 {len(meta[name]['laws']):2d}개"
+        f"  {name:5s} 질문 {len(splits[name]):6,}개 · 조 {meta[name]['articles']:5,}개 · 법령 {len(meta[name]['laws']):2d}개"
     )
-overlap = set(meta["train"]["laws"]) & set(meta["test"]["laws"])
+
+
+def articles(name: str) -> set[str]:
+    return {relevance_key(by_id[q["positive_id"]]) for q in splits[name]}
+
+
+overlap = articles("train") & articles("test")
 print(
-    f"  train과 test에 함께 든 법령: {len(overlap)}개 → test는 학습 때 본 적 없는 법령으로만 이루어진다"
+    f"  train과 test에 함께 든 조: {len(overlap)}개 → test는 학습 때 본 적 없는 조로만 이루어진다 (법령은 모두 학습에 있다)"
 )
 print(f"  검색 대상: 코퍼스 전체 {len(docs):,}개 문서 (정답 법령 안에서만 찾지 않는다)")
 types = Counter(q.get("query_type", "unknown") for q in splits["test"])
@@ -182,7 +190,7 @@ print(
     f"   {mean['mrr@10']:.3f}   {mean['ndcg@10']:.3f}"
 )
 print(
-    "  · R@k   = 정답이 k위 안에 든 질문의 비율. 주요 지표는 R@5 (RAG가 LLM에 넘기는 조문이 5개)"
+    "  · R@k   = 정답이 k위 안에 든 질문의 비율. 주요 지표는 R@5 (작업자가 화면 한 번에 보는 결과가 5개)"
 )
 print("  · MRR@10 = 1/순위의 평균 (1위 1, 3위 0.33, 10위 밖 0)")
 print("  · nDCG@10 = 1/log2(순위+1)의 평균. 순위가 내려갈수록 천천히 깎는다")
@@ -215,13 +223,16 @@ if LABELS.exists():
     labels = load_labels(LABELS)
     with_alt = {qid: lab for qid, lab in labels.items() if lab.get("alt_positive_ids")}
     print(
-        f"\n복수 정답 판정 파일 {rel(LABELS)}: dev 질문 {len(labels):,}개를 판정, "
-        f"다른 정답이 인정된 질문 {len(with_alt)}개 ({len(with_alt) / len(splits['dev']):.1%})"
+        f"\n복수 정답 판정 파일 {rel(LABELS)}: 질문 {len(labels):,}개를 판정, "
+        f"다른 정답이 인정된 질문 {len(with_alt)}개 ({len(with_alt) / len(labels):.1%})"
     )
-    dev_by_qid = {question_key(q): q for q in splits["dev"]}
-    qid = next((q for q in with_alt if q in dev_by_qid), None)
+    print("  (판정은 옛 법령 단위 dev 질문으로 했다. 지금 dev와 겹치는 질문은 일부다)")
+    pool_by_qid = {
+        question_key(q): q for name in ("train", "dev", "test") for q in splits[name]
+    }
+    qid = next((q for q in with_alt if q in pool_by_qid), None)
     if qid:
-        q = dev_by_qid[qid]
+        q = pool_by_qid[qid]
         print(
             f"  예) {q['query']}\n      정답 {q['positive_id']} + 인정한 다른 정답 {with_alt[qid]['alt_positive_ids']}"
         )
@@ -241,14 +252,19 @@ if args.run:
     section(f"4. --run: 질문 {RUN_SAMPLE}개로 직접 평가")
     tmp = Path(tempfile.mkdtemp(prefix="lecture-02-1-"))
     rng = random.Random(SEED)
+    labeled = {question_key(q) for q in splits["dev"]} & (
+        set(load_labels(LABELS)) if LABELS.exists() else set()
+    )
     small = {
-        name: rng.sample(splits[name], min(RUN_SAMPLE, len(splits[name])))
-        for name in ("test", "dev")
+        "test": rng.sample(splits["test"], min(RUN_SAMPLE, len(splits["test"]))),
+        # dev는 복수 정답 판정이 있는 질문만 (판정 파일이 옛 dev로 만들어져 지금 dev와 일부만 겹친다)
+        "dev": [q for q in splits["dev"] if question_key(q) in labeled],
     }
     for name, rows_ in small.items():
         write_jsonl(tmp / "splits" / f"{name}.jsonl", rows_)
     print(
-        f"임시 분할 폴더: {tmp / 'splits'} (test·dev에서 {RUN_SAMPLE}개씩 무작위, seed {SEED})"
+        f"임시 분할 폴더: {tmp / 'splits'} (test {len(small['test'])}개 무작위 seed {SEED}, "
+        f"dev는 판정이 있는 {len(small['dev'])}개)"
     )
     out = tmp / "e5_test.json"
     seconds = ragkit(
@@ -262,7 +278,7 @@ if args.run:
         str(out),
     )
     print(f"  ({seconds:.0f}초)")
-    if LABELS.exists():
+    if small["dev"]:
         dev_out = tmp / "e5_dev_multi.json"
         print("\n같은 모델을 dev로, 복수 정답 판정을 붙여서:")
         ragkit(
@@ -287,7 +303,9 @@ if args.run:
 else:
     section("4. 출발점: 학습 전 e5-small, test 전체")
     out = OUT / "multilingual-e5-small_test.json"
-    seconds = ragkit("evaluate", MODEL, "--split", "test", "--out", str(out))
+    seconds = ragkit(
+        "evaluate", MODEL, "--split", "test", "--splits", str(SPLITS), "--out", str(out)
+    )
     print(
         f"  ({seconds:.0f}초. 코퍼스 임베딩은 받은 인덱스를 재사용하고, 질문만 임베딩했다)"
     )
@@ -338,4 +356,6 @@ for row in random.Random(SEED).sample(misses, min(3, len(misses))):
     print(f"      정답 {by_id[row['positive_id']]['title']} → {rank_text}")
     print(f"      1위  {top1}")
 print(f"\n결과 JSON: {rel(out)} (질문별 순위·top-10은 per_question)")
-print("다음: 04_baseline_train.py — 작은 모델을 한 번 학습하면 얼마나 오르나")
+print(
+    "다음: 04_baseline_train.py — 작은 모델을 한 번 학습하면 얼마나 오르나 (001: test R@5 0.545 → 0.744)"
+)

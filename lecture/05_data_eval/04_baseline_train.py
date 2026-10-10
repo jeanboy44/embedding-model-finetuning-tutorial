@@ -6,11 +6,12 @@
 - 학습 데이터 한 줄(질문 · 정답 조문 · hard negative)이 어떻게 생겼는지 본다
 - MNRL(MultipleNegativesRankingLoss)이 배치 안의 다른 정답을 오답으로 쓰는 방식(in-batch negative)을 숫자로 확인한다
 - NO_DUPLICATES가 왜 필요한지 본다
-- 기본 실험 001의 설정 파일과 받은 모델의 학습 기록을 읽는다. 전체 학습(약 40분)은 강사가 미리 했다
+- 기본 실험 001의 설정 파일과 받은 모델의 학습 기록을 읽는다. 전체 학습(M4 Pro 39분)은 강사가 미리 했다
 - 파일럿: 같은 설정으로 몇 step만 직접 돌려 손실 · 메모리 · step당 시간을 확인한다
 
 사전 준비 (없으면 스크립트가 받는 명령을 알려 주고 끝난다):
-    uv run python scripts/data_version.py pull v1     # 코퍼스 + 분할
+    uv run python scripts/data_version.py pull v1     # 코퍼스 + 질문
+    uv run python lecture/05_data_eval/02_split.py    # 조 단위 분할 data/splits_article/ (없으면 만든다)
     models/multilingual-e5-small                                   # scripts/download_model_hf.py
     uv run python scripts/finetuned_drive.py download 001_baseline     # models/finetuned/001_baseline
     (--run) uv sync --extra train                      # sentence-transformers
@@ -45,7 +46,7 @@ from ragkit.training import batch_margins, in_batch_scores, load_splits
 ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "data"
 CORPUS = DATA / "processed" / "law_docs.json"
-SPLITS = DATA / "splits"
+SPLITS = DATA / "splits_article"  # 조 단위 분할 (02_split.py)
 CONFIG = ROOT / "experiments" / "001_baseline" / "config.yaml"
 RECEIVED = ROOT / "models" / "finetuned" / "001_baseline"
 MODEL = "intfloat/multilingual-e5-small"
@@ -54,6 +55,7 @@ RUN_STEPS = 30  # --run 학습 step 수
 RUN_LIMIT = 960  # --run 학습 질문 수 (배치 32 × 30 step)
 
 GET_DATA = "uv run python scripts/data_version.py pull v1"
+GET_SPLITS = "uv run python lecture/05_data_eval/02_split.py"
 GET_FINETUNED = "uv run python scripts/finetuned_drive.py download 001_baseline"
 
 
@@ -132,7 +134,7 @@ args = parser.parse_args()
 require(
     [
         (CORPUS, GET_DATA),
-        (SPLITS / "train.jsonl", GET_DATA),
+        (SPLITS / "train.jsonl", GET_SPLITS),
         (RECEIVED / "train_meta.json", GET_FINETUNED),
     ]
 )
@@ -157,7 +159,13 @@ print(
 print(
     '  · e5 접두어("query: " · "passage: ")는 데이터가 아니라 코드(ragkit.embeddings.format_queries)에서 붙인다'
 )
-print(f"  · train 질문 {len(train):,}개가 이런 줄로 바뀌어 학습에 들어간다")
+with_neg = sum(bool(q["hard_negative_ids"]) for q in train)
+print(
+    f"  · train 질문 {len(train):,}개 중 hard negative가 남은 {with_neg:,}개가 이런 줄로 바뀌어 학습에 들어간다"
+)
+print(
+    "    (dev · test 정답 조의 문서는 오답에서 뺐다. 그래서 오답이 비어 빠지는 질문이 있다 — 02_split.py)"
+)
 
 
 # ============================================================
@@ -230,7 +238,7 @@ print(
 print(f"  epoch별 dev R@5 (학습 중 간이 평가): {start}{history}")
 print("  · epoch는 dev R@5로 자동으로 고른다(best epoch). test는 보지 않는다")
 print(
-    "  · test는 실험마다 마지막에 한 번만 잰다: 001은 R@5 0.513 → 0.669 (6교시 01_compare_runs.py)"
+    "  · test는 실험마다 마지막에 한 번만 잰다: 001은 R@5 0.545 → 0.744 (학습에 없던 조 942개, 질문 1,863개)"
 )
 
 
@@ -243,7 +251,7 @@ if not args.run:
         f"  uv run python lecture/05_data_eval/04_baseline_train.py --run   # {RUN_STEPS} step만 (약 1.5분)"
     )
     print(
-        "  전체 학습은 just finetune-suite (분할 → 001·004·005 학습 → 비교표, 약 2시간)"
+        f"  전체 학습은 uv run ragkit train {rel(CONFIG)} --splits {rel(SPLITS)} (M4 Pro 39분)"
     )
     print("다음(6교시): 기본 실험 001을 판정하고 오답을 쪼개 다음 가설을 찾는다")
     raise SystemExit(0)
@@ -263,6 +271,8 @@ print(
 seconds = ragkit(
     "train",
     str(CONFIG),
+    "--splits",
+    str(SPLITS),
     "--output-dir",
     str(tmp / "model"),
     "--max-steps",
@@ -276,7 +286,7 @@ print(
     f"\n학습 {pilot['seconds']:.0f}초 (step당 {pilot['seconds'] / RUN_STEPS:.1f}초, 모델 로드 포함 전체 {seconds:.0f}초)"
 )
 print(
-    f"  같은 속도로 train 전체 3 epoch를 돌리면 약 {pilot['seconds'] / RUN_STEPS * len(train) / 32 * 3 / 60:.0f}분"
+    f"  같은 속도로 train 전체 3 epoch를 돌리면 약 {pilot['seconds'] / RUN_STEPS * with_neg / 32 * 3 / 60:.0f}분"
     f" (받은 모델의 실제 학습은 {meta['seconds'] / 60:.0f}분, epoch마다 dev 평가와 저장이 더해진다)"
 )
 
