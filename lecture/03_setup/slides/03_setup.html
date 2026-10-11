@@ -162,11 +162,11 @@
       <div style="display:flex; flex-direction:column; gap:10px; padding:28px 32px; background:#f2f3f5; border-radius:14px">
         <p style="font-family:'JetBrains Mono', monospace; font-size:24px; line-height:1.6; color:#1f2a37">uv run python scripts/data_version.py pull v1<br>uv run python scripts/download_model_hf.py<br>uv run python scripts/finetuned_drive.py download</p>
       </div>
-      <p style="font-family:'Noto Sans KR', Arial, sans-serif; font-size:28px; line-height:1.55; color:#4a5361">코퍼스 · 질문 · 분할(v1), 학습 전 e5, 그리고 파인튜닝 모델 r001_A와 인덱스. 셋 다 로그인 없이 받는다</p>
+      <p style="font-family:'Noto Sans KR', Arial, sans-serif; font-size:28px; line-height:1.55; color:#4a5361">코퍼스 · 질문 · 분할(v1), 학습 전 e5, 그리고 파인튜닝 모델 002 · 001과 각각의 인덱스. 셋 다 로그인 없이 받는다</p>
     </div>
   </div>
   <p style="font-family:'Noto Sans KR', Arial, sans-serif; font-size:30px; line-height:1.6; color:#4a5361"><span style="color:#1f2a37"><b>API 키는 쓰지 않는다.</b></span> LLM 답변 단계는 건너뛰고, 검색까지 직접 본다.</p>
-  <aside>설치는 uv sync 한 줄입니다. 코퍼스, 질문, 분할은 데이터 버전 v1 한 번으로 받고, 학습 전 e5 모델은 HuggingFace에서 받습니다. 사내망 등으로 HF가 막히면 download_model_gdrive.py로 받으면 됩니다. 파인튜닝 모델 r001_A와 인덱스처럼 만드는 데 오래 걸리는 것은 제가 미리 만들어 Drive에 올려 두었습니다. finetuned_drive.py download 한 줄이면 r001_A와 인덱스 두 개를 받아 제자리에 둡니다. 인덱스를 직접 만들면 Mac에서 7~13분 걸리니 받아 쓰는 게 낫습니다. 실은 다음 장의 doctor --fix가 이 명령들을 대신 돌려 줍니다. 오늘은 API 키를 쓰지 않습니다. LLM이 답을 쓰는 단계만 건너뛰고, 오늘의 주제인 검색은 전부 키 없이 돕니다.</aside>
+  <aside>설치는 uv sync 한 줄입니다. 코퍼스, 질문, 분할은 데이터 버전 v1 한 번으로 받고, 학습 전 e5 모델은 HuggingFace에서 받습니다. 사내망 등으로 HF가 막히면 download_model_gdrive.py로 받으면 됩니다. 파인튜닝 모델과 인덱스처럼 만드는 데 오래 걸리는 것은 제가 미리 만들어 Drive에 올려 두었습니다. finetuned_drive.py download 한 줄이면 파인튜닝 모델 002와 001, 7교시에 쓸 줄인 모델까지 인덱스와 함께 받아 제자리에 둡니다. 인덱스를 직접 만들면 Mac에서 7~13분 걸리니 받아 쓰는 게 낫습니다. 실은 다음 장의 doctor --fix가 이 명령들을 대신 돌려 줍니다. 오늘은 API 키를 쓰지 않습니다. LLM이 답을 쓰는 단계만 건너뛰고, 오늘의 주제인 검색은 전부 키 없이 돕니다.</aside>
 </section>
 <section id="check-env" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:44px">
 <div style="display:flex;flex-direction:column;gap:20px">
@@ -180,11 +180,11 @@
 <tr><th style="width:18%;text-align:left;color:#6b7480;font-size:24px">점검</th><th style="width:44%;text-align:left;color:#6b7480;font-size:24px">무엇을 보나</th><th style="width:38%;text-align:left;color:#6b7480;font-size:24px">--fix가 하는 일</th></tr>
 <tr><td><b>설치</b></td><td style="color:#4a5361">ragkit · 앱 · extra, 디스크 여유 5GB</td><td style="color:#4a5361">uv sync</td></tr>
 <tr><td><b>데이터</b></td><td style="color:#4a5361">코퍼스 · 질문 · 분할, 데이터 버전 v1</td><td style="color:#4a5361">data_version.py pull v1</td></tr>
-<tr><td><b>모델 · 인덱스</b></td><td style="color:#4a5361">학습 전 e5 · r001_A와 각각의 인덱스</td><td style="color:#4a5361">download_model_hf · finetuned_drive</td></tr>
+<tr><td><b>모델 · 인덱스</b></td><td style="color:#4a5361">학습 전 e5 · 파인튜닝 002 · 001과 각각의 인덱스</td><td style="color:#4a5361">download_model_hf · finetuned_drive</td></tr>
 <tr><td><b>동작 확인</b></td><td style="color:#4a5361">두 모델을 실제로 열어 검색, 문서 수가 코퍼스와 같은가</td><td style="color:#6b7480">— (위를 채우면 통과)</td></tr>
 </table>
-<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">API 키 항목은 △(선택)로 나온다. 오늘은 키 없이 진행한다 · --quick이면 동작 확인을 건너뛴다</p>
-<aside>점검은 01_doctor.py 하나로 합니다. 설치, 데이터, 모델과 인덱스가 있는지 보고, 받은 두 모델을 실제로 열어 검색까지 해 봅니다. 파일이 있어도 깨졌거나 버전이 안 맞으면 여기서 걸립니다. 빠진 게 있으면 --fix를 붙여 다시 돌리세요. 받을 수 있는 것은 순서대로 받고 다시 점검합니다. API 키 항목은 선택이라 세모로 나오는데, 오늘은 키 없이 진행하니 괜찮습니다. 쉬는 시간 전에 전부 체크가 되도록 채워 두세요. 4교시부터는 이 환경을 계속 씁니다.</aside>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">교시별로 준비됐는지 ✓/✗로 나온다 · --quick이면 동작 확인을 건너뛴다 · --all이면 다 된 항목까지</p>
+<aside>점검은 01_doctor.py 하나로 합니다. 설치, 데이터, 모델과 인덱스가 있는지 보고, 받은 두 모델을 실제로 열어 검색까지 해 봅니다. 파일이 있어도 깨졌거나 버전이 안 맞으면 여기서 걸립니다. 빠진 게 있으면 --fix를 붙여 다시 돌리세요. 받을 수 있는 것은 순서대로 받고 다시 점검합니다. 결과는 3교시부터 8교시까지 교시별로 준비됐는지 체크 표시로 보여 줍니다. 쉬는 시간 전에 전부 체크가 되도록 채워 두세요. 4교시부터는 이 환경을 계속 씁니다.</aside>
 </section>
 <section data-section="완성품 써 보기: CLI로 학습 전 모델에 질문 넷을 직접 던진다" id="quiz" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:48px">
 <div style="display:flex;flex-direction:column;gap:20px">
@@ -214,26 +214,26 @@
 <div style="flex:1;border-top:4px solid #c9ced6;padding:22px 0 0 0;display:flex;flex-direction:column;gap:8px"><p style="font-size:24px;font-weight:700;color:#6b7480">질문 넷을 쳐 본다</p><p style="font-size:28px;line-height:1.5">search 뒤에 앞의 질문을 그대로. 지금은 학습 전 모델이다</p></div>
 <div style="flex:1;border-top:4px solid #c9ced6;padding:22px 0 0 0;display:flex;flex-direction:column;gap:8px"><p style="font-size:24px;font-weight:700;color:#6b7480">사람과 프로그램 둘 다</p><p style="font-size:28px;line-height:1.5">기본은 사람이 읽는 출력, --json이면 다른 프로그램이 읽는 출력</p></div>
 </div>
-<aside>CLI는 터미널에서 바로 씁니다. 저장소 루트에서 uv run --package ragkit-search를 앞에 붙여 실행합니다. 맨 이름 ragkit-search만 치는 건 가상환경을 켰을 때만 됩니다. laws로 법령 이름을 보고, search로 찾고, show로 원문을 봅니다. LLM이 근거를 붙여 답하는 ask 명령도 있지만 API 키가 필요해서 오늘은 쓰지 않습니다. 앞에서 본 질문 네 개를 search 뒤에 그대로 넣어 쳐 보세요. 지금은 학습 전 모델입니다. 모델을 바꿔 끼우는 건 이 시간 마지막에 합니다. CLI는 8교시에 08_product/01_search_cli.py로 직접 다룹니다.</aside>
+<aside>CLI는 터미널에서 바로 씁니다. 저장소 루트에서 uv run --package ragkit-search를 앞에 붙여 실행합니다. 맨 이름 ragkit-search만 치는 건 가상환경을 켰을 때만 됩니다. laws로 법령 이름을 보고, search로 찾고, show로 원문을 봅니다. LLM이 근거를 붙여 답하는 ask 명령도 있지만 이 강의에서는 쓰지 않습니다. 앞에서 본 질문 네 개를 search 뒤에 그대로 넣어 쳐 보세요. 지금은 학습 전 모델입니다. 모델을 바꿔 끼우는 건 이 시간 마지막에 합니다. CLI는 8교시에 08_product/01_search_cli.py로 직접 다룹니다.</aside>
 </section>
 <section data-section="학습 전후 비교: CLI에서 파인튜닝 모델로 바꿔 같은 질문의 정답 순위를 본다" id="same-question" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:36px">
 <div style="display:flex;flex-direction:column;gap:20px">
 <p style="font-size:26px;font-weight:700;color:#2d6db0">3 · 학습 전후 비교 · CLI에서 모델만 바꾸면</p>
-<h2 style="font-size:56px;font-weight:800;line-height:1.25;letter-spacing:-1px">같은 질문, 파인튜닝한 모델(r001_A)로</h2>
+<h2 style="font-size:56px;font-weight:800;line-height:1.25;letter-spacing:-1px">같은 질문, 파인튜닝한 모델(002)로</h2>
 </div>
 <div style="display:flex;flex-direction:column;gap:10px;background:#f2f3f5;border-radius:14px;padding:24px 36px">
-<p style="font-family:'JetBrains Mono', 'Noto Sans KR', monospace;font-size:24px;line-height:1.6;color:#1f2a37">uv run --package ragkit-search ragkit-search search \<br>  "편의점 알바 3개월 했는데 주휴수당 받을 수 있나요?" \<br>  <b style="color:#2d6db0">--checkpoint models/finetuned/r001_A --backend torch</b></p>
+<p style="font-family:'JetBrains Mono', 'Noto Sans KR', monospace;font-size:24px;line-height:1.6;color:#1f2a37">uv run --package ragkit-search ragkit-search search \<br>  "편의점 알바 3개월 했는데 주휴수당 받을 수 있나요?" \<br>  <b style="color:#2d6db0">--checkpoint models/finetuned/002_hard_negatives --backend torch</b></p>
 </div>
 <table style="width:1664px;font-size:26px;color:#1f2a37">
 <tr><th style="width:52%;text-align:left;color:#6b7480;font-size:24px">질문</th><th style="width:16%;text-align:left;color:#6b7480;font-size:24px">말투</th><th style="width:16%;text-align:right;color:#4a5361;font-size:24px">학습 전 정답 순위</th><th style="width:16%;text-align:right;color:#2d6db0;font-size:24px">파인튜닝</th></tr>
 <tr><td>야간 근로 수당</td><td style="color:#4a5361">키워드</td><td style="text-align:right;color:#4a5361">2위</td><td style="text-align:right;color:#2d6db0">3위</td></tr>
-<tr style="background:#e8f1fa"><td><b>편의점 알바 3개월 했는데 주휴수당 받을 수 있나요?</b></td><td style="color:#4a5361">상황 설명</td><td style="text-align:right;color:#4a5361">65위</td><td style="text-align:right;color:#2d6db0"><b>1위</b></td></tr>
-<tr><td>회사 그만뒀는데 퇴직금은 언제까지 받아야 해요?</td><td style="color:#4a5361">궁금한 점</td><td style="text-align:right;color:#4a5361">5위</td><td style="text-align:right;color:#2d6db0">2위</td></tr>
-<tr><td>방문판매로 산 정수기 환불하고 싶어요</td><td style="color:#4a5361">상황 설명</td><td style="text-align:right;color:#4a5361">100위 밖</td><td style="text-align:right;color:#2d6db0">18위</td></tr>
+<tr style="background:#e8f1fa"><td><b>편의점 알바 3개월 했는데 주휴수당 받을 수 있나요?</b></td><td style="color:#4a5361">상황 설명</td><td style="text-align:right;color:#4a5361">65위</td><td style="text-align:right;color:#2d6db0"><b>2위</b></td></tr>
+<tr><td>회사 그만뒀는데 퇴직금은 언제까지 받아야 해요?</td><td style="color:#4a5361">궁금한 점</td><td style="text-align:right;color:#4a5361">5위</td><td style="text-align:right;color:#2d6db0">3위</td></tr>
+<tr><td>방문판매로 산 정수기 환불하고 싶어요</td><td style="color:#4a5361">상황 설명</td><td style="text-align:right;color:#4a5361">100위 밖</td><td style="text-align:right;color:#2d6db0">16위</td></tr>
 </table>
-<p style="font-size:28px;line-height:1.6;color:#4a5361">키워드는 원래 잘 찾고, 일상 말투에서 차이가 커진다. test 전체로는 R@5 <b style="color:#1f2a37">0.513 → 0.723</b>. 이 차이를 4~6교시에 만든다.</p>
-<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">02_try_product.py 출력 · 조 단위 정답 순위 · 근로기준법만 학습에 쓴 법령 · test 수치는 실험 010</p>
-<aside>이제 답을 맞춰 봅니다. 아까 던진 네 질문을 CLI에서 모델만 바꿔 다시 던집니다. --checkpoint로 파인튜닝한 모델 r001_A를 지정하면 됩니다. 짧은 키워드 "야간 근로 수당"은 학습 전 모델도 2위로 잘 찾았고, 파인튜닝 뒤엔 오히려 3위로 한 칸 내려갑니다. 차이는 일상 말투에서 납니다. 편의점 주휴수당 질문은 65위에서 1위로 올라옵니다. 다만 근로기준법은 학습에 쓴 법령이라 체감용 예시입니다. 퇴직금과 방문판매는 학습 때 보지 않은 법령인데도 5위에서 2위, 100위 밖에서 18위로 올라옵니다. 18위면 여전히 상위 5개 밖이라, 파인튜닝해도 못 찾는 질문이 남는다는 것도 같이 봅니다. test 전체로는 R@5가 0.513에서 0.723으로 오릅니다. 이 차이를 4교시부터 6교시까지 직접 만듭니다.</aside>
+<p style="font-size:28px;line-height:1.6;color:#4a5361">키워드는 원래 잘 찾고, 일상 말투에서 차이가 커진다. test 전체로는 기본 실험만으로도 R@5 <b style="color:#1f2a37">0.545 → 0.744</b>. 이 차이를 5~6교시에 만든다.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">02_try_product.py 출력 · 조 단위 정답 순위 · test 수치는 실험 001 (학습에 없던 조 1,863 질문)</p>
+<aside>이제 답을 맞춰 봅니다. 아까 던진 네 질문을 CLI에서 모델만 바꿔 다시 던집니다. --checkpoint로 파인튜닝한 모델 002를 지정하면 됩니다. 짧은 키워드 "야간 근로 수당"은 학습 전 모델도 2위로 잘 찾았고, 파인튜닝 뒤엔 오히려 3위로 한 칸 내려갑니다. 차이는 일상 말투에서 납니다. 편의점 주휴수당 질문은 65위에서 2위로 올라옵니다. 퇴직금은 5위에서 3위, 방문판매 정수기는 100위 밖에서 16위로 올라옵니다. 16위면 여전히 상위 5개 밖이라, 파인튜닝해도 못 찾는 질문이 남는다는 것도 같이 봅니다. test 전체로 보면, 학습에 없던 조에 대한 질문 1,863개에서 기본 실험 001만으로 R@5가 0.545에서 0.744로 오릅니다. 이 차이를 5교시와 6교시에 직접 만듭니다.</aside>
 </section>
 <section id="words-rank" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:40px">
 <div style="display:flex;flex-direction:column;gap:20px">
@@ -247,7 +247,7 @@
 </div>
 <p style="font-size:30px;line-height:1.6;color:#4a5361">학습 전에는 말투에 따라 <b style="color:#b8650f">82위 ↔ 3위</b>로 갈린다. 파인튜닝하면 어느 말투로 물어도 <b style="color:#2d6db0">2위</b>.</p>
 <p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">ragkit-search search · 정답 근로기준법 제55조 (휴일) · 전체 2.6만 문서 중 순위 · 근로기준법은 학습에 쓴 법령</p>
-<aside>같은 내용을 말투만 바꿔서, 학습 전 모델과 파인튜닝 모델에 각각 물어봅니다. 표로 보면 네 칸입니다. 윗줄이 학습 전 모델입니다. 일상어로 물으면 정답 조문이 82위, 법률 용어로 물으면 3위입니다. 같은 걸 물었는데 말투에 따라 82위와 3위로 갈립니다. 학습 전 모델은 법률 용어로 물어야 찾는다는 뜻이죠. 그런데 사람은 법률 용어로 묻지 않습니다. 아랫줄이 파인튜닝한 모델입니다. 일상어로 물어도 2위, 법률 용어로 물어도 2위입니다. 말투가 달라도 같은 조문을 찾게 된 겁니다. 이 어휘 차이를 메우는 것이 오늘 파인튜닝의 목표입니다. 근로기준법은 학습에 쓴 법령이라 체감용 예시이고, 처음 보는 법령에서 얼마나 되는지는 6교시에 봅니다.</aside>
+<aside>같은 내용을 말투만 바꿔서, 학습 전 모델과 파인튜닝 모델에 각각 물어봅니다. 표로 보면 네 칸입니다. 윗줄이 학습 전 모델입니다. 일상어로 물으면 정답 조문이 82위, 법률 용어로 물으면 3위입니다. 같은 걸 물었는데 말투에 따라 82위와 3위로 갈립니다. 학습 전 모델은 법률 용어로 물어야 찾는다는 뜻이죠. 그런데 사람은 법률 용어로 묻지 않습니다. 아랫줄이 파인튜닝한 모델입니다. 일상어로 물어도 2위, 법률 용어로 물어도 2위입니다. 말투가 달라도 같은 조문을 찾게 된 겁니다. 이 어휘 차이를 메우는 것이 오늘 파인튜닝의 목표입니다. 근로기준법은 학습에 쓴 법령이라 체감용 예시이고, 학습에 없던 조에서 얼마나 되는지는 6교시에 봅니다.</aside>
 </section>
 <section data-section="실행 명령, 확인할 것, 다음 시간" id="run" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:56px">
 <div style="display:flex;flex-direction:column;gap:20px">
@@ -258,7 +258,7 @@
 <p style="font-family:'JetBrains Mono', 'Noto Sans KR', monospace;font-size:28px;line-height:1.75;color:#1f2a37"><span style="color:#6b7480"># 0. 완성품 받아 열기: 앞의 Drive 링크에서 받아 더블클릭 (설치 전에 맨 먼저)</span><br><span style="color:#6b7480"># 1. 환경 점검 (빠진 것이 있으면 --fix)</span><br>uv run python lecture/03_setup/01_doctor.py<br><span style="color:#6b7480"># 2. 완성품 써 보기: 같은 질문을 학습 전 e5와 파인튜닝에</span><br>uv run python lecture/03_setup/02_try_product.py<br><span style="color:#6b7480"># 3. 학습 전후 비교: CLI 명령 모음</span><br>lecture/03_setup/README.md</p>
 </div>
 <p style="font-size:30px;line-height:1.6;color:#4a5361">저장소 루트에서 실행한다. 받은 산출물만 쓰므로 --run 모드가 없고, 몇 분이면 끝난다.</p>
-<aside>맨 먼저 완성품 HTML을 받아 열고, 점검과 완성품 스크립트를 돌리고, 학습 전후 비교는 README에 모아 둔 CLI 명령을 직접 쳐 봅니다. 모두 저장소 루트에서 실행합니다. 3교시 스크립트는 받은 모델과 인덱스를 열어 보기만 해서 --run 모드가 없고, 오래 걸리지 않습니다. 점검에서 빠진 게 나오면 --fix를 붙여 다시 돌리세요. API 키는 쓰지 않습니다. 선택: uv run python lecture/03_setup/extra_gemini_basics.py. GEMINI_API_KEY가 있어야 하고, 한 번 실행에 Gemini를 4회 호출합니다. 무료 한도가 작으니 여러 번 돌리지 마세요.</aside>
+<aside>맨 먼저 완성품 HTML을 받아 열고, 점검과 완성품 스크립트를 돌리고, 학습 전후 비교는 README에 모아 둔 CLI 명령을 직접 쳐 봅니다. 모두 저장소 루트에서 실행합니다. 3교시 스크립트는 받은 모델과 인덱스를 열어 보기만 해서 --run 모드가 없고, 오래 걸리지 않습니다. 점검에서 빠진 게 나오면 --fix를 붙여 다시 돌리세요. API 키는 쓰지 않습니다.</aside>
 </section>
 <section id="check" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:72px">
 <div style="display:flex;flex-direction:column;gap:20px">

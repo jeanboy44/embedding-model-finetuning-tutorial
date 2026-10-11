@@ -420,11 +420,10 @@
 <p style="font-family:'JetBrains Mono', 'Noto Sans KR', monospace;font-size:26px;line-height:1.75;color:#1f2a37"><span style="color:#6b7480"># 처음: torch 백엔드</span><br>uv run --package ragkit-api ragkit-api --backend torch<br><span style="color:#6b7480"># 지금: 가지치기 + INT8 모델</span><br>uv run --package ragkit-api ragkit-api --model models/multilingual-e5-small-pruned-int8</p>
 </div>
 <div style="display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:26px 0 0 0">
-<p style="font-size:24px;font-weight:700;color:#2d6db0">MLflow 모델 레지스트리를 쓰면</p>
-<p style="font-family:'JetBrains Mono', 'Noto Sans KR', monospace;font-size:24px;line-height:1.7;color:#1f2a37">uv run ragkit register models/multilingual-e5-small-pruned-int8 --name law-embedder --alias champion<br>uv run --package ragkit-api ragkit-api --model models:/law-embedder@champion</p>
-<p style="font-size:28px;line-height:1.55;color:#4a5361">앱은 경로 대신 별칭으로 부른다. 더 나은 모델이 나오면 별칭만 옮긴다.</p>
+<p style="font-size:24px;font-weight:700;color:#2d6db0">바뀌는 건 옵션 하나</p>
+<p style="font-size:28px;line-height:1.55;color:#4a5361">API 코드는 그대로다. 이 30MB 모델을 8교시에 세 가지 길(HTML 파일 하나 · 웹 · 에이전트)로 건넨다.</p>
 </div>
-<aside>고른 모델로 API를 다시 띄웁니다. 옵션 하나만 바뀌고 API 코드는 그대로입니다. 3번 스크립트가 백엔드를 바꿔 가며 시작 시간과 검색 속도를 직접 재는데, 여기 띄우는 가지치기 + INT8 모델 기준으로, 이 Mac에서는 시작 시간이 torch의 약 3.3초에서 0.1초로, 워밍업 후 20회 검색 중앙값이 약 15ms에서 9ms로 줄었습니다. 가지치기 없이 ONNX INT8만 쓰면 시작은 0.3~0.4초입니다. 돌릴 때마다 조금씩 달라지니 범위로 기억하세요. MLflow 레지스트리에 law-embedder라는 이름, champion이라는 별칭으로 등록해 두면 앱은 경로 대신 별칭으로 모델을 부르고, 더 나은 모델이 나오면 별칭만 옮기면 됩니다. 레지스트리와 모니터링은 8교시에 MLflow 서버(포트 5050)를 띄워 이어서 봅니다.</aside>
+<aside>고른 모델로 API를 다시 띄웁니다. 옵션 하나만 바뀌고 API 코드는 그대로입니다. 3번 스크립트가 백엔드를 바꿔 가며 시작 시간과 검색 속도를 직접 재는데, 여기 띄우는 가지치기 + INT8 모델 기준으로, 이 Mac에서는 시작 시간이 torch의 약 3.3초에서 0.1초로, 워밍업 후 20회 검색 중앙값이 약 15ms에서 9ms로 줄었습니다. 가지치기 없이 ONNX INT8만 쓰면 시작은 0.3~0.4초입니다. 돌릴 때마다 조금씩 달라지니 범위로 기억하세요. 이 모델을 8교시에 HTML 파일 하나, 웹, 에이전트, 세 가지 길로 사용자에게 건넵니다.</aside>
 </section>
 <section data-section="실행 명령, 확인할 것, 다음 시간" id="run" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:40px">
 <div style="display:flex;flex-direction:column;gap:20px">
@@ -455,11 +454,11 @@
 <h2 style="font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-1px">제품으로 전달하고, 마무리한다</h2>
 </div>
 <div style="display:flex;gap:56px">
-<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">1</p><h3 style="font-size:36px;font-weight:800">제품화</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">CLI · MCP · 웹. 오늘 줄인 모델을 그대로 쓴다</p></div>
-<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">2</p><h3 style="font-size:36px;font-weight:800">운영 모니터링</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">MLflow로 요청 한 건, 대화 한 세션을 추적</p></div>
-<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">3</p><h3 style="font-size:36px;font-weight:800">마무리</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">다시 2022 vs 2026</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">1</p><h3 style="font-size:36px;font-weight:800">세 가지 길로 건네기</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">HTML 파일 하나 · 웹 · 에이전트(CLI + 스킬, MCP). 오늘 줄인 모델을 그대로 쓴다</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">2</p><h3 style="font-size:36px;font-weight:800">이러면 끝일까?</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">기능이 있는 제품과 사용자가 잘 쓰는 제품의 차이</p></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:14px;border-top:4px solid #4f93d8;padding:26px 0 0 0"><p style="font-size:24px;font-weight:700;color:#6b7480">3</p><h3 style="font-size:36px;font-weight:800">마무리</h3><p style="font-size:28px;line-height:1.55;color:#4a5361">내가 맡는 범위 여섯 칸과 2022 vs 2026을 다시 본다</p></div>
 </div>
-<aside>마지막 8교시에는 3교시에 먼저 써 본 완성품, CLI와 MCP와 웹을 직접 만듭니다. 오늘 가볍게 만든 모델을 그대로 씁니다. MLflow로 요청과 대화를 추적하는 운영 모니터링을 보고, 2022와 2026을 다시 비교하며 마무리합니다.</aside>
+<aside>마지막 8교시에는 오늘 가볍게 만든 모델을 사용자에게 건네는 세 가지 길을 봅니다. 데스크톱 앱 대신 HTML 파일 하나, 웹, 그리고 사용자의 에이전트에게 CLI와 스킬, MCP로 건네는 길입니다. 길마다 환경과 장단점, 맞는 곳과 안 맞는 곳을 봅니다. 그다음 이러면 끝일까요 하고 묻습니다. 기능이 있는 제품과 사용자가 잘 쓸 수 있는 제품은 다르기 때문입니다. 마지막으로 1교시의 내가 맡는 범위 여섯 칸과 2022 대 2026을 다시 보며 마무리합니다.</aside>
 </section>
 <section id="break" data-transition="fade" style="background:#f2f3f5;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:center;gap:44px">
 <p style="font-size:26px;font-weight:700;color:#6b7480">7교시 끝</p>
