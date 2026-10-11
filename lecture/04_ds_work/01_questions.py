@@ -27,13 +27,16 @@
                                                                # 내가 스킬로 만든 파일을 검증
 """
 
-import argparse
 import json
 import subprocess
 import sys
 import tempfile
 from collections import Counter
 from pathlib import Path
+
+import cyclopts
+from cyclopts import Parameter
+from pydantic import BaseModel, Field
 
 from ragkit.config import get_settings
 from ragkit.data import load_corpus, load_questions
@@ -85,14 +88,24 @@ def validate(*files: Path, tail: int = 6) -> int:
     return result.returncode
 
 
-parser = argparse.ArgumentParser(description="4교시: 질문 데이터")
-parser.add_argument(
-    "--run", action="store_true", help="틀린 질문 파일로 검증 스크립트 직접 돌려 보기"
-)
-parser.add_argument(
-    "--file", type=Path, help="--run에서 검증할 내 질문 파일 (스킬로 만든 것)"
-)
-args = parser.parse_args()
+@Parameter(name="*")
+class Options(BaseModel):
+    run: bool = Field(
+        False, description="틀린 질문 파일로 검증 스크립트 직접 돌려 보기"
+    )
+    file: Path | None = Field(
+        None, description="--run에서 검증할 내 질문 파일 (스킬로 만든 것)"
+    )
+
+
+def cli(*, options: Options | None = None) -> Options:
+    """4교시: 질문 데이터"""
+    return options or Options()
+
+
+args = cyclopts.run(cli, result_action="return_value")
+if args is None:  # --help
+    sys.exit(0)
 
 files = sorted(QUESTIONS.glob("*.jsonl"))
 if not CORPUS.exists() or not files:

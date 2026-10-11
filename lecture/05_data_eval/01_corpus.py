@@ -20,7 +20,6 @@
                                                          # (임시 폴더, 인터넷 필요, 수 초)
 """
 
-import argparse
 import os
 import subprocess
 import sys
@@ -28,6 +27,10 @@ import tempfile
 import time
 from collections import Counter
 from pathlib import Path
+
+import cyclopts
+from cyclopts import Parameter
+from pydantic import BaseModel, Field
 
 os.environ.setdefault(
     "TRANSFORMERS_VERBOSITY", "error"
@@ -76,13 +79,21 @@ def token_lengths(docs: list[dict]) -> list[int] | None:
     return [len(ids) for ids in tokenizer(texts, add_special_tokens=True)["input_ids"]]
 
 
-parser = argparse.ArgumentParser(description="실습 1-1: 코퍼스")
-parser.add_argument(
-    "--run",
-    action="store_true",
-    help=f"{RUN_THEME} 테마 코퍼스를 임시 폴더에 직접 만들어 비교",
-)
-args = parser.parse_args()
+@Parameter(name="*")
+class Options(BaseModel):
+    run: bool = Field(
+        False, description=f"{RUN_THEME} 테마 코퍼스를 임시 폴더에 직접 만들어 비교"
+    )
+
+
+def cli(*, options: Options | None = None) -> Options:
+    """실습 1-1: 코퍼스"""
+    return options or Options()
+
+
+args = cyclopts.run(cli, result_action="return_value")
+if args is None:  # --help
+    sys.exit(0)
 
 if not CORPUS.exists():
     print(f"코퍼스가 없습니다: {CORPUS}")
