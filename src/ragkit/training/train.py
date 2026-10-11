@@ -81,6 +81,10 @@ class TrainConfig(BaseModel):
     train_eval_sample: int = 0
     # 채굴한 hard negative(JSONL: qid, negative_ids). 주면 train 질문의 hard_negative_ids를 이것으로 바꾼다.
     negatives_file: Path | None = None
+    # 배치 구성. none: 무작위(NO_DUPLICATES). same_law: 배치마다 한 법령(정답 문서의 category) 행을
+    # batch_size × same_law_ratio개 모으고 나머지는 무작위로 채운다 (in-batch negative를 같은 법으로).
+    batch_grouping: Literal["none", "same_law"] = "none"
+    same_law_ratio: float = 1.0
     lora: LoraSettings | None = None
 
 
@@ -173,6 +177,24 @@ def _make_loss(config: TrainConfig, model: SentenceTransformer) -> torch.nn.Modu
     return losses.MultipleNegativesRankingLoss(model)
 
 
+# 같은 법 샘플러가 epoch마다 남기는 배치 통계 (train_meta.json에 남긴다)
+_SAMPLER_STATS: dict = {}
+
+
+def _batch_sampler(config: TrainConfig, groups: list[str]) -> Any:
+    """batch_grouping이 none이면 None(기본 NO_DUPLICATES), same_law면 샘플러를 만드는 함수를 돌려준다."""
+    if config.batch_grouping == "none":
+        return None
+    from ragkit.training.sampler import SameLawBatchSampler
+
+    _SAMPLER_STATS.clear()
+
+    def make(dataset: Any, **kwargs: Any) -> SameLawBatchSampler:
+        return SameLawBatchSampler(dataset, groups=groups, ratio=config.same_law_ratio, stats=_SAMPLER_STATS, **kwargs)
+
+    return make
+
+
 def train(
     config: TrainConfig,
     train_questions: list[dict],
@@ -225,6 +247,8 @@ def train(
     )
     if not examples:
         raise ValueError("학습할 예시가 없습니다. hard negative가 있는 train 질문이 필요합니다.")
+    # to_examples와 같은 규칙(negative 없는 질문은 건너뜀)으로 행마다 법령 이름
+    groups = [corpus_by_id[q["positive_id"]]["category"] for q in questions if q["hard_negative_ids"]]
 
     model_source = config.model if Path(config.model).exists() else resolve_model_source(config.model)
     config_kwargs = (
@@ -282,7 +306,8 @@ def train(
         per_device_train_batch_size=config.batch_size,
         learning_rate=config.lr,
         warmup_steps=config.warmup_ratio,  # transformers 5: 1 미만 실수는 전체 step 대비 비율
-        batch_sampler=BatchSamplers.NO_DUPLICATES,  # 같은 문서가 한 배치에 두 번 → 가짜 negative 방지
+        # 같은 문서가 한 배치에 두 번 → 가짜 negative 방지. same_law면 같은 검사를 하는 같은 법 묶음 샘플러
+        batch_sampler=_batch_sampler(config, groups) or BatchSamplers.NO_DUPLICATES,
         seed=config.seed,
         eval_strategy="epoch" if evaluator else "no",
         save_strategy="no",
@@ -329,6 +354,8 @@ def train(
         },
         "config": config.model_dump(mode="json"),
     }
+    if config.batch_grouping != "none":
+        meta["batch_stats"] = dict(_SAMPLER_STATS)
     (output_dir / "train_meta.json").write_text(
         json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8"
     )
