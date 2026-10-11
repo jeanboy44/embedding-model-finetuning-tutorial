@@ -73,7 +73,7 @@ def run(
     variants: list[str] | None = None,
     corpus: Path = Path("data/processed/law_docs.json"),
     questions: Path = Path("data/splits/test.jsonl"),
-    out_dir: Path = Path("experiments/008_deploy_bench/results"),
+    out_dir: Path = Path("experiments/101_deploy_bench/results"),
     n_latency: int = 100,
 ) -> None:
     """변형별로 측정하고 results.json과 comparison.md를 쓴다.

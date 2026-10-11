@@ -50,7 +50,7 @@ uv run ragkit index --model models/multilingual-e5-small-int8
 uv run ragkit index --model models/multilingual-e5-small-pruned-int8
 ```
 
-원본 / ONNX / INT8 / 가지치기+INT8의 크기 · 메모리 · 로딩 · 지연 · 정확도 비교표(실험 008)를 읽고, API 백엔드를 torch → ONNX로 바꿔 시작 시간과 검색 속도를 잰다.
+원본 / ONNX / INT8 / 가지치기+INT8의 크기 · 메모리 · 로딩 · 지연 · 정확도 비교표(실험 101)를 읽고, API 백엔드를 torch → ONNX로 바꿔 시작 시간과 검색 속도를 잰다.
 
 ```shell
 uv run python lecture/07_optimize/03_bench_and_serve.py
@@ -86,5 +86,5 @@ uv run python lecture/07_optimize/extra_embedding_speed.py
 |---|---|
 | `01_api_review.py` | 검색 API 짧은 복습 (apps/api, FastAPI) |
 | `02_onnx_quantize_prune.py` | ONNX 변환, INT8 텐서 단위 vs 채널별, 어휘 가지치기, 받은 모델 비교 |
-| `03_bench_and_serve.py` | 비교표(실험 008) 읽기, API 백엔드 교체 전후 측정 |
+| `03_bench_and_serve.py` | 비교표(실험 101) 읽기, API 백엔드 교체 전후 측정 |
 | `extra_embedding_speed.py` | (선택) 인덱싱 속도 옵션 비교 |

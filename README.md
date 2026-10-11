@@ -77,7 +77,7 @@ LLM 단계(답변 생성)는 `.env`에 `GEMINI_API_KEY`가 필요합니다. [Goo
 # DS용 CLI (1·3단계): index · split · train · evaluate · compare · export-onnx · quantize · prune-vocab
 uv run ragkit --help
 
-# 배포 최적화 비교표 (3단계) → experiments/008_deploy_bench/results/comparison.md
+# 배포 최적화 비교표 (3단계) → experiments/101_deploy_bench/results/comparison.md
 uv run ragkit-bench run
 
 # 검색 API (2단계) → http://127.0.0.1:8000/docs

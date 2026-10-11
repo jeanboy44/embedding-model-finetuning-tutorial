@@ -40,7 +40,7 @@ experiments/archive/*/results/*
 !experiments/*/results/comparison.md
 !experiments/archive/*/results/comparison.md
 # 7교시 03_bench_and_serve.py가 읽는 배포 벤치 측정값 (3KB)
-!experiments/008_deploy_bench/results/results.json
+!experiments/101_deploy_bench/results/results.json
 data/processed/
 data/raw/*
 !data/raw/.gitkeep

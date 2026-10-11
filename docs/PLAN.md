@@ -299,7 +299,7 @@ AI 도구 덕분에 DS가 직접 손대기 쉬워진 영역 ②. 모델을 "제�
 |---|---|---|---|
 | 1 | ragkit(인덱스·분할·학습·평가·비교·오답 분석) | `03_setup` ~ `06_experiment` | 질문 12,232개 → 법령 단위 분할 train 8,294 · dev 1,412 · test 2,526(법령 16개). exp_010(test R@5): 학습 전 e5 0.513 → 001 0.669 · 004 LoRA 0.641 · 005 0.659 · 002 다시 캔 오답 0.723. 쿼리 확장(exp_003)은 Gemini 한도로 보류. 실습 0~3 스크립트 완료(2026-10-06) |
 | 2 | apps/api | `07_optimize/01_api_review.py` (실습 4 복습) | 실행 확인 (torch 백엔드, SSE, 노트북) |
-| 3 | `ragkit quantize`(채널별 INT8), `ragkit prune-vocab`, apps/bench | `07_optimize/02`·`03` | 실험 008(test 2,526개): 가지치기+INT8이 torch 대비 설치 669→127MB·모델 471→30MB·메모리 1133→403MB·로딩 3.6→0.3s, R@5 0.513→0.515(동일). 가지치기 어휘가 test 질문 100%를 원본과 같게 토큰화 |
+| 3 | `ragkit quantize`(채널별 INT8), `ragkit prune-vocab`, apps/bench | `07_optimize/02`·`03` | 실험 101(test 2,526개): 가지치기+INT8이 torch 대비 설치 669→127MB·모델 471→30MB·메모리 1133→403MB·로딩 3.6→0.3s, R@5 0.513→0.515(동일). 가지치기 어휘가 test 질문 100%를 원본과 같게 토큰화 |
 | 4 | apps/search-cli·mcp·web, `ragkit.tracking`(MLflow) | `08_product/01`~`04` | uvx(torch 없음), MCP stdio 도구 호출, 웹 흐름(Playwright) 확인. MLflow(`feat/mlflow`): bench run 2개 → 레지스트리 champion으로 API 기동 → 노트북 대화 2턴이 세션 하나의 트레이스 2개(검색 조문·토큰 수)로 남는 것 확인 |
 
 - 이전 구성(Phase 1~4)의 자료는 모두 지웠다(2026-10-01). 옛 `tutorials/_legacy`(에이전트·모니터링)와 그것만 쓰던 `ragkit.monitoring`, `DocumentStore`·`retrieve`, `run_rag`, `config.EXPERIMENTS`까지 정리했다.

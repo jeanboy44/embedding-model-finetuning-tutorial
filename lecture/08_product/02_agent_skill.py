@@ -47,7 +47,11 @@ VARIANTS = {
     "파인튜닝 e5 (002_hard_negatives)": ["--checkpoint", str(FINETUNED), "--backend", "torch"],
 }
 TEST = ROOT / "data" / "splits" / "test.jsonl"
-RECEIVED = ROOT / "experiments" / "010_agent_skill" / "results" / "comparison.md"
+RECEIVED = (
+    ROOT / "experiments" / "010_agent_skill" / "results" / "comparison.md"
+    if (ROOT / "experiments" / "010_agent_skill" / "results" / "comparison.md").exists()
+    else ROOT / "experiments" / "archive" / "010_agent_skill" / "results" / "comparison.md"
+)
 OUT = ROOT / "experiments" / "results" / "lecture" / "08_product"
 SEED = 7  # 실험 010과 같은 질문을 고른다
 

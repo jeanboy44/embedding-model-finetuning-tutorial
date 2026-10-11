@@ -56,8 +56,12 @@ RECEIVED = {
     "pruned": MODELS / "multilingual-e5-small-pruned",
     "pruned-int8": MODELS / "multilingual-e5-small-pruned-int8",
 }
-BENCH = SETTINGS.experiments_dir / "008_deploy_bench" / "results" / "results.json"
-GRANULARITY = SETTINGS.experiments_dir / "009_int8_granularity" / "results" / "comparison.md"
+BENCH = SETTINGS.experiments_dir / "101_deploy_bench" / "results" / "results.json"
+GRANULARITY = (
+    SETTINGS.experiments_dir / "009_int8_granularity" / "results" / "comparison.md"
+    if (SETTINGS.experiments_dir / "009_int8_granularity" / "results" / "comparison.md").exists()
+    else SETTINGS.experiments_dir / "archive" / "009_int8_granularity" / "results" / "comparison.md"
+)
 TEST = SETTINGS.data_dir / "splits" / "test.jsonl"
 SAMPLE = 200
 RUN = "--run" in sys.argv

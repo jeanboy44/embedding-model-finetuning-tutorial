@@ -9,13 +9,13 @@
 - 실습 3-1 API의 백엔드를 torch → ONNX로 바꿔 시작 시간과 검색 속도를 비교한다
 
 두 가지 모드:
-- 기본: 받은 측정 결과(experiments/008_deploy_bench/results/)를 읽고, API 비교만 직접 잰다 (약 10초)
+- 기본: 받은 측정 결과(experiments/101_deploy_bench/results/)를 읽고, API 비교만 직접 잰다 (약 10초)
 - --run: test 질문 앞 200개로 ragkit-bench를 직접 돌린다 (약 1분). 결과는 임시 폴더에 쓰고 지운다
   (받은 결과를 덮어쓰지 않는다. 전체 측정은 uv run ragkit-bench run)
 
 사전 준비:
     Drive에서 받은 models/ (multilingual-e5-small, -int8, -pruned-int8), data/processed/index/,
-    data/splits/test.jsonl, experiments/008_deploy_bench/results/
+    data/splits/test.jsonl, experiments/101_deploy_bench/results/
     직접 만들려면 실습 3-2의 CLI(export-onnx → quantize → prune-vocab …)와 uv run ragkit index
 
 실행:
@@ -36,7 +36,7 @@ from fastapi.testclient import TestClient
 from ragkit_api.app import create_app
 
 ROOT = Path(__file__).resolve().parents[2]
-RESULTS = ROOT / "experiments" / "008_deploy_bench" / "results" / "results.json"
+RESULTS = ROOT / "experiments" / "101_deploy_bench" / "results" / "results.json"
 TEST = ROOT / "data" / "splits" / "test.jsonl"
 MODELS = ROOT / "models"
 RUN_QUESTIONS = 200  # --run에서 쓸 test 질문 수
@@ -108,7 +108,7 @@ with tempfile.TemporaryDirectory() as tmp:
         print(f"받은 결과: {RESULTS.relative_to(ROOT)} (직접 재려면 --run)")
     else:
         sys.exit(
-            f"{RESULTS}가 없습니다.\n  Drive에서 experiments/008_deploy_bench/를 받거나 --run으로 직접 재세요."
+            f"{RESULTS}가 없습니다.\n  Drive에서 experiments/101_deploy_bench/를 받거나 --run으로 직접 재세요."
         )
     rows = json.loads(results.read_text(encoding="utf-8"))["rows"]
     print((results.parent / "comparison.md").read_text(encoding="utf-8"))

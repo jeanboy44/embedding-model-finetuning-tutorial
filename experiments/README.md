@@ -7,16 +7,16 @@
 |---|---|---|---|---|
 | 000 | `000_base_eval/` | 학습 전 e5-small 평가 (기준선, 학습 없음) | 5 | 조 단위 test R@5 0.545 (법령 단위 0.513) |
 | 001 | `001_baseline/` | 기본 실험: 가진 질문 데이터로 전체 학습 (배치 32, LLM이 고른 오답 1개), 조 단위 분할 (2026-10-11 다시 학습) | 5 | 조 단위 test R@5 **0.744** (Δ +0.199) |
-| 002 | `002_hard_negatives/` | 오답 분석으로 찾은 실험: 모델이 헷갈리는 오답을 다시 캐서 3개씩 넣는다. 학습 설정(lr 3e-5, 4 epoch)은 003 수렴 확인에서 고른 값 | 6 | **test R@5 0.723**, dev 복수 정답 R@5 0.761 (대조군 0.720) |
+| 002 | `002_hard_negatives/` | 오답 분석으로 찾은 실험: 001 모델로 hard negative 1개 재채굴 (train 조 전용, 95% 미만). 조 단위 분할 1번째 바퀴 (2026-10-11 재실험) | 6 | dev R@5 **0.7534** (대조군 0.7144, Δ +0.0390, 배포 INT8 0.7546) |
 | 003 | `003_convergence/` | 수렴 확인: 001과 같고 epoch 6, lr 3e-5 | 6 | dev 복수 정답 R@5 0.721 (best epoch 4) |
 | 004 | `004_lora/` | 001 + LoRA (r16, query/key/value), lr 2e-4 | 6 | test R@5 0.641 |
 | 005 | `005_batch128/` | 001과 같고 배치 32 → 128 | 6 | test R@5 0.659 |
 | 006 | `006_model_soup/` | 002 run A의 seed를 늘려 가중치 평균 (설계만 하고 뺐다) | 6 | - |
 | 007 | `007_colloquial/` | 구어 질문 실험. 다른 worktree에서 진행 중이라 아직 이 브랜치에 없다 | 6 | 진행 중 |
-| 008 | `008_deploy_bench/` | 배포 최적화 비교 (torch / ONNX / INT8 / 가지치기 + INT8) | 7 | `results/comparison.md` |
+| 101 | `101_deploy_bench/` | 배포 최적화 비교 (torch / ONNX / INT8 / 가지치기 + INT8) | 7 | `results/comparison.md` |
 | 009 | `009_int8_granularity/` | INT8 양자화 단위: 텐서 단위 vs 채널별 | 7 | test R@5 0.514 vs 0.458 |
 | 010 | `010_agent_skill/` | 에이전트 + CLI 스킬: 학습 전 e5 vs 파인튜닝 e5 (002) | 8 | `results/comparison.md` |
-| - | `archive/` | 이름을 그대로 둔 옛 실험: `exp_003_llm_query_expansion`, `exp_005_base_model_comparison`, `exp_007_finetune_comparison`, `exp_008_dev_multi_baseline`, `exp_010_lecture_comparison` | | |
+| - | `archive/` | 이름을 그대로 둔 옛 실험: `002_hard_negatives(법령 분할)`, `exp_003_llm_query_expansion`, `exp_005_base_model_comparison`, `exp_007_finetune_comparison`, `exp_008_dev_multi_baseline`, `exp_010_lecture_comparison` | | |
 
 - 설정 하나로 끝나는 실험은 `config.yaml`(과 `results/comparison.md`)만 둔다. 실행은 `just train <폴더>` 또는 `uv run ragkit compare experiments/<폴더>/config.yaml`.
 - `archive/exp_010_lecture_comparison`은 강의 비교표(학습 전 / 001 / 004 / 005 / 002)다. 6교시 `02_compare_runs.py`와 3교시 `02_try_product.py`가 이 설정과 결과를 읽는다.
@@ -51,7 +51,7 @@
 |---|---|---|---|
 | 001 | 기본 학습 | 완료 | 0.712 |
 | 003 | 1. 수렴 확인 | 완료 | 0.721 (best epoch 4) |
-| 002 | 2. hard negative 재채굴 | 완료: 채굴 negative 3개(A) 채택 | **0.761** (대조군 0.720, A·B·C 모두 개선) |
+| 002 | 2. hard negative 재채굴 | 완료: A1 채택 (조 단위 재실험) | **0.7534** (대조군 0.7144, Δ +0.0390) |
 | 006 | 3. model soup | 설계만 하고 뺐다 | - |
 | 007 | 구어 질문 | 진행 중 (다른 worktree) | - |
 
@@ -69,7 +69,7 @@
 | `005_batch128` | `experiments/exp_006_cached_mnrl` |
 | `006_model_soup` | `runs/002_model_soup` |
 | `007_colloquial` | `runs/003_colloquial` |
-| `008_deploy_bench` | `experiments/exp_008_deploy_bench` |
+| `101_deploy_bench` | `experiments/exp_008_deploy_bench` (구 008_deploy_bench) |
 | `009_int8_granularity` | `experiments/exp_012_int8_granularity` |
 | `010_agent_skill` | `experiments/exp_011_agent_skill` |
 | `archive/exp_0NN_*` | `experiments/exp_0NN_*` (003 · 005 · 007 · 008_dev_multi_baseline · 010) |
@@ -117,7 +117,7 @@ cd ../../..
 for d in experiments/exp_00{3,5,7}_* experiments/exp_008_dev_multi_baseline experiments/exp_010_lecture_comparison; do
   [ -d "$d" ] && rsync -a "$d/" "experiments/archive/$(basename "$d")/" && rm -rf "$d"
 done
-for pair in exp_008_deploy_bench:008_deploy_bench exp_011_agent_skill:010_agent_skill exp_012_int8_granularity:009_int8_granularity; do
+for pair in exp_008_deploy_bench:101_deploy_bench exp_011_agent_skill:010_agent_skill exp_012_int8_granularity:009_int8_granularity; do
   old=experiments/${pair%%:*}; new=experiments/${pair#*:}; [ -d "$old" ] && rsync -a "$old/" "$new/" && rm -rf "$old"
 done
 for pair in 001_hard_negatives:002_hard_negatives 002_model_soup:006_model_soup 003_colloquial:007_colloquial; do
