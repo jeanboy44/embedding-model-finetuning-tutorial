@@ -24,7 +24,6 @@
 6교시에는 학습 없이 이 001 모델을 판정하고 오답을 분석한다 (lecture/06_experiment/).
 """
 
-import argparse
 import importlib.util
 import json
 import os
@@ -36,8 +35,11 @@ import time
 from collections import Counter
 from pathlib import Path
 
+import cyclopts
 import numpy as np
 import yaml
+from cyclopts import Parameter
+from pydantic import BaseModel, Field
 
 from ragkit.data import filter_questions, load_corpus
 from ragkit.embeddings import create_embedding_fn
@@ -123,13 +125,21 @@ def show_matrix(scores: np.ndarray, loss: float) -> None:
 sys.stdout.reconfigure(
     line_buffering=True
 )  # ragkit 하위 프로세스 출력과 순서가 섞이지 않게
-parser = argparse.ArgumentParser(
-    description="실습 1-4: 기본 실험 001, 학습 원리와 파일럿"
-)
-parser.add_argument(
-    "--run", action="store_true", help=f"실험 001 설정으로 {RUN_STEPS} step 파일럿"
-)
-args = parser.parse_args()
+
+
+@Parameter(name="*")
+class Options(BaseModel):
+    run: bool = Field(False, description=f"실험 001 설정으로 {RUN_STEPS} step 파일럿")
+
+
+def cli(*, options: Options | None = None) -> Options:
+    """실습 1-4: 기본 실험 001, 학습 원리와 파일럿"""
+    return options or Options()
+
+
+args = cyclopts.run(cli, result_action="return_value")
+if args is None:  # --help
+    sys.exit(0)
 
 require(
     [

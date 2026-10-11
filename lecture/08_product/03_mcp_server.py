@@ -26,6 +26,7 @@ from pathlib import Path
 
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
+from mcp.types import CallToolResult
 
 ROOT = Path(__file__).resolve().parents[2]
 UV_BIN = shutil.which("uv") or "uv"
@@ -37,11 +38,11 @@ def section(title: str) -> None:
     print("=" * 60)
 
 
-def text_of(result) -> str:
+def text_of(result: CallToolResult) -> str:
     return "\n".join(getattr(c, "text", "") for c in result.content)
 
 
-def items_of(result) -> list[dict]:
+def items_of(result: CallToolResult) -> list[dict]:
     """도구 결과를 JSON 객체 목록으로. 목록을 돌려주는 도구는 항목마다 content 하나로 온다."""
     return [json.loads(c.text) for c in result.content if getattr(c, "text", "")]
 

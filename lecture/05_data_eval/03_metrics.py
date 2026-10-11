@@ -22,7 +22,6 @@
 결과는 experiments/results/lecture/05_data_eval/ (기본) 또는 임시 폴더(--run)에 쓴다. 받은 산출물은 건드리지 않는다.
 """
 
-import argparse
 import json
 import os
 import random
@@ -33,7 +32,10 @@ import time
 from collections import Counter
 from pathlib import Path
 
+import cyclopts
 import numpy as np
+from cyclopts import Parameter
+from pydantic import BaseModel, Field
 
 from ragkit.data import load_corpus, load_labels, question_key, relevance_key
 from ragkit.evaluation import first_rank, question_metrics
@@ -120,11 +122,23 @@ def r5(group: dict, judge: str = "doc") -> str:
 sys.stdout.reconfigure(
     line_buffering=True
 )  # ragkit 하위 프로세스 출력과 순서가 섞이지 않게
-parser = argparse.ArgumentParser(description="실습 1-3: 평가셋과 지표")
-parser.add_argument(
-    "--run", action="store_true", help=f"질문 {RUN_SAMPLE}개로 test·dev를 직접 평가한다"
-)
-args = parser.parse_args()
+
+
+@Parameter(name="*")
+class Options(BaseModel):
+    run: bool = Field(
+        False, description=f"질문 {RUN_SAMPLE}개로 test·dev를 직접 평가한다"
+    )
+
+
+def cli(*, options: Options | None = None) -> Options:
+    """실습 1-3: 평가셋과 지표"""
+    return options or Options()
+
+
+args = cyclopts.run(cli, result_action="return_value")
+if args is None:  # --help
+    sys.exit(0)
 
 require(
     [

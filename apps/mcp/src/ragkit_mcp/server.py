@@ -5,8 +5,9 @@ Searcher(모델·인덱스)는 첫 도구 호출 때 한 번 연다. 서버 시�
 
 import os
 import threading
+from collections.abc import Callable
 from pathlib import Path
-from typing import Annotated, Any, Literal
+from typing import Annotated, Any, Literal, TypeVar
 
 # RAGKIT_PROJECT_ROOT가 설정되지 않은 경우(GUI 앱 등에서 실행 시) 저장소 루트를 기본값으로 지정
 if "RAGKIT_PROJECT_ROOT" not in os.environ:
@@ -22,6 +23,8 @@ from pydantic import Field
 
 from ragkit.service import Searcher
 from ragkit_mcp import tools
+
+T = TypeVar("T")
 
 INSTRUCTIONS = """\
 대한민국 법령(근로기준법, 주택임대차보호법, 최저임금법, 도로교통법 등) 조문을 검색하는 도구입니다. Tools for searching Korean statutes.
@@ -62,7 +65,7 @@ def set_searcher(searcher: Searcher | None) -> None:
     _searcher = searcher
 
 
-def _call(fn, *args, **kwargs):
+def _call(fn: Callable[..., T], *args: Any, **kwargs: Any) -> T:
     # 예상한 실패(모르는 법령·없는 id)는 메시지를 그대로 모델에게 보여 준다
     try:
         return fn(get_searcher(), *args, **kwargs)

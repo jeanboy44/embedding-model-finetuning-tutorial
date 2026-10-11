@@ -105,10 +105,10 @@ NOISE_RE = re.compile(r"\s*<(?:개정|신설|\d{4}\.)[^>]*>|<img[^>]*>|</img>")
 # 삭제된 항·호·목 줄(개정 태그를 지운 뒤 "② 삭제", "3. 삭제", "가. 삭제"만 남은 줄)은 본문에서 지운다.
 DELETED_LINE_RE = re.compile(r"^(?:[①-⑳㉑-㉟]|\d+(?:의\d+)?\.|[가-하]\.)\s*삭제\s*$")
 # 제16항부터는 원문자 대신 `**<16>** <16> 본문`처럼 쓴다. 표기를 `<16> 본문` 하나로 줄인다.
-ANGLE_PARAGRAPH_RE = re.compile(r"^\*\*<(\d+)>\*\*\s*(?:<\1>\s*)?", re.M)
+ANGLE_PARAGRAPH_RE = re.compile(r"^\*\*<(\d+)>\*\*\s*(?:<\1>\s*)?", re.MULTILINE)
 # 항 번호(①~⑳, ㉑~㉟, <16> 등)와 호 번호(1. 2의3.)는 줄 맨 앞에 온다.
-PARAGRAPH_RE = re.compile(r"^(?:[①-⑳㉑-㉟]|<\d+>)", re.M)
-ITEM_RE = re.compile(r"^(\d+(?:의\d+)?)\.\s", re.M)
+PARAGRAPH_RE = re.compile(r"^(?:[①-⑳㉑-㉟]|<\d+>)", re.MULTILINE)
+ITEM_RE = re.compile(r"^(\d+(?:의\d+)?)\.\s", re.MULTILINE)
 # 조문 하나(제목 + 본문)의 최대 글자 수. 넘으면 항 단위로, 항도 넘으면 호 묶음으로 나눈다.
 # 임베딩 모델(multilingual-e5, 최대 512토큰)에서 잘리지 않게 잡은 값이다. 한국어 법령은 약 1.8자/토큰이다.
 MAX_CHARS = 800

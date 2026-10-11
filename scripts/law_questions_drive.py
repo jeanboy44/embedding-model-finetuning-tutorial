@@ -27,8 +27,8 @@ import gdown
 from cyclopts import App
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from scripts.download_model_gdrive import extract_zip, sha256sum  # noqa: E402
-from ragkit.config import get_settings  # noqa: E402
+from ragkit.config import get_settings
+from scripts.download_model_gdrive import extract_zip, sha256sum
 
 # 강사의 Drive 폴더 ("링크가 있는 모든 사용자" 공유)
 DEFAULT_FOLDER_URL = (

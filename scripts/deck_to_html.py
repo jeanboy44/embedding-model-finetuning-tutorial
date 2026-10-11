@@ -9,11 +9,12 @@
 키: ← → / Space / PageUp · PageDown 넘기기, Home · End 처음 · 끝, N 대본, F 전체 화면. 인쇄하면 장마다 한 쪽.
 """
 
-import argparse
 import html
 import json
 import re
 from pathlib import Path
+
+from cyclopts import run
 
 VIEWER_CSS = """
   * { box-sizing: border-box; }
@@ -186,14 +187,20 @@ def build(deck_dir: Path) -> str:
 """
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Slides 덱 소스를 HTML 파일 하나로 묶는다")
-    parser.add_argument("deck_dir", type=Path, help="deck.json과 slides/가 있는 폴더")
-    parser.add_argument("out", type=Path, help="출력 HTML 경로")
-    args = parser.parse_args()
-    args.out.write_text(build(args.deck_dir), encoding="utf-8")
-    print(f"{args.out} ({len(json.loads((args.deck_dir / 'deck.json').read_text(encoding='utf-8'))['order'])}장)")
+def main(deck_dir: Path, out: Path) -> None:
+    """Slides 덱 소스를 HTML 파일 하나로 묶는다.
+
+    Parameters
+    ----------
+    deck_dir
+        deck.json과 slides/가 있는 폴더.
+    out
+        출력 HTML 경로.
+    """
+    out.write_text(build(deck_dir), encoding="utf-8")
+    order = json.loads((deck_dir / "deck.json").read_text(encoding="utf-8"))["order"]
+    print(f"{out} ({len(order)}장)")
 
 
 if __name__ == "__main__":
-    main()
+    run(main)

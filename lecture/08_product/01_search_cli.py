@@ -28,11 +28,33 @@ import sys
 import tempfile
 from pathlib import Path
 
+import cyclopts
+from cyclopts import Parameter
+from pydantic import BaseModel, Field
+
 ROOT = Path(__file__).resolve().parents[2]
 ENV = {
     **os.environ,
     "MLFLOW_DISABLE_AGENT_HINT": "1",
 }  # mlflow가 설치돼 있으면 나오는 안내 한 줄을 숨긴다
+
+
+@Parameter(name="*")
+class Options(BaseModel):
+    run: bool = Field(
+        False,
+        description="휠 두 개를 임시 폴더에 빌드하고, uvx 격리 환경에서 torch 없이 도는지 확인",
+    )
+
+
+def cli(*, options: Options | None = None) -> Options:
+    """실습 4-1: 동료가 바로 쓰는 검색 CLI (apps/search-cli, ragkit-search)"""
+    return options or Options()
+
+
+args = cyclopts.run(cli, result_action="return_value")
+if args is None:  # --help
+    sys.exit(0)
 
 
 def section(title: str) -> None:
@@ -112,7 +134,7 @@ print(f"JSON 결과 {len(hits)}건, 필드: {sorted(hits[0]) if hits else '-'}")
 # 4. 배포: 설치 없이 실행 (uvx)
 # ============================================================
 section("4. uvx로 배포 (torch 없는 가벼운 도구)")
-if "--run" not in sys.argv:
+if not args.run:
     print("휠 빌드와 uvx 격리 환경 확인은 --run에서 한다 (네트워크 필요).")
 else:
     with tempfile.TemporaryDirectory() as tmp:

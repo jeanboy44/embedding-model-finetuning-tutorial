@@ -19,7 +19,6 @@ Gemini는 호출하지 않는다. 동작 확인에서 모델을 한 번씩 열�
     uv run python lecture/03_setup/01_doctor.py --all     # 다 된 항목까지 전부 보기
 """
 
-import argparse
 import importlib.metadata
 import importlib.util
 import json
@@ -30,6 +29,10 @@ import time
 import unicodedata
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Annotated
+
+import cyclopts
+from cyclopts import Parameter
 
 from ragkit.config import get_settings
 from ragkit.retrieval import default_index_path, model_key
@@ -462,20 +465,24 @@ def report(groups: dict[str, list[Check]], show_everything: bool) -> list[Check]
     return missing
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description="강의 환경과 리소스를 점검한다")
-    parser.add_argument(
-        "--quick", action="store_true", help="파일과 패키지만 본다 (동작 확인 생략)"
-    )
-    parser.add_argument(
-        "--fix", action="store_true", help="빠진 것을 받고 다시 점검한다"
-    )
-    parser.add_argument(
-        "--all", action="store_true", help="다 된 항목까지 전부 보여 준다"
-    )
-    args = parser.parse_args()
+def main(
+    *,
+    quick: bool = False,
+    fix: bool = False,
+    show_all: Annotated[bool, Parameter(name="--all")] = False,
+) -> None:
+    """강의 환경과 리소스를 점검한다
 
-    if args.fix:
+    Parameters
+    ----------
+    quick
+        파일과 패키지만 본다 (동작 확인 생략)
+    fix
+        빠진 것을 받고 다시 점검한다
+    show_all
+        다 된 항목까지 전부 보여 준다
+    """
+    if fix:
         # 받기 전 상태는 파일만 빠르게 본다. 동작 확인은 받은 뒤 한 번만
         groups = collect(quick=True)
         missing = [
@@ -485,9 +492,9 @@ def main() -> None:
             print(f"빠진 것 {len(missing)}개를 받습니다.")
             run_fixes(cmds)
             print("\n다시 점검합니다.")
-    missing = report(collect(args.quick), args.all)
+    missing = report(collect(quick), show_all)
     sys.exit(1 if missing else 0)
 
 
 if __name__ == "__main__":
-    main()
+    cyclopts.run(main)

@@ -39,7 +39,10 @@ import tempfile
 import unicodedata
 from pathlib import Path
 
+import cyclopts
 import numpy as np
+from cyclopts import Parameter
+from pydantic import BaseModel, Field
 from safetensors import safe_open
 from tokenizers import Tokenizer
 
@@ -64,7 +67,24 @@ GRANULARITY = (
 )
 TEST = SETTINGS.data_dir / "splits" / "test.jsonl"
 SAMPLE = 200
-RUN = "--run" in sys.argv
+
+
+@Parameter(name="*")
+class Options(BaseModel):
+    run: bool = Field(
+        False, description="ONNX 변환·양자화·가지치기를 임시 폴더에서 직접 실행"
+    )
+
+
+def cli(*, options: Options | None = None) -> Options:
+    """실습 3-2: ONNX 변환 · INT8 양자화 · 어휘 가지치기"""
+    return options or Options()
+
+
+args = cyclopts.run(cli, result_action="return_value")
+if args is None:  # --help
+    sys.exit(0)
+RUN = args.run
 
 
 def section(title: str) -> None:
