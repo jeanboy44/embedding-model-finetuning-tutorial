@@ -15,7 +15,7 @@
 무엇을 하나 (강사 PC 약 20초):
     1. Searcher.open으로 학습 전 e5(onnx)와 002_hard_negatives(torch)를 열고, 인덱스 조각 수와 여는 데 걸린 시간을 찍는다
     2. 질문 넷을 두 모델로 Searcher.search 해 정답 조문의 순위(100위까지)와 top-3를 나란히 찍는다. ★가 정답 조문
-    3. 강의 비교표(archive의 exp_010, results/comparison.md)에서 두 모델 행을 읽어 test R@5(전체 · 질문 유형별)를 찍는다
+    3. 실험 002를 끝내며 test로 한 번 잰 결과(조 단위 1,863문항)에서 두 모델의 R@5(전체 · 질문 유형별)를 찍는다
     4. 완성품 세 가지(CLI · MCP · 웹)를 띄우는 명령과 8교시 스크립트를 안내한다. 서버는 띄우지 않는다
 
 사전 준비 (uv run python lecture/03_setup/01_doctor.py 로 한 번에 확인):
@@ -29,7 +29,6 @@
     uv run python lecture/03_setup/02_try_product.py
 """
 
-import json
 import os
 import sys
 import time
@@ -53,14 +52,12 @@ ROOT = Path(__file__).resolve().parents[2]
 console = Console(emoji=False)
 settings = get_settings()
 FINETUNED = settings.models_dir / "finetuned" / "002_hard_negatives"
-SPLIT_META = settings.data_dir / "splits" / "split_meta.json"
-COMPARISON = (  # 강의 비교표: 학습 전 / 001 / 004 / 005 / 002의 test 지표 (6교시 01_compare_runs.py도 읽는다)
-    settings.experiments_dir
-    / "archive"
-    / "exp_010_lecture_comparison"
-    / "results"
-    / "comparison.md"
-)
+# 실험 002를 끝내며 test(조 단위 분할, 1,863문항)로 한 번 잰 doc R@5. 결과 JSON은 나눠 주지 않아 숫자를 옮겨 둔다.
+# (모델, 전체, keyword, question, situation). 질문 수는 keyword 399 · question 701 · situation 763
+TEST_R5 = [
+    ("학습 전 e5", 0.545, 0.739, 0.573, 0.417),
+    ("002_hard_negatives", 0.773, 0.875, 0.795, 0.701),
+]
 K = 3  # 화면에 보여 줄 상위 조문 수. 정답 순위는 K와 상관없이 100위까지 찾는다
 
 # (질문, 유형, 정답으로 볼 조 id). 유형은 스킬이 만든 질문의 세 가지 말투와 같다.
@@ -138,13 +135,6 @@ def rank_of(searcher: Searcher, query: str, answer: str, depth: int = 100) -> st
     return f"{depth}위 밖"
 
 
-def test_laws() -> set[str]:
-    """학습 때 보지 않은 법령 (법령 단위 분할 data/splits의 test). 질문 옆에 표시만 한다."""
-    if not SPLIT_META.exists():
-        return set()
-    return set(json.loads(SPLIT_META.read_text(encoding="utf-8"))["test"]["laws"])
-
-
 # ============================================================
 # 1. 모델 두 개 열기
 # ============================================================
@@ -178,12 +168,9 @@ section(f"2. 같은 질문을 두 모델로 검색 (top-{K})")
 console.print(
     "[dim]점수 크기는 모델마다 달라 서로 비교하지 않는다. 순위만 본다.[/] [green]★[/] = 정답으로 볼 조문"
 )
-unseen = test_laws()
 for query, qtype, answer in QUESTIONS:
-    law = answer.split("_")[0]  # 조 id "근로기준법_법률_제56조"의 앞부분이 법령 이름
-    note = " · 학습 때 보지 않은 법령" if law in unseen else ""
     console.print(f'\n[bold]질문[/] {escape(f"[{qtype}]")} "{escape(query)}"')
-    console.print(f"  정답으로 볼 조문: {escape(answer)}[dim]{note}[/]")
+    console.print(f"  정답으로 볼 조문: {escape(answer)}")
     for label, searcher in (("학습 전", base), ("파인튜닝", tuned)):
         console.print(
             f"  {escape(f'[{label}]')} 정답 순위 [bold]{rank_of(searcher, query, answer)}[/]"
@@ -198,43 +185,23 @@ for query, qtype, answer in QUESTIONS:
 
 
 # ============================================================
-# 3. 전체 test 질문에서는? (exp_010 결과 파일)
+# 3. 전체 test 질문에서는? (실험 002의 test 한 번)
 # ============================================================
-# 검색은 하지 않고, 강사가 미리 잰 비교표(마크다운 표)를 읽어 두 모델 행만 찍는다.
-# test 질문 2,526개(법령 단위 분할) 기준 doc R@5. 전체 평가는 5 · 6교시에서 ragkit evaluate로 직접 한다.
-# 출력에서 볼 것: R@5 0.513 → 0.723, situation 0.403 → 0.631로 상황 질문의 차이가 가장 크다.
-section("3. 질문 몇 개가 아니라 test 전체로 보면 (exp_010)")
-if not COMPARISON.exists():
-    console.print(
-        f"[yellow]결과 파일이 없습니다:[/] {escape(rel(COMPARISON))} (6교시 실습 2에서 다시 본다)"
-    )
-else:
-    # comparison.md의 표(모델별 지표, 질문 유형별 R@5)에서 학습 전 e5와 002_hard_negatives 행만 읽는다
-    rows: dict[str, dict[str, str]] = {}
-    header: list[str] = []
-    for line in COMPARISON.read_text(encoding="utf-8").splitlines():
-        # 표 줄만, 구분선은 제외
-        if not line.startswith("|") or line.startswith("|---"):
-            continue
-        # **굵게**도 벗긴다
-        cells = [c.strip().strip("*") for c in line.strip("|").split("|")]
-        if cells[0] == "모델":  # 머리글 줄. 표가 셋이라 머리글이 세 번 나온다
-            header = cells
-        else:
-            # 같은 모델의 표 여럿을 한 줄로 합친다
-            rows.setdefault(cells[0], {}).update(zip(header, cells))
-    cols = ["R@5", "keyword", "question", "situation"]
-    console.print("  test R@5 (전체 · 질문 유형별, n=질문 수)")
-    table = Table(box=box.SIMPLE_HEAD, show_edge=False)
-    table.add_column("모델")
-    for c in cols:
-        table.add_column(c, justify="right")
-    for name in (settings.embedding_model_name, FINETUNED.name):
-        values = rows.get(name, {})
-        table.add_row(escape(name), *(escape(values.get(c, "-")) for c in cols))
-    console.print(table)
-    console.print(f"  [dim]출처: {escape(rel(COMPARISON))}[/]")
-console.print("  → 키워드 질문보다 상황 설명(situation) 질문에서 학습 전 모델이 더 약하다")
+# 검색은 하지 않고, 강사가 실험을 끝내며 test로 한 번 잰 숫자(TEST_R5)를 찍는다.
+# 조 단위 분할의 test 1,863문항: 54개 법령은 모두 학습에 있고, 학습 질문이 없던 조만 모았다.
+# 전체 평가는 5 · 6교시에서 ragkit evaluate로 직접 한다.
+# 출력에서 볼 것: R@5 0.545 → 0.773, situation 0.417 → 0.701로 상황 질문의 차이가 가장 크다.
+section("3. 질문 몇 개가 아니라 test 전체로 보면 (실험 002)")
+console.print("  test R@5 (조 단위 분할 1,863문항 · 질문 유형별)")
+table = Table(box=box.SIMPLE_HEAD, show_edge=False)
+table.add_column("모델")
+for col in ("R@5", "keyword (399)", "question (701)", "situation (763)"):
+    table.add_column(col, justify="right")
+for name, *values in TEST_R5:
+    table.add_row(escape(name), *(f"{v:.3f}" for v in values))
+console.print(table)
+console.print("  [dim]출처: 실험 002를 끝내며 test로 한 번 잰 결과 (002는 dev로만 골랐다)[/]")
+console.print("  → 키워드 질문보다 상황 설명(situation) 질문에서 학습 전 모델이 더 약하고, 학습으로 가장 많이 오른다")
 
 
 # ============================================================
@@ -250,13 +217,11 @@ console.print(
 
 [CLI] 터미널에서 바로 검색
   uv run --package ragkit-search ragkit-search search "야간 근로 수당" -k 3
-  uv run --package ragkit-search ragkit-search search "야간 근로 수당" -k 3 \\
-      --checkpoint {ckpt} --backend torch
+  uv run --package ragkit-search ragkit-search search "야간 근로 수당" -k 3 --checkpoint {ckpt} --backend torch
   → 실습 4: uv run python lecture/08_product/01_search_cli.py
 
 [MCP] Claude Code 같은 에이전트가 법령을 검색하는 도구로 등록
-  claude mcp add ragkit-law -e RAGKIT_PROJECT_ROOT={ROOT} -- \\
-      uv run --directory {ROOT} --package ragkit-mcp ragkit-mcp
+  claude mcp add ragkit-law -e RAGKIT_PROJECT_ROOT={ROOT} -- uv run --directory {ROOT} --package ragkit-mcp ragkit-mcp
   → 실습 4: uv run python lecture/08_product/03_mcp_server.py
 
 [웹] 검색 화면 (API 서버가 HTML 한 장을 함께 제공, 빌드 없음)

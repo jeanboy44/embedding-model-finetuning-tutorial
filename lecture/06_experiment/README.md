@@ -19,7 +19,7 @@ uv run python lecture/03_setup/01_doctor.py --quick
 
 ## 1. 가설 표와 001 판정: 정말 올랐나
 
-우리가 세운 가설과 결과를 한 표로 보고(model soup을 뺀 이유 포함), 학습 전 e5와 001을 test 1,863개로 잰 결과를 질문 단위 대응 검정(`ragkit paired-test`)으로 판정한다. 강사 결과 JSON(`experiments/results/001_baseline/`)은 Drive로 나눠 주지 않으므로, 처음에는 두 모델을 직접 평가해 약 2분이고 다시 실행하면 그 결과를 읽어 몇 초다.
+우리가 세운 가설과 결과를 한 표로 보고(model soup을 뺀 이유 포함), 학습 전 e5와 001을 test 1,863개로 잰 결과를 질문 단위 대응 검정(`ragkit paired-test`)으로 판정한다. 3교시 `--fix`로 받은 결과 JSON(`experiments/results/001_baseline/`)을 읽어 몇 초다. 없으면 두 모델을 직접 평가해 약 2분이다.
 
 ```shell
 uv run python lecture/06_experiment/01_compare_runs.py

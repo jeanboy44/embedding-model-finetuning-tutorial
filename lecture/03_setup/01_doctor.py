@@ -57,6 +57,8 @@ MODELS = settings.models_dir
 E5 = settings.embedding_model_name  # intfloat/multilingual-e5-small
 E5_DIR = MODELS / Path(E5).name
 FINETUNED = MODELS / "finetuned"
+# Drive에 올린 모델 목록. 받은 모델이 옛 버전인지(모델 키가 다른지) 이것과 견준다
+DRIVE_MANIFEST = ROOT / "scripts" / "finetuned_models.json"
 DATA_VERSION = "v1"
 ALL = {3, 4, 5, 6, 7, 8}  # 교시. 1 · 2교시는 이론이라 점검할 것이 없다
 
@@ -79,6 +81,12 @@ GET_E5 = "uv run python scripts/download_model_hf.py"
 EXPORT_ONNX = f"uv run ragkit export-onnx models/{E5_DIR.name}"
 FROM_DRIVE = "uv run python scripts/finetuned_drive.py download"
 FIX_ORDER = (SYNC, GET_DATA, SPLIT_ARTICLE, GET_E5, EXPORT_ONNX, FROM_DRIVE)
+
+# 6교시: 강사가 잰 실험 001 test 결과 JSON. 있으면 01_compare_runs.py가 두 모델을 다시 평가하지 않는다
+RESULTS_001 = [
+    settings.experiments_dir / "results" / "001_baseline" / "000_base_test.json",
+    settings.experiments_dir / "results" / "001_baseline" / "001_test.json",
+]
 
 # 7교시: 가지치기 · 양자화한 모델과 그 인덱스. Drive의 묶음 하나(optimize)로 받는다
 OPTIMIZED = [
@@ -192,15 +200,23 @@ def finetuned_check(name: str, label: str, periods: set[int]) -> Check:
     path = FINETUNED / name
     have_model = (path / "model.safetensors").exists()
     # 인덱스 파일 이름은 폴더 이름 + 가중치 수정 시각(model_key). 모델만 있고 인덱스가 없으면 "인덱스 없음"
-    have_index = have_model and default_index_path(model_key(name, path)).exists()
-    detail = (
-        ""
-        if have_model and have_index
-        else ("인덱스 없음" if have_model else "모델 없음")
-    )
+    key = model_key(name, path) if have_model else ""
+    have_index = have_model and default_index_path(key).exists()
+    # Drive에 새 버전을 올렸으면 목록의 모델 키가 바뀐다. 받아 둔 모델의 키가 다르면 옛 버전이다
+    manifest = json.loads(DRIVE_MANIFEST.read_text(encoding="utf-8")) if DRIVE_MANIFEST.exists() else {}
+    latest = manifest.get("models", {}).get(name, {}).get("model_key", key)
+    is_latest = key == latest
+    if not have_model:
+        detail = "모델 없음"
+    elif not is_latest:
+        detail = f"옛 버전 ({key}, Drive는 {latest})"
+    elif not have_index:
+        detail = "인덱스 없음"
+    else:
+        detail = ""
     return Check(
         f"{rel(path)} + 인덱스 ({label})",
-        have_model and have_index,
+        have_model and have_index and is_latest,
         detail,
         FROM_DRIVE,
         periods,
@@ -219,6 +235,14 @@ def model_checks() -> list[Check]:
         Check(f"{rel(base_index)} (학습 전 e5 인덱스)", base_index.exists(), "", FROM_DRIVE, ALL - {4}, drive=E5_DIR.name),
         finetuned_check("002_hard_negatives", "최종 모델", {3, 6, 8}),
         finetuned_check("001_baseline", "기본 실험", {5, 6}),
+        Check(
+            "실험 001 test 결과 JSON (학습 전 · 001)",
+            all(p.exists() for p in RESULTS_001),
+            "",
+            FROM_DRIVE,
+            {6},
+            drive="results_001_baseline",
+        ),
         Check(
             "INT8 · 가지치기 모델 3개 + 인덱스 2개",
             not optimized_missing,
@@ -337,7 +361,7 @@ def collect(quick: bool) -> dict[str, list[Check]]:
 # 받는 명령
 # ============================================================
 # --fix는 빠진 항목의 fix 명령을 모아 FIX_ORDER(설치 → 데이터 → 학습 전 모델 → ONNX → Drive) 순서로 돌린다.
-# Drive에서 받을 것(학습 전 e5 인덱스 · 파인튜닝 모델 · 7교시 모델)은 이름을 모아 finetuned_drive.py 한 줄로 만든다.
+# Drive에서 받을 것(학습 전 e5 인덱스 · 파인튜닝 모델 · 6교시 결과 JSON · 7교시 모델)은 이름을 모아 finetuned_drive.py 한 줄로 만든다.
 # 이미 있는 항목은 명령에 들어가지 않으므로 두 번 받지 않는다. 한 명령이 실패해도 다음 명령으로 간다.
 def fix_commands(missing: list[Check]) -> list[str]:
     """--fix가 돌릴 명령. 같은 명령은 하나로, Drive에서 받을 것은 이름을 모아 한 줄로."""

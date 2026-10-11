@@ -47,7 +47,7 @@ uv run python lecture/03_setup/01_doctor.py --fix   # 3~8교시에 쓸 것을 �
 `01_doctor.py`는 3~8교시 실습에 필요한 것을 네 묶음으로 점검한다. 모델을 여는 동작 확인까지 수십 초, `--quick`이면 몇 초다.
 
 1. **설치.** Python 3.10 이상, `ragkit`(ONNX 추론), extra `[torch]` · `[train]` · `[mlflow]`, 앱 네 개(`ragkit-search` · `ragkit-api` · `ragkit-bench` · `ragkit-mcp`), 디스크 여유 5GB, Node.js + pnpm을 본다. 패키지가 빠지면 받는 명령은 모두 `uv sync --all-packages --all-extras` 하나다.
-2. **모델 · 인덱스.** 학습 전 e5(`models/multilingual-e5-small`)와 ONNX 변환본, 그 인덱스 `data/processed/index/multilingual-e5-small.sqlite`, 파인튜닝 모델 둘(`002_hard_negatives`는 최종 모델, `001_baseline`은 5 · 6교시)과 각 인덱스, 7교시의 INT8 · 가지치기 모델 3개와 인덱스 2개를 본다. 인덱스는 만드는 데 몇 분이라 Drive에서 받는다.
+2. **모델 · 인덱스.** 학습 전 e5(`models/multilingual-e5-small`)와 ONNX 변환본, 그 인덱스 `data/processed/index/multilingual-e5-small.sqlite`, 파인튜닝 모델 둘(`002_hard_negatives`는 최종 모델, `001_baseline`은 5 · 6교시)과 각 인덱스, 6교시의 실험 001 test 결과 JSON, 7교시의 INT8 · 가지치기 모델 3개와 인덱스 2개를 본다. 인덱스는 만드는 데 몇 분이라 Drive에서 받는다. 받아 둔 파인튜닝 모델이 Drive에 새로 올린 것과 다르면 "옛 버전"으로 표시하고 `--fix`가 새로 받는다.
 3. **데이터.** 코퍼스 `data/processed/law_docs.json`, 질문 폴더 `data/questions/`, 법령 단위 분할 `data/splits/`(train · dev · test), 조 단위 분할 `data/splits_article/`를 보고 질문 수를 함께 찍는다. 받은 데이터가 버전 v1과 같은지도 보는데, 이것은 선택 항목이라 내가 만든 질문 · 분할이 있어 달라도 된다.
 4. **동작 확인.** `ragkit.service.Searcher.open`으로 학습 전 e5와 `002_hard_negatives`를 실제로 열어 "야간 근로 수당"을 검색한다. 결과가 나오고 인덱스의 문서 수가 코퍼스 조각 수 25,967개와 같아야 통과다. 파일이 있어도 깨졌거나 코퍼스와 인덱스 버전이 다른 경우를 여기서 잡는다. `--quick`은 이 단계를 건너뛴다.
 
@@ -60,7 +60,7 @@ uv run python scripts/data_version.py pull v1          # 코퍼스 · 질문 · 
 uv run ragkit split data/questions --unit article --test-ratio 0.15 --dev-ratio 0.1 --out data/splits_article   # 조 단위 분할 (5 · 6교시, 몇 초)
 uv run python scripts/download_model_hf.py             # 학습 전 e5 (HF가 막히면 download_model_gdrive.py)
 uv run ragkit export-onnx models/multilingual-e5-small # ONNX 추론용 변환
-uv run python scripts/finetuned_drive.py download multilingual-e5-small 002_hard_negatives 001_baseline optimize   # 학습 전 e5 인덱스 · 파인튜닝 모델 2개 · 7교시 INT8 · 가지치기 모델 (각 인덱스 포함)
+uv run python scripts/finetuned_drive.py download multilingual-e5-small 002_hard_negatives 001_baseline results_001_baseline optimize   # 학습 전 e5 인덱스 · 파인튜닝 모델 2개 · 6교시 결과 JSON · 7교시 INT8 · 가지치기 모델 (각 인덱스 포함)
 ```
 
 ## 2. 완성품 써 보기 (한 번에 보기)
@@ -72,8 +72,8 @@ uv run python lecture/03_setup/02_try_product.py
 ```
 
 1. **모델 두 개 열기.** 앱(API · CLI · MCP)과 같은 입구 `ragkit.service.Searcher.open`으로 학습 전 e5(ONNX)와 `models/finetuned/002_hard_negatives`(torch, 받은 모델에는 ONNX 변환본이 없다)를 연다. 두 줄 모두 인덱스 조각 25,967개로 같고, 인덱스 파일은 모델마다 따로다. 같은 조문도 모델이 다르면 벡터가 다르기 때문이다. 여는 데 강사 PC에서 약 11초다(처음 실행은 20초 남짓). 파인튜닝 줄에는 폴더 이름(`002_hard_negatives`)을 찍는다.
-2. **같은 질문을 두 모델로.** 아래 3절의 질문 넷을 두 모델로 `Searcher.search` 해 정답 조문의 순위(100위까지, 조 단위)와 top-3를 나란히 찍는다. ★가 정답 조문이다. 점수 크기는 모델마다 달라 비교하지 않고 순위만 본다. 키워드 "야간 근로 수당"은 둘 다 2 · 3위로 상위인데, 상황 설명 "편의점 알바 … 주휴수당"은 학습 전 65위에서 파인튜닝 2위로 뛴다. "방문판매로 산 정수기 환불"은 파인튜닝해도 16위라 못 찾는다. 이것이 6교시 오답 분석으로 이어진다. 학습 때 보지 않은 법령의 질문에는 그 표시가 붙는다.
-3. **test 전체로 보면.** 검색하지 않고 강사가 미리 잰 비교표(실험 archive의 exp_010)에서 두 모델 행을 읽는다. test 질문 2,526개(법령 단위 분할)의 R@5가 0.513 → 0.723이고, 유형별로는 keyword 0.725 → 0.862, question 0.517 → 0.749, situation 0.403 → 0.631이다. 상황 설명 질문에서 학습 전 모델이 가장 약하고 차이도 가장 크다. 전체 평가는 5 · 6교시에서 `ragkit evaluate`로 직접 한다.
+2. **같은 질문을 두 모델로.** 아래 3절의 질문 넷을 두 모델로 `Searcher.search` 해 정답 조문의 순위(100위까지, 조 단위)와 top-3를 나란히 찍는다. ★가 정답 조문이다. 점수 크기는 모델마다 달라 비교하지 않고 순위만 본다. 키워드 "야간 근로 수당"은 둘 다 2 · 3위로 상위인데, 상황 설명 "편의점 알바 … 주휴수당"은 학습 전 65위에서 파인튜닝 2위로 뛴다. "방문판매로 산 정수기 환불"은 파인튜닝해도 16위라 못 찾는다. 이것이 6교시 오답 분석으로 이어진다.
+3. **test 전체로 보면.** 검색하지 않고 강사가 실험 002를 끝내며 test로 한 번 잰 숫자를 보여 준다. test 질문 1,863개(조 단위 분할)의 R@5가 0.545 → 0.773이고, 유형별로는 keyword 0.739 → 0.875, question 0.573 → 0.795, situation 0.417 → 0.701이다. 상황 설명 질문에서 학습 전 모델이 가장 약하고 차이도 가장 크다. 전체 평가는 5 · 6교시에서 `ragkit evaluate`로 직접 한다.
 4. **완성품 세 가지.** CLI(`ragkit-search search`), MCP(`claude mcp add`), 웹(`ragkit-api --web-dist apps/web-lite`)을 띄우는 명령과 8교시 스크립트를 안내만 한다. 서버는 띄우지 않는다. 세 제품 모두 같은 `Searcher`를 쓰므로 `--checkpoint models/finetuned/002_hard_negatives --backend torch`를 붙이면 파인튜닝 모델로 바뀐다. LLM 답변 단계는 이 강의에서 쓰지 않는다.
 
 ## 3. CLI로 직접 질문 넷을 학습 전 모델에 던져 본다
@@ -127,7 +127,7 @@ uv run --package ragkit-search ragkit-search search "주휴일 유급휴일 1주
 | 방문판매로 산 정수기 환불하고 싶어요 | 100위 밖 | 16위 |
 | 주휴일 유급휴일 1주 개근 (법률 용어) | 3위 | — |
 
-근로기준법은 학습에 쓴 법령이라 체감용 예시다. 처음 보는 법령에서의 성적(test R@5 0.513 → 0.723, 실험 archive의 exp_010)은 6교시에 본다.
+네 질문은 체감용 예시다. 학습 질문이 없던 조로만 모은 test 전체의 성적(R@5 0.545 → 0.773, 실험 002)은 2절 3번에서 봤고, 그 숫자를 재는 법은 5 · 6교시에서 직접 해 본다.
 
 ## 스크립트
 

@@ -52,7 +52,7 @@ DEFAULT_FOLDER_URL = (
     "https://drive.google.com/drive/folders/1vpGtkFmS5kPfRlu5f7pcGKf_gZ2AWHXK"
 )
 MANIFEST = Path(__file__).resolve().parent / "finetuned_models.json"
-DEFAULT_MODEL = "002_hard_negatives"  # test R@5가 가장 높은 모델(0.723, 실험 002) (3교시 · 실습 0)
+DEFAULT_MODEL = "002_hard_negatives"  # 최종 모델 (조 단위 test R@5 0.773, 실험 002) (3교시 · 실습 0)
 DEFAULT_INDEX = "multilingual-e5-small"  # 학습 전 e5의 인덱스. 직접 만들면 7~13분
 WEIGHTS = "model.safetensors"
 console = Console(emoji=False, soft_wrap=True)  # 긴 경로·URL을 중간에서 끊지 않게
