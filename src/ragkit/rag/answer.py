@@ -8,14 +8,12 @@ import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
-import numpy as np
-
+from ragkit.embeddings import EmbedFn
 from ragkit.embeddings.profiles import E5_STYLE
 from ragkit.models import Generation, generate_with_usage
 from ragkit.retrieval import SearchHit, VectorIndex
 
 GenerateFn = Callable[[str], Generation]
-EmbedFn = Callable[..., np.ndarray]
 
 PROMPT_TEMPLATE = """당신은 한국 법령 안내 도우미입니다.
 아래 [조문]만 근거로 질문에 답하세요. 조문에 근거가 없으면 "제공된 조문으로는 알 수 없습니다"라고 답하세요.

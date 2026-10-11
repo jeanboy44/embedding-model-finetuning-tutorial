@@ -7,6 +7,7 @@ import numpy as np
 import torch
 
 from ragkit.embeddings.batching import embed_in_batches
+from ragkit.embeddings.types import EmbedFn
 from ragkit.models import load_embedding_model, load_tokenizer
 from ragkit.models.embedding_loader import resolve_device
 
@@ -85,7 +86,7 @@ def create_torch_embedding_fn(
     *,
     sort_by_length: bool = True,
     num_threads: int | None = None,
-):
+) -> EmbedFn:
     """PyTorch로 모델을 로드하고 임베딩 생성 함수를 반환한다.
 
     Args:

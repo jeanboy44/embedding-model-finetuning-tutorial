@@ -14,12 +14,14 @@ import collections
 import json
 import random
 import re
-import sys
 from pathlib import Path
 
 import numpy as np
+from cyclopts import App
 
 from ragkit.data import load_corpus, load_questions, question_key
+
+app = App(help="002 hard negative 채굴")
 
 RUN = Path(__file__).parent
 ART = RUN / "artifacts"
@@ -58,49 +60,55 @@ def pick(cands: list[dict], keep: list[str]) -> tuple[list[str], list[str]]:
     return chosen, reasons
 
 
+@app.command
 def candidates() -> None:
     ids = json.loads((EMB / "corpus_ids.json").read_text(encoding="utf-8"))
     corpus_emb = np.load(EMB / "corpus_emb.npy")
     query_emb = np.load(EMB / "query_emb_train.npy")
-    rows = [json.loads(line) for line in open(EMB / "topk_train.jsonl", encoding="utf-8")]
+    rows = [
+        json.loads(line)
+        for line in (EMB / "topk_train.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
     train_laws = {by[r["positive_id"]]["category"] for r in load_questions("data/splits/train.jsonl")}
     pool = np.array([by[i]["category"] in train_laws for i in ids])
     index = {i: n for n, i in enumerate(ids)}
     print(f"후보 풀: train 법령 {len(train_laws)}개의 문서 {pool.sum()}개 / 전체 {len(ids)}개")
 
-    out_c = open(ART / "mined_candidates.jsonl", "w", encoding="utf-8")
-    out_a = open(ART / "negatives_A.jsonl", "w", encoding="utf-8")
     (ART / "judge").mkdir(exist_ok=True)
-    out_j = open(ART / "judge" / "b_input.jsonl", "w", encoding="utf-8")
     rng = random.Random(42)
     stats = collections.Counter()
     rel_a = collections.Counter()
-    for r, q in zip(rows, query_emb):
-        qid = question_key(r)
-        s = corpus_emb @ q
-        pos_score = float(s[index[r["positive_id"]]])
-        s_pool = np.where(pool, s, -np.inf)
-        s_pool[index[r["positive_id"]]] = -np.inf
-        top = np.argsort(-s_pool)[:POOL_TOP]
-        cands = [
-            {"id": ids[i], "rank": k + 1, "score": round(float(s[i]), 4),
-             "ratio": round(float(s[i]) / pos_score, 4), "relation": relation(r["positive_id"], ids[i])}
-            for k, i in enumerate(top)
-        ]
-        out_c.write(json.dumps({"qid": qid, "positive_id": r["positive_id"], "positive_score": round(pos_score, 4),
-                                "candidates": cands}, ensure_ascii=False) + "\n")
-        neg, why = pick(cands, [])
-        stats.update(why)
-        rel_a.update(next(c["relation"] for c in cands if c["id"] == n) for n in set(neg))
-        out_a.write(json.dumps({"qid": qid, "negative_ids": neg, "reasons": why}, ensure_ascii=False) + "\n")
-        judge = [c for c in cands[:K_NEG] if c["ratio"] >= MARGIN]
-        stats["b_judge"] += len(judge)
-        if judge:
-            rng.shuffle(judge)
-            out_j.write(json.dumps({
-                "qid": qid, "query": r["query"], "positive": view(r["positive_id"], 700),
-                "candidates": [view(c["id"], 600) for c in judge],
-            }, ensure_ascii=False) + "\n")
+    with (
+        open(ART / "mined_candidates.jsonl", "w", encoding="utf-8") as out_c,
+        open(ART / "negatives_A.jsonl", "w", encoding="utf-8") as out_a,
+        open(ART / "judge" / "b_input.jsonl", "w", encoding="utf-8") as out_j,
+    ):
+        for r, q in zip(rows, query_emb):
+            qid = question_key(r)
+            s = corpus_emb @ q
+            pos_score = float(s[index[r["positive_id"]]])
+            s_pool = np.where(pool, s, -np.inf)
+            s_pool[index[r["positive_id"]]] = -np.inf
+            top = np.argsort(-s_pool)[:POOL_TOP]
+            cands = [
+                {"id": ids[i], "rank": k + 1, "score": round(float(s[i]), 4),
+                 "ratio": round(float(s[i]) / pos_score, 4), "relation": relation(r["positive_id"], ids[i])}
+                for k, i in enumerate(top)
+            ]
+            out_c.write(json.dumps({"qid": qid, "positive_id": r["positive_id"], "positive_score": round(pos_score, 4),
+                                    "candidates": cands}, ensure_ascii=False) + "\n")
+            neg, why = pick(cands, [])
+            stats.update(why)
+            rel_a.update(next(c["relation"] for c in cands if c["id"] == n) for n in set(neg))
+            out_a.write(json.dumps({"qid": qid, "negative_ids": neg, "reasons": why}, ensure_ascii=False) + "\n")
+            judge = [c for c in cands[:K_NEG] if c["ratio"] >= MARGIN]
+            stats["b_judge"] += len(judge)
+            if judge:
+                rng.shuffle(judge)
+                out_j.write(json.dumps({
+                    "qid": qid, "query": r["query"], "positive": view(r["positive_id"], 700),
+                    "candidates": [view(c["id"], 600) for c in judge],
+                }, ensure_ascii=False) + "\n")
     print("A 선택 사유:", dict(stats))
     print("A negative 관계 분포:", dict(rel_a.most_common()))
 
@@ -110,6 +118,7 @@ def view(doc_id: str, n: int) -> dict:
     return {"id": doc_id, "title": d["title"], "text": d["text"][:n]}
 
 
+@app.command(name="finalize-b")
 def finalize_b() -> None:
     """판정 결과(judge/out/*.jsonl: qid, cand_id, label)로 B negative를 만든다.
 
@@ -118,36 +127,40 @@ def finalize_b() -> None:
     """
     labels = {}
     for f in sorted((ART / "judge" / "out").glob("*.jsonl")):
-        for line in open(f, encoding="utf-8"):
-            if line.strip():
-                x = json.loads(line)
-                labels[(x["qid"], x["cand_id"])] = x["label"]
-    out = open(ART / "negatives_B.jsonl", "w", encoding="utf-8")
+        with open(f, encoding="utf-8") as f_in:
+            for line in f_in:
+                if line.strip():
+                    x = json.loads(line)
+                    labels[(x["qid"], x["cand_id"])] = x["label"]
     stats, missing = collections.Counter(), 0
-    for line in open(ART / "mined_candidates.jsonl", encoding="utf-8"):
-        m = json.loads(line)
-        keep, alt = [], []
-        for c in m["candidates"][:K_NEG]:
-            if c["ratio"] < MARGIN:
-                keep.append(c["id"])
-                continue
-            lab = labels.get((m["qid"], c["id"]))
-            if lab is None:
-                missing += 1
-                continue
-            stats[lab] += 1
-            if lab == "no":
-                keep.append(c["id"])
-            elif lab == "full":
-                alt.append(c["id"])
-        neg, why = pick(m["candidates"], keep)
-        stats.update(why)
-        out.write(json.dumps({"qid": m["qid"], "negative_ids": neg, "reasons": why, "alt_positive_ids": alt},
-                             ensure_ascii=False) + "\n")
+    with (
+        open(ART / "negatives_B.jsonl", "w", encoding="utf-8") as out,
+        open(ART / "mined_candidates.jsonl", encoding="utf-8") as in_c,
+    ):
+        for line in in_c:
+            m = json.loads(line)
+            keep, alt = [], []
+            for c in m["candidates"][:K_NEG]:
+                if c["ratio"] < MARGIN:
+                    keep.append(c["id"])
+                    continue
+                lab = labels.get((m["qid"], c["id"]))
+                if lab is None:
+                    missing += 1
+                    continue
+                stats[lab] += 1
+                if lab == "no":
+                    keep.append(c["id"])
+                elif lab == "full":
+                    alt.append(c["id"])
+            neg, why = pick(m["candidates"], keep)
+            stats.update(why)
+            out.write(json.dumps({"qid": m["qid"], "negative_ids": neg, "reasons": why, "alt_positive_ids": alt},
+                                 ensure_ascii=False) + "\n")
     if missing:
-        sys.exit(f"판정이 없는 B 대상 쌍이 {missing}개 있습니다")
+        raise SystemExit(f"판정이 없는 B 대상 쌍이 {missing}개 있습니다")
     print("B 판정·선택 사유:", dict(stats))
 
 
 if __name__ == "__main__":
-    {"candidates": candidates, "finalize-b": finalize_b}[sys.argv[1]]()
+    app()

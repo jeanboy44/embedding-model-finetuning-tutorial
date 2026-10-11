@@ -20,7 +20,6 @@
     uv run python lecture/05_data_eval/02_split.py --run     # ragkit split을 임시 폴더에 실행해 비교 (몇 초)
 """
 
-import argparse
 import json
 import os
 import random
@@ -29,6 +28,10 @@ import sys
 import tempfile
 import unicodedata
 from pathlib import Path
+
+import cyclopts
+from cyclopts import Parameter
+from pydantic import BaseModel, Field
 
 from ragkit.config import get_settings
 from ragkit.data import load_corpus, relevance_key
@@ -81,11 +84,19 @@ def split_into(out: Path | str) -> bool:
     return subprocess.run(cmd, cwd=ROOT, env=env, check=False).returncode == 0
 
 
-parser = argparse.ArgumentParser(description="실습 1-2: 조 단위 분할")
-parser.add_argument(
-    "--run", action="store_true", help="ragkit split을 임시 폴더에 실행해 비교"
-)
-args = parser.parse_args()
+@Parameter(name="*")
+class Options(BaseModel):
+    run: bool = Field(False, description="ragkit split을 임시 폴더에 실행해 비교")
+
+
+def cli(*, options: Options | None = None) -> Options:
+    """실습 1-2: 조 단위 분할"""
+    return options or Options()
+
+
+args = cyclopts.run(cli, result_action="return_value")
+if args is None:  # --help
+    sys.exit(0)
 
 if not CORPUS.exists() or not any(QUESTIONS.glob("*.jsonl")):
     print(f"코퍼스 또는 질문이 없습니다: {rel(CORPUS)}, {rel(QUESTIONS)}/")

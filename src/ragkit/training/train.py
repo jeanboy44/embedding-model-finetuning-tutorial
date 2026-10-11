@@ -8,18 +8,33 @@ dev 질문이 있으면 epoch마다 dev R@5를 재고 가장 좋은 epoch의 가
 LoRA는 학습 후 원래 가중치에 합쳐(merge) 같은 형식으로 저장한다.
 """
 
+from __future__ import annotations
+
 import json
 import random
 import shutil
 import tempfile
 import time
 from pathlib import Path
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import BaseModel
 
 from ragkit.data import doc_text, questions_digest
 from ragkit.training.triplets import to_examples
+
+if TYPE_CHECKING:
+    import torch
+    from sentence_transformers import SentenceTransformer
+    from sentence_transformers.sentence_transformer.evaluation import (
+        InformationRetrievalEvaluator,
+    )
+    from transformers import (
+        TrainerCallback,
+        TrainerControl,
+        TrainerState,
+        TrainingArguments,
+    )
 
 INSTALL_HINT = "학습에는 [train] extra가 필요합니다: uv sync --extra train"
 # epoch 선택 기준. InformationRetrievalEvaluator(name="dev")가 내는 이름이다.
@@ -79,7 +94,13 @@ def load_train_config(path: Path) -> TrainConfig:
     return TrainConfig(**data["training"])
 
 
-def _dev_evaluator(dev_questions, corpus, query_prefix, passage_prefix, name="dev"):
+def _dev_evaluator(
+    dev_questions: list[dict],
+    corpus: list[dict],
+    query_prefix: str,
+    passage_prefix: str,
+    name: str = "dev",
+) -> InformationRetrievalEvaluator:
     """학습 중 평가기 (정답 = positive_id와 alt_positive_ids).
 
     ragkit.evaluation과 달리 related_ids·partial_ids를 순위에서 빼지 않고 article 판정도 없다.
@@ -106,7 +127,9 @@ def _dev_evaluator(dev_questions, corpus, query_prefix, passage_prefix, name="de
     )
 
 
-def _best_epoch_callback(model, history: list[dict], best: dict):
+def _best_epoch_callback(
+    model: SentenceTransformer, history: list[dict], best: dict
+) -> TrainerCallback:
     """epoch마다 dev 지표를 history에 쌓고, DEV_METRIC이 가장 좋은 때의 가중치를 best에 둔다.
 
     체크포인트 파일 대신 CPU 메모리에 복사해 둔다 (e5-small은 약 0.5GB).
@@ -115,7 +138,14 @@ def _best_epoch_callback(model, history: list[dict], best: dict):
     from transformers import TrainerCallback
 
     class BestEpoch(TrainerCallback):
-        def on_evaluate(self, args, state, control, metrics=None, **kwargs):
+        def on_evaluate(
+            self,
+            args: TrainingArguments,
+            state: TrainerState,
+            control: TrainerControl,
+            metrics: dict[str, float] | None = None,
+            **kwargs: Any,
+        ) -> None:
             dev = {
                 k.removeprefix("eval_"): v
                 for k, v in (metrics or {}).items()
@@ -135,7 +165,7 @@ def _best_epoch_callback(model, history: list[dict], best: dict):
     return BestEpoch()
 
 
-def _make_loss(config: TrainConfig, model):
+def _make_loss(config: TrainConfig, model: SentenceTransformer) -> torch.nn.Module:
     from sentence_transformers.sentence_transformer import losses
 
     if config.loss == "cached_mnrl":
@@ -224,7 +254,7 @@ def train(
         transformer.model = peft_model
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-    evaluator = (
+    evaluator: Any = (
         _dev_evaluator(dev_questions, corpus, query_prefix, passage_prefix)
         if dev_questions and config.dev_eval
         else None

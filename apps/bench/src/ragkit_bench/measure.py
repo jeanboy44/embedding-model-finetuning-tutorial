@@ -9,14 +9,14 @@ import numpy as np
 from packaging.requirements import Requirement
 
 from ragkit.data import doc_text
+from ragkit.embeddings import EmbedFn
 from ragkit.evaluation import evaluate_index
-
-EmbedFn = Callable[..., np.ndarray]
+from ragkit.retrieval import VectorIndex
 
 
 def measure(
     embed_fn: EmbedFn,
-    index,
+    index: VectorIndex,
     corpus: list[dict],
     questions: list[dict],
     *,

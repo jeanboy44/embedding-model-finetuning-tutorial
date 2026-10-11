@@ -12,12 +12,19 @@ related_ids(정답을 부분적으로 담은 문서)는 모든 판정에서 순�
 (per_question)를 순위 구간 · 1위 오답과 정답의 관계 · 단어 겹침 · 고침/망침으로 나눠 본다.
 """
 
+from __future__ import annotations
+
 import math
 from collections.abc import Callable, Sequence
+from typing import TYPE_CHECKING
 
 import numpy as np
 
 from ragkit.data import doc_text, question_key, relevance_key
+from ragkit.embeddings import EmbedFn
+
+if TYPE_CHECKING:
+    from ragkit.retrieval import VectorIndex
 
 CUTOFF = 10  # MRR, nDCG를 계산하는 순위 한도
 CANDIDATES = 100  # 질문마다 정렬할 상위 문서 수 (article 판정의 중복 제거 여유 포함)
@@ -97,8 +104,8 @@ def evaluate_retrieval(
 
 
 def evaluate_index(
-    index,
-    embed_fn: Callable[[list[str]], np.ndarray],
+    index: VectorIndex,
+    embed_fn: EmbedFn,
     corpus: list[dict],
     questions: list[dict],
     *,

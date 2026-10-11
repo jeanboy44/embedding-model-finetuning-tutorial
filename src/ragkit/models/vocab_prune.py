@@ -13,6 +13,8 @@ import shutil
 from collections.abc import Iterable
 from pathlib import Path
 
+from tokenizers import Tokenizer
+
 HANGUL = re.compile(r"[가-힣]")
 ASCII = re.compile(r"[\x00-\x7f▁]+")
 SPECIALS = ("<s>", "<pad>", "</s>", "<unk>", "<mask>")
@@ -26,7 +28,7 @@ COPY_FILES = (
 
 
 def vocab_keep_ids(
-    tokenizer,
+    tokenizer: Tokenizer,
     texts: Iterable[str],
     *,
     prefixes: Iterable[str] = ("query: ", "passage: "),

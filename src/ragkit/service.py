@@ -15,10 +15,9 @@ from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
 
-import numpy as np
-
 from ragkit import tracking
 from ragkit.config import get_settings
+from ragkit.embeddings import EmbedFn
 from ragkit.embeddings.profiles import E5_STYLE, ModelProfile, get_profile
 from ragkit.models.gemini_client import Generation
 from ragkit.rag.answer import AnswerResult, build_prompt
@@ -30,7 +29,6 @@ from ragkit.retrieval import (
     model_key,
 )
 
-EmbedFn = Callable[..., np.ndarray]
 StreamFn = Callable[[str], Iterator[str | Generation]]
 
 HISTORY_TURNS = 6  # 프롬프트에 넣는 이전 대화 메시지 수 (질문·답 3쌍)

@@ -7,7 +7,7 @@
 """
 
 import json
-from collections.abc import Iterator
+from collections.abc import AsyncIterator, Iterator
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -75,7 +75,7 @@ def create_app(
     state: dict = {"searcher": searcher, "store": store}
 
     @asynccontextmanager
-    async def lifespan(app: FastAPI):
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         if state["searcher"] is None:
             state["searcher"] = Searcher.open(**(open_kwargs or {}))
         if state["store"] is None:
