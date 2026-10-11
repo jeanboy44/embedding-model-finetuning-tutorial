@@ -1,7 +1,7 @@
-# 012 remined_negatives — 2. 실험 계획 (v2, 검토 반영)
+# 002 hard_negatives — 2. 실험 계획 (v2, 검토 반영)
 
 앞 단계 문서: `00_error_analysis.md`, `01_research.md`. 이 계획서의 dev 숫자는 모두 두 문서와 `runs/001_baseline_seeds/`의 집계 파일에서 옮겼다. dev 질문별 결과 파일(`eval_dev*.json`, `topk_dev_a.jsonl`)은 열지 않았다.
-채굴 숫자(풀 크기, negative 0개 수, 관계 분포, 버린 후보)는 이 계획을 쓰면서 **train 분할로만** 시험 채굴해 얻었다. 출처는 `runs/012_remined_negatives/work/plan/full_test/{mine_stats.json, check.out}`이다. 시험 채굴은 train 질문만 임베딩했고 학습 결과가 아니다. 검토 두 개(`reviews/plan_ir_expert.md`, `reviews/plan_methodology_expert.md`)가 이 숫자를 다시 세어 확인했다.
+채굴 숫자(풀 크기, negative 0개 수, 관계 분포, 버린 후보)는 이 계획을 쓰면서 **train 분할로만** 시험 채굴해 얻었다. 출처는 `runs/002_hard_negatives/work/plan/full_test/{mine_stats.json, check.out}`이다. 시험 채굴은 train 질문만 임베딩했고 학습 결과가 아니다. 검토 두 개(`reviews/plan_ir_expert.md`, `reviews/plan_methodology_expert.md`)가 이 숫자를 다시 세어 확인했다.
 
 v1 → v2에서 바뀐 것:
 - 가설 문구를 실제 선택 규칙(정답보다 아래인 문서만)에 맞췄다.
@@ -15,7 +15,7 @@ v1 → v2에서 바뀐 것:
 
 ## 실험 이름
 
-**`remined_negatives`**. 폴더는 `experiments/012_remined_negatives/`, `runs/012_remined_negatives/`로 바뀐다. 이 문서의 경로와 설정 파일은 바뀐 이름 기준으로 적었다.
+**`remined_negatives`**. 폴더는 `experiments/002_hard_negatives/`, `runs/002_hard_negatives/`로 바뀐다. 이 문서의 경로와 설정 파일은 바뀐 이름 기준으로 적었다.
 
 ## 가설
 
@@ -57,7 +57,7 @@ v1 → v2에서 바뀐 것:
 | 2 · 오답 분석은 dev-a에서만, dev-b는 집계만 | 계획 에이전트는 dev 질문별 파일을 열지 않았다. 결과 단계의 질문 원문 확인은 dev-a에서만 한다. dev-b는 스크립트로 집계한 숫자만 본다 |
 | 2 · run · epoch 선택은 dev로만 | epoch은 학습 중 dev R@5로 고르고(001과 같음), 판정은 공식 dev 평가와 `decide.py`로 한다 |
 | 2 · test는 바퀴 안에서 쓰지 않음 | 어떤 명령도 `--split test`를 쓰지 않는다. `mine.py`는 풀에서 뺄 정답 조 목록을 만들 때만 `test.jsonl`을 읽는다. L7로 점검한다. `01_research.md`의 005 · 004 test 숫자는 옛 분할 값이라 이 계획의 근거로 쓰지 않는다(검토 m9) |
-| 2 · 분할이 바뀐 뒤 첫 바퀴는 기준 모델 재측정 | 재현 점검은 이미 통과했다(학습 전 0.5398, 001 0.7168, `runs/012_remined_negatives/timeline.md`) |
+| 2 · 분할이 바뀐 뒤 첫 바퀴는 기준 모델 재측정 | 재현 점검은 이미 통과했다(학습 전 0.5398, 001 0.7168, `runs/002_hard_negatives/timeline.md`) |
 | 2 · 판정 파일은 현재 분할용만 | `--labels` 없이 doc 판정만 한다 |
 | 3 · 대조군 seed 3, 같은 코드 · 설정 · 스케줄 | 공용 대조군 `runs/001_baseline_seeds/{s42,s43,s44}`를 다시 쓴다(아래 재사용 확인) |
 | 3 · 채택 후보 seed 2 이상, seed 평균끼리 비교 | 채택 후보는 A1 하나다. 처음부터 s42 · s43 두 개를 학습한다 |
@@ -72,9 +72,9 @@ v1 → v2에서 바뀐 것:
 | 4 · 본 학습 전 파일럿 | `pilot_A3`(메모리가 가장 큰 설정)를 먼저 단독으로 돌린다 |
 | 5 · 재현 점검 | 통과했다 |
 | 5 · 채택 모델은 배포 형태로 dev 한 번 | A1을 채택하면 가지치기 + INT8로 dev를 잰다(오케스트레이터) |
-| 5 · 에이전트별 전용 폴더 | 계획 에이전트 파일은 `runs/012_remined_negatives/work/plan/`에만 있다 |
+| 5 · 에이전트별 전용 폴더 | 계획 에이전트 파일은 `runs/002_hard_negatives/work/plan/`에만 있다 |
 | 5 · runs · timeline · MLflow 기록 | 아래 로깅 |
-| 5 · 커밋 금지, 덮어쓰기 금지 | 새 데이터는 `runs/012_remined_negatives/data/`, 모델은 `models/finetuned/012_remined_negatives_<run>`에 둔다 |
+| 5 · 커밋 금지, 덮어쓰기 금지 | 새 데이터는 `runs/002_hard_negatives/data/`, 모델은 `models/finetuned/002_hard_negatives_<run>`에 둔다 |
 
 ### 공용 대조군 재사용 확인
 
@@ -110,10 +110,10 @@ v1 → v2에서 바뀐 것:
 
 ### 새 학습 데이터 만드는 법
 
-스크립트는 계획 단계에서 시험을 마쳤다(`runs/012_remined_negatives/work/plan/mine.py`, `check_data.py`). 폴더 이름을 바꾼 뒤 저장소 루트에서 실행하고, 실제로 친 명령을 `runs/$E/data/mine.command.sh`에 남긴다.
+스크립트는 계획 단계에서 시험을 마쳤다(`runs/002_hard_negatives/work/plan/mine.py`, `check_data.py`). 폴더 이름을 바꾼 뒤 저장소 루트에서 실행하고, 실제로 친 명령을 `runs/$E/data/mine.command.sh`에 남긴다.
 
 ```bash
-E=012_remined_negatives
+E=002_hard_negatives
 # 1) 001로 train 전체 임베딩 · 상위 100 (CPU 약 40초)
 uv run python runs/$E/work/error_analysis/dump_topk.py models/finetuned/001_baseline train runs/$E/data/mine_input
 # 2) 채굴 → runs/$E/data/{mined_candidates.jsonl, mine_stats.json, judge/, A1/, A3/} (약 1분)
@@ -129,16 +129,16 @@ for r in pilot_A3 A1_s42 A1_s43 A3_s42; do mkdir -p runs/$E/$r; cp runs/$E/work/
 
 | 경로 | 내용 |
 |---|---|
-| `runs/012_remined_negatives/data/<run>/negatives.jsonl` (A1 · A3) | qid · negative_ids · reasons(top / fill / repeat / llm_fallback / excluded_as_001). **학습이 실제로 읽는 파일**이다(`negatives_file`) |
-| `runs/012_remined_negatives/data/<run>/train.jsonl` | `data/splits_article/train.jsonl`과 같은 9,126행 · 같은 순서이고 `hard_negative_ids`만 바뀐다. 기록 · 점검용이다(L3로 학습 입력과 같음을 확인) |
-| `runs/012_remined_negatives/data/<run>/dev.jsonl` | `data/splits_article/dev.jsonl` 그대로 복사한 것(sha256 일치). test는 복사하지 않는다 |
-| `runs/012_remined_negatives/data/mined_candidates.jsonl` | 질문마다 풀 안 상위 30: id · 순위 · 점수 · 정답 대비 점수비 · 관계 6유형 |
-| `runs/012_remined_negatives/data/mine_stats.json` | 풀 크기, 풀 제한 전 평가 쪽 비율, 선택 사유, negative 0개 · 대체 수, 관계 분포, 위임 연결 짝 수, **정답보다 높아 버린 후보 · 그런 질문 비율 · 관계**, **train 실패 질문의 사유 분포**, **질문당 서로 다른 negative 수 · 반복 행 수**, **평가 쪽 정답 문서와 코사인 ≥ 0.98인 negative 수**, sha256 |
-| `runs/012_remined_negatives/data/judge/{input,key}.jsonl` | L9 판정 200쌍. `input`에는 점수 · 순위 · 종류를 넣지 않고 순서를 섞는다. `key`는 집계용이다 |
+| `runs/002_hard_negatives/data/<run>/negatives.jsonl` (A1 · A3) | qid · negative_ids · reasons(top / fill / repeat / llm_fallback / excluded_as_001). **학습이 실제로 읽는 파일**이다(`negatives_file`) |
+| `runs/002_hard_negatives/data/<run>/train.jsonl` | `data/splits_article/train.jsonl`과 같은 9,126행 · 같은 순서이고 `hard_negative_ids`만 바뀐다. 기록 · 점검용이다(L3로 학습 입력과 같음을 확인) |
+| `runs/002_hard_negatives/data/<run>/dev.jsonl` | `data/splits_article/dev.jsonl` 그대로 복사한 것(sha256 일치). test는 복사하지 않는다 |
+| `runs/002_hard_negatives/data/mined_candidates.jsonl` | 질문마다 풀 안 상위 30: id · 순위 · 점수 · 정답 대비 점수비 · 관계 6유형 |
+| `runs/002_hard_negatives/data/mine_stats.json` | 풀 크기, 풀 제한 전 평가 쪽 비율, 선택 사유, negative 0개 · 대체 수, 관계 분포, 위임 연결 짝 수, **정답보다 높아 버린 후보 · 그런 질문 비율 · 관계**, **train 실패 질문의 사유 분포**, **질문당 서로 다른 negative 수 · 반복 행 수**, **평가 쪽 정답 문서와 코사인 ≥ 0.98인 negative 수**, sha256 |
+| `runs/002_hard_negatives/data/judge/{input,key}.jsonl` | L9 판정 200쌍. `input`에는 점수 · 순위 · 종류를 넣지 않고 순서를 섞는다. `key`는 집계용이다 |
 
 `run_queue.py`는 `--splits data/splits_article`을 고정하고, `ragkit train`은 `--splits`를 두 번 주면 거부한다(직접 확인: "Parameter --splits specified multiple times"). 그래서 새 데이터 폴더를 `--splits`로 넘기지 않고 학습 코드가 이미 지원하는 `negatives_file`로 negative만 바꾼다.
 
-시험 채굴 결과 (`runs/012_remined_negatives/work/plan/full_test/`):
+시험 채굴 결과 (`runs/002_hard_negatives/work/plan/full_test/`):
 
 | 항목 | A1 | A3 (탐색) |
 |---|---|---|
@@ -171,7 +171,7 @@ for r in pilot_A3 A1_s42 A1_s43 A3_s42; do mkdir -p runs/$E/$r; cp runs/$E/work/
 
 ### queue.tsv
 
-최종 대기열의 사본은 `runs/012_remined_negatives/work/plan/queue.tsv`에 있다. `runs/012_remined_negatives/queue.tsv`에 탭 구분으로 넣는다.
+최종 대기열의 사본은 `runs/002_hard_negatives/work/plan/queue.tsv`에 있다. `runs/002_hard_negatives/queue.tsv`에 탭 구분으로 넣는다.
 - **1단계**: 머리글과 파일럿 행만 올리고 돌린다.
 - **2단계**: 파일럿 통과를 확인한 뒤 본 run 3행을 덧붙여 다시 띄운다.
 - `run_queue.py`는 run 하나가 실패하면 **대기열 전체를 멈춘다**. 남은 run은 "대기" 그대로 남는다. 그러니 한 번에 다 올려도 파일럿이 실패하면 본 학습은 돌지 않는다. 그래도 파일럿 결과(step당 시간 · 메모리)를 보고 본 run 시간을 다시 추정하려고 두 단계로 나눈다.
@@ -179,13 +179,13 @@ for r in pilot_A3 A1_s42 A1_s43 A3_s42; do mkdir -p runs/$E/$r; cp runs/$E/work/
 
 ```
 run	status	start	end	control	model_dir	train_args
-pilot_A3	대기				models/finetuned/012_remined_negatives_pilot_A3	--max-steps 30 --limit 300 --no-dev-eval
-A1_s42	대기			../001_baseline_seeds/s42	models/finetuned/012_remined_negatives_A1_s42	
-A1_s43	대기			../001_baseline_seeds/s42	models/finetuned/012_remined_negatives_A1_s43	
-A3_s42	대기			../001_baseline_seeds/s42	models/finetuned/012_remined_negatives_A3_s42	
+pilot_A3	대기				models/finetuned/002_hard_negatives_pilot_A3	--max-steps 30 --limit 300 --no-dev-eval
+A1_s42	대기			../001_baseline_seeds/s42	models/finetuned/002_hard_negatives_A1_s42	
+A1_s43	대기			../001_baseline_seeds/s42	models/finetuned/002_hard_negatives_A1_s43	
+A3_s42	대기			../001_baseline_seeds/s42	models/finetuned/002_hard_negatives_A3_s42	
 ```
 
-순서는 채택 후보 A1을 먼저, 탐색 A3을 마지막에 둔다. 예산이 모자라면 A3_s42를 뺀다. run 폴더의 `config.yaml`은 `runs/012_remined_negatives/work/plan/configs/<run>/config.yaml`을 복사한다. 001과 다른 줄에는 `# 바꿈` 주석이 있고, 모두 `load_train_config`로 읽힌다.
+순서는 채택 후보 A1을 먼저, 탐색 A3을 마지막에 둔다. 예산이 모자라면 A3_s42를 뺀다. run 폴더의 `config.yaml`은 `runs/002_hard_negatives/work/plan/configs/<run>/config.yaml`을 복사한다. 001과 다른 줄에는 `# 바꿈` 주석이 있고, 모두 `load_train_config`로 읽힌다.
 
 **파일럿 통과 기준**
 - 손실이 NaN이 아니고, 30 step 동안 줄어드는 방향이다.
@@ -203,7 +203,7 @@ A3_s42	대기			../001_baseline_seeds/s42	models/finetuned/012_remined_negatives
 | L4 | dev 사본이 원본과 같음 | sha256 비교 | `check.json`, `data_digest.json` |
 | L5 | 채굴에 dev · test 질문을 쓰지 않음 | 채굴 명령은 `dump_topk.py ... train`뿐이다. `mine_input/`에 `query_emb_train.npy`만 있는지 `ls`로 확인한다 | `data/mine.command.sh`, `timeline.md` |
 | L6 | 채굴 모델에 담긴 평가 정보 | 001은 train으로만 학습했지만 epoch 선택에 dev를 썼다. 대조군도 같은 영향을 갖는다. 채굴 모델 = 대조군 s42라서 s42 대비 대응 검정이 약간 유리할 수 있다. 그래서 s43 · s44 대비 검정도 계산한다(합격선 보고 항목) | `04_results.md` 한계 |
-| L7 | 바퀴 안에서 test를 쓰지 않음 | 바퀴 끝에 `grep -rn -- "--split test\|test.jsonl" runs/012_remined_negatives/*/command.sh runs/012_remined_negatives/data/mine.command.sh`의 결과가 비어야 한다 | `timeline.md`에 grep 결과 한 줄 |
+| L7 | 바퀴 안에서 test를 쓰지 않음 | 바퀴 끝에 `grep -rn -- "--split test\|test.jsonl" runs/002_hard_negatives/*/command.sh runs/002_hard_negatives/data/mine.command.sh`의 결과가 비어야 한다 | `timeline.md`에 grep 결과 한 줄 |
 | L8 | 역할 분리 | 계획 에이전트는 dev 질문별 파일을 열지 않았다. 결과 단계에서 질문 원문은 dev-a만 열고, dev-b는 스크립트 집계 숫자만 본다 | `04_results.md` |
 | L9 | 가짜 negative 비율 (기록용, 데이터 안 바꿈) | `mine.py`가 만든 200쌍을 Claude 서브에이전트 하나가 full / partial / no로 판정한다(00 라벨 표본과 같은 기준). 구성은 A1 선택(top · fill) 100, A1 위임 연결 50, **버린 "정답보다 위" 후보 50**이다(검토 IR-1). 프롬프트에는 질문 · 모범 답 · 정답 조문 · 후보 조문만 넣는다. 집계는 종류별, 그리고 점수비 구간(≥ 0.92 / < 0.92)별로 낸다. A1 선택에서 full이 10% 이상이면 결과 해석의 한계로 적는다. "정답보다 위" 후보의 no 비율은 다음 바퀴(컷 바꾸기)의 근거로 남긴다 | `runs/<실험>/work/judge/{input,output}.jsonl`, `judge.out` |
 | L10 | 질문 집합 · 행 수가 001과 같음 | 학습 전에는 `check_data.py`(학습 예시 8,689, 질문 집합 = 001)로 본다. **학습 뒤**에는 `train_meta.json`에서 `train_examples == 8689`, `data.train.n == 9126`, `data.train.digest`가 A1 run이면 **2c3d054b41a1**, A3 run이면 **6ce401a22a7a**인지 본다. digest는 negative를 바꾼 뒤의 질문으로 계산하므로 001의 d9fec2ea3431과 같을 수 없다(검토 M1). 다시 채굴해 sha가 바뀌었으면 학습 전에 고친 기대값을 쓴다 | `check.json`, `summary.tsv`, `data_digest.json` |
@@ -215,7 +215,7 @@ A3_s42	대기			../001_baseline_seeds/s42	models/finetuned/012_remined_negatives
 결과를 보기 전에 정한다. 계산은 `decide.py`로 한다.
 
 ```bash
-uv run python .claude/skills/experiment-loop/scripts/decide.py 012_remined_negatives \
+uv run python .claude/skills/experiment-loop/scripts/decide.py 002_hard_negatives \
   --control ../001_baseline_seeds/s42 ../001_baseline_seeds/s43 ../001_baseline_seeds/s44 \
   --candidate A1=A1_s42,A1_s43 A3=A3_s42
 ```
@@ -230,11 +230,11 @@ uv run python .claude/skills/experiment-loop/scripts/decide.py 012_remined_negat
   5. dev-b Δ(seed 평균) > 0
   6. **(추가, 더 엄격)** A1_s42와 A1_s43이 **각각** 대조군 seed 최댓값보다 높다
 - **보고 항목 (판정 조건 아님)**
-  - 대응 검정을 대조군 s43 vs A1_s43, s44 vs A1_s42, s44 vs A1_s43으로도 계산한다. 셋 중 하나라도 CI 하한 ≤ 0이거나 s42 대비 Δ와 0.01 넘게 다르면 한계로 적는다(검토 m1, IR 사소 2). 명령은 `uv run ragkit paired-test runs/001_baseline_seeds/<s>/eval_dev.json runs/012_remined_negatives/<run>/eval_dev.json --judge doc --k 5 --out runs/012_remined_negatives/<run>/paired_test_<s>.json`이다.
+  - 대응 검정을 대조군 s43 vs A1_s43, s44 vs A1_s42, s44 vs A1_s43으로도 계산한다. 셋 중 하나라도 CI 하한 ≤ 0이거나 s42 대비 Δ와 0.01 넘게 다르면 한계로 적는다(검토 m1, IR 사소 2). 명령은 `uv run ragkit paired-test runs/001_baseline_seeds/<s>/eval_dev.json runs/002_hard_negatives/<run>/eval_dev.json --judge doc --k 5 --out runs/002_hard_negatives/<run>/paired_test_<s>.json`이다.
   - dev-b Δ와 함께 dev-b 대응 검정 CI(`paired_test_dev_b.json`)를 적는다(검토 m5).
   - **보조 지표**: dev의 article R@5 · R@1 · R@10 · MRR@10을 run마다 `summary.tsv`와 결과표에 적는다(`eval_dev.json`의 doc · article 블록, 검토 IR-3). A1 seed 평균의 article R@5가 대조군 평균보다 표준오차(√(p(1−p)/1243), p≈0.77이면 약 ±0.012) 이상 떨어지면, 판정과 상관없이 "같은 조 · 위임 짝 negative의 부작용 가능성"을 한계로 적는다.
 - **계산량**: A1은 학습 행 · epoch · step 수가 대조군과 같다. negative 문서 길이 때문에 생기는 시간 차이는 `summary.tsv`에 적고, 1.2배를 넘으면 결과 문서에 적는다. A3은 약 1.7배인데, 채택 대상이 아니므로 계산량 대조를 두지 않는다. A3의 해석은 "계산량과 개수가 함께 바뀐 단일 seed 탐색"으로만 한다.
-- 숫자는 모두 공식 `ragkit evaluate`(doc 판정) 값이다. 간이 dev는 epoch 선택에만 쓴다. 결과는 `runs/012_remined_negatives/decision.json`에 남긴다. 조건 6과 보고 항목은 `04_results.md` 표에 적는다. dev를 쓴 사실은 `experiments/ledger.tsv`에 한 줄 남긴다.
+- 숫자는 모두 공식 `ragkit evaluate`(doc 판정) 값이다. 간이 dev는 epoch 선택에만 쓴다. 결과는 `runs/002_hard_negatives/decision.json`에 남긴다. 조건 6과 보고 항목은 `04_results.md` 표에 적는다. dev를 쓴 사실은 `experiments/ledger.tsv`에 한 줄 남긴다.
 
 ### 해석 규칙 (결과 보기 전에 고정)
 
@@ -251,19 +251,19 @@ uv run python .claude/skills/experiment-loop/scripts/decide.py 012_remined_negat
 
 | 파일 | 내용 |
 |---|---|
-| `runs/012_remined_negatives/data/mine.command.sh` | dump · mine · check 명령 그대로 |
-| `runs/012_remined_negatives/data/mine_stats.json`, `mined_candidates.jsonl` | 채굴 통계 · 후보 manifest. 버린 "정답보다 위" 후보와 실패 질문 사유도 여기에 |
-| `runs/012_remined_negatives/data/<run>/{negatives,train,dev}.jsonl`, `check.json` | run별 학습 데이터와 점검 결과 |
-| `runs/012_remined_negatives/data/judge/`, `work/judge/` | L9 판정 입력 · 키 · 출력 · 집계(종류별 · 점수비 구간별) |
-| `runs/012_remined_negatives/<run>/config.yaml`, `command.sh`, `train.log`, `train_meta.json` | 설정 · 명령 · 로그 · epoch별 dev · 학습 행 · digest · 시간 (`run_queue.py`) |
-| `runs/012_remined_negatives/<run>/eval_dev.json`, `eval_dev_a.json`, `eval_dev_b.json`, `paired_test.json`, `paired_test_dev_b.json` | 공식 평가와 대조군 s42 대비 검정 (`run_queue.py`) |
-| `runs/012_remined_negatives/<run>/paired_test_s43.json`, `paired_test_s44.json` | 다른 대조군 seed 대비 검정 (보고용) |
-| `runs/012_remined_negatives/summary.tsv` | run마다 한 줄(`run_queue.py` 열) + 보조 지표 article R@5 · R@1 · R@10 · MRR@10, step 수(`train.log`에서 옮김) |
-| `runs/012_remined_negatives/analysis/mechanism.out` | 해석 규칙의 유형별 실패 수(대조군 3 + A1 2, dev-a · dev-b 집계)와 집계 스크립트 |
-| `runs/012_remined_negatives/decision.json` | `decide.py` 출력 |
-| `runs/012_remined_negatives/data_digest.json` | 분할 · 코퍼스 · negatives · train 사본 sha256과 행 수, 학습 뒤 digest 기대값(L10), 채굴 모델 경로와 인덱스 파일 이름, git commit, uv.lock 해시, 라이브러리 버전. **학습 전에 고정** |
-| `runs/012_remined_negatives/timeline.md` | 단계 · run 시작/끝 · 다시 돌리기(원인) · 계획 변경 · 예산 누적 |
-| MLflow `loop/012_remined_negatives` | `run_queue.py`와 `log_experiment.py`가 자동으로 올린다 |
+| `runs/002_hard_negatives/data/mine.command.sh` | dump · mine · check 명령 그대로 |
+| `runs/002_hard_negatives/data/mine_stats.json`, `mined_candidates.jsonl` | 채굴 통계 · 후보 manifest. 버린 "정답보다 위" 후보와 실패 질문 사유도 여기에 |
+| `runs/002_hard_negatives/data/<run>/{negatives,train,dev}.jsonl`, `check.json` | run별 학습 데이터와 점검 결과 |
+| `runs/002_hard_negatives/data/judge/`, `work/judge/` | L9 판정 입력 · 키 · 출력 · 집계(종류별 · 점수비 구간별) |
+| `runs/002_hard_negatives/<run>/config.yaml`, `command.sh`, `train.log`, `train_meta.json` | 설정 · 명령 · 로그 · epoch별 dev · 학습 행 · digest · 시간 (`run_queue.py`) |
+| `runs/002_hard_negatives/<run>/eval_dev.json`, `eval_dev_a.json`, `eval_dev_b.json`, `paired_test.json`, `paired_test_dev_b.json` | 공식 평가와 대조군 s42 대비 검정 (`run_queue.py`) |
+| `runs/002_hard_negatives/<run>/paired_test_s43.json`, `paired_test_s44.json` | 다른 대조군 seed 대비 검정 (보고용) |
+| `runs/002_hard_negatives/summary.tsv` | run마다 한 줄(`run_queue.py` 열) + 보조 지표 article R@5 · R@1 · R@10 · MRR@10, step 수(`train.log`에서 옮김) |
+| `runs/002_hard_negatives/analysis/mechanism.out` | 해석 규칙의 유형별 실패 수(대조군 3 + A1 2, dev-a · dev-b 집계)와 집계 스크립트 |
+| `runs/002_hard_negatives/decision.json` | `decide.py` 출력 |
+| `runs/002_hard_negatives/data_digest.json` | 분할 · 코퍼스 · negatives · train 사본 sha256과 행 수, 학습 뒤 digest 기대값(L10), 채굴 모델 경로와 인덱스 파일 이름, git commit, uv.lock 해시, 라이브러리 버전. **학습 전에 고정** |
+| `runs/002_hard_negatives/timeline.md` | 단계 · run 시작/끝 · 다시 돌리기(원인) · 계획 변경 · 예산 누적 |
+| MLflow `loop/002_hard_negatives` | `run_queue.py`와 `log_experiment.py`가 자동으로 올린다 |
 | `04_results.md` 재료 | 위 판정 · 보고 항목, 해석 규칙 결과, 고친 · 새로 틀린 질문(dev-a), 배포 형태 dev |
 
 ## 예상 시간 · 비용

@@ -1,9 +1,33 @@
 # 실습 0 (3교시): 준비와 완성품 먼저 써 보기
 
-장표: [3교시 실습 0 준비](https://claude.ai/artifact/VuQyTKs7BHKu4Hsq5xy5Qc). 최종 목표(HTML 파일 하나) → 환경 점검 → 완성품 써 보기 → CLI로 질문 넷 → 학습 전후 비교 순서로 본다.
+장표: [3교시 실습 0 준비](https://claude.ai/artifact/VuQyTKs7BHKu4Hsq5xy5Qc). uv 설치와 최종 목표(HTML 파일 하나) → 환경 점검 → 완성품 써 보기 → CLI로 질문 넷 → 학습 전후 비교 순서로 본다.
 API 키는 쓰지 않는다. 명령은 모두 저장소 루트에서 실행하고, Mac 터미널과 Windows PowerShell에서 그대로 돈다.
 
-## 0. 설치 전에: 최종 목표
+## 0. uv 설치와 최종 목표
+
+### uv 설치
+
+실습에 필요한 파이썬 환경과 패키지는 `uv`로 관리합니다. `uv`가 아직 설치되어 있지 않다면 먼저 설치합니다.
+
+- **macOS / Linux**:
+  ```bash
+  curl -LsSf https://astral.sh/uv/install.sh | sh
+  ```
+
+- **Windows (PowerShell)**:
+  ```powershell
+  powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+  ```
+
+설치 확인 (새 터미널 또는 새 PowerShell 창):
+```bash
+uv --version
+```
+
+> **Windows 참고**: 파이썬이 한글 데이터를 UTF-8로 다루도록 `setx PYTHONUTF8 1`을 한 번 실행하고 PowerShell 창을 새로 엽니다.  
+> 자세한 OS별 안내는 [macOS 설치 가이드](../../INSTALL_MAC.md)와 [Windows 설치 가이드](../../INSTALL_WINDOWS.md)를 참고하세요.
+
+### 설치 전에: 최종 목표
 
 `law-search-offline.html`(56MB)을 더블클릭하면 Python · 서버 · 인터넷 · API 키 없이 브라우저에서 법령 조문 2.6만 건을 검색한다.
 오늘 만드는 파인튜닝 모델(정답이 10위 안에 드는 비율 60% → 80%)을 7교시 방법(ONNX · INT8 · 어휘 가지치기)으로 30MB까지 줄여

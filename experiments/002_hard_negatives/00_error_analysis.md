@@ -3,15 +3,15 @@
 대상: 현재 최고 모델 001 `models/finetuned/001_baseline` (multilingual-e5-small 전체 학습, CachedMNRL 배치 32, lr 2e-5, 3 epoch, LLM이 고른 hard negative 1개, 조 단위 분할 `data/splits_article`, seed 42, best epoch 3). 설정은 `experiments/001_baseline/config.yaml`.
 dev-a(622문항)만 질문 원문 · 순위를 열어 봤다. dev-b는 집계 숫자(R@5)만 옮겼다. 판정은 **doc 기준**(정답 문서 하나)이다. `data/labels/dev.jsonl`은 옛 법령 단위 분할용이라 쓰지 않았다.
 
-재현 (모두 저장소 루트에서, 출력 원문은 `runs/012_remined_negatives/analysis/`):
+재현 (모두 저장소 루트에서, 출력 원문은 `runs/002_hard_negatives/analysis/`):
 
 ```
-uv run python runs/012_remined_negatives/work/error_analysis/dump_topk.py models/finetuned/001_baseline dev_a runs/012_remined_negatives/analysis        # → topk_dev_a.jsonl, dump_dev_a.out
-uv run python runs/012_remined_negatives/work/error_analysis/dump_topk.py models/finetuned/001_baseline train runs/012_remined_negatives/analysis 1000  # train seed 42 표본 1,000 → topk_train.jsonl, dump_train.out
-uv run python runs/012_remined_negatives/work/error_analysis/error_analysis.py   > runs/012_remined_negatives/analysis/error_analysis.out   # 실패 유형 · 순위 · 유형/법령/겹침 · HN, label_sample.jsonl
-uv run python runs/012_remined_negatives/work/error_analysis/extra_analysis.py   > runs/012_remined_negatives/analysis/extra_analysis.out   # train 조 쏠림 · 법령 커버리지
-uv run python runs/012_remined_negatives/work/error_analysis/train_types.py      > runs/012_remined_negatives/analysis/train_types.out      # train 유형 분포 · 유형별 R@5
-uv run python runs/012_remined_negatives/work/error_analysis/label_verdicts.py   # 라벨 판정 40개 → label_check.jsonl, label_check.out
+uv run python runs/002_hard_negatives/work/error_analysis/dump_topk.py models/finetuned/001_baseline dev_a runs/002_hard_negatives/analysis        # → topk_dev_a.jsonl, dump_dev_a.out
+uv run python runs/002_hard_negatives/work/error_analysis/dump_topk.py models/finetuned/001_baseline train runs/002_hard_negatives/analysis 1000  # train seed 42 표본 1,000 → topk_train.jsonl, dump_train.out
+uv run python runs/002_hard_negatives/work/error_analysis/error_analysis.py   > runs/002_hard_negatives/analysis/error_analysis.out   # 실패 유형 · 순위 · 유형/법령/겹침 · HN, label_sample.jsonl
+uv run python runs/002_hard_negatives/work/error_analysis/extra_analysis.py   > runs/002_hard_negatives/analysis/extra_analysis.out   # train 조 쏠림 · 법령 커버리지
+uv run python runs/002_hard_negatives/work/error_analysis/train_types.py      > runs/002_hard_negatives/analysis/train_types.out      # train 유형 분포 · 유형별 R@5
+uv run python runs/002_hard_negatives/work/error_analysis/label_verdicts.py   # 라벨 판정 40개 → label_check.jsonl, label_check.out
 ```
 
 스크립트는 `experiments/archive/002_hard_negatives/`의 `dump_topk.py` · `error_analysis.py` · `common.py`를 복사해 분할 경로를 `data/splits_article`로, 입력을 dev_a와 train 표본으로 바꿨다. dump의 dev_a R@5(0.709)는 공식 평가 `runs/001_baseline_seeds/s42/eval_dev_a.json`의 0.709와 같다(`analysis/dump_dev_a.out`).
@@ -25,7 +25,7 @@ uv run python runs/012_remined_negatives/work/error_analysis/label_verdicts.py  
 | dev-b R@5 (621, 집계만) | 0.543 | 0.725 | `.../eval_dev_b.json` |
 | dev R@1 / R@10 | 0.316 / 0.623 | 0.445 / 0.803 | `.../eval_dev.json` |
 | dev article R@5 (같은 조 조각도 정답) | 0.615 | 0.772 | `.../eval_dev.json` |
-| train 표본 1,000 R@5 | — | 0.808 | `runs/012_remined_negatives/analysis/dump_train.out` |
+| train 표본 1,000 R@5 | — | 0.808 | `runs/002_hard_negatives/analysis/dump_train.out` |
 
 - 표준오차 √(p(1−p)/n): dev-a 약 ±0.018, dev 전체 약 ±0.013.
 - 학습 중 epoch별 dev R@5는 0.697 → 0.710 → 0.717이다. 아직 오르고 있지만 오르는 폭은 줄고 있다(`runs/001_baseline_seeds/s42/train_meta.json` dev_history).
@@ -34,7 +34,7 @@ uv run python runs/012_remined_negatives/work/error_analysis/label_verdicts.py  
 
 ## 실패 181문항 (dev-a, doc 기준 top-5 실패)
 
-출처: `runs/012_remined_negatives/analysis/error_analysis.out` [1]~[9]
+출처: `runs/002_hard_negatives/analysis/error_analysis.out` [1]~[9]
 
 **1위 오답과 정답의 관계**
 
@@ -86,7 +86,7 @@ uv run python runs/012_remined_negatives/work/error_analysis/label_verdicts.py  
 
 ## 라벨 오류 표본
 
-실패 181개 중 seed 42로 40개를 뽑았다. 질문 · 모범 답(`answer`) · 정답 조문 · 1위 조문을 읽고 "1위 결과가 그 자체로 질문의 답인가"를 판정했다. 판정자는 이 오답 분석 에이전트(Claude)다. 판정 근거는 한 줄씩 `runs/012_remined_negatives/analysis/label_check.jsonl`에, 집계는 `analysis/label_check.out`에 있다.
+실패 181개 중 seed 42로 40개를 뽑았다. 질문 · 모범 답(`answer`) · 정답 조문 · 1위 조문을 읽고 "1위 결과가 그 자체로 질문의 답인가"를 판정했다. 판정자는 이 오답 분석 에이전트(Claude)다. 판정 근거는 한 줄씩 `runs/002_hard_negatives/analysis/label_check.jsonl`에, 집계는 `analysis/label_check.out`에 있다.
 
 | 판정 | 개수 | 비율 |
 |---|---|---|
@@ -136,7 +136,7 @@ uv run python runs/012_remined_negatives/work/error_analysis/label_verdicts.py  
 
 ## 학습 데이터 쪽
 
-출처: `runs/012_remined_negatives/analysis/error_analysis.out` [10]~[13], `data/splits_article/split_meta.json`
+출처: `runs/002_hard_negatives/analysis/error_analysis.out` [10]~[13], `data/splits_article/split_meta.json`
 
 - **hard negative 출처**: law-question-gen 스킬로 질문을 만들 때 LLM이 "같은 파트 안에서" 1~3개 골랐다(`.claude/skills/law-question-gen/SKILL.md` "Hard negative 고르기"). train 전체 9,126문항의 HN 관계는 다음과 같다.
   - 같은 조의 다른 조각 50%, 같은 법 같은 종류 다른 조 48%, 법률↔시행령 3%, **다른 법 0%**.

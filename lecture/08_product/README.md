@@ -71,6 +71,31 @@ uv run python lecture/08_product/03_mcp_server.py
 
 스크립트 마지막에 Antigravity CLI(agy) · Claude Code · Claude Desktop 등록 명령이 이 컴퓨터의 경로로 출력된다. 그대로 복사해 쓴다.
 
+### Antigravity CLI (`agy`) 등록 및 사용 예시
+
+1. **MCP 서버 등록**:
+   저장소 루트에서 다음 명령을 실행합니다:
+   ```shell
+   agy mcp add --env RAGKIT_PROJECT_ROOT=$(pwd) ragkit-law $(which uv) run --directory $(pwd) --package ragkit-mcp ragkit-mcp
+   ```
+
+2. **등록 상태 확인**:
+   ```shell
+   agy mcp list
+   ```
+   `ragkit-law`가 `stdio`, `enabled` 상태로 목록에 나타나는지 확인합니다.
+
+3. **에이전트에게 질문하기**:
+   `agy` 세션에서 별도의 슬래시 명령어 없이 자연어로 질문합니다:
+   > "주휴수당 지급 기준에 관한 근로기준법 조항 찾아줘"  
+   > "편의점 알바도 주휴수당 받을 수 있는지 법 조문 근거로 알려줘"
+
+   에이전트가 질문을 분석하여 `ragkit-law` MCP 서버의 도구(`search_laws`, `get_article` 등)를 스스로 호출해 근거 조문을 찾아 답변합니다.
+
+> [!TIP]
+> **MCP vs 슬래시 명령어**: MCP 서버는 슬래시 명령어(`/<이름>`)나 쉘 명령어가 아니라, 에이전트가 백그라운드에서 호출하는 **도구(Tools)**입니다. 따라서 `/ragkit-law`를 입력할 필요 없이 위와 같이 자연어로 바로 질문하시면 됩니다.
+
+
 ## 4. 웹 화면: 법령 노트
 
 API 서버가 화면(빌드된 정적 파일)까지 한 주소에서 함께 준다. 먼저 확인만 하고, 그다음 띄워 브라우저로 본다(Ctrl+C로 끝).

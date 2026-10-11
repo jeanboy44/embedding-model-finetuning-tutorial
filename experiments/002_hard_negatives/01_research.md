@@ -1,7 +1,7 @@
 # 012 (이름 미정) — 1. 문헌
 
 앞 단계 문서: `00_error_analysis.md`. 이 문서의 우리 쪽 숫자는 모두 00 문서와 이전 실험 문서에서 옮겼다. dev 질문별 결과 파일은 열지 않았다.
-문헌 수치는 2026-10-11에 원문(arXiv HTML · PDF 본문)에서 다시 확인했다. 원문 추출 텍스트는 `runs/012_remined_negatives/work/research/pdf/*.txt`에 있다. 원문을 확인하지 못한 수치는 **"확인 못 함"**으로 표시했다.
+문헌 수치는 2026-10-11에 원문(arXiv HTML · PDF 본문)에서 다시 확인했다. 원문 추출 텍스트는 `runs/002_hard_negatives/work/research/pdf/*.txt`에 있다. 원문을 확인하지 못한 수치는 **"확인 못 함"**으로 표시했다.
 
 ## 질문
 
@@ -109,7 +109,7 @@
 
 - NV-Retriever: https://arxiv.org/html/2407.15831 (Table 1, 3, 4, 5, Fig. 3 본문 확인)
 - Arctic-Embed: https://arxiv.org/html/2405.05374 (§3.5, §3.6, §4.5, §7.2, Table 1, 3 본문 확인)
-- RocketQA: https://arxiv.org/abs/2010.08191 (PDF Table 3, 7과 70% 서술 확인, `runs/012_remined_negatives/work/research/pdf/rocketqa.txt`)
+- RocketQA: https://arxiv.org/abs/2010.08191 (PDF Table 3, 7과 70% 서술 확인, `runs/002_hard_negatives/work/research/pdf/rocketqa.txt`)
 - ANCE: https://arxiv.org/abs/2007.00808 (PDF Table 1 확인, `ance.txt`)
 - DPR: https://arxiv.org/abs/2004.04906 (PDF Table 3 확인, `dpr.txt`)
 - GPL: https://arxiv.org/abs/2112.07577 (PDF 결과표 · §5 확인, `gpl.txt`)

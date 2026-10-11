@@ -78,10 +78,17 @@ def main() -> None:
         if mode == "대기":
             commands.append(f"uv run --extra train --extra mlflow ragkit train {run_dir.relative_to(ROOT)}/config.yaml "
                             f"--splits {SPLITS.relative_to(ROOT)} --output-dir {model_dir} {todo['train_args']}".strip())
-        no_dev_eval = "--no-dev-eval" in todo["train_args"]
+        train_args = todo.get("train_args") or ""
+        no_dev_eval = "--no-dev-eval" in train_args
         if not no_dev_eval:
+            corpus_arg = ""
+            if "--corpus " in train_args:
+                import re
+                m = re.search(r"--corpus\s+([^\s]+)", train_args)
+                if m:
+                    corpus_arg = f"--corpus {m.group(1)} "
             commands.append(f"uv run --extra mlflow ragkit evaluate {model_dir} --split dev --splits {SPLITS.relative_to(ROOT)} "
-                            f"--backend torch --out {run_dir.relative_to(ROOT)}/eval_dev.json")
+                            f"{corpus_arg}--backend torch --out {run_dir.relative_to(ROOT)}/eval_dev.json")
         (run_dir / "command.sh").write_text("#!/bin/bash\nset -e\n" + "\n".join(commands) + "\n", encoding="utf-8")
 
         t0, ok = time.time(), True
