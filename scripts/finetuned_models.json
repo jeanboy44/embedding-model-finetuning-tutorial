@@ -12,15 +12,14 @@
       "file_id": "1SUklmNdo460WA1SIJOfreHd1kACKwZUi"
     },
     "001_baseline": {
-      "file": "finetuned-exp_002.zip",
+      "file": "finetuned-001_baseline.zip",
       "model_dir": "models/finetuned/001_baseline",
-      "index": "data/processed/index/001_baseline-20260930142234.sqlite",
-      "model_key": "001_baseline-20260930142234",
-      "weights_mtime": 1790778154.2225323,
-      "sha256": "c45b25f04f2947b9eab0170c3fa20d58589cbc0c6f3dd2cef889210ec7e20a88",
-      "size_mb": 358.4,
-      "file_id": "1fuvHutnkMxY7Jlh3DxZ2s2GmFGJEOniV",
-      "pending_reupload": "Drive의 finetuned-exp_002.zip은 옛 폴더 이름 exp_002 그대로 묶여 있다. 강사가 upload로 다시 올려야 받을 수 있다"
+      "index": "data/processed/index/001_baseline-20261010173529.sqlite",
+      "model_key": "001_baseline-20261010173529",
+      "weights_mtime": 1791653729.4595346,
+      "sha256": "e36db4be10de8eb9b79078caa0bf7628afe87c9fadafccab1371e6b1cb73cac3",
+      "size_mb": 358.6,
+      "file_id": "15l47rSlaqkqofAppX44WvV2dExAI4C1-"
     },
     "004_lora": {
       "file": "finetuned-exp_004.zip",
