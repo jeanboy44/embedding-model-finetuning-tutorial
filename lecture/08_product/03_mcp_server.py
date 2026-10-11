@@ -6,7 +6,7 @@
 - MCP(Model Context Protocol): LLM 에이전트가 외부 도구를 부르는 표준 방식을 이해한다
 - 에이전트가 하는 일을 그대로 재현한다: 서버 연결(stdio) → 도구 목록 → 도구 호출
 - 도구 설계: 이름·설명·입력 스키마가 곧 에이전트가 읽는 "사용 설명서"다
-- Claude Code / Claude Desktop에 등록해 실제로 쓴다
+- Antigravity CLI(agy) / Claude Code / Claude Desktop에 등록해 실제로 쓴다
 
 서버·네트워크 없이 이 컴퓨터에서 서버 프로세스를 띄워 표준 입출력으로 대화한다 (수십 초).
 --run 모드는 없다(받은 인덱스만 읽는다).
@@ -107,7 +107,10 @@ async def main() -> None:
 asyncio.run(main())
 
 section("4. 실제 에이전트에 등록")
-print(f"""Claude Code:
+print(f"""Antigravity CLI (agy):
+  agy mcp add --env RAGKIT_PROJECT_ROOT={ROOT} ragkit-law uv run --directory {ROOT} --package ragkit-mcp ragkit-mcp
+
+Claude Code:
   claude mcp add ragkit-law -e RAGKIT_PROJECT_ROOT={ROOT} -- \\
     uv run --directory {ROOT} --package ragkit-mcp ragkit-mcp
 
@@ -118,13 +121,13 @@ Claude Desktop (claude_desktop_config.json의 mcpServers):
     "env": {{"RAGKIT_PROJECT_ROOT": "{ROOT}"}}
   }}
 
-등록 후 Claude에게: "편의점 알바도 주휴수당 받을 수 있는지 법 조문 근거로 알려줘"
-→ Claude가 list_laws / search_laws / get_article을 스스로 골라 부른다.
+등록 후 agy 또는 claude에게: "편의점 알바도 주휴수당 받을 수 있는지 법 조문 근거로 알려줘"
+→ 에이전트가 list_laws / search_laws / get_article을 스스로 골라 부른다.
 
 CLI + 스킬(실습 4-2)과 비교:
   MCP          서버 프로세스를 등록한다. 도구 이름·설명·입력 스키마로 에이전트가 쓰는 법을 안다.
-               MCP를 지원하는 앱(Claude Desktop 등)이면 어디서나, 터미널이 없어도 쓴다
+               MCP를 지원하는 앱(Antigravity, Claude Desktop 등)이면 어디서나, 터미널이 없어도 쓴다
   CLI + 스킬   SKILL.md 한 파일을 둔다. 에이전트가 셸로 CLI를 부르고, 사람도 같은 명령을 쓴다.
-               셸을 쓰는 코딩 에이전트(Claude Code, Gemini CLI)에 가볍게 붙는다
+               셸을 쓰는 코딩 에이전트(Antigravity agy, Gemini CLI, Claude Code)에 가볍게 붙는다
 같은 Searcher를 쓰므로 검색 결과는 같다. 차이는 연결 방식과 쓰는 곳이다.
 """)

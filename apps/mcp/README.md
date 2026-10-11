@@ -1,6 +1,6 @@
 # ragkit-mcp — 법령 검색 MCP 서버
 
-한국 법령 조문 검색을 LLM 에이전트(Claude Code, Claude Desktop 등)의 도구로 제공한다.
+한국 법령 조문 검색을 LLM 에이전트(Antigravity agy, Claude Code, Claude Desktop 등)의 도구로 제공한다.
 공식 `mcp` Python SDK(2.x, `MCPServer`)로 만들었고 stdio로 통신한다.
 
 ## 준비
@@ -23,6 +23,13 @@ uv run ragkit index                     # data/processed/index/<모델 키>.sqli
 | `ask` | `question, laws=None, k=5` | Gemini 답변 + 근거 {answer, sources[{n, id, title}], error}. `GEMINI_API_KEY`가 없으면 error만 채워진다 |
 
 모르는 법령 이름이나 없는 id는 도구 오류로 돌아온다 (비슷한 법령 이름을 안내).
+
+## Antigravity CLI (agy)에 등록
+
+```bash
+REPO=/path/to/embedding-model-finetuning-tutorial
+agy mcp add --env RAGKIT_PROJECT_ROOT=$REPO ragkit-law uv run --directory $REPO --package ragkit-mcp ragkit-mcp
+```
 
 ## Claude Code에 등록
 

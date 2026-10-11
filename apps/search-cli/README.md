@@ -47,16 +47,17 @@ ragkit-search search "주휴수당" --model google/embeddinggemma-300m
 ragkit-search search "주휴수당" --checkpoint models/my-finetuned --index data/processed/index/my.sqlite
 ```
 
-## 에이전트 스킬 (Claude Code · Gemini CLI)
+## 에이전트 스킬 (Antigravity · Gemini · Claude Code)
 
-`SKILL.md` 하나로 셸을 쓰는 에이전트가 이 CLI를 도구로 쓴다. 두 에이전트는 같은 형식을 읽는다.
+`SKILL.md` 하나로 셸을 쓰는 에이전트가 이 CLI를 도구로 쓴다. 에이전트들은 같은 형식을 읽는다.
 스킬은 "질문 → search(필요하면 법률 용어로 다시) → show --article로 원문 읽기 → 조문 id를 붙여 답하기" 순서를 안내한다.
 
 ```bash
 ragkit-search skill show                                   # 설치될 내용 보기
-ragkit-search skill install --agent claude                 # ./.claude/skills/korean-law-search/SKILL.md
+ragkit-search skill install --agent antigravity            # ./.agents/skills/korean-law-search/SKILL.md
 ragkit-search skill install --agent gemini --user          # ~/.gemini/skills/korean-law-search/SKILL.md
-ragkit-search skill install --agent claude --checkpoint models/finetuned/002_hard_negatives --backend torch   # 파인튜닝 모델로
+ragkit-search skill install --agent claude                 # ./.claude/skills/korean-law-search/SKILL.md
+ragkit-search skill install --agent antigravity --checkpoint models/finetuned/002_hard_negatives --backend torch   # 파인튜닝 모델로
 ```
 
 설치한 SKILL.md에는 이 저장소 환경으로 CLI를 부르는 명령(`uv run --directory <저장소> --package ragkit-search ragkit-search`)과

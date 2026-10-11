@@ -199,7 +199,7 @@ def show(
 
 skill_app = cyclopts.App(
     name="skill",
-    help="에이전트 스킬: Claude Code·Gemini CLI가 이 CLI로 법령을 찾게 하는 SKILL.md.",
+    help="에이전트 스킬: Antigravity(agy)·Gemini·Claude Code가 이 CLI로 법령을 찾게 하는 SKILL.md.",
     default_parameter=Parameter(negative=()),
 )
 app.command(skill_app)
@@ -230,7 +230,7 @@ def skill_show(*, command: str | None = None, options: SearcherOptions | None = 
 @skill_app.command(name="install")
 def skill_install(
     *,
-    agent: Literal["claude", "gemini"] = "claude",
+    agent: Literal["antigravity", "gemini", "claude"] = "antigravity",
     user: bool = False,
     project_dir: Path | None = None,
     name: str | None = None,
@@ -239,12 +239,12 @@ def skill_install(
 ) -> int:
     """SKILL.md를 에이전트의 스킬 폴더에 쓴다.
 
-    Claude Code는 .claude/skills/, Gemini CLI는 .gemini/skills/ 아래를 읽는다.
+    Antigravity는 .agents/skills/, Gemini CLI는 .gemini/skills/, Claude Code는 .claude/skills/ 아래를 읽는다.
     모델 옵션(--checkpoint 등)을 주면 에이전트가 그 모델로 검색하도록 명령에 박아 넣는다.
 
     Args:
-        agent: claude | gemini.
-        user: 프로젝트 대신 사용자 폴더(~/.claude, ~/.gemini)에 설치한다 (모든 프로젝트에서 쓰임).
+        agent: antigravity | gemini | claude.
+        user: 프로젝트 대신 사용자 폴더(~/.agents, ~/.gemini, ~/.claude)에 설치한다 (모든 프로젝트에서 쓰임).
         project_dir: 설치할 프로젝트 폴더. 기본값은 지금 폴더.
         name: 스킬 이름(폴더 이름). 기본값 korean-law-search.
         command: 에이전트가 쓸 실행 명령. 기본값은 이 저장소에서 uv run으로 실행하는 명령.

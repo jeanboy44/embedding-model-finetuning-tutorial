@@ -66,8 +66,8 @@ LLM 단계(답변 생성)는 `.env`에 `GEMINI_API_KEY`가 필요합니다. [Goo
 | 3 (7) | `lecture/07_optimize/02_onnx_quantize_prune.py` | ONNX 변환, INT8 텐서 단위 vs 채널별, 어휘 가지치기 |
 | 3 (7) | `lecture/07_optimize/03_bench_and_serve.py` | 원본/ONNX/INT8/가지치기 비교표, API 백엔드 교체 |
 | 4 (8) | `lecture/08_product/01_search_cli.py` | 검색 CLI, `--json`, uvx 배포 |
-| 4 (8) | `lecture/08_product/02_agent_skill.py` | 에이전트 스킬(SKILL.md)로 Claude Code·Gemini CLI에 CLI 붙이기, 학습 전 vs 파인튜닝 비교 |
-| 4 (8) | `lecture/08_product/03_mcp_server.py` | MCP: 연결 → 도구 목록 → 호출, Claude 등록 |
+| 4 (8) | `lecture/08_product/02_agent_skill.py` | 에이전트 스킬(SKILL.md)로 Antigravity·Gemini·Claude에 CLI 붙이기, 학습 전 vs 파인튜닝 비교 |
+| 4 (8) | `lecture/08_product/03_mcp_server.py` | MCP: 연결 → 도구 목록 → 호출, Antigravity·Claude 등록 |
 | 4 (8) | `lecture/08_product/04_web_app.py` | 웹앱 빌드와 API 서버 한 주소 배포 |
 | 선택 | `lecture/03_setup/extra_gemini_basics.py` · `07_optimize/extra_embedding_speed.py` · `08_product/extra_monitoring.py` | Gemini 기초, 임베딩 속도 옵션, MLflow 모니터링(실험 run 비교 → 모델 레지스트리 → 서비스 트레이스) |
 
@@ -87,7 +87,7 @@ uv run --package ragkit-api ragkit-api --web-dist apps/web/dist                 
 
 # 제품 (4단계)
 uv run --package ragkit-search ragkit-search search "야간 근로 수당" --law 근로기준법
-uv run --package ragkit-mcp ragkit-mcp                      # Claude 등록은 apps/mcp/README.md
+uv run --package ragkit-mcp ragkit-mcp                      # Antigravity·Claude 등록은 apps/mcp/README.md
 cd apps/web && pnpm install && pnpm dev                     # 개발 모드 (api를 먼저 띄운다)
 
 # MLflow (4단계): .env에 MLFLOW_TRACKING_URI가 있으면 train·evaluate·compare·bench가 run을,

@@ -103,9 +103,12 @@ def test_skill_show_fills_command_and_model_options(run, tmp_path) -> None:
     assert "{command}" not in out and "{options}" not in out
 
 
-@pytest.mark.parametrize(("agent", "folder"), [("claude", ".claude"), ("gemini", ".gemini")])
+@pytest.mark.parametrize(
+    ("agent", "folder"),
+    [("antigravity", ".agents"), ("gemini", ".gemini"), ("claude", ".claude")],
+)
 def test_skill_install_writes_agent_skill_folder(run, tmp_path, agent, folder) -> None:
-    """Claude Code는 .claude/skills/, Gemini CLI는 .gemini/skills/ 아래에 같은 SKILL.md를 쓴다."""
+    """Antigravity는 .agents/skills/, Gemini CLI는 .gemini/skills/, Claude Code는 .claude/skills/ 아래에 같은 SKILL.md를 쓴다."""
     code, out, _ = run(["skill", "install", "--agent", agent, "--project-dir", str(tmp_path), "--command", "x"], None)
 
     path = tmp_path / folder / "skills" / "korean-law-search" / "SKILL.md"

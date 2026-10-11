@@ -1,10 +1,10 @@
 """
-실습 4-2 (8교시): 에이전트 스킬 — CLI에 SKILL.md 하나를 붙여 Claude Code·Gemini CLI가 법령을 찾게 하기
+실습 4-2 (8교시): 에이전트 스킬 — CLI에 SKILL.md 하나를 붙여 Antigravity(agy)·Gemini·Claude가 법령을 찾게 하기
 ================================================================================================
 
 학습 목표:
 - 에이전트 스킬: "언제, 어떤 명령을, 어떤 순서로" 쓰는지 적은 SKILL.md 한 파일이면 셸을 쓰는 에이전트가
-  우리 CLI를 도구로 쓴다. Claude Code(.claude/skills/)와 Gemini CLI(.gemini/skills/)가 같은 형식을 읽는다
+  우리 CLI를 도구로 쓴다. Antigravity(.agents/skills/), Gemini(.gemini/skills/), Claude Code(.claude/skills/)가 같은 형식을 읽는다
 - 스킬 설치: ragkit-search skill install. 모델 옵션(--checkpoint)을 주면 에이전트가 그 모델로 검색한다
 - 같은 에이전트에 학습 전 e5 / 파인튜닝 e5를 붙여 비교한다. 에이전트는 검색어를 스스로 고쳐 다시 찾으므로
   CLI 한 번 검색의 차이보다 줄어들지만, 처음 찾는 조문과 검색 횟수가 달라진다
@@ -13,17 +13,17 @@
 두 가지 모드:
 - 기본: 스킬을 임시 폴더에 설치해 보고, 에이전트가 할 첫 검색을 CLI로 재현해 두 모델을 비교한다.
   실제 에이전트 비교는 받은 결과(experiments/010_agent_skill/results/)를 읽는다 (1분 안쪽)
-- --run: claude가 설치돼 있으면 실제로 Claude Code를 헤드리스(claude -p)로 띄워 질문 --questions개를
-  두 모델로 묻는다 (질문당 30~60초, 호출 비용이 든다). 결과는 experiments/results/lecture/08_product/에 쓴다
+- --run: agy(Antigravity) 또는 claude가 설치돼 있으면 실제로 에이전트를 헤드리스(-p)로 띄워 질문 --questions개를
+  두 모델로 묻는다 (질문당 30~60초, 호출 비용/토큰이 든다). 결과는 experiments/results/lecture/08_product/에 쓴다
 
 사전 준비:
     uv run ragkit index                         # 또는 Drive에서 받은 data/processed/index/
     models/finetuned/002_hard_negatives                     # 강사가 나눠 준 파인튜닝 모델과 그 인덱스
-    (--run) Claude Code (claude 명령) 로그인
+    (--run) Antigravity CLI (agy) 또는 Claude Code 로그인
 
 실행:
     uv run python lecture/08_product/02_agent_skill.py
-    uv run python lecture/08_product/02_agent_skill.py --run                  # 질문 2개
+    uv run python lecture/08_product/02_agent_skill.py --run                  # 질문 2개 (agy 우선 자동 감지)
     uv run python lecture/08_product/02_agent_skill.py --run --questions 10   # 실험 010과 같은 설정
 """
 
@@ -56,7 +56,13 @@ OUT = ROOT / "experiments" / "results" / "lecture" / "08_product"
 SEED = 7  # 실험 010과 같은 질문을 고른다
 
 parser = argparse.ArgumentParser(description="실습 4-2: 에이전트 스킬")
-parser.add_argument("--run", action="store_true", help="Claude Code로 실제 비교 (비용이 든다)")
+parser.add_argument("--run", action="store_true", help="Antigravity(agy) 또는 Claude로 실제 비교 (비용/토큰 소모)")
+parser.add_argument(
+    "--agent",
+    choices=["auto", "agy", "antigravity", "claude"],
+    default="auto",
+    help="--run에서 사용할 에이전트 CLI (기본값: agy 우선 자동 감지)",
+)
 parser.add_argument("--questions", type=int, default=2, help="--run에서 물을 test 질문 수")
 parser.add_argument("--out", type=Path, default=OUT, help="--run 결과 폴더")
 args = parser.parse_args()
@@ -104,22 +110,23 @@ print(f"… (전체 {len(lines)}줄. 에이전트는 처음엔 name·description
 # ============================================================
 # 2. 설치: 에이전트마다 스킬 폴더에 파일 하나
 # ============================================================
-section("2. 설치: Claude Code · Gemini CLI")
+section("2. 설치: Antigravity(agy) · Gemini CLI · Claude Code")
 with tempfile.TemporaryDirectory(prefix="lecture-5-2-") as tmp:
-    for agent in ["claude", "gemini"]:
+    for agent in ["antigravity", "gemini", "claude"]:
         proc = cli("skill", "install", "--agent", agent, "--project-dir", tmp)
         print(proc.stdout.splitlines()[0].replace(tmp, "<프로젝트>") if proc.returncode == 0 else proc.stderr)
-    proc = cli("skill", "install", "--agent", "claude", "--project-dir", tmp, *VARIANTS["파인튜닝 e5 (002_hard_negatives)"])
-    tuned_skill = (Path(tmp) / ".claude/skills/korean-law-search/SKILL.md").read_text(encoding="utf-8")
+    proc = cli("skill", "install", "--agent", "antigravity", "--project-dir", tmp, *VARIANTS["파인튜닝 e5 (002_hard_negatives)"])
+    tuned_skill = (Path(tmp) / ".agents/skills/korean-law-search/SKILL.md").read_text(encoding="utf-8")
 search_line = next(line for line in tuned_skill.splitlines() if " search " in line)
 print("\n모델 옵션을 주고 설치하면 명령에 박힌다 (에이전트는 이 모델로 검색한다):")
 print("  " + search_line.replace(str(ROOT), "<저장소>"))
 print("""
 내 컴퓨터에 설치하려면 (모든 프로젝트에서 쓰기):
-  uv run --package ragkit-search ragkit-search skill install --agent claude --user
+  uv run --package ragkit-search ragkit-search skill install --agent antigravity --user
   uv run --package ragkit-search ragkit-search skill install --agent gemini --user
+  (Claude Code: --agent claude)
   (파인튜닝 모델로: 끝에 --checkpoint models/finetuned/002_hard_negatives --backend torch)
-그 뒤 claude 또는 gemini를 열고 "편의점 알바도 주휴수당 받을 수 있는지 조문 근거로 알려줘".""")
+그 뒤 agy, gemini 또는 claude를 열고 "편의점 알바도 주휴수당 받을 수 있는지 조문 근거로 알려줘".""")
 
 # ============================================================
 # 3. 에이전트의 첫 검색을 CLI로 재현: 사용자의 말 그대로 검색
@@ -142,32 +149,78 @@ print("에이전트는 여기서 끝내지 않고 법률 용어로 바꿔 다시
 # ============================================================
 # 4. 실제 에이전트 비교 (받은 결과 또는 --run)
 # ============================================================
-section("4. 실제 에이전트(Claude Code) 비교")
+section("4. 실제 에이전트 비교")
 
 
-def ask_claude(project: Path, question: str) -> dict:
+def resolve_agent(preference: str) -> tuple[str, str, str]:
+    """(에이전트 이름, 바이너리 경로, skill install 대상 이름) 반환."""
+    if preference in ("agy", "antigravity"):
+        p = shutil.which("agy") or shutil.which("antigravity")
+        if not p:
+            sys.exit("agy(Antigravity CLI) 명령이 없습니다. 설치·로그인한 뒤 다시 실행하세요.")
+        return "Antigravity (agy)", p, "antigravity"
+    if preference == "claude":
+        p = shutil.which("claude")
+        if not p:
+            sys.exit("claude 명령이 없습니다. Claude Code를 설치·로그인한 뒤 다시 실행하세요.")
+        return "Claude Code", p, "claude"
+
+    # auto 감지: agy 먼저 확인, 없으면 claude
+    if p := (shutil.which("agy") or shutil.which("antigravity")):
+        return "Antigravity (agy)", p, "antigravity"
+    if p := shutil.which("claude"):
+        return "Claude Code", p, "claude"
+    sys.exit("agy(Antigravity CLI) 또는 claude 명령이 없습니다. CLI를 설치·로그인한 뒤 다시 실행하세요.")
+
+
+def ask_agent(agent_name: str, bin_path: str, project: Path, question: str) -> dict:
     prompt = f"{question}\n\n(한국 법령 질문입니다. korean-law-search 스킬로 조문을 찾아 근거 조문 id를 붙여 답해 주세요.)"
     start = time.time()
-    proc = subprocess.run(
-        [shutil.which("claude") or "claude", "-p", prompt, "--model", "sonnet", "--output-format", "stream-json", "--verbose",
-         "--allowedTools", "Bash(uv run:*)", "Skill", "--max-turns", "12"],
-        cwd=project, capture_output=True, text=True, timeout=900, check=False,
-    )  # fmt: skip
     commands, answer, cost = [], "", None
-    for line in proc.stdout.splitlines():
-        try:
-            event = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        if event.get("type") == "assistant":
-            for block in event["message"].get("content", []):
-                if block.get("type") == "tool_use" and block.get("name") == "Bash":
-                    commands.append(block["input"].get("command", ""))
-        elif event.get("type") == "result":
-            answer, cost = event.get("result", ""), event.get("total_cost_usd")
-    # 에이전트는 명령을 변수에 담거나 여러 검색을 한 번에 묶어 부르기도 한다 → 셸 호출 수를 센다
-    return {"answer": answer, "commands": commands, "calls": len(commands),
-            "seconds": round(time.time() - start, 1), "cost": cost}  # fmt: skip
+
+    if agent_name.startswith("Antigravity"):
+        proc = subprocess.run(
+            [bin_path, "-p", prompt, "--output-format", "stream-json", "--dangerously-skip-permissions"],
+            cwd=project, capture_output=True, text=True, timeout=900, check=False,
+        )
+        for line in proc.stdout.splitlines():
+            try:
+                event = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if event.get("event") == "step_update":
+                step = event.get("step_update", {})
+                if step.get("step_type") == "tool" and step.get("tool_name") == "run_command":
+                    cmd = step.get("tool_info", {}).get("parameters", {}).get("CommandLine", "")
+                    if cmd and cmd not in commands:
+                        commands.append(cmd)
+            elif event.get("event") == "result":
+                answer = event.get("result", {}).get("response", "")
+    else:
+        proc = subprocess.run(
+            [bin_path, "-p", prompt, "--model", "sonnet", "--output-format", "stream-json", "--verbose",
+             "--allowedTools", "Bash(uv run:*)", "Skill", "--max-turns", "12"],
+            cwd=project, capture_output=True, text=True, timeout=900, check=False,
+        )  # fmt: skip
+        for line in proc.stdout.splitlines():
+            try:
+                event = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if event.get("type") == "assistant":
+                for block in event["message"].get("content", []):
+                    if block.get("type") == "tool_use" and block.get("name") == "Bash":
+                        commands.append(block["input"].get("command", ""))
+            elif event.get("type") == "result":
+                answer, cost = event.get("result", ""), event.get("total_cost_usd")
+
+    return {
+        "answer": answer,
+        "commands": commands,
+        "calls": len(commands),
+        "seconds": round(time.time() - start, 1),
+        "cost": cost,
+    }
 
 
 def mean(rows: list[dict], key: str) -> float:
@@ -181,26 +234,28 @@ def summarize(rows: list[dict]) -> str:
         if not mine:
             continue
         hit = sum(r["cited_gold"] for r in mine)
+        has_cost = any(r.get("cost") is not None for r in mine)
+        cost_str = f"${mean(mine, 'cost'):.2f}" if has_cost else "-"
         lines.append(
             f"| {name} | {hit}/{len(mine)} | {mean(mine, 'calls'):.1f} | {mean(mine, 'seconds'):.0f}초"
-            f" | ${mean(mine, 'cost'):.2f} |"
+            f" | {cost_str} |"
         )
     return "\n".join(lines)
 
 
 if args.run:
-    if shutil.which("claude") is None:
-        sys.exit("claude 명령이 없습니다. Claude Code를 설치·로그인한 뒤 다시 실행하세요.")
+    agent_name, bin_path, skill_target = resolve_agent(args.agent)
+    print(f"실행 대상 에이전트: {agent_name} ({bin_path})")
     args.out.mkdir(parents=True, exist_ok=True)
     rows = []
     with tempfile.TemporaryDirectory(prefix="lecture-5-2-agents-") as tmp:
         projects = {}
         for i, (name, flags) in enumerate(VARIANTS.items()):
             projects[name] = Path(tmp) / f"v{i}"
-            cli("skill", "install", "--agent", "claude", "--project-dir", str(projects[name]), *flags)
+            cli("skill", "install", "--agent", skill_target, "--project-dir", str(projects[name]), *flags)
         for q in pick_questions(args.questions):
             for name, project in projects.items():
-                r = ask_claude(project, q["query"])
+                r = ask_agent(agent_name, bin_path, project, q["query"])
                 r.update(variant=name, query=q["query"], gold=q["positive_id"])
                 r["cited_gold"] = article_key(q["positive_id"]) in r["answer"]
                 rows.append(r)
@@ -211,8 +266,8 @@ if args.run:
     )
     table = summarize(rows)
     (args.out / "comparison.md").write_text(
-        f"# Claude Code + korean-law-search 스킬: 학습 전 vs 파인튜닝\n\n"
-        f"test situation 질문 {args.questions}개 (seed {SEED}), claude -p --model sonnet. "
+        f"# {agent_name} + korean-law-search 스킬: 학습 전 vs 파인튜닝\n\n"
+        f"test situation 질문 {args.questions}개 (seed {SEED}). "
         f"정답 조문 인용 = 답에 정답 조(조 단위 id)를 근거로 적었는가.\n\n{table}\n",
         encoding="utf-8",
     )
@@ -222,7 +277,7 @@ elif RECEIVED.exists():
     print(f"받은 결과 ({RECEIVED.relative_to(ROOT)}):\n")
     print(RECEIVED.read_text(encoding="utf-8").strip())
 else:
-    print("받은 결과가 없습니다. 직접 해 보려면 --run (Claude Code 필요).")
+    print("받은 결과가 없습니다. 직접 해 보려면 --run (Antigravity agy 또는 Claude Code 필요).")
 
 print("""
 읽는 법:

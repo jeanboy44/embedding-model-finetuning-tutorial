@@ -1,9 +1,10 @@
-"""에이전트 스킬(SKILL.md): Claude Code·Gemini CLI가 ragkit-search를 도구로 쓰게 하는 안내서.
+"""에이전트 스킬(SKILL.md): Antigravity(agy)·Gemini·Claude Code가 ragkit-search를 도구로 쓰게 하는 안내서.
 
-두 에이전트는 같은 형식(앞머리 name·description + 본문)을 읽는다. 설치는 스킬 폴더에 SKILL.md를 쓰는 것뿐이다.
+에이전트들은 같은 형식(앞머리 name·description + 본문)을 읽는다. 설치는 스킬 폴더에 SKILL.md를 쓰는 것뿐이다.
 
-    Claude Code   프로젝트 .claude/skills/<이름>/SKILL.md   사용자 ~/.claude/skills/<이름>/SKILL.md
-    Gemini CLI    프로젝트 .gemini/skills/<이름>/SKILL.md   사용자 ~/.gemini/skills/<이름>/SKILL.md
+    Antigravity (agy) 프로젝트 .agents/skills/<이름>/SKILL.md   사용자 ~/.agents/skills/<이름>/SKILL.md
+    Gemini CLI        프로젝트 .gemini/skills/<이름>/SKILL.md   사용자 ~/.gemini/skills/<이름>/SKILL.md
+    Claude Code       프로젝트 .claude/skills/<이름>/SKILL.md   사용자 ~/.claude/skills/<이름>/SKILL.md
 """
 
 import shlex
@@ -12,8 +13,13 @@ from pathlib import Path
 from typing import Literal
 
 SKILL_NAME = "korean-law-search"
-Agent = Literal["claude", "gemini"]
-AGENT_DIRS: dict[str, str] = {"claude": ".claude", "gemini": ".gemini"}
+Agent = Literal["antigravity", "gemini", "claude"]
+AGENT_DIRS: dict[str, str] = {
+    "antigravity": ".agents",
+    "agy": ".agents",
+    "gemini": ".gemini",
+    "claude": ".claude",
+}
 
 
 def default_command(project_root: Path) -> str:
