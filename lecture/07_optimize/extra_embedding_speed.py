@@ -11,6 +11,13 @@
   4) 스레드 수
 - 속도를 바꿔도 결과(임베딩)는 같아야 한다 → 기준 대비 코사인 유사도로 확인
 
+무엇을 하나 (모드 하나뿐, 설정 8개 × 문서 1,000개, 이 Mac에서 약 2분):
+    0. 코퍼스에서 고르게 뽑은 문서 1,000개를 passage: 접두어로 만들고 길이 중앙값·최대를 출력한다
+    1. CONFIGS의 설정 8개를 차례로 돈다. 이 컴퓨터에 없는 장치(mps·CoreML)는 건너뛴다.
+       설정마다 create_embedding_fn으로 임베딩 함수를 만들고, 워밍업 한 배치 뒤 1,000개를 재서
+       걸린 초 · 코퍼스 전체(2.6만 개) 환산 분 · 첫 설정 대비 최소 코사인을 한 줄로 출력한다
+    2. 첫 설정을 기준으로 설정별 속도 배율(x1.0, x1.8 …)을 표로 보여 준다
+
 사전 준비:
     Drive에서 받은 data/processed/law_docs.json, models/(또는 HF 캐시의 기본 모델)
 
@@ -35,9 +42,10 @@ from ragkit.data import doc_text, load_corpus
 from ragkit.embeddings import create_embedding_fn, format_passages
 
 SAMPLE_SIZE = 1000  # 코퍼스에서 고르게 뽑을 문서 수
-BATCH_SIZE = 64
+BATCH_SIZE = 64  # 한 번에 임베딩할 문장 수. ragkit index --batch-size와 같은 뜻
 
 # (이름, backend, device, sort_by_length, threads, onnx_providers)
+# 한 번에 하나씩만 바꿔 효과를 분리한다. 모두 create_embedding_fn 인자 그대로다
 CONFIGS = [
     ("torch  cpu  정렬 없음", "torch", "cpu", False, None, None),
     ("torch  cpu  길이 정렬", "torch", "cpu", True, None, None),
@@ -78,6 +86,7 @@ def available(device: str | None, providers: list[str] | None) -> bool:
     return True
 
 
+# 0. 표본 문서: 코퍼스 2.6만 개에서 step 간격으로 1,000개. 길이 분포가 전체와 비슷하다
 settings = get_settings()
 docs = load_corpus(settings.data_dir / "processed" / "law_docs.json")
 step = max(len(docs) // SAMPLE_SIZE, 1)
@@ -88,6 +97,8 @@ print(
     f"최대 {lengths.max():,}자, 배치 {BATCH_SIZE}"
 )
 
+# 1. 설정별 측정: 설정마다 임베딩 함수를 새로 만들고, 같은 1,000개를 임베딩해 시간을 잰다.
+#    출력 한 줄 = 걸린 초 · 코퍼스 전체 환산 분 · 기준 대비 최소 코사인(1에 가까워야 같은 결과)
 baseline = None  # 처음으로 성공한 설정의 임베딩 = 결과 비교 기준
 rows = []
 for name, backend, device, sort, threads, providers in CONFIGS:
@@ -113,6 +124,8 @@ for name, backend, device, sort, threads, providers in CONFIGS:
         continue
     if baseline is None:
         baseline = vectors
+    # same: 기준 대비 행별 코사인의 최소(정규화된 벡터라 내적 = 코사인)
+    # full_min: 1,000개에 걸린 시간을 코퍼스 전체(2.6만 개)로 환산한 분
     same = float((vectors * baseline).sum(axis=1).min())
     full_min = elapsed / len(texts) * len(docs) / 60
     rows.append((name, elapsed, full_min, same))
@@ -125,6 +138,7 @@ if not rows:
         "\n성공한 설정이 없습니다. 위 실패 이유를 확인하세요 (모델·onnxruntime·torch 설치)."
     )
 
+# 2. 기준 대비 속도 배율: 첫 설정(보통 torch cpu 정렬 없음)이 x1.0
 base_name, base_time = rows[0][0], rows[0][1]
 print(f"\n코사인·속도의 기준 = 처음 성공한 설정: {base_name}")
 print("기준 대비 속도")

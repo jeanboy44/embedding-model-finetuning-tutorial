@@ -7,6 +7,13 @@
 - 검색 문서 한 건이 어떤 필드로 되어 있는지 본다 (id, 제목, 본문, 법령, 테마, 상위 조 id, 항·호)
 - 모델(e5)이 512토큰까지만 읽기 때문에 긴 조문을 항·호 단위로 나눴다는 것을 길이 분포로 확인한다
 
+무엇을 하나 (기본 모드, 20초 안쪽):
+    1. 규모: 법령 · 조문 · 검색 문서 수를 세고 테마별로 표를 찍는다 (ragkit.data.load_corpus)
+    2. 검색 문서 한 건: 장표 예시 조문의 필드를 그대로 찍고, 임베딩하는 글의 모양을 보인다
+    3. 항·호 분할: parent_id가 같은 문서를 세어 나뉜 조문 수 · 조각 수 · 예시 조문을 보인다
+    4. 길이 분포: 글자 수와 e5 토큰 수의 분위수, 512토큰 넘는 문서 비율을 나누기 전후로 비교한다
+    5. (--run) 전기 테마만 임시 폴더에 직접 만들어 받은 코퍼스와 id · 본문을 비교한다
+
 2022: 법령 사이트에서 조문을 긁어 엑셀로 정리하고, 긴 조문은 사람이 잘랐다
 2026: 법령이 Git(legalize-kr)에 있고, 스크립트 하나로 받아 나눈다
 
@@ -107,10 +114,14 @@ docs = load_corpus(CORPUS)
 # ============================================================
 # 1. 규모
 # ============================================================
+# 코퍼스 전체를 돌며 법령(category) · 조문(parent_id) · 검색 문서(id) 수를 센다.
+# 법령 하나는 법률 · 시행령 · 시행규칙 파일 여러 개로 되어 있어 파일 수도 같이 보인다.
+# 출력에서 볼 것: 법령 54개 · 조문 11,723개 · 검색 문서 25,967개, 테마별 크기 차이.
 section("1. 규모: 법령 · 조문 · 검색 문서")
 laws = {d["category"] for d in docs}
+# law_name(파일)마다 하나씩만 세어 법률 · 시행령 · 시행규칙 파일 수를 구한다
 law_files = Counter(d["law_type"] for d in {d["law_name"]: d for d in docs}.values())
-articles = {d["parent_id"] for d in docs}
+articles = {d["parent_id"] for d in docs}  # parent_id = 나누기 전 조문의 id
 print(
     f"법령       {len(laws):>7,}개  (법률·시행령·시행규칙 파일 {sum(law_files.values())}개: "
     + ", ".join(f"{t} {n}" for t, n in law_files.most_common())
@@ -123,7 +134,7 @@ print("\n테마별")
 by_theme: dict[str, list[dict]] = {}
 for d in docs:
     by_theme.setdefault(d["theme"], []).append(d)
-for theme, items in sorted(by_theme.items(), key=lambda x: -len(x[1])):
+for theme, items in sorted(by_theme.items(), key=lambda x: -len(x[1])):  # 큰 테마부터
     n_laws = len({d["category"] for d in items})
     print(f"  {theme:10s} 법령 {n_laws:3d}개  검색 문서 {len(items):6,}개")
 
@@ -131,7 +142,11 @@ for theme, items in sorted(by_theme.items(), key=lambda x: -len(x[1])):
 # ============================================================
 # 2. 검색 문서 한 건
 # ============================================================
+# 장표에 나온 최저임금법 제5조를 골라 검색 문서의 필드를 하나씩 찍는다.
+# 모델이 읽는 글은 ragkit.data.doc_text(제목 + 줄바꿈 + 본문)이고, "passage: " 접두어는
+# ragkit.embeddings.format_passages가 코드에서 붙인다 (데이터에는 없다).
 section("2. 검색 문서 한 건 (장표의 예시)")
+# 예시 조문이 없으면 첫 문서
 example = next((d for d in docs if d["parent_id"] == EXAMPLE_ID), docs[0])
 for field in (
     "id",
@@ -144,7 +159,7 @@ for field in (
     "paragraph",
 ):
     print(f"  {field:12s} {example[field]!r}")
-print(f"  {'text':12s} {example['text'][:160]}...")
+print(f"  {'text':12s} {example['text'][:160]}...")  # 본문은 앞 160자만
 print(
     "\n임베딩하는 글: 제목 + 줄바꿈 + 본문 (ragkit.data.doc_text), 앞에 'passage: '를 붙인다"
 )
@@ -153,16 +168,19 @@ print(
 # ============================================================
 # 3. 항·호 분할
 # ============================================================
+# parent_id가 같은 검색 문서 수를 세어, 조문 하나가 몇 조각으로 나뉘었는지 본다.
+# 출력에서 볼 것: 나뉜 조문 2,596개 → 조각 16,840개, 최대 32조각,
+# 예시 전기사업법 제2조(정의)는 호를 묶어 5조각이고 조각마다 머리말을 되풀이한다.
 section("3. 긴 조문은 항·호 단위로 나눈다")
-pieces = Counter(d["parent_id"] for d in docs)
-split_articles = [pid for pid, n in pieces.items() if n > 1]
+pieces = Counter(d["parent_id"] for d in docs)  # 조문 id → 조각 수
+split_articles = [pid for pid, n in pieces.items() if n > 1]  # 2조각 이상 = 나뉜 조문
 print(
     f"나뉜 조문 {len(split_articles):,}개 / {len(articles):,}개"
     f"  → 조각 {sum(pieces[p] for p in split_articles):,}개"
 )
 print(f"조문 하나가 가장 많이 나뉜 경우: {max(pieces.values())}조각")
 print(f"\n예: {SPLIT_EXAMPLE}")
-for d in [d for d in docs if d["parent_id"] == SPLIT_EXAMPLE][:6]:
+for d in [d for d in docs if d["parent_id"] == SPLIT_EXAMPLE][:6]:  # 앞 6조각까지만
     print(f"  {d['id']:40s} {len(doc_text(d)):5,}자")
 print(
     '  조각마다 같은 조의 머리말("이 법에서 사용하는 용어의 뜻은...")을 앞에 붙여 문맥을 남긴다'
@@ -172,6 +190,9 @@ print(
 # ============================================================
 # 4. 길이 분포
 # ============================================================
+# 검색 문서의 글자 수와 e5 토크나이저로 잰 토큰 수("passage: " 포함)의 분위수를 찍는다.
+# 토큰 수 재기는 약 10초. 나누기 전 조 단위 코퍼스(law_docs_article_level.json)가 있으면
+# 512토큰 넘는 비율을 전후로 비교한다. 출력에서 볼 것: 18.6% → 1.0%, 가장 긴 문서.
 section(f"4. 길이 분포: 모델은 {MAX_TOKENS}토큰까지만 읽는다")
 chars = [len(doc_text(d)) for d in docs]
 print(f"글자 수   {percentiles(chars)}")
@@ -180,7 +201,7 @@ tokens = token_lengths(docs)
 if tokens is None:
     print("토큰 수는 extra [torch]가 있어야 잰다 (uv sync --all-packages --all-extras)")
 else:
-    over = sum(t > MAX_TOKENS for t in tokens)
+    over = sum(t > MAX_TOKENS for t in tokens)  # 모델이 뒷부분을 못 읽는 문서 수
     print(f"토큰 수   {percentiles(tokens)}  ({time.perf_counter() - start:.1f}초)")
     print(f"  {MAX_TOKENS}토큰 넘는 검색 문서 {over:,}개 ({over / len(tokens):.1%})")
     longest = max(range(len(docs)), key=lambda i: tokens[i])
@@ -188,7 +209,7 @@ else:
         f"  가장 긴 문서: {docs[longest]['title']} ({tokens[longest]:,}토큰)"
         " — 표처럼 항·호로 더 나눌 수 없는 문서가 남는다"
     )
-    if ARTICLE_LEVEL.exists():
+    if ARTICLE_LEVEL.exists():  # 나누기 전 코퍼스가 있을 때만 전후 비교
         before = load_corpus(ARTICLE_LEVEL)
         before_tokens = token_lengths(before) or []
         before_over = sum(t > MAX_TOKENS for t in before_tokens)
@@ -201,6 +222,9 @@ else:
 # ============================================================
 # 5. (--run) 직접 만들어 보기
 # ============================================================
+# scripts/prepare_law_data.py를 하위 프로세스로 불러 전기 테마만 임시 폴더에 만든다
+# (legalize-kr을 받으므로 인터넷 필요, 수 초). 받은 코퍼스의 electric 문서와
+# id 집합 · 본문이 같은지 비교한다. 다르면 그 사이 법령이 개정된 것이다.
 if args.run:
     section(f"5. --run: {RUN_THEME} 테마 코퍼스를 직접 만든다")
     with tempfile.TemporaryDirectory() as tmp:
@@ -230,6 +254,7 @@ if args.run:
         else:
             mine = load_corpus(out)
             given = [d for d in docs if d["theme"] == RUN_THEME]
+            # 문서 구성(id 집합)이 같은가
             same_ids = {d["id"] for d in mine} == {d["id"] for d in given}
             given_by_id = {d["id"]: d for d in given}
             same_text = sum(
@@ -253,5 +278,5 @@ print("""
 정리:
 - 검색 단위는 법령이 아니라 조문, 긴 조문은 다시 항·호로 나눈 조각이다 (숫자는 위 출력)
 - 긴 조문을 나누지 않으면 512토큰 뒤의 내용은 임베딩에 들어가지 않는다
-- 다음: uv run python lecture/05_data_eval/02_split.py (법령 단위 분할)
+- 다음: uv run python lecture/05_data_eval/02_split.py (조 단위 분할)
 """)

@@ -3,9 +3,16 @@
 ============================================================================
 
 학습 목표:
-- 서버 없이 터미널에서 법령을 찾는 도구를 써 본다: laws → search(법령 필터) → show → ask
+- 서버 없이 터미널에서 법령을 찾는 도구를 써 본다: laws → search(법령 필터) → show
 - 사람이 읽는 출력과 --json(다른 프로그램이 읽는 출력)을 함께 제공하는 설계를 본다
 - 설치 없이 실행하는 배포: uvx. 휠(wheel)을 만들어 torch 없이 돈다는 것을 확인한다 (--run)
+
+무엇을 하나 (명령은 전부 apps/search-cli의 ragkit-search를 자식 프로세스로 부른다. 안은 ragkit.service.Searcher 하나다):
+    1. laws --theme youth → search "야간 근로 수당" -k 3 --law 근로기준법 → show 근로기준법_법률_제56조 --article
+       법령 이름 확인 → 법령을 좁혀 검색 → 조 전체 원문. 사람이 읽는 출력이다
+    2. search "전세 보증금" -k 2 --law 주택임대차보호법 --json → 결과 건수와 필드 이름만 출력 (다른 프로그램이 읽는 출력)
+    3. uvx 배포: 기본 모드는 동료에게 줄 명령만 안내. --run이면 휠 두 개를 빌드해 uvx 격리 환경에 torch가 없는지 확인
+    답변(ask) 명령은 이 강의에서 쓰지 않는다. 검색(근거 조문)까지만 본다
 
 두 가지 모드:
 - 기본: 저장소에 설치된 ragkit-search로 명령들을 실행해 본다 (수십 초)
@@ -14,7 +21,6 @@
 
 사전 준비:
     uv run ragkit index             # 또는 Drive에서 받은 data/processed/index/
-    .env의 GEMINI_API_KEY (ask만 필요, 있으면 LLM 1회 호출)
 
 실행:
     uv run python lecture/08_product/01_search_cli.py
@@ -92,30 +98,24 @@ def run(*args: str, show: bool = True, required: bool = True) -> str:
 # ============================================================
 # 1. 사람이 쓰는 명령들
 # ============================================================
+# 에이전트(SKILL.md)도 같은 순서로 부른다: laws로 정확한 법령 이름을 확인하고,
+# --law로 좁혀 search한 뒤, 답에 쓸 조는 show --article로 항·호 전체를 읽는다.
+# 출력에서 볼 것: laws의 법령 이름 · 조각 수, search의 [유사도]와 조각 id, show의 조 전체 원문과 출처 URL
 section("1. 법령 목록 → 검색 → 조문 보기")
-run("laws", "--theme", "youth")
+run("laws", "--theme", "youth")  # youth 테마 법령 32개 (법률 · 시행령 · 시행규칙)
 print()
+# 근로기준법으로 좁혀 상위 3개
 run("search", "야간 근로 수당", "-k", "3", "--law", "근로기준법")
 print()
-run("show", "근로기준법_법률_제56조", "--article")
+run("show", "근로기준법_법률_제56조", "--article")  # 조각 id → 같은 조의 항·호 전체
 
 # ============================================================
-# 2. 답변: 찾은 조문만 근거로, 받는 대로 출력
+# 2. 다른 프로그램이 쓰는 출력
 # ============================================================
-section("2. 답변 (찾은 조문만 근거, 받는 대로 출력)")
-# GEMINI_API_KEY가 없으면 실패한다 → 오류를 보여 주고 다음으로 넘어간다
-run(
-    "ask",
-    "수습 기간에도 최저임금을 다 줘야 하나요?",
-    "--law",
-    "최저임금법",
-    required=False,
-)
-
-# ============================================================
-# 3. 다른 프로그램이 쓰는 출력
-# ============================================================
-section("3. --json: 스크립트·다른 도구와 연결")
+# 같은 search에 --json을 붙이면 사람용 출력 대신 JSON 목록이 나온다. 이 스크립트가 그것을
+# json.loads로 읽듯이, 에이전트 스킬(SKILL.md)과 다른 도구도 이 출력을 읽는다.
+# 출력에서 볼 것: 건수 2와 필드 이름 15개 (id · title · score · text · law_name · law_type · parent_id · source_url …)
+section("2. --json: 스크립트·다른 도구와 연결")
 hits = json.loads(
     run(
         "search",
@@ -125,20 +125,25 @@ hits = json.loads(
         "--law",
         "주택임대차보호법",
         "--json",
-        show=False,
+        show=False,  # JSON 원문은 길어서 화면에 찍지 않고 파싱만 한다
     )
 )
 print(f"JSON 결과 {len(hits)}건, 필드: {sorted(hits[0]) if hits else '-'}")
 
 # ============================================================
-# 4. 배포: 설치 없이 실행 (uvx)
+# 3. 배포: 설치 없이 실행 (uvx)
 # ============================================================
-section("4. uvx로 배포 (torch 없는 가벼운 도구)")
+# ragkit-search는 onnxruntime만 있으면 돌고 torch가 필요 없다. 그래서 휠(wheel) 두 개
+# (ragkit, ragkit-search)만 건네면 동료가 uvx로 설치 없이 쓴다.
+# --run: uv build로 휠 두 개를 임시 폴더에 만들고, uvx 격리 환경에서 torch가 없는지 묻는다.
+# 출력에서 볼 것: 휠 두 개의 크기(KB), "uvx 격리 환경에 torch 없음: True", 동료에게 줄 명령
+section("3. uvx로 배포 (torch 없는 가벼운 도구)")
 if not args.run:
     print("휠 빌드와 uvx 격리 환경 확인은 --run에서 한다 (네트워크 필요).")
 else:
-    with tempfile.TemporaryDirectory() as tmp:
+    with tempfile.TemporaryDirectory() as tmp:  # 휠은 임시 폴더에 두고 끝나면 지운다
         dist = Path(tmp)
+        # 워크스페이스의 두 패키지만 (torch 없음)
         for package in ("ragkit", "ragkit-search"):
             subprocess.run(
                 ["uv", "build", "-q", "--package", package, "--wheel", "-o", str(dist)],
@@ -150,14 +155,14 @@ else:
         check = subprocess.run(
             [
                 "uvx",
-                "--isolated",
+                "--isolated",  # 저장소의 .venv와 캐시를 쓰지 않는 새 환경 (의존성은 PyPI에서 받는다)
                 "--with",
                 str(next(dist.glob("ragkit-*.whl"))),
                 "--from",
                 str(next(dist.glob("ragkit_search-*.whl"))),
                 "python",
                 "-c",
-                "import importlib.util as u; print(u.find_spec('torch') is None)",
+                "import importlib.util as u; print(u.find_spec('torch') is None)",  # torch가 없으면 True
             ],
             capture_output=True,
             text=True,

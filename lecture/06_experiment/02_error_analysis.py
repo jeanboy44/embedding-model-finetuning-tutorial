@@ -11,15 +11,25 @@
 
 분류(1위 오답과 정답의 관계, 순위 구간, 단어 겹침)는 ragkit.evaluation의 함수로 기계적으로 한다.
 
+무엇을 하나:
+    0. 01이 읽은(또는 직접 만든) 학습 전 / 001의 조 단위 test 결과 JSON을 읽는다 (질문별 순위 · top-10)
+    1. 질문 유형 · 테마 · 법령 · 단어 겹침 4분위별 R@5를 학습 전 → 001로 비교한다
+    2. ragkit.evaluation.compare_hits로 고침 · 새로 틀림 · 둘 다 틀림 · 둘 다 맞힘을 세고 예시를 보여 준다
+    3. 001이 여전히 틀리는 질문의 1위 오답과 정답의 관계(confusion_relation) · 정답 순위 구간을 집계한다
+    4. 파인튜닝으로 닿지 않는 범위(정답 31위 밖)와 R@5 상한을 계산한다
+    5. train의 hard negative가 정답과 같은 법인 비율을 세고, 001로 잰 오답 순위 기록(실험 002 오답 분석)을 보여 준다
+       --run이면 train 질문 300개를 001로 직접 검색해 오답의 순위를 잰다
+    6. 실패 목록을 JSONL로 남기고, AI에게 맡길 분류 요청과 다음 가설을 적는다
+
 사전 준비:
     01_compare_runs.py를 먼저 실행해 학습 전 / 001의 test 결과(질문별 순위)를 만든다
-    (또는 강사가 나눠 준 experiments/archive/exp_010_lecture_comparison/results/*.json)
+    (또는 강사가 나눠 준 experiments/results/001_baseline/{000_base_test,001_test}.json)
 
 실행:
     uv run python lecture/06_experiment/02_error_analysis.py          # 01의 test 결과로 분석 (몇 초)
     uv run python lecture/06_experiment/02_error_analysis.py --run    # + train 질문 300개를 001로 검색해 우리가 준 오답의 순위를 직접 잰다 (1분 안쪽)
 
-여전히 틀리는 질문 목록은 experiments/results/lecture/06_experiment/ 아래 JSONL로 남긴다(AI에게 분류를 맡길 때 쓴다).
+여전히 틀리는 질문 목록은 experiments/results/lecture/06_experiment/failures_001_baseline.jsonl로 남긴다(AI에게 분류를 맡길 때 쓴다).
 """
 
 import json
@@ -51,21 +61,25 @@ from ragkit.retrieval import VectorIndex, default_index_path, model_key
 ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "data"
 CORPUS = DATA / "processed" / "law_docs.json"
-TEST = DATA / "splits" / "test.jsonl"
-TRAIN = DATA / "splits" / "train.jsonl"
-RECEIVED = ROOT / "experiments" / "exp_010_lecture_comparison" / "results"
+SPLITS = DATA / "splits_article"  # 조 단위 분할 (5교시 02_split.py)
+TEST = SPLITS / "test.jsonl"
+TRAIN = SPLITS / "train.jsonl"
+RECEIVED = (
+    ROOT / "experiments" / "results" / "001_baseline"
+)  # 강사가 나눠 준 실험 001 결과
 LECTURE_OUT = ROOT / "experiments" / "results" / "lecture" / "06_experiment"
-FROM_01 = LECTURE_OUT / "exp_010"
+FROM_01 = LECTURE_OUT / "001_baseline"  # 01_compare_runs.py가 직접 평가했을 때 쓴 곳
 TUNED_DIR = ROOT / "models" / "finetuned" / "001_baseline"
 BASE, TUNED = "multilingual-e5-small", "001_baseline"  # 학습 전 / 기본 실험 001
 LABELS = {BASE: "학습 전", TUNED: "001"}
 K = 5
-RUN_SAMPLE = 300
+RUN_SAMPLE = 300  # --run에서 001로 검색할 train 질문 수
 SEED = 42
 DEPTH = 50  # 오답 순위를 볼 깊이 (이보다 아래면 "50위 밖")
 
 GET_DATA = "uv run python scripts/data_version.py pull v1"
-GET_002 = "uv run python scripts/finetuned_drive.py download 001_baseline"
+GET_SPLITS = "uv run python lecture/05_data_eval/02_split.py"
+GET_001 = "uv run python scripts/finetuned_drive.py download 001_baseline"
 
 
 def section(title: str) -> None:
@@ -88,7 +102,7 @@ def pad(text: str, width: int) -> str:
 
 
 def load_results(folder: Path) -> dict[str, dict]:
-    """결과 폴더의 모델별 JSON을 모델 폴더 이름 → 결과로 읽는다."""
+    """결과 폴더의 모델별 JSON을 모델 폴더 이름 → 결과로 읽는다 (01_compare_runs.py와 같은 규칙)."""
     found = {}
     for path in sorted(folder.glob("*.json")):
         if path.name == "comparison.json" or path.stem.endswith("_expand"):
@@ -114,6 +128,8 @@ def negative_bucket(rank: int | None) -> str:
 
 
 sys.stdout.reconfigure(line_buffering=True)
+
+
 @Parameter(name="*")
 class Options(BaseModel):
     run: bool = Field(
@@ -131,17 +147,21 @@ args = cyclopts.run(cli, result_action="return_value")
 if args is None:  # --help
     sys.exit(0)
 
-for path, how in ((CORPUS, GET_DATA), (TEST, GET_DATA), (TRAIN, GET_DATA)):
+for path, how in ((CORPUS, GET_DATA), (TEST, GET_SPLITS), (TRAIN, GET_SPLITS)):
     if not path.exists():
         print(f"필요한 산출물이 없습니다: {rel(path)}\n  받기: {how}")
         raise SystemExit(1)
 docs = {d["id"]: d for d in load_corpus(CORPUS)}
-questions = {question_key(q): q for q in load_questions(TEST)}
+questions = {
+    question_key(q): q for q in load_questions(TEST)
+}  # query_type을 붙이려고 test 질문 원본을 든다
 
 
 # ============================================================
 # 0. 질문별 결과 불러오기
 # ============================================================
+# 01이 읽은 순서와 같다: 받은 결과(RECEIVED) → 01이 직접 평가한 결과(FROM_01).
+# 두 JSON의 per_question(질문별 doc_rank · top10)이 이 스크립트의 재료 전부다
 section("0. 질문별 결과")
 results, source = {}, None
 for folder in (RECEIVED, FROM_01):
@@ -155,7 +175,9 @@ if source is None:
     print(f"  (또는 강사가 나눠 준 결과 JSON을 {rel(RECEIVED)}/ 에 둔다)")
     raise SystemExit(1)
 base, tuned = results[BASE], results[TUNED]
-print(f"결과: {rel(source)} · 질문 {base['n']:,}개 · 판정 doc · R@{K}")
+print(
+    f"결과: {rel(source)} · 조 단위 test 질문 {base['n']:,}개 · 법령 {len(base['by_law'])}개 · 판정 doc · R@{K}"
+)
 print(
     f"  {LABELS[BASE]} R@{K} {base['doc'][f'recall@{K}']:.3f} → {LABELS[TUNED]} {tuned['doc'][f'recall@{K}']:.3f}"
 )
@@ -164,6 +186,8 @@ print(
 # ============================================================
 # 1. 어디가 올랐나
 # ============================================================
+# 결과 JSON의 by_query_type · by_theme · by_law 집계를 그대로 비교하고(가장 적게 오른 순),
+# 단어 겹침은 query_overlap(질문 글자 2-gram이 정답 조문에 나오는 비율)으로 4분위를 나눠 직접 센다
 section("1. 어디가 올랐나: 유형 · 테마 · 법령")
 for field, name in (("by_query_type", "질문 유형"), ("by_theme", "테마")):
     print(f"\n{name}별 R@{K}")
@@ -191,7 +215,9 @@ laws = sorted(
         - base["by_law"][g]["doc"][f"recall@{K}"]
     ),
 )
-print(f"\n법령별 R@{K} (질문 20개 이상, 가장 적게 오른 3개 / 가장 많이 오른 3개)")
+print(
+    f"\n법령별 R@{K} (질문 20개 이상 {len(laws)}개 법령, 가장 적게 오른 3개 / 가장 많이 오른 3개)"
+)
 for g in dict.fromkeys(laws[:3] + laws[-3:]):
     a, b = (
         base["by_law"][g]["doc"][f"recall@{K}"],
@@ -206,7 +232,7 @@ overlap = {
     row["qid"]: query_overlap(row["query"], doc_text(docs[row["positive_id"]]))
     for row in base["per_question"]
 }
-edges = np.quantile(list(overlap.values()), [0.25, 0.5, 0.75])
+edges = np.quantile(list(overlap.values()), [0.25, 0.5, 0.75])  # 4분위 경계
 tuned_rank = {row["qid"]: row["doc_rank"] for row in tuned["per_question"]}
 tuned_by_quartile = []
 for i, name in enumerate(("겹침 하위 25%", "25~50%", "50~75%", "상위 25%")):
@@ -227,6 +253,8 @@ print(
 # ============================================================
 # 2. 고친 질문 · 새로 틀린 질문
 # ============================================================
+# compare_hits가 같은 qid끼리 짝지어 네 묶음으로 나눈다. 01의 paired-test가 센 고침 · 망침과 같은 수다.
+# 새로 틀린 질문의 정답 순위를 rank_bucket으로 묶어, 살짝 밀린 것(6~10위)이 얼마나 되는지 본다
 groups = compare_hits(base, tuned, judge="doc", k=K)
 section(
     f"2. 질문 단위로 짝짓기: 고침 {len(groups['fixed']):,} · 새로 틀림 {len(groups['broken']):,} · "
@@ -256,6 +284,9 @@ print(
 # ============================================================
 # 3. 여전히 틀리는 질문: 1위 오답은 무엇인가
 # ============================================================
+# 001이 5위 안에 못 넣은 질문마다 top-10의 1위 문서를 꺼내 confusion_relation으로 정답과의 관계
+# (같은 조 조각 · 같은 법 다른 조 · 법률↔시행령 · 다른 법 같은 테마 · 다른 법 다른 테마)를 매긴다.
+# 이 목록(failures)이 6절에서 JSONL로 남는다
 section(
     f"3. 여전히 틀리는 질문 ({LABELS[TUNED]} 기준 {sum(not hit(r) for r in tuned_rank.values()):,}개)"
 )
@@ -297,7 +328,7 @@ buckets = Counter(rank_bucket(f["rank"]) for f in failures)
 print("\n정답은 몇 위에 있었나")
 for b in RANK_BUCKETS[1:]:
     print(f"  {pad(b, 10)}{buckets[b]:5,}  ({buckets[b] / len(failures):.0%})")
-far = buckets["31~100위"] + buckets["100위 밖"]
+far = buckets["31~100위"] + buckets["100위 밖"]  # 오답 학습으로 닿기 어려운 범위
 
 print("\n파인튜닝 후에도 틀린 situation 질문 5개 (1위가 왜 헷갈렸을지 적어 본다)")
 situation_fail = [f for f in failures if f["query_type"] == "situation"]
@@ -321,6 +352,8 @@ if confused:
 # ============================================================
 # 4. 파인튜닝의 한계
 # ============================================================
+# 3절의 순위 구간에서 정답이 31위 밖인 실패 수(far)로, 가까운 경쟁 문서를 밀어내는 학습이
+# 닿지 못하는 범위와 R@5 상한을 계산한다
 section("4. 파인튜닝으로 안 고쳐지는 것")
 print(
     f"  · 정답이 31위 밖인 실패 {far:,}개 ({far / len(failures):.0%}): 오답을 바꿔 가까운 경쟁 문서를 밀어내는 학습으로는 닿지 않는다"
@@ -336,13 +369,16 @@ print(
     "  · 추론(여러 조문을 이어야 하는 질문), 숫자 조건, 코퍼스에 없는 지식은 검색 모델 학습으로 고쳐지지 않는다"
 )
 print(
-    "  · test 법령은 학습 때 보지 않았다. 본 법령에서 얻은 이득의 일부만 새 법령으로 옮겨 간다 (docs/PLAN.md error analysis)"
+    "  · test 조는 학습 때 보지 않았지만 54개 법령은 모두 학습에 있다. 이 점수는 '학습한 법령 안의 학습에 없던 조'에서의 성능이다"
 )
 
 
 # ============================================================
 # 5. 우리가 준 오답은 어땠나
 # ============================================================
+# train 질문에 붙은 hard_negative_ids를 정답과 같은 법(category)인지 센다(질문을 만들 때 LLM이 골랐다).
+# 기본 모드는 실험 002의 오답 분석(001로 train 표본 1,000개를 검색한 기록)을 보여 주고,
+# --run이면 001 모델 + 받은 인덱스로 train 300개를 직접 검색해 각 오답의 순위를 잰다
 section("5. 우리가 준 오답(hard negative)은 모델이 헷갈리는 것이었나")
 train = load_questions(TRAIN)
 pairs = [(q, h) for q in train for h in q.get("hard_negative_ids", []) if h in docs]
@@ -359,15 +395,15 @@ print(
 
 if args.run:
     if not TUNED_DIR.exists():
-        print(f"모델이 없습니다: {rel(TUNED_DIR)}\n  받기: {GET_002}")
+        print(f"모델이 없습니다: {rel(TUNED_DIR)}\n  받기: {GET_001}")
         raise SystemExit(1)
     index_path = default_index_path(model_key(str(TUNED_DIR), TUNED_DIR))
     if not index_path.exists():
-        print(f"001 인덱스가 없습니다: {rel(index_path)}\n  받기: {GET_002}")
+        print(f"001 인덱스가 없습니다: {rel(index_path)}\n  받기: {GET_001}")
         raise SystemExit(1)
     sample = random.Random(SEED).sample(
         [q for q in train if q.get("hard_negative_ids")], RUN_SAMPLE
-    )
+    )  # 오답이 붙은 질문만 (조 단위 분할에서 오답이 모두 빠진 질문 437개는 제외)
     print(
         f"\n--run: train 질문 {RUN_SAMPLE}개 (seed {SEED})를 001로 검색해 오답의 순위를 잰다"
     )
@@ -376,11 +412,13 @@ if args.run:
         str(TUNED_DIR), backend="torch"
     )  # 받은 인덱스와 같은 백엔드
     profile = get_profile(TUNED_DIR)
-    vectors = embed([profile.format_query(q["query"]) for q in sample])
+    vectors = embed(
+        [profile.format_query(q["query"]) for q in sample]
+    )  # query: 접두어는 profile이 붙인다
     index = VectorIndex.open(index_path)
     ranks = Counter()
     for q, vec in zip(sample, vectors):
-        order = [h.id for h in index.search(vec, k=DEPTH)]
+        order = [h.id for h in index.search(vec, k=DEPTH)]  # 상위 50개만 본다
         for neg in q["hard_negative_ids"]:
             ranks[negative_bucket(order.index(neg) + 1 if neg in order else None)] += 1
     index.close()
@@ -393,16 +431,25 @@ if args.run:
     print(f"  → {DEPTH}위 밖 오답은 학습해도 배울 것이 거의 없다. 이미 쉬운 오답이다")
 else:
     print(
-        "\n같은 설정에 더 오래 학습한 003으로 잰 기록 (experiments/002_hard_negatives/00_error_analysis.md):"
+        "\n001로 train 표본 1,000개를 검색해 잰 기록 (실험 002 오답 분석, experiments/002_hard_negatives/00_error_analysis.md):"
     )
-    print("  · train의 기존 오답 중 이미 50위 밖 40%, 6~30위 33%, 1~5위 18%")
-    print("  · dev에서 틀린 질문의 1위 오답이 우리가 준 오답인 경우 4.7%")
+    print(
+        "  · train의 기존 오답 중 이미 50위 밖 39%, 31~50위 9%, 6~30위 31%, 1~5위 21%"
+    )
+    print(
+        "  · 기존 오답의 관계: 같은 조의 다른 조각 50%, 같은 법 같은 종류 다른 조 48%, 법률↔시행령 3%, 다른 법 0%"
+    )
+    print(
+        "  · dev에서 틀린 질문의 1위 오답이 우리가 준 오답인 경우 3.3%, 5위 안에 하나라도 있는 경우 17.1%"
+    )
     print("  001로 직접 재려면 --run")
 
 
 # ============================================================
 # 6. AI에게 맡기고, DS는 판단한다
 # ============================================================
+# 3절의 실패 목록을 JSONL로 남긴다(질문 · 정답 · 1위 오답 · 관계). 분류는 AI에게 맡기고
+# DS는 어떤 숫자를 믿을지와 다음 가설을 정한다. 이 가설이 실험 002다
 section("6. 분류와 리포트는 AI에게, 가설과 판단은 DS가")
 LECTURE_OUT.mkdir(parents=True, exist_ok=True)
 out = LECTURE_OUT / f"failures_{TUNED}.jsonl"
@@ -425,6 +472,6 @@ print(
 )
 print("\n다음 가설 (한 문장으로): '모델이 헷갈리는 조문을 오답으로 주면 오른다'")
 print(
-    "  근거: 1위 오답의 절반이 다른 법, 정답의 다수가 30위 안. 우리가 준 오답은 같은 법이고 쉽다"
+    f"  근거: 1위 오답의 {other_law / len(failures):.0%}가 다른 법, 정답의 {1 - far / len(failures):.0%}가 30위 안. 우리가 준 오답은 같은 법이고 쉽다"
 )
 print("  이 가설을 에이전트가 돈 바퀴가 실험 002이다 → 03_hard_negatives.py")

@@ -11,6 +11,13 @@
 서버·네트워크 없이 이 컴퓨터에서 서버 프로세스를 띄워 표준 입출력으로 대화한다 (수십 초).
 --run 모드는 없다(받은 인덱스만 읽는다).
 
+무엇을 하나 (이 스크립트가 에이전트 역할, apps/mcp의 ragkit-mcp가 서버 역할이다):
+    1. 연결: `uv run --package ragkit-mcp ragkit-mcp`를 자식 프로세스로 띄우고 initialize → 서버 이름과 instructions(사용 지침)
+    2. 도구 목록: list_tools → search_laws · get_article · list_laws · ask의 이름 · 입력값 · 설명 첫 줄
+       (ask는 LLM 답변 도구라 이 강의에서 쓰지 않는다)
+    3. 도구 호출: list_laws(theme) → search_laws(query, laws, k) → get_article(doc_id), 그리고 잘못된 법령 이름을 준 오류 응답
+    4. 등록 명령 출력: 원격(streamable-http) · 로컬(stdio) 두 방법을 이 컴퓨터 경로로. CLI + 스킬(실습 4-2)과 비교
+
 사전 준비:
     uv run ragkit index             # 또는 Drive에서 받은 data/processed/index/
 
@@ -48,7 +55,8 @@ def items_of(result: CallToolResult) -> list[dict]:
 
 
 async def main() -> None:
-    # 에이전트(클라이언트)는 서버 프로세스를 띄우고 표준 입출력으로 대화한다
+    # 에이전트(클라이언트)는 서버 프로세스를 띄우고 표준 입출력으로 대화한다.
+    # 아래 등록 명령(4번)에 적는 것과 같은 명령 · 환경 변수다 (RAGKIT_PROJECT_ROOT로 인덱스 위치를 찾는다)
     params = StdioServerParameters(
         command="uv",
         args=["run", "--directory", str(ROOT), "--package", "ragkit-mcp", "ragkit-mcp"],
@@ -58,18 +66,37 @@ async def main() -> None:
         stdio_client(params) as (read, write),
         ClientSession(read, write) as session,
     ):
+        # ------------------------------------------------------------
+        # 1. 연결 (initialize): 서버가 이름과 instructions를 보낸다
+        # ------------------------------------------------------------
+        # instructions는 apps/mcp 서버에 적힌 사용 지침이다. 에이전트는 이 글을 읽고
+        # "법령 질문이면 추측하지 말고 search_laws를 부른다"는 규칙을 안다.
+        # 출력에서 볼 것: 서버 이름 ragkit-law, 지침 다섯 줄
         info = await session.initialize()
         section("1. 연결: 서버가 자기소개(instructions)를 보낸다")
         print(f"서버: {info.server_info.name}")
         print((info.instructions or "").strip())
 
+        # ------------------------------------------------------------
+        # 2. 도구 목록 (list_tools): 이름 · 입력 스키마 · 설명
+        # ------------------------------------------------------------
+        # 에이전트가 받는 "사용 설명서"는 이것이 전부다. 도구 이름과 설명이 곧 설계다.
+        # 출력에서 볼 것: 도구 4개. search_laws(query, k, laws) · get_article(doc_id) · list_laws(theme) · ask(…)
+        # ask는 서버에 LLM이 켜져 있어야 하는 답변 도구라 이 강의에서 쓰지 않는다
         section("2. 도구 목록: 에이전트는 이 설명을 읽고 언제 무엇을 부를지 정한다")
         for tool in (await session.list_tools()).tools:
+            # 입력 스키마의 인자 이름만
             params_ = ", ".join(tool.input_schema.get("properties", {}))
             print(
                 f"- {tool.name}({params_})\n    {(tool.description or '').splitlines()[0]}"
             )
 
+        # ------------------------------------------------------------
+        # 3. 도구 호출 (call_tool): 실습 4-1의 laws → search → show와 같은 순서
+        # ------------------------------------------------------------
+        # 결과는 content 목록으로 오고, 항목마다 JSON 한 건이다(items_of가 파싱). 검색은 실습 4-1과
+        # 같은 Searcher라 점수도 같다. 마지막은 틀린 법령 이름 "근로기준"을 일부러 줘 오류 응답을 본다.
+        # 출력에서 볼 것: youth 법령 32개, 최저임금법 제5조(0.898) · 제31조, 제5조 조각 1개, is_error=True와 비슷한 이름 안내
         section("3. 도구 호출: 에이전트가 하는 순서 그대로")
         print('list_laws(theme="youth") → 정확한 법령 이름 확인')
         laws = items_of(await session.call_tool("list_laws", {"theme": "youth"}))
@@ -104,11 +131,18 @@ async def main() -> None:
         bad = await session.call_tool(
             "search_laws", {"query": "수당", "laws": ["근로기준"]}
         )
+        # 예외가 아니라 오류 결과로 돌아온다 (is_error=True)
         print(f"  is_error={bad.is_error}: {text_of(bad)[:150]}")
 
 
 asyncio.run(main())
 
+# ============================================================
+# 4. 실제 에이전트에 등록: 명령을 이 컴퓨터의 경로로 출력한다
+# ============================================================
+# 방법 A는 서버 한 대를 streamable-http로 띄우고 여러 사용자가 URL로 붙는다.
+# 방법 B는 각자의 컴퓨터에서 위 1번과 같은 stdio 프로세스를 등록한다 (ROOT · UV_BIN이 실제 경로로 들어간다).
+# 출력에서 볼 것: 복사해 쓸 등록 명령, 등록 뒤 던질 질문, CLI + 스킬과의 비교표
 section("4. 실제 에이전트에 등록")
 print(f"""[방법 A] 여러 사용자가 함께 쓰는 경우 (원격 Streamable HTTP — 권장):
   1. 서버 1대 기동:

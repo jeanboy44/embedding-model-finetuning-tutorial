@@ -112,7 +112,7 @@ def ask(
     law: list[str] | None = None,
     options: SearcherOptions | None = None,
 ) -> int:
-    """찾은 조문만 근거로 답한다 (GEMINI_API_KEY 필요). 답을 받는 대로 출력하고 근거 조문을 덧붙인다.
+    """찾은 조문만 근거로 답한다 (서버의 LLM이 켜져 있을 때만). 답을 받는 대로 출력하고 근거 조문을 덧붙인다.
 
     Args:
         question: 질문.

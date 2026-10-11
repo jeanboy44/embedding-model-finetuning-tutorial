@@ -34,7 +34,7 @@ from ragkit.retrieval import (
 StreamFn = Callable[[str], Iterator[str | Generation]]
 
 HISTORY_TURNS = 6  # 프롬프트에 넣는 이전 대화 메시지 수 (질문·답 3쌍)
-NO_LLM_MESSAGE = "GEMINI_API_KEY가 없어 답변을 만들 수 없습니다. 검색 결과만 보여 줍니다."
+NO_LLM_MESSAGE = "LLM 답변이 꺼져 있어 답변을 만들 수 없습니다. 검색 결과만 보여 줍니다."
 
 
 @dataclass(frozen=True)

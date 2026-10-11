@@ -9,6 +9,13 @@
 - 기본 실험 001의 설정 파일과 받은 모델의 학습 기록을 읽는다. 전체 학습(M4 Pro 39분)은 강사가 미리 했다
 - 파일럿: 같은 설정으로 몇 step만 직접 돌려 손실 · 메모리 · step당 시간을 확인한다
 
+무엇을 하나 (기본 모드, 1분 안쪽):
+    1. 학습 데이터 한 줄: train 질문 하나의 질문 · 정답 · hard negative 제목, 학습에 들어가는 질문 수
+    2. MNRL과 in-batch negative: 질문 4개 배치의 코사인 점수표와 손실 (ragkit.training.in_batch_scores)
+    3. NO_DUPLICATES: 정답 조문을 다른 질문과 같이 쓰는 train 질문 수 (가짜 오답의 근거)
+    4. 설정 파일과 학습 기록: experiments/001_baseline/config.yaml, 받은 모델의 train_meta.json
+    5. (--run) `ragkit train`을 30 step만 임시 폴더에 돌리고, 2의 배치를 파일럿 모델로 다시 재서 비교
+
 사전 준비 (없으면 스크립트가 받는 명령을 알려 주고 끝난다):
     uv run python scripts/data_version.py pull v1     # 코퍼스 + 질문
     uv run python lecture/05_data_eval/02_split.py    # 조 단위 분할 data/splits_article/ (없으면 만든다)
@@ -18,7 +25,7 @@
 
 실행:
     uv run python lecture/05_data_eval/04_baseline_train.py          # 원리 + 받은 모델의 학습 기록 (1분 안쪽)
-    uv run python lecture/05_data_eval/04_baseline_train.py --run    # 실험 001 설정으로 30 step 파일럿 (약 1.5분)
+    uv run python lecture/05_data_eval/04_baseline_train.py --run    # 실험 001 설정으로 30 step 파일럿 (모델 로드 포함 2~3분)
 
 --run은 실험 001 설정 그대로 --output-dir만 임시 폴더로 줘서 돌린다. 받은 모델은 덮어쓰지 않는다.
 6교시에는 학습 없이 이 001 모델을 판정하고 오답을 분석한다 (lecture/06_experiment/).
@@ -150,16 +157,20 @@ require(
 )
 docs = load_corpus(CORPUS)
 by_id = {d["id"]: d for d in docs}
+# 코퍼스에 없는 id를 가리키는 질문은 거른다 (학습 코드와 같은 전처리)
 train, _ = filter_questions(load_splits(SPLITS)["train"], by_id)
 
 
 # ============================================================
 # 1. 학습 데이터 한 줄
 # ============================================================
+# 학습에 들어가는 한 줄은 (질문, 정답 조문, hard negative 조문)이다. situation 질문 하나로
+# 세 칸의 제목을 찍고, train 9,126개 중 hard negative가 남은 8,689개만 학습 예시가 됨을 보인다
+# (02_split.py에서 dev · test 정답 조의 문서를 오답에서 뺐기 때문).
 section("1. 학습 데이터 한 줄: 질문 · 정답 · hard negative")
 example = next(
     q for q in train if q.get("query_type") == "situation" and q["hard_negative_ids"]
-)
+)  # 오답이 남아 있는 situation 질문 중 첫 번째
 print(f"질문            {example['query']}")
 print(f"정답(positive)  {by_id[example['positive_id']]['title']}")
 print(f"오답(hard neg.) {by_id[example['hard_negative_ids'][0]]['title']}")
@@ -169,7 +180,7 @@ print(
 print(
     '  · e5 접두어("query: " · "passage: ")는 데이터가 아니라 코드(ragkit.embeddings.format_queries)에서 붙인다'
 )
-with_neg = sum(bool(q["hard_negative_ids"]) for q in train)
+with_neg = sum(bool(q["hard_negative_ids"]) for q in train)  # = 학습 예시 수 8,689
 print(
     f"  · train 질문 {len(train):,}개 중 hard negative가 남은 {with_neg:,}개가 이런 줄로 바뀌어 학습에 들어간다"
 )
@@ -181,6 +192,9 @@ print(
 # ============================================================
 # 2. MNRL: 배치 안의 다른 정답이 공짜 오답이 된다
 # ============================================================
+# 법령이 서로 다른 질문 4개로 작은 배치를 만들고, 학습 전 e5(ragkit.embeddings.create_embedding_fn)로
+# ragkit.training.in_batch_scores를 불러 질문 × (정답 4 + hard negative 4) 코사인 점수표와 MNRL 손실을 찍는다.
+# 출력에서 볼 것: 점수가 0.78~0.88에 몰려 대각선이 뚜렷하지 않다, 손실 1.514. --run 뒤에 같은 배치를 다시 잰다.
 section(f"2. MNRL과 in-batch negative (배치 {BATCH}개로 축소)")
 batch: list[dict] = []
 for q in train[
@@ -188,9 +202,9 @@ for q in train[
 ]:  # --run이 학습하는 질문 안에서, 법령이 서로 다르게 고른다 (학습 전후 비교용)
     laws = {by_id[b["positive_id"]]["category"] for b in batch}
     if (
-        q["hard_negative_ids"]
-        and q.get("query_type") != "keyword"
-        and by_id[q["positive_id"]]["category"] not in laws
+        q["hard_negative_ids"]  # hard negative 칸이 있어야 점수표 오른쪽 4칸이 찬다
+        and q.get("query_type") != "keyword"  # 쉬운 keyword 질문은 뺀다
+        and by_id[q["positive_id"]]["category"] not in laws  # 법령이 서로 다르게
     ):
         batch.append(q)
     if len(batch) == BATCH:
@@ -212,9 +226,12 @@ print("  · 학습은 대각선을 키우고 나머지를 줄이는 방향으로
 # ============================================================
 # 3. NO_DUPLICATES
 # ============================================================
+# 정답 조문(positive_id)이 같은 train 질문이 얼마나 많은지 센다 (3,466개, 38%).
+# 그런 질문 둘이 한 배치에 들면 서로의 정답이 in-batch 오답이 되어 같은 조문을 밀어내는 가짜 오답이 생긴다.
+# 그래서 config의 학습은 BatchSamplers.NO_DUPLICATES로 묶는다는 근거다.
 section("3. NO_DUPLICATES: 같은 조문이 한 배치에 두 번 들어가면")
-counts = Counter(q["positive_id"] for q in train)
-shared = sum(n for n in counts.values() if n > 1)
+counts = Counter(q["positive_id"] for q in train)  # 정답 문서 id → 질문 수
+shared = sum(n for n in counts.values() if n > 1)  # 정답을 같이 쓰는 질문 수
 top_id, top_n = counts.most_common(1)[0]
 print(
     f"train 질문 {len(train):,}개 중 정답 조문을 다른 질문과 같이 쓰는 질문 {shared:,}개 ({shared / len(train):.0%})"
@@ -231,6 +248,9 @@ print(
 # ============================================================
 # 4. 설정 파일과 받은 모델의 학습 기록
 # ============================================================
+# experiments/001_baseline/config.yaml의 training 항목을 그대로 찍고, 받은 모델의 train_meta.json에서
+# 학습 시간(39분) · 학습 파라미터 수 · best epoch · epoch별 dev R@5(0.540 → 0.697 / 0.710 / 0.717)를 읽는다.
+# epoch는 dev로 고르고 test는 보지 않는다. test 결과(0.545 → 0.744)는 실험 001 기록에서 인용한다.
 section(f"4. 설정 파일 ({rel(CONFIG)}) 과 받은 모델의 학습 기록")
 config = yaml.safe_load(CONFIG.read_text(encoding="utf-8"))
 print(f"{rel(CONFIG)} 의 training:")
@@ -238,6 +258,7 @@ for key, value in config["training"].items():
     print(f"  {key}: {value}")
 
 meta = json.loads((RECEIVED / "train_meta.json").read_text(encoding="utf-8"))
+# dev_history = epoch마다 학습 중 잰 dev R@5, dev_before = 학습 전 (옛 기록에는 없을 수 있다)
 history = " / ".join(f"{h['dev_cosine_recall@5']:.3f}" for h in meta["dev_history"])
 before = (meta.get("dev_before") or {}).get("dev_cosine_recall@5")
 start = f"학습 전 {before:.3f} → " if before else ""
@@ -255,10 +276,14 @@ print(
 # ============================================================
 # 5. 파일럿
 # ============================================================
+# 기본 모드: 파일럿과 전체 학습 명령만 안내하고 끝낸다.
+# --run: 실험 001 설정 그대로 `ragkit train`을 --output-dir 임시 폴더, --limit 960, --max-steps 30,
+# --no-dev-eval로 돌린다 (sentence-transformers 필요, 모델 로드 포함 2~3분). 끝나면 2의 배치를
+# 파일럿 모델로 다시 재서 점수표 · 손실 · 질문별 여유를 학습 전과 비교하고 임시 폴더를 지운다.
 if not args.run:
     section("5. 파일럿을 직접 돌려 보려면")
     print(
-        f"  uv run python lecture/05_data_eval/04_baseline_train.py --run   # {RUN_STEPS} step만 (약 1.5분)"
+        f"  uv run python lecture/05_data_eval/04_baseline_train.py --run   # {RUN_STEPS} step만 (모델 로드 포함 2~3분)"
     )
     print(
         f"  전체 학습은 uv run ragkit train {rel(CONFIG)} --splits {rel(SPLITS)} (M4 Pro 39분)"
@@ -267,7 +292,7 @@ if not args.run:
     raise SystemExit(0)
 
 section(f"5. --run: 실험 001 설정으로 {RUN_STEPS} step 파일럿")
-if importlib.util.find_spec("sentence_transformers") is None:
+if importlib.util.find_spec("sentence_transformers") is None:  # extra train 전
     print("학습 도구가 없습니다. 먼저 실행: uv sync --extra train")
     raise SystemExit(1)
 tmp = Path(tempfile.mkdtemp(prefix="lecture-05-baseline-"))
@@ -291,6 +316,7 @@ seconds = ragkit(
     str(RUN_LIMIT),
     "--no-dev-eval",
 )
+# 파일럿의 학습 기록 (seconds 등)
 pilot = json.loads((tmp / "model" / "train_meta.json").read_text(encoding="utf-8"))
 print(
     f"\n학습 {pilot['seconds']:.0f}초 (step당 {pilot['seconds'] / RUN_STEPS:.1f}초, 모델 로드 포함 전체 {seconds:.0f}초)"
@@ -303,10 +329,11 @@ print(
 print("\n같은 배치를 파일럿 모델로 다시 재면:")
 pilot_embed = create_embedding_fn(
     str(tmp / "model"), checkpoint_path=tmp / "model", backend="torch"
-)
+)  # 임시 폴더의 파일럿 모델을 torch로 바로 읽는다 (ONNX 변환 없이)
 after_scores, after_loss = in_batch_scores(pilot_embed, batch, by_id)
 show_matrix(after_scores, after_loss)
 
+# 질문마다 정답 점수 - 가장 높은 오답 점수
 before_margin, after_margin = batch_margins(before_scores), batch_margins(after_scores)
 print("\n질문별 여유 (정답 점수 - 가장 높은 오답 점수, 0보다 크면 정답이 1위)")
 for i, (a, b) in enumerate(zip(before_margin, after_margin), 1):

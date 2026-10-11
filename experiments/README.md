@@ -19,7 +19,7 @@
 | - | `archive/` | 이름을 그대로 둔 옛 실험: `002_hard_negatives(법령 분할)`, `exp_003_llm_query_expansion`, `exp_005_base_model_comparison`, `exp_007_finetune_comparison`, `exp_008_dev_multi_baseline`, `exp_010_lecture_comparison` | | |
 
 - 설정 하나로 끝나는 실험은 `config.yaml`(과 `results/comparison.md`)만 둔다. 실행은 `just train <폴더>` 또는 `uv run ragkit compare experiments/<폴더>/config.yaml`.
-- `archive/exp_010_lecture_comparison`은 강의 비교표(학습 전 / 001 / 004 / 005 / 002)다. 6교시 `02_compare_runs.py`와 3교시 `02_try_product.py`가 이 설정과 결과를 읽는다.
+- `archive/exp_010_lecture_comparison`은 옛 법령 단위 강의 비교표(학습 전 / 001 / 004 / 005 / 002)다. 3교시 `02_try_product.py`만 이 결과를 읽고, 6교시 `01_compare_runs.py`는 `results/001_baseline/`(조 단위)을 읽는다.
 - 결과 JSON은 커밋하지 않는다. 비교표(`results/comparison.md`)만 커밋한다.
 
 ## 에이전트가 도는 실험의 기록 (002 · 006 · 007)

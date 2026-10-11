@@ -20,7 +20,7 @@ uv run ragkit index                     # data/processed/index/<모델 키>.sqli
 | `search_laws` | `query, k=5, laws=None` | 가까운 조문 조각: id, title, law_name, article_no, score, text, source_url |
 | `get_article` | `doc_id` | 그 조각이 속한 조 전체: title, law_name, source_url, pieces[{id, title, text}] |
 | `list_laws` | `theme=None` | 법령 목록: law_name, law_type, theme, doc_count (`laws` 필터에 쓸 정확한 이름) |
-| `ask` | `question, laws=None, k=5` | Gemini 답변 + 근거 {answer, sources[{n, id, title}], error}. `GEMINI_API_KEY`가 없으면 error만 채워진다 |
+| `ask` | `question, laws=None, k=5` | LLM 답변 + 근거 {answer, sources[{n, id, title}], error}. LLM이 꺼져 있으면(강의 기본) error만 채워진다 |
 
 모르는 법령 이름이나 없는 id는 도구 오류로 돌아온다 (비슷한 법령 이름을 안내).
 

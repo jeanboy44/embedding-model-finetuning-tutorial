@@ -30,7 +30,7 @@ def serve(
         backend: onnx | torch | st. 기본값 Settings.embedding_backend.
         index: 인덱스 파일. 기본값 data/processed/index/<모델 키>.sqlite.
         db: 노트북 저장 파일. 기본값 data/app/notebooks.sqlite.
-        web_dist: 빌드한 web 폴더(apps/web/dist). 주면 / 에서 화면도 제공한다.
+        web_dist: 화면 폴더(apps/web-lite 또는 빌드한 apps/web/dist). 주면 / 에서 화면도 제공한다.
         cors_origin: web을 다른 주소에서 띄울 때 허용할 출처 (여러 번 줄 수 있다).
     """
     import uvicorn

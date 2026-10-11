@@ -9,13 +9,25 @@
   → 크기는 같아도 "어떻게 줄이느냐"가 정확도를 좌우한다
 - 용량의 대부분이 어휘 임베딩 표임을 확인하고, 어휘 가지치기로 한 번 더 줄인다
 
+무엇을 하나:
+    0. 준비물 확인: 원본 가중치(model.safetensors), test.jsonl, 그리고 기본 모드면 네 폴더의
+       onnx/model.onnx. 코퍼스에서 고르게 뽑은 문서 200개 + 질문 3개를 비교용 문장으로 만든다
+    1. ONNX 변환: onnx/model.onnx 크기를 safetensors와 비교하고, 같은 203문장을 torch 백엔드와
+       onnx 백엔드(create_embedding_fn)로 임베딩해 행별 코사인의 평균·최소를 본다 → 1.0000
+    2. INT8 양자화: fp32 ONNX 대비 INT8 채널별의 크기와 코사인(평균 0.9994)을 표로 보고,
+       실험 101의 R@5(fp32/INT8/가지치기+INT8)와 실험 009의 텐서 단위 R@5(0.458)를 읽어 보여 준다
+       --run이면 텐서 단위 INT8도 직접 만들어 코사인을 표에 한 줄 더 넣는다
+    3. 어휘 가지치기: safetensors를 열어 파라미터의 82%가 단어 임베딩 표임을 세고, 코퍼스 전체를
+       토큰화해 실제 쓰는 토큰 수를 센다. 가지치기 모델의 어휘 수·크기·코사인을 보고, test 질문
+       2,526개가 원본과 똑같이 토큰화되는지 센다 → 100%
+
 두 가지 모드:
 - 기본: 받은 모델 폴더 네 개를 비교만 한다 (변환·양자화를 다시 하지 않는다, 약 20초)
       models/multilingual-e5-small              원본 (+ onnx/model.onnx)
       models/multilingual-e5-small-int8         ONNX INT8 (채널별)
       models/multilingual-e5-small-pruned       어휘 가지치기 (+ onnx/model.onnx)
       models/multilingual-e5-small-pruned-int8  가지치기 + INT8
-- --run: 임시 폴더에 직접 변환 → 양자화(텐서 단위·채널별) → 가지치기 → 변환 → 양자화 (약 30초)
+- --run: 임시 폴더에 직접 변환 → 양자화(텐서 단위·채널별) → 가지치기 → 변환 → 양자화 (이 Mac에서 약 3분)
       임시 폴더는 끝나면 지운다. 받은 모델 폴더는 건드리지 않는다
 
 사전 준비:
@@ -52,21 +64,30 @@ from ragkit.embeddings import create_embedding_fn, format_passages, format_queri
 
 SETTINGS = get_settings()
 MODELS = SETTINGS.models_dir
-MODEL = MODELS / "multilingual-e5-small"
-RECEIVED = {
+MODEL = MODELS / "multilingual-e5-small"  # 원본. torch 가중치 + onnx/model.onnx
+RECEIVED = {  # Drive에서 받은 네 폴더. 기본 모드는 이것만 읽는다
     "fp32": MODEL,
     "int8": MODELS / "multilingual-e5-small-int8",
     "pruned": MODELS / "multilingual-e5-small-pruned",
     "pruned-int8": MODELS / "multilingual-e5-small-pruned-int8",
 }
+# 실험 101 비교표(ragkit-bench 결과)
 BENCH = SETTINGS.experiments_dir / "101_deploy_bench" / "results" / "results.json"
+# 실험 009: 텐서 단위 INT8까지 잰 표. 보관함(archive)으로 옮겨져 있어도 찾는다
 GRANULARITY = (
     SETTINGS.experiments_dir / "009_int8_granularity" / "results" / "comparison.md"
-    if (SETTINGS.experiments_dir / "009_int8_granularity" / "results" / "comparison.md").exists()
-    else SETTINGS.experiments_dir / "archive" / "009_int8_granularity" / "results" / "comparison.md"
+    if (
+        SETTINGS.experiments_dir / "009_int8_granularity" / "results" / "comparison.md"
+    ).exists()
+    else SETTINGS.experiments_dir
+    / "archive"
+    / "009_int8_granularity"
+    / "results"
+    / "comparison.md"
 )
+# 3번에서 토큰화 비교에 쓸 test 질문 2,526개
 TEST = SETTINGS.data_dir / "splits" / "test.jsonl"
-SAMPLE = 200
+SAMPLE = 200  # 코사인 비교용 문서 수 (코퍼스 2.6만 개에서 고르게)
 
 
 @Parameter(name="*")
@@ -116,6 +137,8 @@ def cosine_to(ref: np.ndarray, model_dir: Path, texts: list[str]) -> np.ndarray:
 # ============================================================
 # 0. 준비물 확인
 # ============================================================
+# 기본 모드는 받은 네 폴더의 onnx/model.onnx가 모두 있어야 한다. --run은 원본 가중치만 있으면
+# 나머지를 임시 폴더에 직접 만든다. 없으면 어떤 파일이 없는지 적고 끝낸다.
 need = [MODEL / "model.safetensors", TEST] + (
     [] if RUN else [onnx_file(p) for p in RECEIVED.values()]
 )
@@ -128,13 +151,16 @@ if missing:
         "Drive에서 models/ · data/splits/를 받거나, --run으로 임시 폴더에 직접 만들어 보세요."
     )
 
+# 비교용 문장: 코퍼스에서 고르게 뽑은 문서 200개(passage: 접두어) + 질문 3개(query: 접두어)
 docs = load_corpus(SETTINGS.data_dir / "processed" / "law_docs.json")
 texts = format_passages([doc_text(d) for d in docs[:: len(docs) // SAMPLE][:SAMPLE]])
 texts += format_queries(
     ["편의점 알바 주휴수당", "전세 보증금 돌려받기", "음주운전 벌금"]
 )
-questions = [
-    json.loads(line)["query"] for line in TEST.read_text(encoding="utf-8").splitlines() if line.strip()
+questions = [  # test 질문 전체. 3번에서 가지치기 전후 토큰화가 같은지 센다
+    json.loads(line)["query"]
+    for line in TEST.read_text(encoding="utf-8").splitlines()
+    if line.strip()
 ]
 
 with tempfile.TemporaryDirectory() as tmp:
@@ -145,13 +171,18 @@ with tempfile.TemporaryDirectory() as tmp:
     # ============================================================
     # 1. PyTorch → ONNX
     # ============================================================
+    # 같은 203문장을 torch 백엔드와 onnx 백엔드로 각각 임베딩해 행별 코사인을 잰다.
+    # 두 백엔드 모두 ragkit.embeddings.create_embedding_fn 하나로 연다(backend 인자만 다르다).
+    # --run이면 먼저 ragkit.models.onnx_export.export_onnx로 임시 폴더에 직접 변환한다.
+    # 출력: onnx 파일 크기(470MB)가 safetensors와 같고, 코사인 평균·최소가 1.0000이다.
     section("1. ONNX 변환 (torch 없이 돌릴 수 있는 형식)")
     if RUN:
+        # 변환·양자화·가지치기 함수. extra [train]이 필요하다
         from ragkit.models.onnx_export import export_onnx, quantize_onnx
         from ragkit.models.vocab_prune import prune_vocab, vocab_keep_ids
 
         print("변환 중… (임시 폴더)")
-        export_onnx(MODEL, work / "fp32")
+        export_onnx(MODEL, work / "fp32")  # CLI `ragkit export-onnx`와 같은 함수
         paths["fp32"] = work / "fp32"
     fp32_onnx = onnx_file(paths["fp32"])
     print(
@@ -159,8 +190,9 @@ with tempfile.TemporaryDirectory() as tmp:
     )
 
     torch_vec = create_embedding_fn(str(MODEL), backend="torch", device="cpu")(texts)
+    # onnx_vec은 이후 모든 비교의 기준이다
     onnx_vec = create_embedding_fn(str(paths["fp32"]), backend="onnx")(texts)
-    cos = (torch_vec * onnx_vec).sum(axis=1)
+    cos = (torch_vec * onnx_vec).sum(axis=1)  # 둘 다 정규화되어 있어 내적 = 코사인
     print(
         f"torch vs onnx 코사인 ({len(texts)}문장): 평균 {cos.mean():.5f}, 최소 {cos.min():.5f} → 사실상 같은 모델"
     )
@@ -168,14 +200,19 @@ with tempfile.TemporaryDirectory() as tmp:
     # ============================================================
     # 2. INT8 양자화
     # ============================================================
+    # INT8 모델로 같은 203문장을 임베딩해 fp32 ONNX 기준 코사인을 잰다(cosine_to).
+    # 기본 모드는 받은 채널별 INT8 한 줄, --run은 quantize_onnx로 텐서 단위·채널별을 둘 다
+    # 만들어 두 줄을 비교한다. 이어서 실험 101·009 결과 파일에서 R@5를 읽어 보여 준다.
+    # 출력: 크기 470 → 118MB, 채널별 코사인 평균 0.9994. 텐서 단위는 R@5 0.458로 뚝 떨어진다.
     section("2. 동적 INT8 양자화 (가중치 float32 4바이트 → int8 1바이트)")
-    rows = [("fp32 원본", mb(fp32_onnx), 1.0, 1.0)]
+    rows = [("fp32 원본", mb(fp32_onnx), 1.0, 1.0)]  # (이름, MB, 코사인 평균, 최소)
     if RUN:
         for name, key, per_channel in [
-            ("INT8 텐서 단위", "int8-tensor", False),
-            ("INT8 채널별", "int8", True),
+            ("INT8 텐서 단위", "int8-tensor", False),  # 행렬 하나에 스케일 하나
+            ("INT8 채널별", "int8", True),  # 채널마다 스케일. quantize 기본값
         ]:
             print(f"{name} 양자화 중…")
+            # CLI `ragkit quantize [--no-per-channel]`와 같은 함수
             quantize_onnx(paths["fp32"], work / key, per_channel=per_channel)
             paths[key] = work / key
             c = cosine_to(onnx_vec, paths[key], texts)
@@ -199,7 +236,11 @@ with tempfile.TemporaryDirectory() as tmp:
         + ("" if RUN else " (텐서 단위와 직접 비교하려면 --run)")
     )
     if BENCH.exists():
-        bench = {r["variant"]: r for r in json.loads(BENCH.read_text(encoding="utf-8"))["rows"]}
+        # 실험 101: ragkit-bench가 test 질문 2,526개로 잰 변형별 R@5 (3-3에서 표 전체를 본다)
+        bench = {
+            r["variant"]: r
+            for r in json.loads(BENCH.read_text(encoding="utf-8"))["rows"]
+        }
         n = next(iter(bench.values()))["n_questions"]
         print(
             f"\n검색 정확도 R@5 (test 질문 {n:,}개, {BENCH.relative_to(SETTINGS.project_root)}):"
@@ -215,7 +256,9 @@ with tempfile.TemporaryDirectory() as tmp:
             if len(cells) > 2 and cells[1].startswith("**"):
                 r5[cells[0]] = float(cells[1].strip("*"))
         if "multilingual-e5-small-int8-tensor" in r5:
-            print(f"\n텐서 단위 vs 채널별 R@5 ({GRANULARITY.relative_to(SETTINGS.project_root)}):")
+            print(
+                f"\n텐서 단위 vs 채널별 R@5 ({GRANULARITY.relative_to(SETTINGS.project_root)}):"
+            )
             print(f"  fp32 {r5.get('intfloat/multilingual-e5-small', float('nan')):.3f} · "
                   f"채널별 {r5.get('multilingual-e5-small-int8', float('nan')):.3f} · "
                   f"텐서 단위 {r5['multilingual-e5-small-int8-tensor']:.3f}  → 코사인 0.99의 작은 차이가 검색에서는 R@5 몇 점으로 커진다")  # fmt: skip
@@ -223,9 +266,16 @@ with tempfile.TemporaryDirectory() as tmp:
     # ============================================================
     # 3. 어디를 줄여야 효과가 큰가: 어휘 가지치기
     # ============================================================
+    # safetensors 헤더만 열어 텐서별 파라미터 수를 세면 단어 임베딩 표가 82%다.
+    # 코퍼스 2.6만 문서를 토큰화해 실제 쓰는 토큰 수를 세고, 가지치기 모델의 어휘·크기·코사인을
+    # 본다. --run이면 vocab_keep_ids → prune_vocab → export_onnx → quantize_onnx를 직접 돈다.
+    # 출력: 코퍼스가 쓰는 토큰 5,483개 / 250,002개(2.2%), 가지치기 뒤 어휘 19,282개 · 30MB,
+    # test 질문 2,526개가 100% 원본과 같은 토큰으로 쪼개진다.
     section("3. 용량은 어디에 있나 → 어휘 가지치기")
+    # 가중치를 메모리에 올리지 않고 텐서 모양만 읽는다
     with safe_open(str(MODEL / "model.safetensors"), "np") as f:
         sizes = {k: int(np.prod(f.get_slice(k).get_shape())) for k in f.keys()}  # noqa: SIM118 (safetensors API, dict 아님)
+    # 단어 임베딩 표 = 어휘 수 × 384차원
     emb = sum(v for k, v in sizes.items() if "word_embeddings" in k)
     total = sum(sizes.values())
     print(
@@ -236,9 +286,9 @@ with tempfile.TemporaryDirectory() as tmp:
     )
 
     tok = Tokenizer.from_file(str(MODEL / "tokenizer.json"))
-    corpus_texts = format_passages([doc_text(d) for d in docs])
+    corpus_texts = format_passages([doc_text(d) for d in docs])  # 코퍼스 전체
     used: set[int] = set()
-    for i in range(0, len(corpus_texts), 2000):
+    for i in range(0, len(corpus_texts), 2000):  # 2,000개씩 끊어 토큰화 (메모리)
         for enc in tok.encode_batch(corpus_texts[i : i + 2000]):
             used.update(enc.ids)
     vocab = tok.get_vocab_size()
@@ -251,12 +301,14 @@ with tempfile.TemporaryDirectory() as tmp:
         prefixes = [SETTINGS.query_prefix, SETTINGS.passage_prefix]
         keep = vocab_keep_ids(tok, corpus_texts, prefixes=prefixes, ascii_max_len=3)
         print("가지치기 → 변환 → 양자화 중… (임시 폴더)")
+        # keep(남길 토큰 id)만 남긴다. CLI `ragkit prune-vocab`와 같은 함수
         paths["pruned"] = prune_vocab(MODEL, work / "pruned", keep)
         export_onnx(paths["pruned"])
         quantize_onnx(paths["pruned"], work / "pruned-int8")
         paths["pruned-int8"] = work / "pruned-int8"
 
     new_tok = Tokenizer.from_file(str(paths["pruned"] / "tokenizer.json"))
+    # 실제 검색 때처럼 query: 접두어를 붙여 토큰화하고, 원본과 토큰이 같은 질문 수를 센다
     formatted = format_queries(questions)
     same = sum(new_tok.encode(q).tokens == tok.encode(q).tokens for q in formatted)
     c = cosine_to(onnx_vec, paths["pruned-int8"], texts)

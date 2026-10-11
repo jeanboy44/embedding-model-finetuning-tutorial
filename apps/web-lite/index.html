@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>법령 검색</title>
+<!-- 빌드 없는 HTML 한 장. 같은 주소의 ragkit-api(/api/…)만 부른다. 모델 · 인덱스는 서버에 있다.
+     디자인은 apps/offline-search/src/template.html(3교시 오프라인 검색 파일)과 같다. -->
+<style>
+/* shadcn/ui 흑백(zinc) 톤. 색은 쓰지 않고 명도 · 테두리 · 굵기로만 구분한다 */
+:root {
+  --background: #fafafa;
+  --card: #ffffff;
+  --foreground: #09090b;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --border: #e4e4e7;
+  --primary: #18181b;
+  --primary-foreground: #fafafa;
+  --ring: #a1a1aa;
+  --radius: 8px;
+  --font: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #09090b;
+    --card: #09090b;
+    --foreground: #fafafa;
+    --muted: #27272a;
+    --muted-foreground: #a1a1aa;
+    --border: #27272a;
+    --primary: #fafafa;
+    --primary-foreground: #18181b;
+    --ring: #52525b;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+main { max-width: 1240px; margin: 0 auto; padding: 40px 16px 64px; }
+header h1 { margin: 0; font-size: 1.6rem; font-weight: 600; letter-spacing: -0.025em; }
+header p { margin: 4px 0 0; color: var(--muted-foreground); font-size: 0.95rem; }
+#status { margin: 16px 0 0; font-size: 0.875rem; color: var(--muted-foreground); }
+#status.busy::before {
+  content: ""; display: inline-block; width: 0.8em; height: 0.8em; margin-right: 0.5em;
+  border: 2px solid var(--border); border-top-color: var(--foreground); border-radius: 50%;
+  animation: spin 0.8s linear infinite; vertical-align: -0.1em;
+}
+#status.error { color: var(--foreground); font-weight: 600; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+form { margin-top: 20px; }
+.search-row { display: flex; gap: 8px; }
+input[type="search"] {
+  flex: 1; min-width: 0; height: 44px; padding: 0 14px; font: inherit; font-size: 1rem;
+  color: var(--foreground); background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+}
+input[type="search"]::placeholder { color: var(--muted-foreground); }
+input[type="search"]:focus, select:focus, button:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+button, select {
+  font: inherit; font-size: 0.875rem; color: var(--foreground); background: var(--card);
+  border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 12px; cursor: pointer;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+}
+button:hover:not(:disabled), select:hover:not(:disabled) { background: var(--muted); }
+button:disabled, input:disabled, select:disabled { opacity: 0.5; cursor: not-allowed; }
+#search {
+  height: 44px; padding: 0 20px; background: var(--primary); border-color: var(--primary); color: var(--primary-foreground);
+  font-weight: 500; font-size: 0.95rem;
+}
+#search:hover:not(:disabled) { background: var(--primary); opacity: 0.9; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.filters select { max-width: 100%; }
+#law-name { flex: 1; min-width: 180px; }
+.examples { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.example { font-size: 0.8rem; border-radius: 999px; background: var(--muted); border-color: transparent; color: var(--foreground); box-shadow: none; }
+.example:hover:not(:disabled) { background: var(--border); }
+#timing { margin: 18px 0 8px; font-size: 0.8rem; color: var(--muted-foreground); min-height: 1.3em; font-variant-numeric: tabular-nums; }
+
+#modes { display: inline-flex; margin-top: 12px; padding: 3px; gap: 2px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--muted); }
+#modes button { border: 0; padding: 5px 12px; font-size: 0.85rem; background: transparent; box-shadow: none; border-radius: 6px; color: var(--muted-foreground); }
+#modes button:hover:not(:disabled) { color: var(--foreground); background: transparent; }
+#modes button[aria-pressed="true"] { background: var(--card); color: var(--foreground); font-weight: 500; box-shadow: 0 1px 2px rgb(0 0 0 / 0.06); }
+
+#results, .hits { display: flex; flex-direction: column; gap: 12px; }
+#results.compare { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.column-head { margin: 0 0 10px; font-size: 1rem; font-weight: 600; padding-bottom: 6px; border-bottom: 2px solid var(--foreground); }
+.column-head.base { color: var(--muted-foreground); border-bottom-style: dashed; border-bottom-color: var(--muted-foreground); }
+.column-head.finetuned { color: var(--foreground); border-bottom-color: var(--foreground); }
+.elsewhere { font-size: 0.72rem; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
+.elsewhere.missing { border-style: dashed; }
+.hit { overflow-wrap: anywhere; background: var(--card); border: 1px solid var(--border); border-radius: calc(var(--radius) + 4px); padding: 16px 18px; box-shadow: 0 1px 2px rgb(0 0 0 / 0.04); }
+.hit-head { display: flex; align-items: baseline; gap: 10px; }
+.hit-head h3 { flex: 1; margin: 0; font-size: 0.95rem; font-weight: 600; line-height: 1.45; }
+.rank { color: var(--foreground); font-weight: 700; min-width: 1.2em; font-variant-numeric: tabular-nums; }
+.score { font-variant-numeric: tabular-nums; font-size: 0.8rem; color: var(--muted-foreground); }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 0 calc(1.2em + 10px); }
+.tag { font-size: 0.72rem; padding: 1px 8px; border-radius: 999px; background: var(--muted); color: var(--foreground); font-weight: 500; }
+.tag.quiet { background: transparent; border: 1px solid var(--border); color: var(--muted-foreground); font-weight: 400; }
+.text { margin: 10px 0 0 calc(1.2em + 10px); white-space: pre-wrap; font-size: 0.9rem; color: var(--foreground); }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0 0 calc(1.2em + 10px); font-size: 0.8rem; }
+.actions button { font-size: 0.78rem; padding: 3px 10px; }
+.actions a { color: var(--foreground); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border); }
+.actions a:hover { text-decoration-color: var(--foreground); }
+.article { margin: 12px 0 0 calc(1.2em + 10px); border-left: 2px solid var(--border); padding-left: 12px; }
+.piece h4 { margin: 10px 0 0; font-size: 0.8rem; font-weight: 500; color: var(--muted-foreground); }
+.piece .text { margin-left: 0; }
+.piece.current h4 { color: var(--foreground); font-weight: 600; }
+.empty { color: var(--muted-foreground); }
+
+details { margin-top: 40px; font-size: 0.85rem; color: var(--muted-foreground); }
+summary { cursor: pointer; color: var(--foreground); }
+dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 12px 0; }
+dt { font-weight: 600; color: var(--foreground); }
+dd { margin: 0; }
+
+@media (max-width: 560px) {
+  main { padding-top: 24px; }
+  .tags, .text, .actions, .article { margin-left: 0; }
+  #results.compare { grid-template-columns: minmax(0, 1fr); }
+  #search { padding: 0 14px; }
+}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>법령 검색</h1>
+    <p>검색 API 서버가 이 화면을 함께 줍니다. 질문은 서버에서 임베딩하고, 조문 벡터와 비교해 가까운 조문을 돌려줍니다.</p>
+    <p id="status" class="busy">서버에 연결하는 중…</p>
+  </header>
+
+  <form id="form">
+    <div class="search-row">
+      <input id="query" type="search" placeholder="궁금한 것을 평소 말투로 물어보세요" autocomplete="off" disabled>
+      <button id="search" type="submit" disabled>검색</button>
+    </div>
+    <div class="filters">
+      <select id="theme" aria-label="테마" disabled><option value="">테마 전체</option></select>
+      <select id="law-type" aria-label="법령 종류" disabled><option value="">종류 전체</option></select>
+      <select id="law-name" aria-label="법령" disabled><option value="">법령 전체</option></select>
+      <select id="top-k" aria-label="결과 수" disabled>
+        <option value="5">5건</option>
+        <option value="10" selected>10건</option>
+        <option value="20">20건</option>
+      </select>
+    </div>
+  </form>
+  <div class="examples">
+    <button type="button" class="example" disabled>야간 근로 수당</button>
+    <button type="button" class="example" disabled>편의점 알바 3개월 했는데 주휴수당 받을 수 있나요?</button>
+    <button type="button" class="example" disabled>회사 그만뒀는데 퇴직금은 언제까지 받아야 해요?</button>
+    <button type="button" class="example" disabled>방문판매로 산 정수기 환불하고 싶어요</button>
+    <button type="button" class="example" disabled>주휴일 유급휴일 1주 개근</button>
+  </div>
+
+  <p id="timing"></p>
+  <div id="results"></div>
+
+  <details>
+    <summary>이 화면은 어떻게 동작하나요?</summary>
+    <p>이 HTML 파일에는 모델도 조문도 들어 있지 않습니다. 검색 API 서버(ragkit-api)가 시작할 때 임베딩 모델과 조문 인덱스를 한 번 열어 두고,
+      화면은 같은 주소의 <code>/api/search</code>에 질문을 보내 결과만 받아 그립니다. 3교시의 오프라인 파일과 같은 디자인이지만, 무거운 것은 모두 서버 쪽에 있습니다.</p>
+    <p>순위는 조문 조각(항 · 호) 단위입니다. "같은 조 전체"를 누르면 <code>/api/articles/…</code>로 그 조의 조각을 모두 가져옵니다.</p>
+    <dl>
+      <dt>모델</dt><dd id="about-model">-</dd>
+      <dt>조문</dt><dd id="about-docs">-</dd>
+      <dt>API 문서</dt><dd><a id="about-docs-link" href="/docs" target="_blank" rel="noopener">/docs</a> (FastAPI가 자동으로 만든 설명서)</dd>
+    </dl>
+    <p>답변 생성(LLM)은 이 강의에서 쓰지 않습니다. 찾은 조문 원문을 직접 읽어 확인하세요. 법률 자문이 아닙니다.</p>
+  </details>
+</main>
+<script>
+// 화면: 서버의 /api/health · /api/laws · /api/search · /api/articles/{조 id}만 부른다.
+const THEME_LABELS = { youth: "청년·근로", traffic: "교통", tax: "세금", finance: "금융", consumer: "소비자", electric: "전기" };
+const $ = (selector) => document.querySelector(selector);
+const state = { laws: [] }; // {law_name, law_type, theme, doc_count}
+
+function setStatus(text, { busy = true, error = false } = {}) {
+  const status = $("#status");
+  status.textContent = text;
+  status.classList.toggle("busy", busy);
+  status.classList.toggle("error", error);
+}
+
+async function api(path, body) {
+  const resp = await fetch(path, body === undefined
+    ? undefined
+    : { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+  if (!resp.ok) {
+    let detail = `${resp.status}`;
+    try { detail = JSON.stringify((await resp.json()).detail); } catch {}
+    throw new Error(detail);
+  }
+  return resp.json();
+}
+
+// ---- 시작: 서버 상태와 법령 목록 ------------------------------------------------
+
+async function load() {
+  const health = await api("/api/health");
+  state.laws = await api("/api/laws");
+  fillFilters();
+  $("#about-model").textContent = health.model_key;
+  $("#about-docs").textContent = `${health.doc_count.toLocaleString()}개 조각 (법령 ${state.laws.length}개)`;
+  setStatus(`준비 완료 · 모델 ${health.model_key} · 조문 ${health.doc_count.toLocaleString()}건`, { busy: false });
+  for (const control of document.querySelectorAll("#form [disabled], .example")) control.disabled = false;
+  $("#query").focus();
+}
+
+function el(tag, attrs = {}, ...children) {
+  const node = document.createElement(tag);
+  for (const [key, value] of Object.entries(attrs)) {
+    if (key === "class") node.className = value;
+    else if (key.startsWith("on")) node.addEventListener(key.slice(2), value);
+    else node.setAttribute(key, value);
+  }
+  node.append(...children.filter((c) => c !== null && c !== undefined && c !== false));
+  return node;
+}
+
+const option = (value, label) => el("option", { value }, label);
+
+function fillFilters() {
+  const themes = [...new Set(state.laws.map((l) => l.theme))];
+  $("#theme").append(...themes.map((t) => option(t, THEME_LABELS[t] ?? t)));
+  const types = [...new Set(state.laws.map((l) => l.law_type))];
+  $("#law-type").append(...types.map((t) => option(t, t)));
+  fillLawNames();
+}
+
+function selectedLaws() {
+  const theme = $("#theme").value;
+  const lawType = $("#law-type").value;
+  const lawName = $("#law-name").value;
+  if (!theme && !lawType && !lawName) return null; // 필터 없음 → 전체 법령
+  return state.laws
+    .filter((l) => (!theme || l.theme === theme) && (!lawType || l.law_type === lawType) && (!lawName || l.law_name === lawName))
+    .map((l) => l.law_name);
+}
+
+function fillLawNames() {
+  const theme = $("#theme").value;
+  const lawType = $("#law-type").value;
+  const select = $("#law-name");
+  const selected = select.value;
+  const names = state.laws
+    .filter((l) => (!theme || l.theme === theme) && (!lawType || l.law_type === lawType))
+    .map((l) => l.law_name)
+    .sort((a, b) => a.localeCompare(b, "ko"));
+  select.replaceChildren(option("", `법령 전체 (${names.length})`), ...names.map((name) => option(name, name)));
+  select.value = names.includes(selected) ? selected : "";
+}
+
+// ---- 검색 ----------------------------------------------------------------------
+
+async function search() {
+  const query = $("#query").value.trim();
+  if (!query) return;
+  const laws = selectedLaws();
+  if (laws && laws.length === 0) {
+    $("#results").replaceChildren(el("p", { class: "empty" }, "조건에 맞는 법령이 없습니다. 필터를 풀어 보세요."));
+    return;
+  }
+  const k = Number($("#top-k").value);
+  $("#search").disabled = true;
+  const t0 = performance.now();
+  try {
+    const { hits } = await api("/api/search", { query, k, laws });
+    const ms = performance.now() - t0;
+    $("#timing").textContent = `서버 왕복 ${ms.toFixed(0)}ms (임베딩 + 비교 + 전송) · ${hits.length}건`;
+    const list = $("#results");
+    list.replaceChildren(hits.length === 0
+      ? el("p", { class: "empty" }, "조건에 맞는 조문이 없습니다.")
+      : el("div", { class: "hits" }, ...hits.map((hit, i) => renderHit(hit, i + 1))));
+  } finally {
+    $("#search").disabled = false;
+  }
+}
+
+function renderHit(hit, rank) {
+  const previewChars = 220;
+  const preview = hit.text.length > previewChars ? `${hit.text.slice(0, previewChars)}…` : hit.text;
+  const body = el("p", { class: "text" }, preview);
+  const actions = el("div", { class: "actions" });
+  if (preview !== hit.text) {
+    actions.append(el("button", {
+      type: "button",
+      onclick: (event) => {
+        const open = body.dataset.open === "1";
+        body.textContent = open ? preview : hit.text;
+        body.dataset.open = open ? "0" : "1";
+        event.currentTarget.textContent = open ? "전문 보기" : "접기";
+      },
+    }, "전문 보기"));
+  }
+  if (hit.parent_id) {
+    actions.append(el("button", {
+      type: "button",
+      onclick: async (event) => {
+        const button = event.currentTarget;
+        button.disabled = true;
+        try {
+          const pieces = await api(`/api/articles/${encodeURIComponent(hit.parent_id)}`);
+          button.remove();
+          body.after(el("div", { class: "article" }, ...pieces.map((p) =>
+            el("section", { class: p.id === hit.id ? "piece current" : "piece" },
+              el("h4", {}, p.title ?? p.id), el("p", { class: "text" }, p.text)))));
+        } catch (error) {
+          button.disabled = false;
+          setStatus(`조 전체 불러오기 실패: ${error.message}`, { busy: false, error: true });
+        }
+      },
+    }, "같은 조 전체"));
+  }
+  if (hit.source_url) actions.append(el("a", { href: hit.source_url, target: "_blank", rel: "noopener" }, "법제처 ↗"));
+  return el("article", { class: "hit" },
+    el("div", { class: "hit-head" },
+      el("span", { class: "rank" }, String(rank)),
+      el("h3", {}, hit.title ?? hit.id),
+      el("span", { class: "score", title: "코사인 유사도" }, hit.score.toFixed(3))),
+    el("div", { class: "tags" },
+      el("span", { class: "tag" }, THEME_LABELS[hit.theme] ?? hit.theme ?? "-"),
+      el("span", { class: "tag" }, hit.law_type ?? "-"),
+      el("span", { class: "tag quiet" }, hit.id)),
+    body,
+    actions);
+}
+
+// ---- 이벤트 --------------------------------------------------------------------
+
+$("#form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  search().catch((error) => setStatus(`검색 실패: ${error.message}`, { busy: false, error: true }));
+});
+for (const id of ["#theme", "#law-type"]) $(id).addEventListener("change", fillLawNames);
+for (const id of ["#theme", "#law-type", "#law-name", "#top-k"]) {
+  $(id).addEventListener("change", () => $("#query").value.trim() && $("#form").requestSubmit());
+}
+for (const chip of document.querySelectorAll(".example")) {
+  chip.addEventListener("click", () => {
+    $("#query").value = chip.textContent;
+    $("#form").requestSubmit();
+  });
+}
+
+load().catch((error) => {
+  console.error(error);
+  setStatus(`서버에 연결하지 못했습니다: ${error.message}. ragkit-api가 이 주소에서 떠 있는지 확인하세요.`, { busy: false, error: true });
+});
+</script>
+</body>
+</html>

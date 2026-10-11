@@ -14,6 +14,15 @@
       └─ llm (CHAT_MODEL)       프롬프트 · 답 · 토큰 수
   노트북 하나 = 세션 하나 → 대화 흐름 전체를 세션 화면에서 다시 본다
 
+무엇을 하나 (ragkit · ragkit-bench · ragkit-api를 자식 프로세스로 부르고, 환경 변수 MLFLOW_TRACKING_URI만 넘긴다):
+    1. mlflow server를 포트 5050에 띄운다 (저장소 mlruns/mlflow.db, 아티팩트 mlruns/artifacts)
+    2. ragkit-bench run으로 onnx-int8 · onnx-int8-pruned 두 변형을 test 질문으로 재서 부모 run + 자식 run으로 남긴다
+       (--check면 test 앞 100개 질문만, 약 90초)
+    3. ragkit register로 가지치기 + INT8 모델을 law-embedder로 등록하고 별칭 champion을 붙인다
+    4. ragkit-api --model models:/law-embedder@champion 으로 API를 띄우고, 노트북 하나에 질문 두 개를 보낸다
+    5. mlflow.search_traces로 그 노트북(세션)의 트레이스를 읽어 스팬 트리를 출력한다
+    6. MLflow UI에서 볼 곳을 안내하고 서버를 열어 둔다 (Ctrl+C로 끝). --check면 5에서 끝낸다
+
 설치 (서버·DS 도구는 mlflow, 배포하는 앱은 가벼운 mlflow-tracing):
     uv sync --extra mlflow                    # 이 저장소 (ragkit[mlflow])
     uv pip install "ragkit-api[tracing]"      # 배포할 때 (mlflow-tracing, 레지스트리 기능 없음)
@@ -23,7 +32,7 @@
     uv run ragkit prune-vocab models/multilingual-e5-small
     uv run ragkit export-onnx models/multilingual-e5-small-pruned
     uv run ragkit quantize models/multilingual-e5-small-pruned
-    .env의 GEMINI_API_KEY (없으면 llm 스팬 없이 끝나고 트레이스가 ERROR로 남는다. 있으면 LLM 2회 호출)
+    LLM 답변은 쓰지 않으므로 트레이스는 llm 스팬 없이 끝나고 상태가 ERROR로 남는다 (search · embed_query 스팬은 그대로 본다)
 
 실행:
     uv run python lecture/08_product/extra_monitoring.py            # 끝나면 MLflow UI를 열어 둔다 (Ctrl+C로 끝)
@@ -137,6 +146,9 @@ tmp = tempfile.TemporaryDirectory()  # --check용 질문 부분집합
 # ============================================================
 # 1. MLflow 서버 (추적 저장소 SQLite + 아티팩트 폴더)
 # ============================================================
+# 실험 run · 모델 레지스트리 · 트레이스가 전부 이 서버 하나에 모인다. 저장은 mlruns/ 아래라
+# 지우면 처음부터다. /health가 응답할 때까지 기다린 뒤 다음 단계로 간다.
+# 출력에서 볼 것: 서버 명령 한 줄과 "서버 준비 완료"
 section("1. mlflow server → " + TRACKING_URI)
 STORE.mkdir(exist_ok=True)
 server_cmd = [
@@ -169,12 +181,17 @@ try:
     # ============================================================
     # 2. 실험 추적: 실습 3-3의 배포 벤치를 다시 돌려 run으로 남긴다
     # ============================================================
+    # ragkit-bench는 코드 변경 없이 MLFLOW_TRACKING_URI만 있으면 부모 run(벤치 전체)과
+    # 변형마다 자식 run(R@5 · 지연 · 메모리 · 크기)을 남긴다. 변형은 7교시의 INT8과 가지치기 + INT8 둘.
+    # 출력에서 볼 것: 변형별 R@5와 지연 표. UI의 Experiments › ragkit에서 자식 run을 Compare로 나란히 본다
     section("2. 실험 추적 — ragkit-bench (부모 run + 변형마다 자식 run)")
     questions = TEST
     if CHECK:
-        lines = [line for line in TEST.read_text(encoding="utf-8").splitlines() if line.strip()][
-            :CHECK_QUESTIONS
-        ]
+        lines = [
+            line
+            for line in TEST.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ][:CHECK_QUESTIONS]
         questions = Path(tmp.name) / "test_subset.jsonl"
         questions.write_text("\n".join(lines) + "\n", encoding="utf-8")
         print(f"(--check: test 질문 앞 {len(lines)}개만 쓴다)")
@@ -189,9 +206,9 @@ try:
             "--questions",
             str(questions),
             "--n-latency",
-            "30",
+            "30",  # 지연 측정에 쓸 질문 수 (평가 질문과 별개)
             "--out-dir",
-            "mlruns/bench",
+            "mlruns/bench",  # 결과 표 · JSON은 mlruns/bench에 (MLflow 아티팩트와 같은 폴더 아래)
         ]
     )
     print("""
@@ -203,6 +220,9 @@ try:
     # ============================================================
     # 3. 모델 레지스트리: 벤치에서 고른 모델을 등록하고 champion 별칭
     # ============================================================
+    # ragkit register는 모델 폴더를 MLflow 모델로 올리고(버전이 하나 늘어난다) 별칭을 옮긴다.
+    # 서비스는 models:/law-embedder@champion만 알면 되므로, 다음에 더 좋은 모델이 나오면 별칭만 옮긴다.
+    # 출력에서 볼 것: 등록된 이름 · 버전 · 별칭. UI의 Models › law-embedder
     section("3. 모델 레지스트리 — ragkit register")
     run(
         [
@@ -219,6 +239,10 @@ try:
     # ============================================================
     # 4. 서비스 트레이싱: 레지스트리 모델로 API를 띄우고 노트북에서 대화
     # ============================================================
+    # ragkit-api가 --model에 레지스트리 주소를 받으면 champion 버전을 내려받아 연다 (모델 로드까지 최대 120초).
+    # 노트북 "근로 상담"을 만들고 /chat에 질문 두 개를 보낸다. 노트북 id가 곧 MLflow 세션 id다.
+    # LLM 답변은 쓰지 않으므로 chat은 근거 조문까지만 하고 끝난다.
+    # 출력에서 볼 것: 노트북 id와 질문 두 줄
     section(f"4. ragkit-api --model {REGISTRY_URI}")
     api_cmd = [
         "ragkit-api",
@@ -227,6 +251,7 @@ try:
         "--model",
         REGISTRY_URI,
         "--db",
+        # 노트북 · 대화 저장소도 mlruns/ 아래에 (저장소 기본 DB를 건드리지 않는다)
         str(STORE / "notebooks.sqlite"),
     ]
     print("$ " + " ".join(api_cmd))
@@ -246,6 +271,10 @@ try:
     # ============================================================
     # 5. 트레이스 읽기 (UI에서 보는 것과 같은 내용을 코드로)
     # ============================================================
+    # mlflow.search_traces로 실험 ragkit-service에서 이 노트북(세션) 것만 고르고, 트레이스마다 스팬을
+    # 부모 → 자식 들여쓰기로 출력한다. RETRIEVER 스팬에는 찾은 조문 id를 덧붙인다.
+    # 출력에서 볼 것: 질문마다 answer(CHAIN) › search(RETRIEVER) › embed_query(EMBEDDING) 트리와 ms.
+    # llm 스팬이 없고 상태가 ERROR인 것은 LLM을 쓰지 않아서다
     section("5. 세션의 트레이스")
     import mlflow
 
@@ -299,19 +328,22 @@ try:
                 extra = f" → 토큰 입력 {usage.get('input_tokens')} · 출력 {usage.get('output_tokens')}"
             print(f"  {'  ' * depth}{span.name} ({span.span_type}) {ms:.0f}ms{extra}")
         if root.status.status_code == "ERROR":
-            # 오류 이유는 루트 스팬의 error 속성에 남는다 (키가 없으면 llm 스팬 없이 끝난다)
+            # 오류 이유는 루트 스팬의 error 속성에 남는다 (LLM을 쓰지 않으면 llm 스팬 없이 끝난다)
             reason = (
                 (root.attributes or {}).get("error")
                 or (root.outputs or {}).get("answer")
                 or root.status.description
             )
             print(
-                f"  오류: {reason or '내용 없음 (GEMINI_API_KEY가 없으면 llm 스팬 없이 이렇게 끝난다)'}"
+                f"  오류: {reason or '내용 없음 (LLM을 쓰지 않으면 llm 스팬 없이 이렇게 끝난다)'}"
             )
 
     if CHECK:
         print("\n확인 완료 (--check).")
     else:
+        # ============================================================
+        # 6. MLflow UI 안내: 서버를 열어 두고 볼 곳을 알려 준다
+        # ============================================================
         section("6. MLflow UI에서 보기")
         print(f"""{TRACKING_URI}
   Experiments › ragkit          deploy_bench의 자식 run 선택 → Compare (R@5 · 지연 · 메모리 · 크기)

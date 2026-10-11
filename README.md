@@ -42,8 +42,6 @@ uv run ragkit index                                      # 검색 인덱스 → 
 uv run ragkit split data/questions                       # 평가 질문 분할 → data/splits/ (질문은 Drive에서 받는다)
 ```
 
-LLM 단계(답변 생성)는 `.env`에 `GEMINI_API_KEY`가 필요합니다. [Google AI Studio](https://aistudio.google.com)의 무료 등급 키로 충분합니다(기본 모델 `gemini-2.5-flash-lite`). 키가 없으면 해당 단계만 건너뜁니다.
-
 ## 실습 스크립트
 
 실습 스크립트는 모두 저장소 루트에서 실행합니다(파이썬 스크립트는 `uv run python <파일>`, 에이전트 스킬은 Gemini CLI 접속 후 `SKILL.md` 파일 경로를 던져주고 "스킬로 등록해" 요청, 데스크톱은 HTML 파일 열기). 기본은 받은 산출물로 확인하고, `--run`을 주면 작은 부분집합으로 직접 실행합니다.
@@ -51,7 +49,7 @@ LLM 단계(답변 생성)는 `.env`에 `GEMINI_API_KEY`가 필요합니다. [Goo
 | 실습 (교시) | 파일 | 내용 |
 |---|---|---|
 | 0 (3) | [law-search-offline.html (Drive)](https://drive.google.com/file/d/1TzgE1mh2ZSyAjmPFJtb7OTuk05JFr3mt/view?usp=sharing) | 가장 먼저(저장소 받기 전): 완성품 HTML(법령 검색 파일 하나)을 받아 더블클릭. |
-| 0 (3) | `lecture/03_setup/01_doctor.py` | 설치·모델·데이터·인덱스·API 키 점검, 빠진 것을 받는 명령 |
+| 0 (3) | `lecture/03_setup/01_doctor.py` | 설치·모델·데이터·인덱스 점검, 빠진 것을 받는 명령 |
 | 0 (3) | `lecture/03_setup/02_try_product.py` | 같은 질문을 학습 전 e5 vs 파인튜닝 모델로 나란히, 제품 띄우는 법 |
 | 0 (3) | `lecture/03_setup/README.md` | CLI로 질문 넷 → `--checkpoint`로 학습 전후 비교 (명령 모음) |
 | — (4) | `lecture/04_ds_work/01_questions.py` | (선택) 받은 질문 데이터 보기: 유형·테마, hard negative, 검증. 4교시는 장표로 설명 (`lecture/04_ds_work/README.md`) |
@@ -68,8 +66,8 @@ LLM 단계(답변 생성)는 `.env`에 `GEMINI_API_KEY`가 필요합니다. [Goo
 | 4 (8) | `lecture/08_product/01_search_cli.py` | 검색 CLI, `--json`, uvx 배포 |
 | 4 (8) | `lecture/08_product/SKILL.md` | 에이전트 스킬: Gemini CLI 접속 후 SKILL.md 파일 경로 던져주고 "스킬로 등록해" 요청 |
 | 4 (8) | `lecture/08_product/03_mcp_server.py` | MCP: 연결 → 도구 목록 → 호출, Antigravity·Claude 등록 |
-| 4 (8) | `lecture/08_product/04_web_app.py` | 웹앱 빌드와 API 서버 한 주소 배포 |
-| 선택 | `lecture/03_setup/extra_gemini_basics.py` · `07_optimize/extra_embedding_speed.py` · `08_product/extra_monitoring.py` | Gemini 기초, 임베딩 속도 옵션, MLflow 모니터링(실험 run 비교 → 모델 레지스트리 → 서비스 트레이스) |
+| 4 (8) | `lecture/08_product/04_web_app.py` | 검색 화면(HTML 한 장)을 API 서버가 한 주소에서 배포 |
+| 선택 | `lecture/07_optimize/extra_embedding_speed.py` · `08_product/extra_monitoring.py` · `08_product/extra_web_notebook.py` | 임베딩 속도 옵션, MLflow 모니터링(실험 run 비교 → 모델 레지스트리 → 서비스 트레이스), 법령 노트(React) |
 
 ## 도구와 앱
 
@@ -83,7 +81,8 @@ uv run ragkit-bench run
 # 검색 API (2단계) → http://127.0.0.1:8000/docs
 uv run --package ragkit-api ragkit-api --backend torch                              # 2단계
 uv run --package ragkit-api ragkit-api --model models/multilingual-e5-small-pruned-int8    # 3단계 이후
-uv run --package ragkit-api ragkit-api --web-dist apps/web/dist                            # 화면까지 한 주소
+uv run --package ragkit-api ragkit-api --web-dist apps/web-lite                            # 검색 화면(HTML 한 장)까지 한 주소
+uv run --package ragkit-api ragkit-api --web-dist apps/web/dist                            # 법령 노트(React 빌드)까지 한 주소
 
 # 제품 (4단계)
 uv run --package ragkit-search ragkit-search search "야간 근로 수당" --law 근로기준법
@@ -113,7 +112,8 @@ train·evaluate·compare run에는 입력 파일과 내용이 같은 버전이 �
 |---|---|
 | [`apps/api`](apps/api) | `/api/search`, `/api/answer(/stream)`, `/api/notebooks/...` |
 | [`apps/bench`](apps/bench) | `ragkit-bench run`: 지연·처리량·메모리·모델/설치 크기·Recall |
-| [`apps/web`](apps/web/README.md) | 노트북 = 법령 묶음, 인용 달린 답, 조문 보기, 노트 |
+| [`apps/web-lite`](apps/web-lite/README.md) | 검색 화면 HTML 한 장: 오프라인 파일과 같은 디자인, 모델 · 인덱스는 서버에 (8교시 웹) |
+| [`apps/web`](apps/web/README.md) | (선택) 법령 노트: 노트북 = 법령 묶음, 인용 달린 답, 조문 보기, 노트 |
 | [`apps/search-cli`](apps/search-cli/README.md) | `search` · `ask` · `laws` · `show` · `SKILL.md`(Gemini CLI 접속 후 파일 경로 던져주고 스킬 등록) |
 | [`apps/mcp`](apps/mcp/README.md) | `search_laws` · `get_article` · `list_laws` · `ask` (MCP 서버: Antigravity · Claude) |
 | [`apps/offline-search`](apps/offline-search/README.md) | 설치·서버·인터넷 없이 여는 HTML 한 파일: 30MB 파인튜닝 모델 + 조문 벡터 + 원문 (3교시에 최종 목표로 소개) |

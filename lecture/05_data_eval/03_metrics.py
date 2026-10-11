@@ -8,6 +8,14 @@
 - 판정 세 가지(doc: 정답 문서 일치 / article: 같은 조의 조각이면 정답 / multi: 판정으로 인정한 다른 정답도 정답)의 차이를 본다
 - 학습 전 e5-small의 test 성적(출발점)을 명령 하나로 재고, 어떤 말투에서 약한지 읽는다
 
+무엇을 하나 (기본 모드, 약 1분):
+    1. 평가셋: 분할별 질문 · 조 · 법령 수, train ∩ test 조 0개, test 질문 유형 수와 situation 예 하나
+    2. 지표를 손으로: 질문 5개의 정답 순위를 ragkit.evaluation.question_metrics에 넣어 R@k · MRR · nDCG를 계산
+    3. 판정 세 가지: 항·호 조각 예로 doc · article 판정의 순위 차이, data/labels/dev.jsonl로 multi 판정
+    4. 학습 전 e5 평가: `ragkit evaluate intfloat/multilingual-e5-small --split test` (받은 인덱스 재사용)
+       (--run) test 300개 표본과 복수 정답 판정이 있는 dev 질문만 임시 폴더에 평가
+    5. 결과 읽기: doc · article R@5, 질문 유형별 · 테마별 R@5, 틀린 situation 질문 예 3개
+
 사전 준비 (없으면 스크립트가 받는 명령을 알려 주고 끝난다):
     uv run python scripts/data_version.py pull v1     # 코퍼스 + 질문
     uv run python lecture/05_data_eval/02_split.py    # 조 단위 분할 data/splits_article/ (없으면 만든다)
@@ -157,6 +165,9 @@ require(
 # ============================================================
 # 1. 평가셋: 조 단위 분할
 # ============================================================
+# 02_split.py가 만든 data/splits_article/을 다시 읽어 분할별 질문 · 조 · 법령 수를 찍고,
+# train과 test의 정답 조(ragkit.data.relevance_key)가 겹치지 않음을 다시 확인한다.
+# 출력에서 볼 것: test 1,863개 = keyword 399 · question 701 · situation 763, 검색 대상은 코퍼스 전체.
 section("1. 평가셋: 조 단위로 나눈 train / dev / test")
 docs = load_corpus(CORPUS)
 by_id = {d["id"]: d for d in docs}
@@ -172,13 +183,14 @@ def articles(name: str) -> set[str]:
     return {relevance_key(by_id[q["positive_id"]]) for q in splits[name]}
 
 
-overlap = articles("train") & articles("test")
+overlap = articles("train") & articles("test")  # 0개여야 한다 (02_split.py)
 print(
     f"  train과 test에 함께 든 조: {len(overlap)}개 → test는 학습 때 본 적 없는 조로만 이루어진다 (법령은 모두 학습에 있다)"
 )
 print(f"  검색 대상: 코퍼스 전체 {len(docs):,}개 문서 (정답 법령 안에서만 찾지 않는다)")
 types = Counter(q.get("query_type", "unknown") for q in splits["test"])
 print("  test 질문 유형: " + " · ".join(f"{t} {n:,}" for t, n in sorted(types.items())))
+# 가장 어려운 유형(situation)의 첫 질문
 example = next(q for q in splits["test"] if q.get("query_type") == "situation")
 print(f"\n  예) [{example['query_type']}] {example['query']}")
 print(f"      정답: {example['positive_id']}")
@@ -188,10 +200,13 @@ print("  규칙: 모델·설정은 dev로 고르고, test는 마지막 비교에
 # ============================================================
 # 2. 지표를 손으로: 질문 5개의 정답 순위
 # ============================================================
+# 정답 순위만 알면 지표가 나온다는 것을 보이려고, 순위 1 · 3 · 밖 · 7 · 12인 질문 5개를
+# ragkit.evaluation.question_metrics에 넣어 R@1 · R@5 · R@10 · MRR@10 · nDCG@10을 찍고 평균을 낸다.
+# 출력에서 볼 것: 평균 R@5 0.40 · MRR@10 0.295 · nDCG@10 0.367, 순위가 내려갈 때 지표마다 깎이는 정도.
 section("2. 지표를 작은 예로 계산하기")
 ranks = [1, 3, None, 7, 12]  # 질문 5개에서 정답이 나온 순위 (None = 100위 밖)
-ks = (1, 5, 10)
-rows = [question_metrics(rank, ks) for rank in ranks]
+ks = (1, 5, 10)  # R@k의 k
+rows = [question_metrics(rank, ks) for rank in ranks]  # 질문마다 지표 dict
 print("질문  정답 순위  R@1  R@5  R@10  MRR@10  nDCG@10")
 for i, (rank, m) in enumerate(zip(ranks, rows), 1):
     print(
@@ -213,7 +228,11 @@ print("  · nDCG@10 = 1/log2(순위+1)의 평균. 순위가 내려갈수록 천�
 # ============================================================
 # 3. 판정: doc · article · multi
 # ============================================================
+# 항·호로 나뉜 첫 조문(전기사업법 제2조, 5조각)으로 검색 결과 순서를 가정해
+# doc 판정(정답 문서 그대로)과 article 판정(같은 조의 조각이면 정답)의 순위를 ragkit.evaluation.first_rank로 비교한다.
+# 이어서 복수 정답 판정 파일(dev 641개 판정, 다른 정답 인정 44개)로 multi 판정이 무엇인지 보인다.
 section("3. 무엇을 정답으로 볼까: doc · article · multi")
+# id ≠ parent_id 인 첫 문서 = 나뉜 조각. siblings = 같은 조의 조각 전부
 fragment = next(d for d in docs if d.get("parent_id") and d["id"] != d["parent_id"])
 siblings = [d["id"] for d in docs if d.get("parent_id") == fragment["parent_id"]]
 print(
@@ -222,7 +241,7 @@ print(
 ranked = [s for s in siblings if s != fragment["id"]][:1] + [
     "다른법_법률_제1조",
     fragment["id"],
-]
+]  # 가정한 검색 결과: 1위 같은 조의 다른 조각, 2위 엉뚱한 조문, 3위 정답 문서
 article_keys = [relevance_key(by_id[i]) if i in by_id else i for i in ranked]
 print(f"  검색 결과 순서: {ranked}")
 print(f"  정답: {fragment['id']}")
@@ -235,6 +254,7 @@ print(
 
 if LABELS.exists():
     labels = load_labels(LABELS)
+    # 정답 외에 다른 조문도 맞다고 인정한 질문
     with_alt = {qid: lab for qid, lab in labels.items() if lab.get("alt_positive_ids")}
     print(
         f"\n복수 정답 판정 파일 {rel(LABELS)}: 질문 {len(labels):,}개를 판정, "
@@ -262,13 +282,16 @@ else:
 # ============================================================
 # 4. 출발점: 학습 전 e5-small을 test로
 # ============================================================
+# 기본 모드: `ragkit evaluate` CLI를 하위 프로세스로 불러 test 1,863개 전체를 잰다 (약 1분).
+# 코퍼스 임베딩은 받은 인덱스(data/processed/index/multilingual-e5-small.sqlite)를 재사용하고 질문만 임베딩한다.
+# --run: test 300개 표본과 복수 정답 판정이 있는 dev 질문(81개)을 임시 분할 폴더에 써서 직접 평가한다.
 if args.run:
     section(f"4. --run: 질문 {RUN_SAMPLE}개로 직접 평가")
-    tmp = Path(tempfile.mkdtemp(prefix="lecture-02-1-"))
-    rng = random.Random(SEED)
+    tmp = Path(tempfile.mkdtemp(prefix="lecture-02-1-"))  # 결과와 임시 분할을 둘 곳
+    rng = random.Random(SEED)  # 표본도 seed 42로 뽑아 누가 돌려도 같은 300개
     labeled = {question_key(q) for q in splits["dev"]} & (
         set(load_labels(LABELS)) if LABELS.exists() else set()
-    )
+    )  # 지금 dev 질문 중 판정 파일에 있는 것
     small = {
         "test": rng.sample(splits["test"], min(RUN_SAMPLE, len(splits["test"]))),
         # dev는 복수 정답 판정이 있는 질문만 (판정 파일이 옛 dev로 만들어져 지금 dev와 일부만 겹친다)
@@ -316,7 +339,7 @@ if args.run:
     )
 else:
     section("4. 출발점: 학습 전 e5-small, test 전체")
-    out = OUT / "multilingual-e5-small_test.json"
+    out = OUT / "multilingual-e5-small_test.json"  # 받은 결과 파일과 다른 폴더에 쓴다
     seconds = ragkit(
         "evaluate", MODEL, "--split", "test", "--splits", str(SPLITS), "--out", str(out)
     )
@@ -324,8 +347,16 @@ else:
         f"  ({seconds:.0f}초. 코퍼스 임베딩은 받은 인덱스를 재사용하고, 질문만 임베딩했다)"
     )
 
-result = json.loads(out.read_text(encoding="utf-8"))
+result = json.loads(out.read_text(encoding="utf-8"))  # ragkit evaluate가 쓴 결과 JSON
 
+
+# ============================================================
+# 5. 결과 읽기
+# ============================================================
+# 결과 JSON에서 doc 판정의 R@1 · R@5 · R@10 · MRR@10 · nDCG@10과 article R@5를 읽고,
+# by_query_type · by_theme으로 어떤 말투 · 테마에서 약한지 본다. 마지막에 5위 안에 못 든
+# situation 질문 중 3개를 뽑아 1위 문서와 정답 순위를 보인다 (실험 001의 000과 같은 값:
+# R@5 0.545, keyword 0.739 / question 0.573 / situation 0.417).
 section("5. 결과 읽기")
 print(
     f"질문 {result['n']:,}개 · 모델 {result['model']} · 백엔드 {result['backend']} · {result['dim']}차원"
@@ -357,9 +388,9 @@ misses = [
     row
     for row in result["per_question"]
     if types_by_qid.get(row["qid"]) == "situation" and (row["doc_rank"] or 999) > 5
-]
+]  # doc_rank가 None(100위 밖)이거나 5위 밖인 situation 질문
 print(f"\n틀린 situation 질문 {len(misses):,}개 중 3개 (1위로 나온 문서와 정답 순위)")
-for row in random.Random(SEED).sample(misses, min(3, len(misses))):
+for row in random.Random(SEED).sample(misses, min(3, len(misses))):  # 항상 같은 3개
     top1 = (
         by_id.get(row["top10"][0], {}).get("title", row["top10"][0])
         if row["top10"]

@@ -33,7 +33,7 @@ INSTRUCTIONS = """\
 - 조문은 항·호 단위 조각(piece)으로 나뉘어 있습니다. search_laws는 조각을 돌려주고, 조 전체는 get_article로 봅니다.
 - 특정 법령만 찾으려면 list_laws로 정확한 법령 이름을 확인한 뒤 search_laws의 laws에 넣으세요.
 - 답변 시에는 검색된 조문의 제목(예: 근로기준법 제56조)과 조문 id를 반드시 근거로 명시하세요.
-- ask는 서버에 GEMINI_API_KEY가 있어야 합니다. 없으면 search_laws 결과로 직접 답하세요.
+- ask는 서버에 LLM이 켜져 있어야 합니다. error가 오면 search_laws 결과로 직접 답하세요.
 """
 
 READ_ONLY = ToolAnnotations(read_only_hint=True, open_world_hint=False)
@@ -121,8 +121,8 @@ def ask(
     laws: Laws = None,
     k: Annotated[int, Field(description="근거로 쓸 조문 수", ge=1, le=20)] = 5,
 ) -> dict:
-    """검색한 조문만 근거로 Gemini가 답한다: {answer, sources[{n, id, title}], error}. 답의 [n]은 sources의 n번째.
-    Answers with Gemini grounded on retrieved articles. Needs GEMINI_API_KEY on the server;
+    """검색한 조문만 근거로 LLM이 답한다: {answer, sources[{n, id, title}], error}. 답의 [n]은 sources의 n번째.
+    Answers with an LLM grounded on retrieved articles. Needs the LLM enabled on the server;
     if `error` is set, answer yourself from search_laws results instead.
     """
     return _call(tools.ask, question, laws=laws, k=k)

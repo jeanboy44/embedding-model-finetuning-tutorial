@@ -1,15 +1,16 @@
 # ragkit-api (apps/api)
 
-법령 검색·근거 답변·노트북을 제공하는 FastAPI 서버입니다. 강의 2단계 산출물이고, `apps/web`의 유일한 백엔드입니다.
+법령 검색·근거 답변·노트북을 제공하는 FastAPI 서버입니다. 강의 2단계 산출물이고, `apps/web-lite`(검색 화면)와 `apps/web`(법령 노트)의 유일한 백엔드입니다.
 
 ```bash
 uv run --package ragkit-api ragkit-api                        # http://127.0.0.1:8000, 문서 /docs
 uv run --package ragkit-api ragkit-api --checkpoint models/finetuned/002_hard_negatives   # 파인튜닝 모델
-uv run --package ragkit-api ragkit-api --web-dist apps/web/dist                          # 빌드한 web도 함께
+uv run --package ragkit-api ragkit-api --web-dist apps/web-lite                          # 검색 화면(HTML 한 장)도 함께
+uv run --package ragkit-api ragkit-api --web-dist apps/web/dist                          # 빌드한 법령 노트(React)도 함께
 ```
 
 - 시작할 때 `Searcher.open()`으로 모델과 인덱스(`data/processed/index/<모델>.sqlite`)를 한 번 로드합니다. 인덱스가 없으면 `uv run ragkit index` 안내와 함께 멈춥니다.
-- 답변에는 `.env`의 `GEMINI_API_KEY`가 필요합니다. 없으면 `/api/health`의 `llm_available`이 false이고, 답변 요청은 검색 결과와 `error`만 돌려줍니다.
+- 답변 생성(LLM)은 강의에서 쓰지 않습니다. LLM이 꺼져 있으면 `/api/health`의 `llm_available`이 false이고, 답변 요청은 검색 결과와 `error`만 돌려줍니다.
 - 노트북·대화·노트는 `data/app/notebooks.sqlite`(`--db`로 변경)에 저장합니다. 인증은 없습니다(로컬 단일 사용자).
 
 ## 엔드포인트

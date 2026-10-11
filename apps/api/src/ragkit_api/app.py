@@ -69,7 +69,7 @@ def create_app(
         searcher: 검색기. None이면 앱이 시작할 때 Searcher.open(**open_kwargs)로 연다.
         store: 노트북 저장소. None이면 data/app/notebooks.sqlite.
         open_kwargs: Searcher.open 인자 (model, checkpoint, backend, index_path).
-        web_dist: 빌드한 web 폴더(apps/web/dist). 주면 / 에서 함께 제공한다.
+        web_dist: 화면 폴더(apps/web-lite 또는 빌드한 apps/web/dist). 주면 / 에서 함께 제공한다.
         cors_origins: 다른 주소에서 띄운 web을 허용할 출처. 기본 Vite 개발 서버.
     """
     state: dict = {"searcher": searcher, "store": store}
@@ -251,10 +251,16 @@ def create_app(
 
 
 def _mount_web(app: FastAPI, dist: Path) -> None:
-    """빌드한 SPA를 제공한다. 파일이 없는 경로(/notebooks/..)는 index.html로 돌려 화면 라우터가 처리한다."""
+    """화면 폴더를 제공한다. 폴더 안의 파일은 그대로, 없는 경로(/notebooks/..)는 index.html로 돌려 화면 라우터가 처리한다.
+
+    apps/web-lite(HTML 한 장)도, 빌드한 SPA(apps/web/dist)도 같은 방식으로 준다.
+    """
     index_html = dist / "index.html"
     if not index_html.exists():
-        raise FileNotFoundError(f"web 빌드가 없습니다: {index_html}\n먼저 빌드하세요: cd apps/web && pnpm build")
+        raise FileNotFoundError(
+            f"화면 파일이 없습니다: {index_html}\n"
+            "apps/web-lite는 저장소에 있고, apps/web/dist는 먼저 빌드해야 합니다: cd apps/web && pnpm build"
+        )
     root = dist.resolve()
 
     @app.get("/{path:path}", include_in_schema=False)

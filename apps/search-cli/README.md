@@ -27,7 +27,7 @@ uvx --from /path/to/embedding-model-finetuning-tutorial/apps/search-cli ragkit-s
 ragkit-search search "야간 근로 수당" -k 3 --law 근로기준법
 ragkit-search search "전세 보증금" --law 주택임대차보호법 --law "주택임대차보호법 시행령" --json
 
-# 답변 (GEMINI_API_KEY 필요): 받는 대로 출력한 뒤 근거 조문 [n] 목록
+# 답변 (서버의 LLM이 켜져 있을 때만, 강의에서는 쓰지 않음): 받는 대로 출력한 뒤 근거 조문 [n] 목록
 ragkit-search ask "수습 기간에도 최저임금을 줘야 하나요?" --law 최저임금법
 
 # 법령 목록 (--law에 쓸 정확한 이름)

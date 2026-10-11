@@ -8,6 +8,14 @@
 - 표를 읽고 "정확도를 얼마나 잃고 무엇을 얻는가"를 DS가 직접 판단한다
 - 실습 3-1 API의 백엔드를 torch → ONNX로 바꿔 시작 시간과 검색 속도를 비교한다
 
+무엇을 하나:
+    1. 측정 결과 읽기: 실험 101의 results.json(네 변형의 수치)과 comparison.md(표)를 읽어
+       표를 그대로 출력한다. --run이면 ragkit-bench run을 부속 프로세스로 돌려 임시 폴더에 새로 잰다
+    2. 표 읽기: torch-fp32를 기준으로 변형마다 설치 크기·모델 크기·로딩·지연 p50·메모리·R@5의
+       전후 값과 배율을 한 줄씩 보여 준다 (669 → 127MB, 471 → 30MB, 1,133 → 403MB, R@5 +0.002)
+    3. API에 적용: 3-1과 같은 create_app을 torch / ONNX INT8 / 가지치기+INT8로 세 번 열어
+       시작 시간과 검색 20회의 중앙값 ms를 잰다. 모델·백엔드 인자만 바뀌고 코드는 같다
+
 두 가지 모드:
 - 기본: 받은 측정 결과(experiments/101_deploy_bench/results/)를 읽고, API 비교만 직접 잰다 (약 10초)
 - --run: test 질문 앞 200개로 ragkit-bench를 직접 돌린다 (약 1분). 결과는 임시 폴더에 쓰고 지운다
@@ -43,7 +51,7 @@ RESULTS = ROOT / "experiments" / "101_deploy_bench" / "results" / "results.json"
 TEST = ROOT / "data" / "splits" / "test.jsonl"
 MODELS = ROOT / "models"
 RUN_QUESTIONS = 200  # --run에서 쓸 test 질문 수
-SEARCH_REPEAT = 20
+SEARCH_REPEAT = 20  # 3번에서 API 검색 지연을 잴 반복 횟수 (중앙값을 쓴다)
 
 
 @Parameter(name="*")
@@ -91,9 +99,11 @@ def ratio(before: float, after: float) -> str:
 
 def run_bench_subset(out_dir: Path) -> Path:
     """test 질문 앞부분으로 ragkit-bench를 돌려 out_dir에 결과를 쓴다."""
-    lines = [line for line in TEST.read_text(encoding="utf-8").splitlines() if line.strip()][
-        :RUN_QUESTIONS
-    ]
+    # ragkit-bench run은 변형마다 새 프로세스를 띄워 로딩·지연·최대 메모리·R@k를 재고
+    # results.json과 comparison.md를 쓴다. --n-latency 30: 지연은 질문 30개로만 잰다.
+    lines = [
+        line for line in TEST.read_text(encoding="utf-8").splitlines() if line.strip()
+    ][:RUN_QUESTIONS]
     subset = out_dir / "test_subset.jsonl"
     subset.write_text("\n".join(lines) + "\n", encoding="utf-8")
     cmd = [
@@ -118,6 +128,9 @@ def run_bench_subset(out_dir: Path) -> Path:
 # ============================================================
 # 1. 측정 결과 (ragkit-bench: 변형마다 새 프로세스에서 잰다)
 # ============================================================
+# 기본 모드는 실험 101의 results.json(수치)과 comparison.md(표)를 읽기만 한다.
+# 네 변형: torch-fp32 · onnx-fp32 · onnx-int8 · onnx-int8-pruned, test 질문 2,526개, CPU.
+# 출력: 열이 모델 MB · 설치 MB · 로딩 s · 지연 p50/p95 · 문서/초 · 최대 메모리 · R@1/5/10 · MRR@10인 표.
 section("1. ragkit-bench 결과")
 with tempfile.TemporaryDirectory() as tmp:
     if args.run:
@@ -131,14 +144,19 @@ with tempfile.TemporaryDirectory() as tmp:
         sys.exit(
             f"{RESULTS}가 없습니다.\n  Drive에서 experiments/101_deploy_bench/를 받거나 --run으로 직접 재세요."
         )
+    # rows: 변형 하나 = 한 행(dict). comparison.md는 같은 내용의 마크다운 표
     rows = json.loads(results.read_text(encoding="utf-8"))["rows"]
     print((results.parent / "comparison.md").read_text(encoding="utf-8"))
 
 # ============================================================
 # 2. 표 읽기
 # ============================================================
+# 기준 행(torch-fp32)과 나머지 행을 항목별로 "전 → 후 (배율)"로 풀어 쓴다.
+# ratio()가 "1/4.0로" · "23% 줄어듦" 같은 배율 문장을 만든다.
+# 출력: onnx-int8-pruned가 설치 669 → 127MB, 모델 471 → 30MB, 메모리 1,133 → 403MB,
+# R@5 0.513 → 0.515. onnx-fp32는 메모리가 오히려 1,782MB로 큰 것도 본다.
 section("2. 무엇을 얻고 무엇을 잃었나 (원본 torch-fp32 대비)")
-base = next((r for r in rows if r["variant"] == "torch-fp32"), rows[0])
+base = next((r for r in rows if r["variant"] == "torch-fp32"), rows[0])  # 기준 행
 for r in rows:
     if r is base:
         continue
@@ -168,9 +186,14 @@ print("""
 # ============================================================
 # 3. API에 적용: 모델·백엔드만 바꾼다
 # ============================================================
+# 3-1과 같은 create_app(ragkit_api.app)을 open_kwargs만 바꿔 세 번 연다. with 블록에 들어갈 때
+# Searcher.open이 모델·인덱스를 로드하므로 그 시간이 "시작"이다. 모델 폴더가 없으면 그 줄은 건너뛴다.
+# 모델마다 그 모델로 만든 인덱스(data/processed/index/<모델 키>.sqlite)가 있어야 한다.
+# 출력: 시작 s · 검색 중앙값 ms · 1위 조문. 세 모델 모두 1위가 근로기준법 제56조로 같다.
+# torch의 시작 시간은 처음 실행에서 10초 넘게 걸릴 수 있다(OS 캐시). ONNX 둘은 0.5초 · 0.1초.
 section("3. API 백엔드 바꾸기: torch → ONNX")
 for label, kwargs in [
-    ("torch (실습 3-1)", {"backend": "torch"}),
+    ("torch (실습 3-1)", {"backend": "torch"}),  # 기본 모델 + torch. 3-1과 같은 설정
     (
         "ONNX INT8",
         {"model": str(MODELS / "multilingual-e5-small-int8"), "backend": "onnx"},
@@ -188,12 +211,11 @@ for label, kwargs in [
     start = time.perf_counter()
     with TestClient(create_app(open_kwargs=kwargs)) as client:
         load = time.perf_counter() - start
-        body = {"query": "야간 근로 수당", "k": 1, "laws": ["근로기준법"]}
-        hits = client.post("/api/search", json=body).json()[
-            "hits"
-        ]  # 첫 요청은 워밍업으로 버린다
+        body = {"query": "야간 근로 수당", "k": 1, "laws": ["근로기준법"]}  # 1위만 본다
+        # 첫 요청은 워밍업으로 버린다 (1위 조문만 출력에 쓴다)
+        hits = client.post("/api/search", json=body).json()["hits"]
         times = []
-        for _ in range(SEARCH_REPEAT):
+        for _ in range(SEARCH_REPEAT):  # 같은 요청 20회의 중앙값으로 지연을 잰다
             t = time.perf_counter()
             client.post("/api/search", json=body)
             times.append(1000 * (time.perf_counter() - t))
