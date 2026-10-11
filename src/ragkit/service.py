@@ -100,6 +100,7 @@ class Searcher:
         checkpoint: Path | None = None,
         backend: str | None = None,
         index_path: Path | None = None,
+        lazy: bool = False,
     ) -> "Searcher":
         """Settings 기본값으로 모델·인덱스를 연다 (`ragkit index`와 같은 파일 규칙).
 
@@ -110,6 +111,7 @@ class Searcher:
             backend: onnx | torch | st. 기본값 Settings.embedding_backend. 주지 않았는데
                 파인튜닝 폴더에 onnx/model.onnx가 없으면 torch로 연다(`ragkit evaluate`와 같은 규칙).
             index_path: 인덱스 파일. 기본값 data/processed/index/<모델 키>.sqlite.
+            lazy: True면 첫 search 호출 때까지 모델 로드를 지연한다 (MCP 서버 등 콜드 스타트 방지).
 
         Raises:
             FileNotFoundError: 인덱스 파일이 없을 때 (만드는 명령을 안내한다).
@@ -125,8 +127,28 @@ class Searcher:
         no_onnx = checkpoint is not None and not (Path(checkpoint) / "onnx" / "model.onnx").exists()
         if backend is None and no_onnx and choose_backend(profile, None) == "onnx" and "torch" in profile.backends:
             backend = "torch"
-        embed_fn = create_embedding_fn(model, checkpoint_path=checkpoint, backend=backend)
+
+        if lazy:
+            _actual_embed_fn: EmbedFn | None = None
+            _embed_lock = threading.Lock()
+
+            def lazy_embed_fn(texts: list[str]) -> np.ndarray:
+                nonlocal _actual_embed_fn
+                if _actual_embed_fn is None:
+                    with _embed_lock:
+                        if _actual_embed_fn is None:
+                            _actual_embed_fn = create_embedding_fn(model, checkpoint_path=checkpoint, backend=backend)
+                return _actual_embed_fn(texts)
+
+            embed_fn = lazy_embed_fn
+        else:
+            embed_fn = create_embedding_fn(model, checkpoint_path=checkpoint, backend=backend)
+
         return cls(index, embed_fn, profile=profile)
+
+    def warmup(self) -> None:
+        """임베딩 모델을 미리 메모리에 로드한다 (백그라운드 웜업 및 콜드 스타트 방지)."""
+        self.embed_fn([self.profile.format_query("")])
 
     @property
     def model_key(self) -> str:

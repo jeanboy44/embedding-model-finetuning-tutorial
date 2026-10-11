@@ -24,51 +24,84 @@ uv run ragkit index                     # data/processed/index/<모델 키>.sqli
 
 모르는 법령 이름이나 없는 id는 도구 오류로 돌아온다 (비슷한 법령 이름을 안내).
 
-## Antigravity CLI (agy)에 등록
+## 다중 사용자 환경 (원격 Streamable HTTP MCP — 권장)
+
+여러 팀원이나 수강생이 함께 쓰는 경우, 서버 1대만 띄워두면 **사용자들은 로컬에 모델·Python·uv를 설치할 필요 없이** URL 하나로 즉시 연결합니다.
+(서버에서 모델이 미리 로드되어 콜드 스타트 지연도 전혀 없습니다.)
+
+### 1. 서버 실행 (호스트 1대)
+
+```bash
+uv run --package ragkit-mcp ragkit-mcp --transport streamable-http --port 8000
+```
+
+### 2. 사용자 클라이언트 등록 (각 사용자 PC)
+
+- **Antigravity CLI (agy)**:
+  ```bash
+  agy mcp add ragkit-law http://<서버주소>:8000/mcp
+  ```
+
+- **Antigravity IDE / Claude Desktop (`mcp_config.json`)**:
+  ```json
+  {
+    "mcpServers": {
+      "ragkit-law": {
+        "url": "http://<서버주소>:8000/mcp"
+      }
+    }
+  }
+  ```
+
+---
+
+## 단일 사용자 로컬 환경 (stdio 프로세스 연결)
+
+각자 컴퓨터에서 직접 프로세스를 띄워 쓰는 방식입니다.
+
+### Antigravity CLI (agy)에 등록
 
 ```bash
 REPO=/path/to/embedding-model-finetuning-tutorial
-agy mcp add --env RAGKIT_PROJECT_ROOT=$REPO ragkit-law uv run --directory $REPO --package ragkit-mcp ragkit-mcp
+agy mcp add --env RAGKIT_PROJECT_ROOT=$REPO ragkit-law $(which uv) run --directory $REPO --package ragkit-mcp ragkit-mcp
 ```
 
-## Claude Code에 등록
+### Claude Code에 등록
 
 ```bash
 REPO=/path/to/embedding-model-finetuning-tutorial
 claude mcp add ragkit-law -e RAGKIT_PROJECT_ROOT=$REPO -- \
-  uv run --directory $REPO --package ragkit-mcp ragkit-mcp
+  $(which uv) run --directory $REPO --package ragkit-mcp ragkit-mcp
 ```
 
-다른 모델의 인덱스를 쓰려면 끝에 옵션을 붙인다 (`ragkit-mcp --help`):
+### GUI 앱 (Antigravity IDE · Claude Desktop) 등록
 
-```bash
-claude mcp add ragkit-law -e RAGKIT_PROJECT_ROOT=$REPO -- \
-  uv run --directory $REPO --package ragkit-mcp ragkit-mcp --model google/embeddinggemma-300m
-```
+macOS GUI 앱은 터미널의 `PATH`를 상속받지 못하므로 `command`에 반드시 **`uv`의 절대 경로(`which uv`)**를 적어야 합니다.
 
-`ask`까지 쓰려면 `-e GEMINI_API_KEY=...`를 더하거나 저장소 `.env`에 넣는다.
-키가 없어도 에이전트가 `search_laws` 결과로 직접 답할 수 있다.
-
-## Claude Desktop에 등록
-
-`claude_desktop_config.json` (macOS: `~/Library/Application Support/Claude/`):
+`~/.gemini/config/mcp_config.json` 또는 `claude_desktop_config.json`:
 
 ```json
 {
   "mcpServers": {
     "ragkit-law": {
-      "command": "uv",
-      "args": ["run", "--directory", "/path/to/embedding-model-finetuning-tutorial",
-               "--package", "ragkit-mcp", "ragkit-mcp"],
-      "env": { "RAGKIT_PROJECT_ROOT": "/path/to/embedding-model-finetuning-tutorial" }
+      "command": "/opt/homebrew/bin/uv",
+      "args": [
+        "run",
+        "--directory", "/path/to/embedding-model-finetuning-tutorial",
+        "--package", "ragkit-mcp",
+        "ragkit-mcp"
+      ],
+      "env": {
+        "RAGKIT_PROJECT_ROOT": "/path/to/embedding-model-finetuning-tutorial"
+      }
     }
   }
 }
 ```
 
-Desktop은 PATH가 짧을 수 있으니 `command`에 `uv`의 절대 경로(`which uv`)를 쓰는 편이 안전하다.
+> **콜드 스타트 방지**: `ragkit-mcp`는 첫 호출 시 모델을 지연 로드(Lazy)하고 서버 기동과 동시에 백그라운드에서 모델을 웜업하여 타임아웃을 방지합니다.
 
 ## 구조
 
 - `tools.py` — 도구 로직. `Searcher`를 첫 인자로 받는 순수 함수 (테스트는 가짜 Searcher로).
-- `server.py` — `MCPServer("ragkit-law")`에 도구를 등록하고 Searcher를 지연 로드한다. `main()`은 stdio.
+- `server.py` — `MCPServer("ragkit-law")`에 도구를 등록하고 stdio 및 Streamable HTTP를 지원한다.

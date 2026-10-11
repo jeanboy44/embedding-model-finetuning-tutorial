@@ -107,16 +107,27 @@ async def main() -> None:
 asyncio.run(main())
 
 section("4. 실제 에이전트에 등록")
-print(f"""Antigravity CLI (agy):
-  agy mcp add --env RAGKIT_PROJECT_ROOT={ROOT} ragkit-law uv run --directory {ROOT} --package ragkit-mcp ragkit-mcp
+print(f"""[방법 A] 여러 사용자가 함께 쓰는 경우 (원격 Streamable HTTP — 권장):
+  1. 서버 1대 기동:
+     uv run --package ragkit-mcp ragkit-mcp --transport streamable-http --port 8000
+
+  2. 사용자 PC에서 등록 (로컬 설치 불필요):
+     Antigravity CLI (agy):
+       agy mcp add ragkit-law http://<서버주소>:8000/mcp
+     Claude Desktop / Antigravity IDE (mcp_config.json):
+       "ragkit-law": {{"url": "http://<서버주소>:8000/mcp"}}
+
+[방법 B] 내 컴퓨터에서 직접 프로세스를 띄우는 경우 (로컬 stdio):
+  Antigravity CLI (agy):
+    agy mcp add --env RAGKIT_PROJECT_ROOT={ROOT} ragkit-law $(which uv) run --directory {ROOT} --package ragkit-mcp ragkit-mcp
 
 Claude Code:
   claude mcp add ragkit-law -e RAGKIT_PROJECT_ROOT={ROOT} -- \\
-    uv run --directory {ROOT} --package ragkit-mcp ragkit-mcp
+    $(which uv) run --directory {ROOT} --package ragkit-mcp ragkit-mcp
 
-Claude Desktop (claude_desktop_config.json의 mcpServers):
+Claude Desktop / Antigravity IDE (mcp_config.json):
   "ragkit-law": {{
-    "command": "uv",
+    "command": "/opt/homebrew/bin/uv",  <-- $(which uv) 절대 경로 사용
     "args": ["run", "--directory", "{ROOT}", "--package", "ragkit-mcp", "ragkit-mcp"],
     "env": {{"RAGKIT_PROJECT_ROOT": "{ROOT}"}}
   }}
