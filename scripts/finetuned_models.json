@@ -2,15 +2,14 @@
   "drive_folder": "https://drive.google.com/drive/folders/1vpGtkFmS5kPfRlu5f7pcGKf_gZ2AWHXK",
   "models": {
     "002_hard_negatives": {
-      "file": "finetuned-r001_A.zip",
+      "file": "finetuned-002_hard_negatives.zip",
       "model_dir": "models/finetuned/002_hard_negatives",
       "index": "data/processed/index/002_hard_negatives-20261002120228.sqlite",
       "model_key": "002_hard_negatives-20261002120228",
       "weights_mtime": 1790942548.600959,
-      "sha256": "d3b07a70959e833b3557ea2eee9f6a533f21b022b5f5ea3dc5cf0e49cae3d9c5",
+      "sha256": "138c145c477f9cc6891dacb181c2da6c6a842a94db7ac172af8ba55603854822",
       "size_mb": 358.5,
-      "file_id": "1BZDpsGyrtD6_NgKyra9ifDfuraULO8Fn",
-      "pending_reupload": "Drive의 finetuned-r001_A.zip은 옛 폴더 이름 r001_A 그대로 묶여 있다. 강사가 upload로 다시 올려야 받을 수 있다"
+      "file_id": "1SUklmNdo460WA1SIJOfreHd1kACKwZUi"
     },
     "001_baseline": {
       "file": "finetuned-exp_002.zip",
@@ -53,6 +52,21 @@
       "sha256": "350584332ce6113fdef03f864c0992326e71d437218f124662a6878e73a37163",
       "size_mb": 43.3,
       "file_id": "1l3_nuTHWKDf3kKBDGEpKdaCAnOgqO1ZC"
+    }
+  },
+  "files": {
+    "optimize": {
+      "file": "files-optimize.zip",
+      "paths": [
+        "models/multilingual-e5-small-int8",
+        "models/multilingual-e5-small-pruned",
+        "models/multilingual-e5-small-pruned-int8",
+        "data/processed/index/multilingual-e5-small-int8.sqlite",
+        "data/processed/index/multilingual-e5-small-pruned-int8.sqlite"
+      ],
+      "sha256": "011c3820ddcabde282f99869b881e04ad9c2332575affb7a3a9dd9377a0c6566",
+      "size_mb": 340.4,
+      "file_id": "1c-O8xfPgB3RZbR4e-YQ_KWEhHm9cfzKI"
     }
   }
 }
