@@ -78,12 +78,14 @@ logs/
 # Superpowers artifacts
 .superpowers/
 
-# Claude Code: worktrees 등은 무시하고 프로젝트 스킬만 관리
+# Claude Code / Antigravity / Gemini
 .claude/*
 !.claude/skills/
 .claude/skills/*
 !.claude/skills/law-question-gen/
 !.claude/skills/experiment-loop/
+.agents/
+.gemini/
 data/questions/
 data/questions_test/
 data/questions_colloquial/

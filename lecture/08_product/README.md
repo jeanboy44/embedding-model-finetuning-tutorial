@@ -37,33 +37,36 @@ uv run python lecture/08_product/01_search_cli.py --run
 
 ## 2. 에이전트 스킬: CLI에 SKILL.md 하나를 붙인다
 
-Antigravity(agy), Gemini CLI, Claude Code는 스킬 폴더의 `SKILL.md`를 읽고, 법령 질문이 오면 우리 CLI로 조문을 찾아 근거와 함께 답한다. 스킬을 보고, 임시 폴더에 설치해 보고, 에이전트의 첫 검색을 두 모델로 재현한 뒤, 강사가 잰 실제 에이전트 비교(실험 010)를 읽는다(1분 안쪽).
+스킬은 별도의 서버 프로그램이나 실행 스크립트 없이, **`SKILL.md` 마크다운 파일 하나**만 에이전트 스킬 폴더에 두면 끝납니다.
+Antigravity(agy), Gemini CLI, Claude Code는 이 파일을 읽고, 법령 질문이 오면 우리 CLI(`ragkit-search`)로 조문을 찾아 근거와 함께 답합니다.
+
+스킬 파일: [`lecture/08_product/SKILL.md`](SKILL.md)
+
+### 스킬 내용 확인 및 설치
+
+스킬 내용을 확인하고, 내 에이전트 스킬 폴더에 설치합니다. 모든 프로젝트에서 쓰려면 `--user`(홈 폴더의 `.agents/skills/` · `.gemini/skills/` · `.claude/skills/`).
 
 ```shell
-uv run python lecture/08_product/02_agent_skill.py
-```
-
-내 에이전트에 설치한다. 모든 프로젝트에서 쓰려면 `--user`(홈 폴더의 `.agents/skills/` · `.gemini/skills/` · `.claude/skills/`).
-
-```shell
+# 1. 스킬 내용 보기
+cat lecture/08_product/SKILL.md
+# 또는
 uv run --package ragkit-search ragkit-search skill show
+
+# 2. 내 에이전트에 설치 (Antigravity / Gemini / Claude)
 uv run --package ragkit-search ragkit-search skill install --agent antigravity --user
 uv run --package ragkit-search ragkit-search skill install --agent gemini --user
 ```
 
-파인튜닝 모델로 검색하게 하려면 설치할 때 모델을 준다(같은 이름으로 다시 설치하면 덮어쓴다).
+파인튜닝 모델로 검색하게 하려면 설치할 때 모델을 줍니다 (명령어에 모델 옵션이 박힙니다).
 
 ```shell
 uv run --package ragkit-search ragkit-search skill install --agent antigravity --user --checkpoint models/finetuned/002_hard_negatives --backend torch
 ```
 
-그다음 `agy`, `gemini` 또는 `claude`를 새로 열고 묻는다: "편의점 알바도 주휴수당 받을 수 있는지 조문 근거로 알려줘".
+그다음 `agy`, `gemini` 또는 `claude`를 새로 열고 묻습니다:
+> "편의점 알바도 주휴수당 받을 수 있는지 조문 근거로 알려줘"
 
-선택: Antigravity CLI(`agy`) 또는 Claude Code가 설치·로그인돼 있으면 실제로 띄워 학습 전 vs 파인튜닝을 비교한다(질문당 30~60초, 사용량이 든다).
-
-```shell
-uv run python lecture/08_product/02_agent_skill.py --run
-```
+에이전트가 `SKILL.md`에 적힌 순서대로 우리 CLI(`ragkit-search search` → `show --article`)를 호출하여 근거 조문을 찾아 답변하는 것을 확인할 수 있습니다.
 
 ## 3. MCP 서버: 에이전트를 붙이는 두 번째 방법
 
@@ -106,7 +109,7 @@ uv run python lecture/08_product/extra_monitoring.py
 | 파일 | 내용 |
 |---|---|
 | `01_search_cli.py` | 검색 CLI(laws · search · show · ask · --json), uvx 배포(--run) |
-| `02_agent_skill.py` | 에이전트 스킬 보기 · 설치, 첫 검색 재현, 실험 010(Antigravity/Claude + 스킬, 학습 전 vs 파인튜닝) |
+| `SKILL.md` | 에이전트 스킬(SKILL.md 하나로 조문 검색 연동, 프롬프트 규약) |
 | `03_mcp_server.py` | MCP: 연결 → 도구 목록 → 호출, Antigravity/Claude 등록, CLI + 스킬과 비교 |
 | `04_web_app.py` | 웹 빌드와 API 서버 한 주소 배포 |
 | `extra_monitoring.py` | MLflow: 실험 비교 → 모델 레지스트리 → 서비스 트레이스 · 세션 |
