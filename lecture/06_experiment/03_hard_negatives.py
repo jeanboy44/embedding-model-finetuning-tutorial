@@ -21,7 +21,11 @@ import unicodedata
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-RUN = ROOT / "runs" / "001_hard_negatives"
+RUN = (
+    ROOT / "experiments" / "002_hard_negatives"
+    if (ROOT / "experiments" / "002_hard_negatives" / "03_run" / "decision.json").exists()
+    else ROOT / "experiments" / "archive" / "002_hard_negatives"
+)
 RUNS = RUN / "03_run"
 LECTURE_TABLE = (
     ROOT / "experiments" / "exp_010_lecture_comparison" / "results" / "comparison.md"
