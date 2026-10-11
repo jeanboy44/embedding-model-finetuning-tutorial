@@ -9,12 +9,15 @@
 """
 
 from pathlib import Path
+from typing import Any
 
 from ragkit.config import get_settings
 from ragkit.embeddings.prefix import format_passages, format_queries
 from ragkit.embeddings.profiles import ModelProfile, get_profile
+from ragkit.embeddings.types import EmbedFn
 
 __all__ = [
+    "EmbedFn",
     "ModelProfile",
     "choose_backend",
     "create_embedding_fn",
@@ -52,7 +55,7 @@ def create_embedding_fn(
     sort_by_length: bool | None = None,
     num_threads: int | None = None,
     onnx_providers: list[str] | None = None,
-):
+) -> EmbedFn:
     """모델을 로드하고 임베딩 생성 함수를 반환한다.
 
     팩토리 함수로, 모델 로드를 한 번만 수행하고 이후 호출에서 재사용한다.
@@ -107,7 +110,7 @@ def create_embedding_fn(
     raise ValueError(f"알 수 없는 임베딩 백엔드: {backend!r} (onnx | torch | st)")
 
 
-def __getattr__(name: str):
+def __getattr__(name: str) -> Any:
     # torch 백엔드 전용 함수는 쓰는 시점에만 torch를 import한다.
     if name in {"mean_pool", "generate_embeddings"}:
         from ragkit.embeddings import torch_backend

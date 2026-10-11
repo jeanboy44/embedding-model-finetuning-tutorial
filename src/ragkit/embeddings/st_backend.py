@@ -10,6 +10,7 @@ from pathlib import Path
 import numpy as np
 
 from ragkit.embeddings.profiles import ModelProfile
+from ragkit.embeddings.types import EmbedFn
 from ragkit.models.embedding_loader import resolve_device, resolve_model_source
 
 
@@ -18,7 +19,7 @@ def create_st_embedding_fn(
     profile: ModelProfile,
     checkpoint_path: Path | None = None,
     device: str | None = None,
-):
+) -> EmbedFn:
     """sentence-transformers로 모델을 로드하고 임베딩 생성 함수를 반환한다.
 
     Args:

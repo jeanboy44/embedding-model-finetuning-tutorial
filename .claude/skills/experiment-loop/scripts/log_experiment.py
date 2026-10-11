@@ -19,6 +19,7 @@ import json
 import os
 import subprocess
 from pathlib import Path
+from typing import Any
 
 import mlflow
 import yaml
@@ -70,7 +71,7 @@ def paired_metrics(result: dict | None, prefix: str) -> dict:
     return out
 
 
-def find_or_start(name: str, key: str, parent_id: str | None = None):
+def find_or_start(name: str, key: str, parent_id: str | None = None) -> Any:
     query = f"tags.loop_key = '{key}'"
     found = mlflow.search_runs(filter_string=query, max_results=1, output_format="list")
     if found:

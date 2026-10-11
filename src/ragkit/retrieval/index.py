@@ -21,9 +21,8 @@ import numpy as np
 import sqlite_vec
 from loguru import logger
 
+from ragkit.embeddings import EmbedFn
 from ragkit.embeddings.profiles import E5_STYLE
-
-EmbedFn = Callable[..., np.ndarray]
 
 DOC_COLUMNS = (
     "id", "parent_id", "title", "text", "theme", "law_name", "law_type", "category",

@@ -12,6 +12,7 @@ import onnxruntime as ort
 from tokenizers import Tokenizer
 
 from ragkit.embeddings.batching import embed_in_batches
+from ragkit.embeddings.types import EmbedFn
 
 MAX_LENGTH = 512
 
@@ -41,7 +42,7 @@ def create_onnx_embedding_fn(
     sort_by_length: bool = True,
     num_threads: int | None = None,
     providers: list[str] | None = None,
-):
+) -> EmbedFn:
     """ONNX 모델을 로드하고 임베딩 생성 함수를 반환한다.
 
     Args:

@@ -21,6 +21,7 @@ import tempfile
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
+from types import ModuleType
 from typing import Any
 
 from ragkit.config import get_settings
@@ -33,7 +34,7 @@ def enabled() -> bool:
     return bool(get_settings().mlflow_tracking_uri) and importlib.util.find_spec("mlflow") is not None
 
 
-def _mlflow(experiment: str | None = None):
+def _mlflow(experiment: str | None = None) -> ModuleType:
     """mlflow 모듈을 설정(주소·실험)한 뒤 돌려준다. 같은 설정이면 다시 하지 않는다."""
     global _configured
     import mlflow
@@ -58,7 +59,7 @@ def metric_name(name: str) -> str:
 class Run:
     """열린 run. MLflow가 꺼져 있으면 모든 메서드가 아무 일도 하지 않고 id는 None."""
 
-    def __init__(self, mlflow_module=None, run_id: str | None = None) -> None:
+    def __init__(self, mlflow_module: ModuleType | None = None, run_id: str | None = None) -> None:
         self._mlflow = mlflow_module
         self.id = run_id
 
@@ -141,7 +142,7 @@ def flat_metrics(result: dict, prefix: str = "") -> dict[str, float]:
 DATA_EXPERIMENT = "law-data"
 
 
-def _log_inputs(mlflow, refs: list, contexts: list[str]) -> None:
+def _log_inputs(mlflow: ModuleType, refs: list, contexts: list[str]) -> None:
     """DatasetRef를 MLflow 데이터셋(메타데이터만: 이름·digest·Drive 주소)으로 run 입력에 단다."""
     if not refs:
         return
@@ -149,7 +150,7 @@ def _log_inputs(mlflow, refs: list, contexts: list[str]) -> None:
     from mlflow.data.meta_dataset import MetaDataset
 
     mlflow.log_inputs(
-        datasets=[MetaDataset(HTTPDatasetSource(r.source), name=r.name, digest=r.digest) for r in refs],
+        datasets=[MetaDataset(HTTPDatasetSource(r.source), name=r.name, digest=r.digest) for r in refs],  # type: ignore[abstract]
         contexts=contexts,
         tags_list=[{"data_version": r.version} for r in refs],
     )
@@ -283,7 +284,7 @@ try:  # 레지스트리 저장용 빈 모델 (추론은 ragkit이 폴더를 직�
     import mlflow.pyfunc as _pyfunc
 
     class _ModelFolder(_pyfunc.PythonModel):
-        def predict(self, context, model_input: list[str], params=None) -> list[list[float]]:
+        def predict(self, context: Any, model_input: list[str], params: dict[str, Any] | None = None) -> list[list[float]]:
             raise NotImplementedError("ragkit.embeddings.create_embedding_fn(모델 폴더)로 쓴다")
 except ImportError:  # mlflow-tracing만 있거나 mlflow가 없을 때
     _ModelFolder = None  # type: ignore[assignment,misc]
@@ -295,11 +296,11 @@ except ImportError:  # mlflow-tracing만 있거나 mlflow가 없을 때
 class Span:
     """열린 스팬. MLflow가 꺼져 있으면 아무 일도 하지 않는다."""
 
-    def __init__(self, live=None) -> None:
+    def __init__(self, live: Any = None) -> None:
         self._live = live
 
     @property
-    def live(self):
+    def live(self) -> Any:
         return self._live
 
     def set_attributes(self, attributes: dict[str, Any]) -> None:

@@ -4,8 +4,11 @@ Searcher(모델·인덱스)는 첫 도구 호출 때 한 번 연다. 서버 시�
 """
 
 import threading
+from collections.abc import Callable
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, TypeVar
+
+T = TypeVar("T")
 
 import cyclopts
 from mcp.server.mcpserver import MCPServer
@@ -53,7 +56,7 @@ def set_searcher(searcher: Searcher | None) -> None:
     _searcher = searcher
 
 
-def _call(fn, *args, **kwargs):
+def _call(fn: Callable[..., T], *args: Any, **kwargs: Any) -> T:
     # 예상한 실패(모르는 법령·없는 id)는 메시지를 그대로 모델에게 보여 준다
     try:
         return fn(get_searcher(), *args, **kwargs)

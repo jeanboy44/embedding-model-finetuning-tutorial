@@ -7,7 +7,8 @@ torch/transformers는 함수 안에서 import한다. core 배포(ONNX)에서도
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from types import ModuleType
+from typing import TYPE_CHECKING, Any
 
 from ragkit.config import get_settings
 
@@ -38,7 +39,7 @@ def resolve_model_source(model_name: str) -> str:
     return model_name
 
 
-def _import_torch():
+def _import_torch() -> tuple[ModuleType, Any, Any]:
     try:
         import torch
         from transformers import AutoModel, AutoTokenizer
