@@ -47,11 +47,17 @@ def _peak_rss_mb_windows() -> float:
             ("PeakPagefileUsage", ctypes.c_size_t),
         ]
 
+    # 반환형·인자형을 지정하지 않으면 64비트 핸들이 32비트 int로 잘려 "핸들이 잘못되었습니다"가 난다.
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel32.GetCurrentProcess.restype = wintypes.HANDLE
+    psapi = ctypes.WinDLL("psapi", use_last_error=True)
+    psapi.GetProcessMemoryInfo.argtypes = [wintypes.HANDLE, ctypes.POINTER(ProcessMemoryCounters), wintypes.DWORD]
+    psapi.GetProcessMemoryInfo.restype = wintypes.BOOL
+
     counters = ProcessMemoryCounters()
     counters.cb = ctypes.sizeof(counters)
-    handle = ctypes.windll.kernel32.GetCurrentProcess()
-    if not ctypes.windll.psapi.GetProcessMemoryInfo(handle, ctypes.byref(counters), counters.cb):
-        raise ctypes.WinError()
+    if not psapi.GetProcessMemoryInfo(kernel32.GetCurrentProcess(), ctypes.byref(counters), counters.cb):
+        raise ctypes.WinError(ctypes.get_last_error())
     return counters.PeakWorkingSetSize / 1e6
 
 
