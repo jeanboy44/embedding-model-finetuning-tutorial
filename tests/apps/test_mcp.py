@@ -8,6 +8,8 @@ from mcp.server.mcpserver.exceptions import ToolError
 from ragkit_mcp import server as mcp_server
 from ragkit_mcp import tools
 
+from ragkit.service import NO_LLM_MESSAGE
+
 
 def test_search_laws_returns_pieces(searcher) -> None:
     hits = tools.search_laws(searcher, "휴일", k=2)
@@ -43,7 +45,7 @@ def test_ask_with_and_without_llm(searcher, searcher_without_llm) -> None:
     assert [s["n"] for s in result["sources"]] == [1, 2]
 
     result = tools.ask(searcher_without_llm, "휴일")
-    assert result["answer"] == "" and "GEMINI_API_KEY" in result["error"]
+    assert result["answer"] == "" and result["error"] == NO_LLM_MESSAGE
     assert result["sources"][0] == {"n": 1, "id": "제55조", "title": "근로기준법 제55조"}
 
 

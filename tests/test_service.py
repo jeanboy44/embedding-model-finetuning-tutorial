@@ -8,7 +8,7 @@ import pytest
 
 from ragkit.models import Generation
 from ragkit.retrieval import build_index
-from ragkit.service import DeltaEvent, DoneEvent, HitsEvent, Searcher
+from ragkit.service import NO_LLM_MESSAGE, DeltaEvent, DoneEvent, HitsEvent, Searcher
 
 
 def _embed(texts: list[str], batch_size: int = 32) -> np.ndarray:
@@ -110,7 +110,7 @@ def test_answer_stream_without_llm_returns_hits_and_error(index) -> None:
     events = list(searcher.answer_stream("휴일"))
 
     assert isinstance(events[0], HitsEvent)
-    assert isinstance(events[1], DoneEvent) and "GEMINI_API_KEY" in events[1].error
+    assert isinstance(events[1], DoneEvent) and events[1].error == NO_LLM_MESSAGE
 
 
 def test_answer_stream_llm_failure_keeps_partial_answer(index) -> None:

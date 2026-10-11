@@ -8,6 +8,8 @@ from fastapi.testclient import TestClient
 from ragkit_api import create_app
 from ragkit_api.store import NotebookStore
 
+from ragkit.service import NO_LLM_MESSAGE
+
 
 def parse_sse(body: str) -> list[tuple[str, dict]]:
     events = []
@@ -79,7 +81,7 @@ def test_answer_without_llm_reports_error(searcher_without_llm, tmp_path: Path) 
     with TestClient(app) as c:
         body = c.post("/api/answer", json={"query": "휴일"}).json()
 
-    assert body["answer"] == "" and "GEMINI_API_KEY" in body["error"] and body["hits"]
+    assert body["answer"] == "" and body["error"] == NO_LLM_MESSAGE and body["hits"]
 
 
 def test_notebook_crud(client: TestClient) -> None:

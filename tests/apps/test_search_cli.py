@@ -6,6 +6,8 @@ import pytest
 from ragkit_search import cli
 from ragkit_search.cli import app
 
+from ragkit.service import NO_LLM_MESSAGE
+
 
 @pytest.fixture
 def run(monkeypatch, capsys):
@@ -64,7 +66,7 @@ def test_ask_without_llm_prints_sources_and_error(run, searcher_without_llm) -> 
     code, out, err = run(["ask", "휴일"], searcher_without_llm)
     assert code == 1
     assert "근거 조문:" in out and "[1] 근로기준법 제55조 (제55조)" in out
-    assert "GEMINI_API_KEY" in err
+    assert NO_LLM_MESSAGE in err
 
 
 def test_laws_theme_and_json(run, searcher) -> None:
