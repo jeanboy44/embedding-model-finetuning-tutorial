@@ -27,7 +27,6 @@
     uv run python lecture/08_product/02_agent_skill.py --run --questions 10   # 실험 010과 같은 설정
 """
 
-import argparse
 import json
 import os
 import random
@@ -37,6 +36,10 @@ import sys
 import tempfile
 import time
 from pathlib import Path
+
+import cyclopts
+from cyclopts import Parameter
+from pydantic import BaseModel, Field
 
 ROOT = Path(__file__).resolve().parents[2]
 ENV = {**os.environ, "MLFLOW_DISABLE_AGENT_HINT": "1"}
@@ -51,11 +54,21 @@ RECEIVED = ROOT / "experiments" / "010_agent_skill" / "results" / "comparison.md
 OUT = ROOT / "experiments" / "results" / "lecture" / "08_product"
 SEED = 7  # 실험 010과 같은 질문을 고른다
 
-parser = argparse.ArgumentParser(description="실습 4-2: 에이전트 스킬")
-parser.add_argument("--run", action="store_true", help="Claude Code로 실제 비교 (비용이 든다)")
-parser.add_argument("--questions", type=int, default=2, help="--run에서 물을 test 질문 수")
-parser.add_argument("--out", type=Path, default=OUT, help="--run 결과 폴더")
-args = parser.parse_args()
+@Parameter(name="*")
+class Options(BaseModel):
+    run: bool = Field(False, description="Claude Code로 실제 비교 (비용이 든다)")
+    questions: int = Field(2, ge=1, description="--run에서 물을 test 질문 수")
+    out: Path = Field(OUT, description="--run 결과 폴더")
+
+
+def cli(*, options: Options | None = None) -> Options:
+    """실습 4-2: 에이전트 스킬"""
+    return options or Options()
+
+
+args = cyclopts.run(cli, result_action="return_value")
+if args is None:  # --help
+    sys.exit(0)
 
 
 def section(title: str) -> None:

@@ -32,7 +32,10 @@ import time
 import unicodedata
 from pathlib import Path
 
+import cyclopts
+from cyclopts import Parameter
 from fastapi.testclient import TestClient
+from pydantic import BaseModel, Field
 from ragkit_api.app import create_app
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -41,6 +44,24 @@ TEST = ROOT / "data" / "splits" / "test.jsonl"
 MODELS = ROOT / "models"
 RUN_QUESTIONS = 200  # --run에서 쓸 test 질문 수
 SEARCH_REPEAT = 20
+
+
+@Parameter(name="*")
+class Options(BaseModel):
+    run: bool = Field(
+        False,
+        description=f"test 질문 앞 {RUN_QUESTIONS}개로 ragkit-bench를 직접 돌린다",
+    )
+
+
+def cli(*, options: Options | None = None) -> Options:
+    """실습 3-3: 원본 / ONNX / INT8 / 가지치기+INT8 비교표, 그리고 API에 적용"""
+    return options or Options()
+
+
+args = cyclopts.run(cli, result_action="return_value")
+if args is None:  # --help
+    sys.exit(0)
 
 
 def section(title: str) -> None:
@@ -99,7 +120,7 @@ def run_bench_subset(out_dir: Path) -> Path:
 # ============================================================
 section("1. ragkit-bench 결과")
 with tempfile.TemporaryDirectory() as tmp:
-    if "--run" in sys.argv:
+    if args.run:
         if not TEST.exists():
             sys.exit(f"{TEST}가 없습니다. Drive에서 data/splits/를 받으세요.")
         results = run_bench_subset(Path(tmp))

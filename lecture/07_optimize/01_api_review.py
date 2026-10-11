@@ -29,6 +29,7 @@ import json
 import sys
 import tempfile
 import time
+from collections.abc import Iterable
 from pathlib import Path
 
 from fastapi.testclient import TestClient
@@ -46,7 +47,7 @@ def section(title: str) -> None:
     print("=" * 60)
 
 
-def read_sse(lines) -> list[tuple[str, dict]]:
+def read_sse(lines: Iterable[str]) -> list[tuple[str, dict]]:
     """SSE 줄 스트림을 (event, data) 목록으로 모은다. 조각이 올 때마다 바로 출력한다."""
     events, event = [], None
     for line in lines:

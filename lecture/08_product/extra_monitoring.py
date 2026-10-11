@@ -44,6 +44,10 @@ import time
 import urllib.request
 from pathlib import Path
 
+import cyclopts
+from cyclopts import Parameter
+from pydantic import BaseModel, Field
+
 if importlib.util.find_spec("mlflow") is None:
     sys.exit(
         "mlflow가 설치되어 있지 않습니다. 먼저 설치하세요:\n  uv sync --extra mlflow"
@@ -57,7 +61,24 @@ TRACKING_URI = f"http://127.0.0.1:{MLFLOW_PORT}"
 MODEL_DIR = ROOT / "models" / "multilingual-e5-small-pruned-int8"
 REGISTRY_URI = "models:/law-embedder@champion"
 TEST = ROOT / "data" / "splits" / "test.jsonl"
-CHECK = "--check" in sys.argv
+
+
+@Parameter(name="*")
+class Options(BaseModel):
+    check: bool = Field(
+        False, description="확인만 하고 종료 (bench는 test 질문 100개로, 약 90초)"
+    )
+
+
+def cli(*, options: Options | None = None) -> Options:
+    """실습 4 선택: 모니터링 — MLflow 3로 실험·모델·서비스를 한곳에서 본다"""
+    return options or Options()
+
+
+args = cyclopts.run(cli, result_action="return_value")
+if args is None:  # --help
+    sys.exit(0)
+CHECK = args.check
 CHECK_QUESTIONS = 100  # --check에서 bench에 쓸 test 질문 수
 
 # 이 스크립트가 띄우는 모든 프로세스(ragkit·ragkit-bench·ragkit-api)가 같은 MLflow 서버에 기록한다

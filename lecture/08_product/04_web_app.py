@@ -37,9 +37,29 @@ import time
 import urllib.request
 from pathlib import Path
 
+import cyclopts
+from cyclopts import Parameter
+from pydantic import BaseModel, Field
+
 ROOT = Path(__file__).resolve().parents[2]
 WEB = ROOT / "apps" / "web"
 PORT = 8765
+
+
+@Parameter(name="*")
+class Options(BaseModel):
+    run: bool = Field(False, description="apps/web/dist가 있어도 pnpm build를 다시 한다")
+    check: bool = Field(False, description="서버를 띄워 확인만 하고 바로 끝낸다 (브라우저 안내 생략)")
+
+
+def cli(*, options: Options | None = None) -> Options:
+    """실습 4-4: 웹 검색 데모"""
+    return options or Options()
+
+
+args = cyclopts.run(cli, result_action="return_value")
+if args is None:  # --help
+    sys.exit(0)
 
 
 def section(title: str) -> None:
@@ -57,7 +77,7 @@ def get(path: str) -> tuple[int, str]:
 # 1. 화면 빌드 (정적 파일: html·js·css)
 # ============================================================
 section("1. pnpm build → apps/web/dist")
-if "--run" in sys.argv or not (WEB / "dist" / "index.html").exists():
+if args.run or not (WEB / "dist" / "index.html").exists():
     if not shutil.which("pnpm"):
         sys.exit(
             "pnpm이 없습니다: corepack enable (Node.js 20+). 또는 Drive에서 받은 apps/web/dist를 쓰세요."
@@ -115,7 +135,7 @@ try:
         f"GET /notebooks/… → {status} (화면 경로도 index.html로 → React Router가 처리)"
     )
 
-    if "--check" in sys.argv:
+    if args.check:
         print("\n확인 완료 (--check).")
     else:
         section("3. 브라우저로 접속")
