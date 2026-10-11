@@ -84,7 +84,9 @@ def find_or_start(name: str, key: str, parent_id: str | None = None) -> Any:
 
 def git_commit() -> str:
     try:
-        return subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
+        return subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True, check=False
+        ).stdout.strip()
     except OSError:
         return ""
 

@@ -3,7 +3,7 @@
 import hashlib
 import json
 import random
-from datetime import datetime
+from datetime import datetime, timezone
 from math import comb
 from pathlib import Path
 
@@ -15,7 +15,7 @@ K = 5
 
 
 def now() -> str:
-    return datetime.now().strftime("%Y-%m-%d %H:%M")
+    return datetime.now(timezone.utc).astimezone().strftime("%Y-%m-%d %H:%M")
 
 
 def qid(row: dict) -> str:

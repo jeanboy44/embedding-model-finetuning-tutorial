@@ -8,8 +8,6 @@ import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
-import numpy as np
-
 from ragkit.embeddings import EmbedFn
 from ragkit.embeddings.profiles import E5_STYLE
 from ragkit.models import Generation, generate_with_usage

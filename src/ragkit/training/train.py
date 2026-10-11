@@ -29,7 +29,12 @@ if TYPE_CHECKING:
     from sentence_transformers.sentence_transformer.evaluation import (
         InformationRetrievalEvaluator,
     )
-    from transformers import TrainerCallback, TrainerControl, TrainerState, TrainingArguments
+    from transformers import (
+        TrainerCallback,
+        TrainerControl,
+        TrainerState,
+        TrainingArguments,
+    )
 
 INSTALL_HINT = "학습에는 [train] extra가 필요합니다: uv sync --extra train"
 # epoch 선택 기준. InformationRetrievalEvaluator(name="dev")가 내는 이름이다.

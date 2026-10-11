@@ -23,7 +23,17 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from loop_lib import MLFLOW_URI, ROOT, SPLITS, append, make_dev_ab, now, recall, subset_eval, subset_qids  # noqa: E402
+from loop_lib import (
+    MLFLOW_URI,
+    ROOT,
+    SPLITS,
+    append,
+    make_dev_ab,
+    now,
+    recall,
+    subset_eval,
+    subset_qids,
+)
 
 FIELDS = ["run", "status", "start", "end", "control", "model_dir", "train_args"]
 
@@ -43,8 +53,9 @@ def save_queue(path: Path, rows: list[dict]) -> None:
 def sh(cmd: str, log: Path, env: dict) -> int:
     with log.open("a", encoding="utf-8") as f:
         f.write(f"\n$ {cmd}\n")
-        f.flush()
-        return subprocess.run(cmd, shell=True, cwd=ROOT, stdout=f, stderr=subprocess.STDOUT, env=env).returncode
+        return subprocess.run(
+            cmd, shell=True, cwd=ROOT, stdout=f, stderr=subprocess.STDOUT, env=env, check=False
+        ).returncode
 
 
 def main() -> None:

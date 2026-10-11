@@ -117,7 +117,7 @@ def main() -> None:
     # 2. 질문: test 질문 ↔ train 질문 (학습 전 e5, query 앞 문구)
     profile = get_profile(MODEL)
     embed = create_embedding_fn(MODEL)
-    q_emb = lambda rows: np.asarray(  # noqa: E731
+    q_emb = lambda rows: np.asarray(
         embed([profile.format_query(q["query"]) for q in rows]), dtype=np.float32
     )
     q_near = nearest(q_emb(test), q_emb(train), [q["query"] for q in test], [q["query"] for q in train])
