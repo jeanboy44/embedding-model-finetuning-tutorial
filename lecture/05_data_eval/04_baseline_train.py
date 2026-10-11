@@ -313,7 +313,7 @@ if not args.run:
         f"  [dim]uv run python lecture/05_data_eval/04_baseline_train.py --run[/]   # {RUN_STEPS} step만 (모델 로드 포함 2~3분)"
     )
     console.print(
-        f"  전체 학습은 [dim]uv run ragkit train {escape(rel(CONFIG))} --splits {escape(rel(SPLITS))}[/] (M4 Pro 39분)"
+        f"  전체 학습은 [dim]uv run ragkit train {escape(rel(CONFIG))} --splits {escape(rel(SPLITS))} --output-dir models/finetuned/my_001[/] (M4 Pro 39분, 받은 모델을 덮어쓰지 않게 출력 폴더를 바꾼다)"
     )
     console.print("다음(6교시): 기본 실험 001을 판정하고 오답을 쪼개 다음 가설을 찾는다")
     raise SystemExit(0)

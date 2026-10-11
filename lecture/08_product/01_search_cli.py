@@ -198,7 +198,8 @@ else:
 
 console.print()
 console.print("동료에게 줄 명령 (저장소 경로만 바꾸면 된다):")
-console.print(f"[dim]  export RAGKIT_PROJECT_ROOT={escape(str(ROOT))}[/]", soft_wrap=True)
+console.print(f"[dim]  export RAGKIT_PROJECT_ROOT={escape(str(ROOT))}            # macOS · Linux[/]", soft_wrap=True)
+console.print(f'[dim]  $env:RAGKIT_PROJECT_ROOT="{escape(str(ROOT))}"   # Windows PowerShell[/]', soft_wrap=True)
 console.print(
     f'[dim]  uvx --from {escape(str(ROOT))}/apps/search-cli ragkit-search search "야간 근로 수당"[/]',
     soft_wrap=True,

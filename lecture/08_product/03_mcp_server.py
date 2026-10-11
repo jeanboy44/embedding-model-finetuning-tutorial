@@ -184,11 +184,10 @@ console.print(
 
 [방법 B] 내 컴퓨터에서 직접 프로세스를 띄우는 경우 (로컬 stdio):
   Antigravity CLI (agy):
-    agy mcp add --env RAGKIT_PROJECT_ROOT={ROOT} ragkit-law $(which uv) run --directory {ROOT} --package ragkit-mcp ragkit-mcp
+    agy mcp add --env RAGKIT_PROJECT_ROOT={ROOT} ragkit-law {UV_BIN} run --directory {ROOT} --package ragkit-mcp ragkit-mcp
 
 Claude Code:
-  claude mcp add ragkit-law -e RAGKIT_PROJECT_ROOT={ROOT} -- \\
-    $(which uv) run --directory {ROOT} --package ragkit-mcp ragkit-mcp
+  claude mcp add ragkit-law -e RAGKIT_PROJECT_ROOT={ROOT} -- {UV_BIN} run --directory {ROOT} --package ragkit-mcp ragkit-mcp
 
 Claude Desktop / Antigravity IDE (mcp_config.json):
   "ragkit-law": {{

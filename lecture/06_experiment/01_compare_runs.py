@@ -32,6 +32,7 @@
 import json
 import os
 import random
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -338,9 +339,13 @@ if args.run:
         f"  [yellow]표본 {RUN_SAMPLE}개라 신뢰구간이 전체 test보다 넓다. 같은 차이도 표본이 작으면 확신할 수 없다[/]"
     )
 
-console.print(
-    f"\n결과 폴더: [dim]{escape(rel(out_dir))}[/] (모델별 JSON의 per_question = 질문별 순위·top-10)"
-)
+if args.run:
+    shutil.rmtree(tmp, ignore_errors=True)  # 표본 결과는 임시 폴더에만 두고 지운다
+    console.print("\n임시 폴더는 지웠다. 받은 결과와 기본 모드 결과는 바뀌지 않았다.")
+else:
+    console.print(
+        f"\n결과 폴더: [dim]{escape(rel(out_dir))}[/] (모델별 JSON의 per_question = 질문별 순위·top-10)"
+    )
 console.print(
     "다음: 02_error_analysis.py — 어디서 올랐고, 무엇이 여전히 틀리고, 우리가 준 오답은 어땠나"
 )

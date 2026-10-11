@@ -49,29 +49,22 @@ uv run python lecture/08_product/01_search_cli.py --run
 
 ## 2. 에이전트 스킬: CLI에 SKILL.md 하나를 붙인다
 
-스킬 추가는 별도의 복잡한 설치 과정 없이, **Gemini CLI에 접속한 뒤 `SKILL.md` 파일 경로를 던져주고 "스킬로 등록해"라고 말하면 끝납니다.**
+1절의 CLI에 사용 설명서 `SKILL.md` 한 파일을 붙이면 셸을 쓰는 코딩 에이전트(Antigravity `agy` · Gemini CLI · Claude Code)가 법령 질문에 이 CLI를 부른다. 스킬 내용은 [`lecture/08_product/SKILL.md`](SKILL.md)에서 본다.
 
-스킬 파일: [`lecture/08_product/SKILL.md`](SKILL.md)
+등록은 CLI 명령 하나다. 에이전트의 스킬 폴더에 `SKILL.md`를 쓰고, 다른 폴더에서 불러도 돌도록 이 저장소 경로(`uv run --directory …`)를 명령에 넣는다. `--agent`는 `antigravity`(기본) · `gemini` · `claude`, `--user`면 모든 프로젝트에서 쓰인다.
 
-### 스킬 등록 및 사용 방법
+```shell
+uv run --package ragkit-search ragkit-search skill show                       # 설치할 내용 미리 보기
+uv run --package ragkit-search ragkit-search skill install --agent gemini --user
+```
 
-1. **Gemini CLI** (또는 Antigravity `agy`)를 실행합니다:
-   ```shell
-   gemini
-   # 또는
-   agy
-   ```
+`lecture/08_product/SKILL.md`를 손으로 복사하면 명령에 저장소 경로가 없어 이 저장소 밖에서는 돌지 않는다. 에이전트에게 "이 파일 보고 스킬로 등록해"라고 맡길 때도 위 명령을 쓰게 한다.
 
-2. 에이전트에게 파일 경로와 함께 스킬 등록을 요청합니다:
-   > "`lecture/08_product/SKILL.md` 파일 보고 스킬로 등록해"
+등록한 뒤 에이전트(`gemini`, `agy` 등)를 열고 묻는다.
 
-   에이전트가 마크다운을 확인하고 자신의 스킬 디렉터리(`~/.gemini/skills/` 또는 `.agents/skills/`)에 자동으로 등록합니다.
-   *(참고: CLI 명령어 `uv run --package ragkit-search ragkit-search skill install --agent gemini --user`로도 등록 가능)*
+> "편의점 알바도 주휴수당 받을 수 있는지 조문 근거로 알려줘"
 
-3. 등록 후 에이전트에게 법령 질문을 던집니다:
-   > "편의점 알바도 주휴수당 받을 수 있는지 조문 근거로 알려줘"
-
-에이전트가 `SKILL.md`에 적힌 순서대로 우리 CLI(`ragkit-search search` → `show --article`)를 호출하여 근거 조문을 찾아 답변하는 것을 확인할 수 있습니다.
+에이전트가 `SKILL.md`에 적힌 순서대로 `ragkit-search search` → `show --article`을 불러 근거 조문을 찾고, 그 조문으로 답한다.
 
 ## 3. MCP 서버: 에이전트를 붙이는 두 번째 방법
 
@@ -90,27 +83,23 @@ uv run python lecture/08_product/03_mcp_server.py
 
 ### Antigravity CLI (`agy`) 등록 및 사용 예시
 
-1. **MCP 서버 등록**:
-   저장소 루트에서 다음 명령을 실행합니다:
-   ```shell
-   agy mcp add --env RAGKIT_PROJECT_ROOT=$(pwd) ragkit-law $(which uv) run --directory $(pwd) --package ragkit-mcp ragkit-mcp
-   ```
+1. **MCP 서버 등록.** 위 스크립트 4단계 "[방법 B]"가 출력한 `agy mcp add …` 줄을 그대로 복사해 실행한다. 이 컴퓨터의 저장소 경로와 `uv` 경로가 들어 있어 macOS와 Windows PowerShell에서 같은 줄이 돈다.
 
-2. **등록 상태 확인**:
+2. **등록 상태 확인.**
    ```shell
    agy mcp list
    ```
-   `ragkit-law`가 `stdio`, `enabled` 상태로 목록에 나타나는지 확인합니다.
+   `ragkit-law`가 `stdio`, `enabled` 상태로 목록에 나타나는지 본다.
 
-3. **에이전트에게 질문하기**:
-   `agy` 세션에서 별도의 슬래시 명령어 없이 자연어로 질문합니다:
-   > "주휴수당 지급 기준에 관한 근로기준법 조항 찾아줘"  
+3. **에이전트에게 묻기.** `agy` 세션에서 슬래시 명령 없이 자연어로 묻는다.
+   > "주휴수당 지급 기준에 관한 근로기준법 조항 찾아줘"
+   >
    > "편의점 알바도 주휴수당 받을 수 있는지 법 조문 근거로 알려줘"
 
-   에이전트가 질문을 분석하여 `ragkit-law` MCP 서버의 도구(`search_laws`, `get_article` 등)를 스스로 호출해 근거 조문을 찾아 답변합니다.
+   에이전트가 질문을 보고 `ragkit-law` MCP 서버의 도구(`search_laws`, `get_article` 등)를 스스로 불러 근거 조문을 찾는다.
 
 > [!TIP]
-> **MCP vs 슬래시 명령어**: MCP 서버는 슬래시 명령어(`/<이름>`)나 쉘 명령어가 아니라, 에이전트가 백그라운드에서 호출하는 **도구(Tools)**입니다. 따라서 `/ragkit-law`를 입력할 필요 없이 위와 같이 자연어로 바로 질문하시면 됩니다.
+> **MCP vs 슬래시 명령.** MCP 서버는 슬래시 명령(`/<이름>`)이나 셸 명령이 아니라 에이전트가 뒤에서 부르는 **도구(Tools)**다. `/ragkit-law`를 칠 필요 없이 위처럼 자연어로 묻는다.
 
 
 ## 4. 웹 화면: 검색 API 서버가 HTML 한 장을 함께 준다

@@ -33,6 +33,7 @@
 import json
 import os
 import random
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -323,7 +324,7 @@ else:
 # --run: test 300개 표본과 복수 정답 판정이 있는 dev 질문(81개)을 임시 분할 폴더에 써서 직접 평가한다.
 if args.run:
     section(f"4. --run: 질문 {RUN_SAMPLE}개로 직접 평가")
-    tmp = Path(tempfile.mkdtemp(prefix="lecture-02-1-"))  # 결과와 임시 분할을 둘 곳
+    tmp = Path(tempfile.mkdtemp(prefix="lecture-05-3-"))  # 결과와 임시 분할을 둘 곳
     rng = random.Random(SEED)  # 표본도 seed 42로 뽑아 누가 돌려도 같은 300개
     labeled = {question_key(q) for q in splits["dev"]} & (
         set(load_labels(LABELS)) if LABELS.exists() else set()
@@ -459,9 +460,13 @@ for row in random.Random(SEED).sample(misses, min(3, len(misses))):  # 항상 �
         highlight=False,
     )
     console.print(f"      1위  {escape(top1)}", highlight=False)
-console.print(
-    f"\n[dim]결과 JSON: {escape(rel(out))} (질문별 순위·top-10은 per_question)[/]"
-)
+if args.run:
+    shutil.rmtree(tmp, ignore_errors=True)  # 표본 결과는 임시 폴더에만 두고 지운다
+    console.print("\n[dim]임시 폴더는 지웠다. 기본 모드 결과는 바뀌지 않았다.[/]")
+else:
+    console.print(
+        f"\n[dim]결과 JSON: {escape(rel(out))} (질문별 순위·top-10은 per_question)[/]"
+    )
 console.print(
     "다음: 04_baseline_train.py — 작은 모델을 한 번 학습하면 얼마나 오르나 (001: test R@5 0.545 → 0.744)"
 )

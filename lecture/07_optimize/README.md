@@ -34,7 +34,7 @@ uv run python lecture/07_optimize/01_api_review.py
 
 ## 2. 모델 줄이기: ONNX → INT8 → 어휘 가지치기
 
-배포용 모델 세 개를 직접 만든다. 각 명령은 수 초~수십 초다.
+배포용 모델 세 개를 직접 만든다. 각 명령은 수 초~수십 초다. 출력 폴더는 3교시에 받은 모델과 같아서, 같은 방법으로 다시 만들어 덮어쓴다.
 
 ```shell
 uv run ragkit export-onnx models/multilingual-e5-small
@@ -71,7 +71,7 @@ uv run python lecture/07_optimize/02_onnx_quantize_prune.py --run
 
 ## 3. 비교표와 API에 적용
 
-새 모델로 검색하려면 그 모델로 만든 인덱스가 필요하다. 모델마다 코퍼스 2.6만 문서를 임베딩하므로 몇 분씩 걸린다(쉬는 시간 전에 걸어 둔다).
+새 모델로 검색하려면 그 모델로 만든 인덱스가 필요하다. 3교시 `--fix`로 받았으면 이미 있어 아래 명령은 바로 끝난다. 없으면 모델마다 코퍼스 2.6만 문서를 임베딩하므로 몇 분씩 걸린다(쉬는 시간 전에 걸어 둔다).
 
 ```shell
 uv run ragkit index --model models/multilingual-e5-small-int8

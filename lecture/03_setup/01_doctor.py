@@ -305,7 +305,7 @@ def smoke_checks() -> list[Check]:
         except Exception as e:  # noqa: BLE001 — 어떤 이유든 그대로 보여 준다
             detail = f"{type(e).__name__}: {str(e).splitlines()[0][:60]}"
             checks.append(
-                Check(name, False, detail, "위의 모델 · 인덱스를 먼저 채운다", periods)
+                Check(name, False, detail, "위 명령으로 모델 · 인덱스를 받은 뒤에도 이 줄이 남으면 상세의 오류를 본다", periods)
             )
             continue
         took = time.perf_counter() - start
