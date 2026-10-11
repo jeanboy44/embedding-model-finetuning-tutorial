@@ -62,7 +62,7 @@ ragkit-search skill install --agent antigravity --checkpoint models/finetuned/00
 
 설치한 SKILL.md에는 이 저장소 환경으로 CLI를 부르는 명령(`uv run --directory <저장소> --package ragkit-search ragkit-search`)과
 모델 옵션이 박힌다. 다른 실행 방법을 쓰려면 `--command`로 바꾼다 (예: `--command ragkit-search`).
-에이전트를 새로 연 뒤 법령 질문을 하면 스킬이 켜진다. 실습은 `lecture/08_product/02_agent_skill.py`.
+에이전트를 새로 연 뒤 법령 질문을 하면 스킬이 켜진다. 실습 가이드는 `lecture/08_product/README.md` 및 `SKILL.md`.
 
 ## 오류
 

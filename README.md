@@ -46,7 +46,7 @@ LLM 단계(답변 생성)는 `.env`에 `GEMINI_API_KEY`가 필요합니다. [Goo
 
 ## 실습 스크립트
 
-모두 저장소 루트에서 `uv run python <파일>`로 실행합니다. 기본은 받은 산출물로 확인하고, `--run`을 주면 작은 부분집합으로 직접 실행합니다.
+실습 스크립트는 모두 저장소 루트에서 실행합니다(파이썬 스크립트는 `uv run python <파일>`, 에이전트 스킬은 `SKILL.md` 확인/설치, 데스크톱은 HTML 파일 열기). 기본은 받은 산출물로 확인하고, `--run`을 주면 작은 부분집합으로 직접 실행합니다.
 
 | 실습 (교시) | 파일 | 내용 |
 |---|---|---|
@@ -87,8 +87,9 @@ uv run --package ragkit-api ragkit-api --web-dist apps/web/dist                 
 
 # 제품 (4단계)
 uv run --package ragkit-search ragkit-search search "야간 근로 수당" --law 근로기준법
-uv run --package ragkit-mcp ragkit-mcp                      # Antigravity·Claude 등록은 apps/mcp/README.md
-cd apps/web && pnpm install && pnpm dev                     # 개발 모드 (api를 먼저 띄운다)
+uv run --package ragkit-search ragkit-search skill install --agent antigravity --user       # 에이전트 스킬 등록 (Gemini/Claude도 지원)
+uv run --package ragkit-mcp ragkit-mcp                                                      # MCP 서버 (Antigravity·Claude 등록은 apps/mcp/README.md)
+cd apps/web && pnpm install && pnpm dev                                                     # 개발 모드 (api를 먼저 띄운다)
 
 # MLflow (4단계): .env에 MLFLOW_TRACKING_URI가 있으면 train·evaluate·compare·bench가 run을,
 # api·search-cli·mcp가 질문마다 트레이스를 남긴다 (없으면 아무것도 기록하지 않음)
@@ -113,8 +114,8 @@ train·evaluate·compare run에는 입력 파일과 내용이 같은 버전이 �
 | [`apps/api`](apps/api) | `/api/search`, `/api/answer(/stream)`, `/api/notebooks/...` |
 | [`apps/bench`](apps/bench) | `ragkit-bench run`: 지연·처리량·메모리·모델/설치 크기·Recall |
 | [`apps/web`](apps/web/README.md) | 노트북 = 법령 묶음, 인용 달린 답, 조문 보기, 노트 |
-| [`apps/search-cli`](apps/search-cli/README.md) | `search` · `ask` · `laws` · `show` · `skill install`(에이전트 스킬) |
-| [`apps/mcp`](apps/mcp/README.md) | `search_laws` · `get_article` · `list_laws` · `ask` |
+| [`apps/search-cli`](apps/search-cli/README.md) | `search` · `ask` · `laws` · `show` · `skill`(에이전트 스킬: Antigravity · Gemini · Claude) |
+| [`apps/mcp`](apps/mcp/README.md) | `search_laws` · `get_article` · `list_laws` · `ask` (MCP 서버: Antigravity · Claude) |
 | [`apps/offline-search`](apps/offline-search/README.md) | 설치·서버·인터넷 없이 여는 HTML 한 파일: 30MB 파인튜닝 모델 + 조문 벡터 + 원문 (3교시에 최종 목표로 소개) |
 
 ## 저장소 구조
