@@ -72,6 +72,13 @@ uv run --package ragkit-api ragkit-api --model models/multilingual-e5-small-prun
 
 8000번 포트를 다른 프로그램이 쓰고 있으면 `--port 8010`처럼 바꾼다.
 
+서버가 뜬 상태에서 **새 터미널(PowerShell) 창을 열고** API 동작을 확인한다(macOS는 `curl.exe` 대신 `curl`):
+
+```shell
+curl.exe http://127.0.0.1:8000/api/health
+curl.exe -X POST http://127.0.0.1:8000/api/search -H "Content-Type: application/json" -d "{\"query\": \"야간 근로 수당\", \"k\": 3}"
+```
+
 ## 선택: 임베딩 속도 옵션
 
 장치(CPU·GPU), 길이순 배치, 스레드 수에 따라 인덱싱 속도가 어떻게 달라지는지 잰다(약 2분).
