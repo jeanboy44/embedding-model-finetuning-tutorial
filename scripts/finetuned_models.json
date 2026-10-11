@@ -4,11 +4,11 @@
     "002_hard_negatives": {
       "file": "finetuned-002_hard_negatives.zip",
       "model_dir": "models/finetuned/002_hard_negatives",
-      "index": "data/processed/index/002_hard_negatives-20261002120228.sqlite",
-      "model_key": "002_hard_negatives-20261002120228",
-      "weights_mtime": 1790942548.600959,
-      "sha256": "138c145c477f9cc6891dacb181c2da6c6a842a94db7ac172af8ba55603854822",
-      "size_mb": 358.5,
+      "index": "data/processed/index/002_hard_negatives-20261011065719.sqlite",
+      "model_key": "002_hard_negatives-20261011065719",
+      "weights_mtime": 1791701839.4970188,
+      "sha256": "97842bafd5aa3ff447aade34a4307063c05bb481f43be13c2b0166ac0e2b4fcd",
+      "size_mb": 358.6,
       "file_id": "1SUklmNdo460WA1SIJOfreHd1kACKwZUi"
     },
     "001_baseline": {
@@ -66,6 +66,15 @@
       "sha256": "011c3820ddcabde282f99869b881e04ad9c2332575affb7a3a9dd9377a0c6566",
       "size_mb": 340.4,
       "file_id": "1c-O8xfPgB3RZbR4e-YQ_KWEhHm9cfzKI"
+    },
+    "results_001_baseline": {
+      "file": "files-results_001_baseline.zip",
+      "paths": [
+        "experiments/results/001_baseline"
+      ],
+      "sha256": "411e410f6f4ab46e09698f7e30a36d05be3b44452ad55ce4ce37b565116832bf",
+      "size_mb": 0.7,
+      "file_id": "1xlmtR_y_13MSDGEr50w0u34xi91NF_dv"
     }
   }
 }
