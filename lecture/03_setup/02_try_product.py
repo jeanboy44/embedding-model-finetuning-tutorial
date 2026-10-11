@@ -46,7 +46,7 @@ from rich.panel import Panel
 from rich.table import Table
 
 from ragkit.config import get_settings
-from ragkit.retrieval import default_index_path
+from ragkit.retrieval import default_index_path, model_key
 from ragkit.service import Searcher
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -150,7 +150,7 @@ def test_laws() -> set[str]:
 # ============================================================
 # 앱과 같은 입구 Searcher.open으로 두 모델을 연다. 인덱스는 모델마다 따로 있고 조각 수는 같다(25,967).
 # 출력에서 볼 것: 두 줄의 인덱스 조각 수가 같은지, 여는 데 걸린 시간(강사 PC 약 11초).
-# 파인튜닝 줄의 모델 키는 인덱스에 적힌 학습 run 이름이라 폴더 이름(002_hard_negatives)과 다를 수 있다.
+# 파인튜닝 줄에는 폴더 이름을 찍는다. 인덱스 안에 적힌 모델 키는 학습 당시 run 이름(실험 번호를 바꾸기 전 이름)이라 헷갈린다.
 section("1. 학습 전 e5 vs 파인튜닝 e5 (002_hard_negatives)")
 start = time.perf_counter()
 base, tuned, backend = open_searchers()
@@ -158,10 +158,11 @@ console.print(
     f"학습 전  {escape(f'{base.model_key:28s}')} 인덱스 [bold]{base.doc_count:,}개[/] 조각 (onnx)"
 )
 console.print(
-    f"파인튜닝 {escape(f'{tuned.model_key:28s}')} 인덱스 [bold]{tuned.doc_count:,}개[/] 조각 ({backend})"
+    f"파인튜닝 {escape(f'{FINETUNED.name:28s}')} 인덱스 [bold]{tuned.doc_count:,}개[/] 조각 ({backend})"
 )
 console.print(
-    f"  [dim]인덱스 파일: {escape(rel(default_index_path(tuned.model_key)))} 처럼[/]"
+    f"  [dim]인덱스 파일: {escape(rel(default_index_path(model_key(str(FINETUNED), FINETUNED))))} 처럼[/]",
+    soft_wrap=True,
 )
 console.print("  [dim]모델마다 따로 있다 (같은 조문도 모델이 다르면 벡터가 다르다)[/]")
 console.print(f"모델·인덱스 열기 [bold]{time.perf_counter() - start:.1f}초[/]")
