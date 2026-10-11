@@ -1,6 +1,6 @@
 # 실습 0 (3교시): 준비와 완성품 먼저 써 보기
 
-장표: [3교시 실습 0 준비](https://claude.ai/artifact/VuQyTKs7BHKu4Hsq5xy5Qc). 최종 목표(HTML 파일 하나) → 환경 점검 → CLI로 질문 넷 → 학습 전후 비교 순서로 본다.
+장표: [3교시 실습 0 준비](https://claude.ai/artifact/VuQyTKs7BHKu4Hsq5xy5Qc). 최종 목표(HTML 파일 하나) → 환경 점검 → 완성품 써 보기 → CLI로 질문 넷 → 학습 전후 비교 순서로 본다.
 API 키는 쓰지 않는다. 명령은 모두 저장소 루트에서 실행하고, Mac 터미널과 Windows PowerShell에서 그대로 돈다.
 
 ## 0. 설치 전에: 최종 목표
@@ -31,7 +31,15 @@ uv run python scripts/finetuned_drive.py download multilingual-e5-small 002_hard
 
 `GEMINI_API_KEY`는 없어도 된다. LLM 답변 단계만 건너뛴다.
 
-## 2. 질문 넷을 학습 전 모델에 던져 본다
+## 2. 완성품 써 보기 (한 번에 보기)
+
+같은 질문 넷을 학습 전 모델과 파인튜닝 모델에 한 번에 던져 비교하고, test 전체 지표와 완성품(웹 · CLI · MCP) 띄우는 안내를 본다.
+
+```bash
+uv run python lecture/03_setup/02_try_product.py
+```
+
+## 3. CLI로 직접 질문 넷을 학습 전 모델에 던져 본다
 
 정답으로 떠야 할 조문이 위쪽에 뜨는지 본다.
 
@@ -51,7 +59,7 @@ uv run --package ragkit-search ragkit-search search "방문판매로 산 정수�
 uv run --package ragkit-search ragkit-search show 근로기준법_법률_제55조   # 조문 원문
 ```
 
-## 3. 학습 전후 비교: 모델만 바꾼다
+## 4. 학습 전후 비교: 모델만 바꾼다
 
 같은 명령 뒤에 `--checkpoint models/finetuned/002_hard_negatives --backend torch`만 붙이면 파인튜닝한 모델(002_hard_negatives)로 찾는다. 인덱스는 자동으로 그 모델 것을 쓴다.
 
