@@ -21,7 +21,6 @@
 강사가 실험 exp_010 결과 JSON(experiments/archive/exp_010_lecture_comparison/results/*.json)을 나눠 줬으면 그것을 읽는다.
 """
 
-import argparse
 import json
 import os
 import random
@@ -31,6 +30,10 @@ import tempfile
 import time
 import unicodedata
 from pathlib import Path
+
+import cyclopts
+from cyclopts import Parameter
+from pydantic import BaseModel, Field
 
 from ragkit.data import load_questions
 
@@ -176,13 +179,22 @@ def evaluate_both(questions: Path | None, out_dir: Path) -> dict[str, Path]:
 sys.stdout.reconfigure(
     line_buffering=True
 )  # ragkit 하위 프로세스 출력과 순서가 섞이지 않게
-parser = argparse.ArgumentParser(description="실습 2-1: 가설 표와 001 판정")
-parser.add_argument(
-    "--run",
-    action="store_true",
-    help=f"test {RUN_SAMPLE}개 표본으로 평가와 검정을 직접 실행",
-)
-args = parser.parse_args()
+@Parameter(name="*")
+class Options(BaseModel):
+    run: bool = Field(
+        False,
+        description=f"test {RUN_SAMPLE}개 표본으로 평가와 검정을 직접 실행",
+    )
+
+
+def cli(*, options: Options | None = None) -> Options:
+    """실습 2-1: 가설 표와 001 판정"""
+    return options or Options()
+
+
+args = cyclopts.run(cli, result_action="return_value")
+if args is None:  # --help
+    sys.exit(0)
 
 require([(CORPUS, GET_DATA), (TEST, GET_DATA), (TUNED_DIR, GET_002)])
 

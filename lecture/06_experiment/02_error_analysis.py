@@ -22,7 +22,6 @@
 여전히 틀리는 질문 목록은 experiments/results/lecture/06_experiment/ 아래 JSONL로 남긴다(AI에게 분류를 맡길 때 쓴다).
 """
 
-import argparse
 import json
 import random
 import sys
@@ -31,7 +30,10 @@ import unicodedata
 from collections import Counter
 from pathlib import Path
 
+import cyclopts
 import numpy as np
+from cyclopts import Parameter
+from pydantic import BaseModel, Field
 
 from ragkit.data import doc_text, load_corpus, load_questions, question_key
 from ragkit.embeddings import create_embedding_fn
@@ -112,13 +114,22 @@ def negative_bucket(rank: int | None) -> str:
 
 
 sys.stdout.reconfigure(line_buffering=True)
-parser = argparse.ArgumentParser(description="실습 2-2: 001 오답 분석")
-parser.add_argument(
-    "--run",
-    action="store_true",
-    help=f"train 질문 {RUN_SAMPLE}개를 001로 검색해 우리가 준 오답의 순위를 직접 잰다",
-)
-args = parser.parse_args()
+@Parameter(name="*")
+class Options(BaseModel):
+    run: bool = Field(
+        False,
+        description=f"train 질문 {RUN_SAMPLE}개를 001로 검색해 우리가 준 오답의 순위를 직접 잰다",
+    )
+
+
+def cli(*, options: Options | None = None) -> Options:
+    """실습 2-2: 001 오답 분석"""
+    return options or Options()
+
+
+args = cyclopts.run(cli, result_action="return_value")
+if args is None:  # --help
+    sys.exit(0)
 
 for path, how in ((CORPUS, GET_DATA), (TEST, GET_DATA), (TRAIN, GET_DATA)):
     if not path.exists():
