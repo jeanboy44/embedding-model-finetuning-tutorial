@@ -20,45 +20,15 @@ app = cyclopts.App(name="ragkit-bench", help="원본 / ONNX / INT8 모델의 속
 
 
 def _peak_rss_mb() -> float:
-    """현재 프로세스의 최대 메모리(MB). Windows엔 resource 모듈이 없어 Win32 API로 잰다."""
+    """현재 프로세스의 최대 메모리(MB). Windows엔 resource 모듈이 없어 psutil의 peak_wset을 쓴다."""
     if sys.platform == "win32":
-        return _peak_rss_mb_windows()
+        import psutil
+
+        return psutil.Process().memory_info().peak_wset / 1e6
     import resource
 
     rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
     return rss / 1e6 if sys.platform == "darwin" else rss / 1e3  # macOS는 바이트, Linux는 KB
-
-
-def _peak_rss_mb_windows() -> float:
-    import ctypes
-    from ctypes import wintypes
-
-    class ProcessMemoryCounters(ctypes.Structure):
-        _fields_ = [
-            ("cb", wintypes.DWORD),
-            ("PageFaultCount", wintypes.DWORD),
-            ("PeakWorkingSetSize", ctypes.c_size_t),
-            ("WorkingSetSize", ctypes.c_size_t),
-            ("QuotaPeakPagedPoolUsage", ctypes.c_size_t),
-            ("QuotaPagedPoolUsage", ctypes.c_size_t),
-            ("QuotaPeakNonPagedPoolUsage", ctypes.c_size_t),
-            ("QuotaNonPagedPoolUsage", ctypes.c_size_t),
-            ("PagefileUsage", ctypes.c_size_t),
-            ("PeakPagefileUsage", ctypes.c_size_t),
-        ]
-
-    # 반환형·인자형을 지정하지 않으면 64비트 핸들이 32비트 int로 잘려 "핸들이 잘못되었습니다"가 난다.
-    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
-    kernel32.GetCurrentProcess.restype = wintypes.HANDLE
-    psapi = ctypes.WinDLL("psapi", use_last_error=True)
-    psapi.GetProcessMemoryInfo.argtypes = [wintypes.HANDLE, ctypes.POINTER(ProcessMemoryCounters), wintypes.DWORD]
-    psapi.GetProcessMemoryInfo.restype = wintypes.BOOL
-
-    counters = ProcessMemoryCounters()
-    counters.cb = ctypes.sizeof(counters)
-    if not psapi.GetProcessMemoryInfo(kernel32.GetCurrentProcess(), ctypes.byref(counters), counters.cb):
-        raise ctypes.WinError(ctypes.get_last_error())
-    return counters.PeakWorkingSetSize / 1e6
 
 
 def prepare_index(variant: Variant, corpus_path: str) -> str:

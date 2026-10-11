@@ -4664,6 +4664,7 @@ source = { editable = "apps/bench" }
 dependencies = [
     { name = "cyclopts" },
     { name = "packaging" },
+    { name = "psutil" },
     { name = "ragkit", extra = ["torch"] },
 ]
 
@@ -4676,6 +4677,7 @@ mlflow = [
 requires-dist = [
     { name = "cyclopts", specifier = ">=3.0.0" },
     { name = "packaging", specifier = ">=23" },
+    { name = "psutil", specifier = ">=5.9" },
     { name = "ragkit", extras = ["mlflow"], marker = "extra == 'mlflow'", editable = "." },
     { name = "ragkit", extras = ["torch"], editable = "." },
 ]
