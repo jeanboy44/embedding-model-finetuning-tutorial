@@ -1,11 +1,10 @@
 """ragkit-bench: 모델 변형별 측정을 각각 새 프로세스에서 돌려 비교표를 만든다.
 
-변형마다 프로세스를 새로 띄우는 이유: 최대 메모리(ru_maxrss)를 그 변형만의 값으로 재기 위해서다.
+변형마다 프로세스를 새로 띄우는 이유: 최대 메모리를 그 변형만의 값으로 재기 위해서다.
 """
 
 import json
 import multiprocessing as mp
-import resource
 import sys
 import time
 from dataclasses import asdict
@@ -21,8 +20,39 @@ app = cyclopts.App(name="ragkit-bench", help="원본 / ONNX / INT8 모델의 속
 
 
 def _peak_rss_mb() -> float:
+    """현재 프로세스의 최대 메모리(MB). Windows엔 resource 모듈이 없어 Win32 API로 잰다."""
+    if sys.platform == "win32":
+        return _peak_rss_mb_windows()
+    import resource
+
     rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
     return rss / 1e6 if sys.platform == "darwin" else rss / 1e3  # macOS는 바이트, Linux는 KB
+
+
+def _peak_rss_mb_windows() -> float:
+    import ctypes
+    from ctypes import wintypes
+
+    class ProcessMemoryCounters(ctypes.Structure):
+        _fields_ = [
+            ("cb", wintypes.DWORD),
+            ("PageFaultCount", wintypes.DWORD),
+            ("PeakWorkingSetSize", ctypes.c_size_t),
+            ("WorkingSetSize", ctypes.c_size_t),
+            ("QuotaPeakPagedPoolUsage", ctypes.c_size_t),
+            ("QuotaPagedPoolUsage", ctypes.c_size_t),
+            ("QuotaPeakNonPagedPoolUsage", ctypes.c_size_t),
+            ("QuotaNonPagedPoolUsage", ctypes.c_size_t),
+            ("PagefileUsage", ctypes.c_size_t),
+            ("PeakPagefileUsage", ctypes.c_size_t),
+        ]
+
+    counters = ProcessMemoryCounters()
+    counters.cb = ctypes.sizeof(counters)
+    handle = ctypes.windll.kernel32.GetCurrentProcess()
+    if not ctypes.windll.psapi.GetProcessMemoryInfo(handle, ctypes.byref(counters), counters.cb):
+        raise ctypes.WinError()
+    return counters.PeakWorkingSetSize / 1e6
 
 
 def prepare_index(variant: Variant, corpus_path: str) -> str:
