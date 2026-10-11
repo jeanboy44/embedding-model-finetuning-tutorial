@@ -21,12 +21,14 @@
 import asyncio
 import json
 import os
+import shutil
 from pathlib import Path
 
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
 ROOT = Path(__file__).resolve().parents[2]
+UV_BIN = shutil.which("uv") or "uv"
 
 
 def section(title: str) -> None:
@@ -127,7 +129,7 @@ Claude Code:
 
 Claude Desktop / Antigravity IDE (mcp_config.json):
   "ragkit-law": {{
-    "command": "/opt/homebrew/bin/uv",  <-- $(which uv) 절대 경로 사용
+    "command": "{UV_BIN}",
     "args": ["run", "--directory", "{ROOT}", "--package", "ragkit-mcp", "ragkit-mcp"],
     "env": {{"RAGKIT_PROJECT_ROOT": "{ROOT}"}}
   }}
