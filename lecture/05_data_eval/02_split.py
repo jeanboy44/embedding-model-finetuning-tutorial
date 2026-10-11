@@ -34,17 +34,22 @@ import random
 import subprocess
 import sys
 import tempfile
-import unicodedata
 from pathlib import Path
 
 import cyclopts
 from cyclopts import Parameter
 from pydantic import BaseModel, Field
+from rich import box
+from rich.console import Console
+from rich.markup import escape
+from rich.panel import Panel
+from rich.table import Table
 
 from ragkit.config import get_settings
 from ragkit.data import load_corpus, relevance_key
 from ragkit.training import load_splits
 
+console = Console(emoji=False)
 ROOT = Path(__file__).resolve().parents[2]
 settings = get_settings()
 CORPUS = settings.data_dir / "processed" / "law_docs.json"
@@ -60,9 +65,8 @@ USE = {"train": "학습", "dev": "epoch · 설정 고르기", "test": "최종 �
 
 
 def section(title: str) -> None:
-    print("\n" + "=" * 60)
-    print(title)
-    print("=" * 60)
+    console.print()
+    console.rule(f"[bold]{escape(title)}[/]", style="blue")
 
 
 def rel(path: Path) -> str:
@@ -70,12 +74,6 @@ def rel(path: Path) -> str:
         return str(path.relative_to(ROOT))
     except ValueError:
         return str(path)
-
-
-def rjust(text: str, n: int) -> str:
-    """한글을 두 칸으로 세어 오른쪽 정렬 (표 머리글용)."""
-    w = sum(2 if unicodedata.east_asian_width(ch) in "WF" else 1 for ch in text)
-    return " " * max(n - w, 0) + text
 
 
 def ragkit_cmd() -> list[str]:
@@ -107,14 +105,20 @@ if args is None:  # --help
     sys.exit(0)
 
 if not CORPUS.exists() or not any(QUESTIONS.glob("*.jsonl")):
-    print(f"코퍼스 또는 질문이 없습니다: {rel(CORPUS)}, {rel(QUESTIONS)}/")
-    print("받기: uv run python scripts/data_version.py pull v1")
+    console.print(
+        Panel(
+            f"코퍼스 또는 질문이 없습니다: {escape(rel(CORPUS))}, {escape(rel(QUESTIONS))}/\n"
+            "받기: [dim]uv run python scripts/data_version.py pull v1[/]",
+            title="필요한 산출물이 없습니다",
+            border_style="red",
+        )
+    )
     sys.exit(1)
 if not META.exists():  # 분할은 Drive로 받지 않고 질문에서 바로 만든다 (seed 42, 몇 초)
-    print(f"분할이 없어 만든다: {rel(SPLITS)}/")
-    print(f"$ {SPLIT_CMD}")
+    console.print(f"분할이 없어 만든다: {escape(rel(SPLITS))}/")
+    console.print(f"[dim]$ {escape(SPLIT_CMD)}[/]", soft_wrap=True)
     if not split_into(SPLITS):
-        print("ragkit split이 실패했습니다. 위 메시지를 확인하세요.")
+        console.print("[red]ragkit split이 실패했습니다.[/] 위 메시지를 확인하세요.")
         sys.exit(1)
 
 meta = json.loads(META.read_text(encoding="utf-8"))  # ragkit split이 남긴 분할 요약
@@ -129,20 +133,31 @@ splits = load_splits(SPLITS)  # {"train": [...], "dev": [...], "test": [...]} �
 # 표로 찍는다. 출력에서 볼 것: train 9,126 · dev 1,243 · test 1,863 (75% · 10% · 15%),
 # 조 4,389 · 610 · 942, 법령은 세 분할 모두 54개, 그리고 분할마다 다른 용도.
 section("1. 분할 (split_meta.json)")
-print(
-    f"질문 {rel(Path(meta['questions']))}, 단위 {meta['unit']}, seed {meta['seed']}, "
+console.print(
+    f"질문 {escape(rel(Path(meta['questions'])))}, 단위 {escape(str(meta['unit']))}, seed {meta['seed']}, "
     f"test {meta['test_ratio']:.0%} · dev {meta['dev_ratio']:.0%} 목표 (법령마다 조를 나눠서)"
 )
 total = sum(meta[n]["questions"] for n in NAMES)
-print(
-    f"\n  {'split':6s} {rjust('질문', 7)} {rjust('비율', 6)} {rjust('조', 6)} {rjust('법령', 5)}  용도"
-)
+split_table = Table(box=box.SIMPLE_HEAD, show_edge=False)
+split_table.add_column("split")
+split_table.add_column("질문", justify="right")
+split_table.add_column("비율", justify="right")
+split_table.add_column("조", justify="right")
+split_table.add_column("법령", justify="right")
+split_table.add_column("용도")
 for name in NAMES:
     n = meta[name]["questions"]
-    print(
-        f"  {name:6s} {n:>7,} {n / total:>6.0%} {meta[name]['articles']:>6,} {len(meta[name]['laws']):>5}  {USE[name]}"
+    split_table.add_row(
+        name,
+        f"[bold]{n:,}[/]",
+        f"{n / total:.0%}",
+        f"{meta[name]['articles']:,}",
+        f"{len(meta[name]['laws'])}",
+        USE[name],
     )
-print(f"  합계   {total:>7,}")
+split_table.add_section()
+split_table.add_row("합계", f"{total:,}", "", "", "", "")
+console.print(split_table)
 
 
 # ============================================================
@@ -162,24 +177,27 @@ def article_set(qs: list[dict]) -> set[str]:
 arts = {name: article_set(splits[name]) for name in NAMES}
 for a, b in (("train", "dev"), ("train", "test"), ("dev", "test")):
     both = arts[a] & arts[b]
-    print(f"  {a} ∩ {b}: 조 {len(both)}개 {'✓' if not both else '✗'}")
+    mark = "[green]✓[/]" if not both else "[red]✗[/]"
+    console.print(f"  {a} ∩ {b}: 조 {len(both)}개 {mark}")
 laws = {name: set(meta[name]["laws"]) for name in NAMES}
 every = laws["train"] & laws["dev"] & laws["test"]
-print(
-    f"  세 분할에 모두 든 법령: {len(every)}개 (전체 {len(laws['train'] | laws['dev'] | laws['test'])}개)"
+console.print(
+    f"  세 분할에 모두 든 법령: [bold]{len(every)}[/]개 (전체 {len(laws['train'] | laws['dev'] | laws['test'])}개)",
+    highlight=False,
 )
-print(
+console.print(
     "  · 같은 조의 항 · 호 조각은 한쪽으로 묶는다. 조각마다 같은 조 제목이 붙어 있어 갈라 놓으면 새어 나간다"
 )
 
 held = meta.get("heldout_negatives")  # ragkit split이 오답에서 뺀 문서의 집계
 if held:
-    print(
+    console.print(
         f"\ntrain hard negative {held['train_negatives']:,}개 중 dev · test 정답 조의 문서 "
-        f"{held['dropped_negatives']:,}개({held['dropped_negatives'] / held['train_negatives']:.1%})를 뺐다"
+        f"[bold]{held['dropped_negatives']:,}[/]개({held['dropped_negatives'] / held['train_negatives']:.1%})를 뺐다",
+        highlight=False,
     )
-    print("  · 그대로 두면 test 정답 조가 학습 때 '오답'으로 나온다")
-    print(
+    console.print("  · 그대로 두면 test 정답 조가 학습 때 '오답'으로 나온다")
+    console.print(
         f"  · 그래서 오답이 하나도 남지 않은 train 질문 {held['no_negative_questions']:,}개는 학습 예시에서 빠진다"
     )
 
@@ -209,18 +227,20 @@ n_test = len(splits["test"])
 random_test, random_train = pool[:n_test], pool[n_test + len(splits["dev"]) :]
 random_leak = leak(random_train, random_test)
 
-print("test 질문 중 '정답 조가 train에서도 정답으로 나온' 비율")
-print(f"  조 단위 분할 (이 분할)     {article_leak:6.1%}")
-print(f"  질문 단위 무작위 분할      {random_leak:6.1%}")
-print(
+console.print("test 질문 중 '정답 조가 train에서도 정답으로 나온' 비율")
+console.print(f"  조 단위 분할 (이 분할)     [bold green]{article_leak:6.1%}[/]")
+console.print(f"  질문 단위 무작위 분할      [bold yellow]{random_leak:6.1%}[/]")
+console.print(
     "→ 질문 단위로 섞으면 같은 조의 다른 질문을 학습 때 이미 본다. 모델이 그 조를 외워"
 )
-print("  점수가 부풀려진다")
-print("\n법령 단위로 나누면 점수는 부풀지 않지만, test 법령은 학습 때 한 조도 못 본다")
-print(
+console.print("  점수가 부풀려진다")
+console.print(
+    "\n법령 단위로 나누면 점수는 부풀지 않지만, test 법령은 학습 때 한 조도 못 본다"
+)
+console.print(
     "  · 운영은 '매뉴얼 전체로 학습하고, 추가되면 다시 학습'이라 처음 보는 법령을 잴 일이 없다"
 )
-print(
+console.print(
     "  · 조 단위: 모든 법령의 말은 배우고, 아직 아무도 묻지 않은 조로 잰다 = 현업 시나리오"
 )
 
@@ -234,30 +254,34 @@ print(
 if args.run:
     section("4. --run: ragkit split을 임시 폴더에 실행")
     with tempfile.TemporaryDirectory() as tmp:
-        print(f"$ {SPLIT_CMD.replace('data/splits_article', '<임시 폴더>')}")
+        console.print(
+            f"[dim]$ {escape(SPLIT_CMD.replace('data/splits_article', '<임시 폴더>'))}[/]"
+        )
         if not split_into(tmp):
-            print("ragkit split이 실패했습니다. 위 메시지를 확인하세요.")
+            console.print("[red]ragkit split이 실패했습니다.[/] 위 메시지를 확인하세요.")
         else:
             mine = json.loads(
                 (Path(tmp) / "split_meta.json").read_text(encoding="utf-8")
             )
-            print("\n지금 분할과 비교")
+            console.print("\n지금 분할과 비교")
             for name in NAMES:
                 same_file = (Path(tmp) / f"{name}.jsonl").read_bytes() == (
                     SPLITS / f"{name}.jsonl"
                 ).read_bytes()  # 질문 순서까지 같은지 바이트로 비교
-                print(
+                mark = "[green]✓[/]" if same_file else "[red]✗[/]"
+                console.print(
                     f"  {name:6s} 질문 {mine[name]['questions']:>6,} vs {meta[name]['questions']:>6,}"
                     f"  조 {mine[name]['articles']:>5,} vs {meta[name]['articles']:>5,}"
-                    f"  파일 같음 {'✓' if same_file else '✗'}"
+                    f"  파일 같음 {mark}",
+                    highlight=False,
                 )
-            print(
+            console.print(
                 "→ 같은 질문 · 같은 코퍼스 · 같은 seed면 같은 분할이 나온다 (재현 가능)"
             )
-            print("  내가 만든 질문을 더했다면 --out 을 다른 폴더로 주고 비교한다")
-    print("임시 폴더는 지웠다. data/splits_article/는 바뀌지 않았다.")
+            console.print("  내가 만든 질문을 더했다면 --out 을 다른 폴더로 주고 비교한다")
+    console.print("[dim]임시 폴더는 지웠다. data/splits_article/는 바뀌지 않았다.[/]")
 
-print("""
+console.print("""
 정리:
 - train · dev · test는 조가 겹치지 않고, 54개 법령이 모두 세 분할에 들어간다
 - test는 실험마다 마지막에 한 번만 쓴다 (5 · 6교시)

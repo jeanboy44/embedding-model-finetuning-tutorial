@@ -37,7 +37,6 @@ import subprocess
 import sys
 import tempfile
 import time
-import unicodedata
 from pathlib import Path
 
 import cyclopts
@@ -45,6 +44,11 @@ from cyclopts import Parameter
 from fastapi.testclient import TestClient
 from pydantic import BaseModel, Field
 from ragkit_api.app import create_app
+from rich import box
+from rich.console import Console
+from rich.markup import escape
+from rich.panel import Panel
+from rich.table import Table
 
 ROOT = Path(__file__).resolve().parents[2]
 RESULTS = ROOT / "experiments" / "101_deploy_bench" / "results" / "results.json"
@@ -52,6 +56,7 @@ TEST = ROOT / "data" / "splits" / "test.jsonl"
 MODELS = ROOT / "models"
 RUN_QUESTIONS = 200  # --run에서 쓸 test 질문 수
 SEARCH_REPEAT = 20  # 3번에서 API 검색 지연을 잴 반복 횟수 (중앙값을 쓴다)
+console = Console(emoji=False)  # 데이터 문장의 :...: 이 이모지로 바뀌지 않게
 
 
 @Parameter(name="*")
@@ -73,15 +78,54 @@ if args is None:  # --help
 
 
 def section(title: str) -> None:
-    print("\n" + "=" * 60)
-    print(title)
-    print("=" * 60)
+    console.print()
+    console.rule(f"[bold]{escape(title)}[/]", style="blue")
 
 
-def pad(text: str, width: int) -> str:
-    """화면 폭 기준으로 오른쪽을 채운다 (한글은 두 칸을 차지해 f-string 폭 지정으로는 열이 어긋난다)."""
-    used = sum(2 if unicodedata.east_asian_width(ch) in "WF" else 1 for ch in text)
-    return text + " " * max(width - used, 0)
+def fail(message: str) -> None:
+    console.print(Panel(message, title="필요한 산출물이 없습니다", border_style="red"))
+    sys.exit(1)
+
+
+def print_markdown_table(markdown: str) -> None:
+    """comparison.md(제목 줄 + 마크다운 표)를 rich 표로 찍는다.
+
+    열이 13개라 한 표로는 터미널 폭을 넘는다. 변형 이름을 앞에 두고
+    자원·속도 열과 정확도(R@k · MRR) 열을 두 표로 나눈다. 값은 그대로다.
+    """
+    header, rows = None, []
+    for line in markdown.splitlines():
+        if not line.startswith("|"):
+            if line.startswith("#"):
+                console.print(f"[bold]{escape(line.lstrip('# '))}[/]")
+            elif line.strip():
+                console.print(line, markup=False)
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if header is None:
+            header = cells
+        elif not set("".join(cells)) <= set("-:"):
+            rows.append(cells)
+    if header is None:
+        return
+    accuracy = [i for i, h in enumerate(header) if h.startswith(("R@", "MRR", "nDCG"))]
+    resource = [i for i in range(1, len(header)) if i not in accuracy]
+    for n, columns in enumerate(c for c in (resource, accuracy) if c):
+        if n:
+            console.print()
+        table = Table(
+            header[0],
+            *(header[i] for i in columns),
+            box=box.SIMPLE_HEAD,
+            show_edge=False,
+            padding=(0, 1, 0, 0),  # 80열 터미널에도 들어가게 열 간격을 1칸으로
+        )
+        table.columns[0].no_wrap = True  # 변형 이름은 자르지 않는다
+        for i, column in enumerate(table.columns[1:]):
+            column.justify = "left" if header[columns[i]] == "백엔드" else "right"
+        for cells in rows:
+            table.add_row(*(escape(cells[i]) for i in [0, *columns]))
+        console.print(table)
 
 
 def ratio(before: float, after: float) -> str:
@@ -116,11 +160,8 @@ def run_bench_subset(out_dir: Path) -> Path:
         "--n-latency",
         "30",
     ]
-    print("$ " + " ".join(cmd).replace(str(out_dir), "<임시 폴더>"))
-    print(
-        "측정 중… (변형마다 새 프로세스, 변형별 인덱스가 없으면 먼저 만든다)",
-        flush=True,
-    )
+    console.print("[dim]$ " + escape(" ".join(cmd).replace(str(out_dir), "<임시 폴더>")) + "[/]")
+    console.print("[dim]측정 중… (변형마다 새 프로세스, 변형별 인덱스가 없으면 먼저 만든다)[/]")
     subprocess.run(cmd, cwd=ROOT, check=True)
     return out_dir / "results.json"
 
@@ -135,18 +176,20 @@ section("1. ragkit-bench 결과")
 with tempfile.TemporaryDirectory() as tmp:
     if args.run:
         if not TEST.exists():
-            sys.exit(f"{TEST}가 없습니다. Drive에서 data/splits/를 받으세요.")
+            fail(f"{escape(str(TEST))}가 없습니다. Drive에서 data/splits/를 받으세요.")
         results = run_bench_subset(Path(tmp))
     elif RESULTS.exists():
         results = RESULTS
-        print(f"받은 결과: {RESULTS.relative_to(ROOT)} (직접 재려면 --run)")
+        console.print(
+            f"받은 결과: [dim]{escape(str(RESULTS.relative_to(ROOT)))}[/] (직접 재려면 --run)\n"
+        )
     else:
-        sys.exit(
-            f"{RESULTS}가 없습니다.\n  Drive에서 experiments/101_deploy_bench/를 받거나 --run으로 직접 재세요."
+        fail(
+            f"{escape(str(RESULTS))}가 없습니다.\n  Drive에서 experiments/101_deploy_bench/를 받거나 --run으로 직접 재세요."
         )
     # rows: 변형 하나 = 한 행(dict). comparison.md는 같은 내용의 마크다운 표
     rows = json.loads(results.read_text(encoding="utf-8"))["rows"]
-    print((results.parent / "comparison.md").read_text(encoding="utf-8"))
+    print_markdown_table((results.parent / "comparison.md").read_text(encoding="utf-8"))
 
 # ============================================================
 # 2. 표 읽기
@@ -160,22 +203,24 @@ base = next((r for r in rows if r["variant"] == "torch-fp32"), rows[0])  # 기�
 for r in rows:
     if r is base:
         continue
-    print(f"[{r['variant']}]")
-    print(
-        f"  설치 크기  {base['install_mb']:.0f} → {r['install_mb']:.0f} MB  ({ratio(base['install_mb'], r['install_mb'])})"
+    delta = r["recall@5"] - base["recall@5"]
+    color = "green" if delta > 0 else "yellow" if delta < 0 else "bold"
+    console.print(f"[bold]{escape('[' + r['variant'] + ']')}[/]")
+    console.print(
+        f"  설치 크기  {base['install_mb']:.0f} → [bold]{r['install_mb']:.0f} MB[/]  ({ratio(base['install_mb'], r['install_mb'])})"
     )
-    print(
-        f"  모델 크기  {base['model_mb']:.0f} → {r['model_mb']:.0f} MB  ({ratio(base['model_mb'], r['model_mb'])})"
+    console.print(
+        f"  모델 크기  {base['model_mb']:.0f} → [bold]{r['model_mb']:.0f} MB[/]  ({ratio(base['model_mb'], r['model_mb'])})"
     )
-    print(f"  로딩       {base['load_s']:.2f} → {r['load_s']:.2f} s")
-    print(f"  지연 p50   {base['latency_ms_p50']:.1f} → {r['latency_ms_p50']:.1f} ms")
-    print(
-        f"  메모리     {base['peak_rss_mb']:.0f} → {r['peak_rss_mb']:.0f} MB  ({ratio(base['peak_rss_mb'], r['peak_rss_mb'])})"
+    console.print(f"  로딩       {base['load_s']:.2f} → {r['load_s']:.2f} s")
+    console.print(f"  지연 p50   {base['latency_ms_p50']:.1f} → {r['latency_ms_p50']:.1f} ms")
+    console.print(
+        f"  메모리     {base['peak_rss_mb']:.0f} → [bold]{r['peak_rss_mb']:.0f} MB[/]  ({ratio(base['peak_rss_mb'], r['peak_rss_mb'])})"
     )
-    print(
-        f"  R@5        {base['recall@5']:.3f} → {r['recall@5']:.3f}  ({r['recall@5'] - base['recall@5']:+.3f})"
+    console.print(
+        f"  R@5        {base['recall@5']:.3f} → {r['recall@5']:.3f}  ([{color}]{delta:+.3f}[/])"
     )
-print("""
+console.print("""
 생각해 볼 것:
 - ONNX fp32는 메모리가 오히려 크다: 가중치를 모두 메모리에 올린다(torch는 safetensors를 필요할 때 읽는다)
 - 처리량(문서/초)은 이 Mac에서 torch가 빠를 수 있다. 배포 서버(Linux x86)에서는 다를 수 있다 → 배포 환경에서 다시 재라
@@ -192,6 +237,9 @@ print("""
 # 출력: 시작 s · 검색 중앙값 ms · 1위 조문. 세 모델 모두 1위가 근로기준법 제56조로 같다.
 # torch의 시작 시간은 처음 실행에서 10초 넘게 걸릴 수 있다(OS 캐시). ONNX 둘은 0.5초 · 0.1초.
 section("3. API 백엔드 바꾸기: torch → ONNX")
+table = Table("백엔드", "시작", f"검색 중앙값 ({SEARCH_REPEAT}회)", "1위", box=box.SIMPLE_HEAD, show_edge=False)
+table.columns[1].justify = "right"
+table.columns[2].justify = "right"
 for label, kwargs in [
     ("torch (실습 3-1)", {"backend": "torch"}),  # 기본 모델 + torch. 3-1과 같은 설정
     (
@@ -204,8 +252,8 @@ for label, kwargs in [
     ),
 ]:
     if "model" in kwargs and not Path(kwargs["model"]).is_dir():
-        print(
-            f"{label}: {kwargs['model']}가 없어 건너뜁니다. Drive에서 models/를 받거나 실습 3-2의 CLI로 만드세요."
+        console.print(
+            f"[yellow]{escape(label)}: {escape(kwargs['model'])}가 없어 건너뜁니다. Drive에서 models/를 받거나 실습 3-2의 CLI로 만드세요.[/]"
         )
         continue
     start = time.perf_counter()
@@ -219,12 +267,18 @@ for label, kwargs in [
             t = time.perf_counter()
             client.post("/api/search", json=body)
             times.append(1000 * (time.perf_counter() - t))
-        print(
-            f"{pad(label, 18)} 시작 {load:4.1f}s · 검색 중앙값 {statistics.median(times):4.0f}ms "
-            f"({SEARCH_REPEAT}회) · 1위 {hits[0]['title']}"
+        table.add_row(
+            escape(label),
+            f"{load:.1f}s",
+            f"[bold]{statistics.median(times):.0f}ms[/]",
+            escape(hits[0]["title"]),
         )
-print("""
+console.print(table)
+console.print(
+    """
 실제 서버:
-  uv run --package ragkit-api ragkit-api --model models/multilingual-e5-small-pruned-int8
+  [dim]uv run --package ragkit-api ragkit-api --model models/multilingual-e5-small-pruned-int8[/]
 배포할 것: ragkit core(torch 없음) + 모델 폴더(약 30MB) + 인덱스 파일(data/processed/index/<모델 키>.sqlite)
-""")
+""",
+    soft_wrap=True,  # 복사해서 쓰는 명령이 줄바꿈으로 끊기지 않게
+)

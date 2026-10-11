@@ -34,15 +34,20 @@ from pathlib import Path
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 from mcp.types import CallToolResult
+from rich import box
+from rich.console import Console
+from rich.markup import escape
+from rich.table import Table
+
+console = Console(emoji=False)
 
 ROOT = Path(__file__).resolve().parents[2]
 UV_BIN = shutil.which("uv") or "uv"
 
 
 def section(title: str) -> None:
-    print("\n" + "=" * 60)
-    print(title)
-    print("=" * 60)
+    console.print()
+    console.rule(f"[bold]{escape(title)}[/]", style="blue")
 
 
 def text_of(result: CallToolResult) -> str:
@@ -74,8 +79,8 @@ async def main() -> None:
         # 출력에서 볼 것: 서버 이름 ragkit-law, 지침 다섯 줄
         info = await session.initialize()
         section("1. 연결: 서버가 자기소개(instructions)를 보낸다")
-        print(f"서버: {info.server_info.name}")
-        print((info.instructions or "").strip())
+        console.print(f"서버: [bold]{escape(info.server_info.name)}[/]")
+        console.print((info.instructions or "").strip(), markup=False, highlight=False)
 
         # ------------------------------------------------------------
         # 2. 도구 목록 (list_tools): 이름 · 입력 스키마 · 설명
@@ -87,8 +92,9 @@ async def main() -> None:
         for tool in (await session.list_tools()).tools:
             # 입력 스키마의 인자 이름만
             params_ = ", ".join(tool.input_schema.get("properties", {}))
-            print(
-                f"- {tool.name}({params_})\n    {(tool.description or '').splitlines()[0]}"
+            console.print(f"- [bold]{escape(tool.name)}[/]({escape(params_)})")
+            console.print(
+                f"    {escape((tool.description or '').splitlines()[0])}", highlight=False
             )
 
         # ------------------------------------------------------------
@@ -98,41 +104,62 @@ async def main() -> None:
         # 같은 Searcher라 점수도 같다. 마지막은 틀린 법령 이름 "근로기준"을 일부러 줘 오류 응답을 본다.
         # 출력에서 볼 것: youth 법령 32개, 최저임금법 제5조(0.898) · 제31조, 제5조 조각 1개, is_error=True와 비슷한 이름 안내
         section("3. 도구 호출: 에이전트가 하는 순서 그대로")
-        print('list_laws(theme="youth") → 정확한 법령 이름 확인')
+        console.print('[bold]list_laws(theme="youth")[/] → 정확한 법령 이름 확인')
         laws = items_of(await session.call_tool("list_laws", {"theme": "youth"}))
         first = laws[0]
-        print(
-            f"  {len(laws)}개 법령, 예: {first['law_name']} ({first['law_type']}, 조각 {first['doc_count']}개)"
+        console.print(
+            f"  [bold]{len(laws)}[/]개 법령, 예: {escape(first['law_name'])} ({escape(first['law_type'])}, 조각 {first['doc_count']}개)"
         )
 
-        print('\nsearch_laws(query="수습 기간 최저임금", laws=["최저임금법"], k=2)')
+        console.print()
+        call = 'search_laws(query="수습 기간 최저임금", laws=["최저임금법"], k=2)'
+        console.print(f"[bold]{escape(call)}[/]")
         hits = items_of(
             await session.call_tool(
                 "search_laws",
                 {"query": "수습 기간 최저임금", "laws": ["최저임금법"], "k": 2},
             )
         )
-        print(
+        console.print(
             f"  결과마다 필드 {len(hits[0]) if hits else 0}개 (id, title, score, text, source_url …) 중 title · score만:"
         )
+        table = Table(box=box.SIMPLE_HEAD, show_edge=False)
+        table.add_column("score", justify="right")
+        table.add_column("title")
+        table.add_column("id", style="dim")
         for hit in hits:
-            print(f"  {hit['score']:.3f}  {hit['title']}  (id={hit['id']})")
+            table.add_row(f"{hit['score']:.3f}", escape(hit["title"]), escape(hit["id"]))
+        console.print(table)
 
-        print('\nget_article(doc_id="최저임금법_법률_제5조") → 조 전체를 읽고 답한다')
+        console.print()
+        console.print(
+            '[bold]get_article(doc_id="최저임금법_법률_제5조")[/] → 조 전체를 읽고 답한다'
+        )
         article = items_of(
             await session.call_tool("get_article", {"doc_id": "최저임금법_법률_제5조"})
         )[0]
-        print(f"  {article['title']}: 조각 {len(article['pieces'])}개")
-        print("  " + article["pieces"][0]["text"][:150].replace("\n", " ") + " …")
+        console.print(
+            f"  {escape(article['title'])}: 조각 [bold]{len(article['pieces'])}[/]개"
+        )
+        console.print(
+            "  " + article["pieces"][0]["text"][:150].replace("\n", " ") + " …",
+            markup=False,
+            highlight=False,
+        )
 
-        print(
-            '\n잘못된 입력: search_laws(laws=["근로기준"]) → 비슷한 이름을 알려 줘 에이전트가 고쳐 다시 부른다'
+        console.print()
+        call = 'search_laws(laws=["근로기준"])'
+        console.print(
+            f"잘못된 입력: [bold]{escape(call)}[/] → 비슷한 이름을 알려 줘 에이전트가 고쳐 다시 부른다"
         )
         bad = await session.call_tool(
             "search_laws", {"query": "수당", "laws": ["근로기준"]}
         )
         # 예외가 아니라 오류 결과로 돌아온다 (is_error=True)
-        print(f"  is_error={bad.is_error}: {text_of(bad)[:150]}")
+        console.print(
+            f"  [yellow]is_error={bad.is_error}[/]: {escape(text_of(bad)[:150])}",
+            highlight=False,
+        )
 
 
 asyncio.run(main())
@@ -144,7 +171,8 @@ asyncio.run(main())
 # 방법 B는 각자의 컴퓨터에서 위 1번과 같은 stdio 프로세스를 등록한다 (ROOT · UV_BIN이 실제 경로로 들어간다).
 # 출력에서 볼 것: 복사해 쓸 등록 명령, 등록 뒤 던질 질문, CLI + 스킬과의 비교표
 section("4. 실제 에이전트에 등록")
-print(f"""[방법 A] 여러 사용자가 함께 쓰는 경우 (원격 Streamable HTTP — 권장):
+console.print(
+    f"""[방법 A] 여러 사용자가 함께 쓰는 경우 (원격 Streamable HTTP — 권장):
   1. 서버 1대 기동:
      uv run --package ragkit-mcp ragkit-mcp --transport streamable-http --port 8000
 
@@ -178,4 +206,8 @@ CLI + 스킬(실습 4-2)과 비교:
   CLI + 스킬   SKILL.md 한 파일을 둔다. 에이전트가 셸로 CLI를 부르고, 사람도 같은 명령을 쓴다.
                셸을 쓰는 코딩 에이전트(Antigravity agy, Gemini CLI, Claude Code)에 가볍게 붙는다
 같은 Searcher를 쓰므로 검색 결과는 같다. 차이는 연결 방식과 쓰는 곳이다.
-""")
+""",
+    markup=False,
+    highlight=False,
+    soft_wrap=True,
+)

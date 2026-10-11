@@ -45,16 +45,19 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 from ragkit_api.app import create_app
 from ragkit_api.store import NotebookStore
+from rich.console import Console
+from rich.markup import escape
+from rich.panel import Panel
 
 from ragkit.config import get_settings
 
+console = Console(emoji=False)  # 데이터 문장의 :...: 이 이모지로 바뀌지 않게
 QUERY = "야간에 일하면 수당을 더 받나요?"  # 2번에서 필터 없이 / 법령 필터로 두 번 검색하는 질문
 
 
 def section(title: str) -> None:
-    print("\n" + "=" * 60)
-    print(title)
-    print("=" * 60)
+    console.print()
+    console.rule(f"[bold]{escape(title)}[/]", style="blue")
 
 
 def read_sse(lines: Iterable[str]) -> list[tuple[str, dict]]:
@@ -69,14 +72,16 @@ def read_sse(lines: Iterable[str]) -> list[tuple[str, dict]]:
             events.append((event, data))
             if event == "hits":  # 근거 조문 k개가 답보다 먼저 온다
                 first = data["hits"][0]["title"] if data["hits"] else "-"
-                print(f"[hits] 근거 {len(data['hits'])}개 먼저 도착: {first}")
+                console.print(
+                    f"[dim]\\[hits][/] 근거 [bold]{len(data['hits'])}개[/] 먼저 도착: {escape(first)}"
+                )
             elif event == "delta":  # 답 조각. LLM을 쓰지 않으면 오지 않는다
                 print(data["text"], end="", flush=True)
             elif event == "done":  # 마지막 이벤트. LLM이 없으면 error 칸에 이유
-                err = f" 오류: {data['error']}" if data.get("error") else ""
-                print(
-                    f"\n[done] 입력 {data['input_tokens']} / 출력 {data['output_tokens']} 토큰, "
-                    f"{data['latency_s']:.1f}초{err}"
+                err = f" [red]오류: {escape(str(data['error']))}[/]" if data.get("error") else ""
+                console.print(
+                    f"\n[dim]\\[done][/] 입력 {data['input_tokens']} / 출력 {data['output_tokens']} 토큰, "
+                    f"[bold]{data['latency_s']:.1f}초[/]{err}"
                 )
             event = None
     return events
@@ -85,9 +90,14 @@ def read_sse(lines: Iterable[str]) -> list[tuple[str, dict]]:
 # 0. 준비물 확인: 기본 모델의 인덱스(ragkit index 결과)가 하나라도 있어야 앱이 뜬다
 index_dir = get_settings().data_dir / "processed" / "index"
 if not any(index_dir.glob("*.sqlite")):
-    sys.exit(
-        f"인덱스가 없습니다: {index_dir}\n  uv run ragkit index  로 만들거나 Drive에서 받으세요."
+    console.print(
+        Panel(
+            f"인덱스가 없습니다: {escape(str(index_dir))}\n  [dim]uv run ragkit index[/]  로 만들거나 Drive에서 받으세요.",
+            title="필요한 산출물이 없습니다",
+            border_style="red",
+        )
     )
+    sys.exit(1)
 
 with tempfile.TemporaryDirectory() as tmp:
     # ============================================================
@@ -105,8 +115,8 @@ with tempfile.TemporaryDirectory() as tmp:
     )
     # with 블록에 들어갈 때 lifespan이 모델·인덱스를 연다
     with TestClient(app) as client:
-        print(
-            f"모델·인덱스 로딩 {time.perf_counter() - start:.1f}초 (이후 요청은 재사용)"
+        console.print(
+            f"모델·인덱스 로딩 [bold]{time.perf_counter() - start:.1f}초[/] (이후 요청은 재사용)"
         )
 
         # ========================================================
@@ -118,22 +128,22 @@ with tempfile.TemporaryDirectory() as tmp:
         # 출력: 첫 검색의 ms는 워밍업이라 느리다(수백 ms에서 1초 넘게). 이후 요청은 수십 ms다.
         section("2. GET /api/health → POST /api/search")
         health = client.get("/api/health").json()
-        print(json.dumps(health, ensure_ascii=False))
+        console.print(json.dumps(health, ensure_ascii=False), markup=False)
 
         body = {"query": QUERY, "k": 3}  # k=3: 상위 3건만
         t = time.perf_counter()
         resp = client.post("/api/search", json=body)
-        print(
-            f"\n검색 {json.dumps(body, ensure_ascii=False)} → HTTP {resp.status_code}, "
-            f"{1000 * (time.perf_counter() - t):.0f}ms"
+        console.print(
+            f"\n검색 {escape(json.dumps(body, ensure_ascii=False))} → HTTP {resp.status_code}, "
+            f"[bold]{1000 * (time.perf_counter() - t):.0f}ms[/]"
         )
         for hit in resp.json()["hits"]:
-            print(f"  {hit['score']:.3f}  {hit['title']}")
+            console.print(f"  {hit['score']:.3f}  {escape(hit['title'])}")
 
         body = {**body, "laws": ["근로기준법"]}  # 같은 질문을 근로기준법 안에서만
-        print("\n법령 필터 laws=['근로기준법']")
+        console.print("\n법령 필터 laws=['근로기준법']", markup=False)
         for hit in client.post("/api/search", json=body).json()["hits"]:
-            print(f"  {hit['score']:.3f}  {hit['title']}")
+            console.print(f"  {hit['score']:.3f}  {escape(hit['title'])}")
 
         # ========================================================
         # 3. 스키마 검증: 잘못된 요청은 코드 없이도 422로 막힌다
@@ -144,12 +154,11 @@ with tempfile.TemporaryDirectory() as tmp:
         section("3. 잘못된 요청 → 422 (pydantic 검증)")
         # 빈 질문, k 상한(50) 초과
         resp = client.post("/api/search", json={"query": "", "k": 999})
-        print(
-            f"HTTP {resp.status_code}: {[str(e['loc'][-1]) + ' ' + e['msg'] for e in resp.json()['detail']]}"
-        )
+        errors = [str(e["loc"][-1]) + " " + e["msg"] for e in resp.json()["detail"]]
+        console.print(f"[yellow]HTTP {resp.status_code}[/]: {escape(str(errors))}")
         # 모르는 법령 이름
         resp = client.post("/api/search", json={"query": "수당", "laws": ["없는법"]})
-        print(f"HTTP {resp.status_code}: {resp.json()['detail']}")
+        console.print(f"[yellow]HTTP {resp.status_code}[/]: {escape(str(resp.json()['detail']))}")
 
         # ========================================================
         # 4. 스트리밍 답변 (SSE) 한 번
@@ -161,8 +170,8 @@ with tempfile.TemporaryDirectory() as tmp:
         # 출력: Content-Type text/event-stream, 이벤트 순서 ['hits', 'done'] 총 2개.
         section("4. POST /api/answer/stream (SSE)")
         if not health["llm_available"]:
-            print(
-                "LLM 답변은 이 강의에서 쓰지 않으므로 hits 뒤 done에 error가 옵니다. 이벤트 순서만 보세요."
+            console.print(
+                "[dim]LLM 답변은 이 강의에서 쓰지 않으므로 hits 뒤 done에 error가 옵니다. 이벤트 순서만 보세요.[/]"
             )
         body = {
             "query": "월세 계약이 끝나면 보증금은 언제 돌려받나요?",
@@ -172,13 +181,13 @@ with tempfile.TemporaryDirectory() as tmp:
         start = time.perf_counter()
         # stream으로 열어 응답을 줄 단위로 받는다
         with client.stream("POST", "/api/answer/stream", json=body) as resp:
-            print(
-                f"HTTP {resp.status_code}, Content-Type: {resp.headers['content-type']}"
+            console.print(
+                f"HTTP {resp.status_code}, Content-Type: {escape(resp.headers['content-type'])}"
             )
             events = read_sse(resp.iter_lines())
         names = [e for e, _ in events]
-        print(
-            f"이벤트 순서: {names[:3]} … 총 {len(events)}개, {time.perf_counter() - start:.1f}초"
+        console.print(
+            f"이벤트 순서: {escape(str(names[:3]))} … 총 {len(events)}개, [bold]{time.perf_counter() - start:.1f}초[/]"
         )
 
         # ========================================================
@@ -192,17 +201,19 @@ with tempfile.TemporaryDirectory() as tmp:
             "/api/notebooks",
             json={"title": "첫 자취 준비", "laws": ["주택임대차보호법", "근로기준법"]},
         ).json()
-        print(f"POST /api/notebooks → {nb['id'][:8]}… 소스 법령 {nb['laws']}")
-        print("""이후 흐름 (웹 화면이 부르는 순서, 여기서는 LLM 호출을 아끼려 생략):
+        console.print(
+            f"POST /api/notebooks → {escape(nb['id'][:8])}… 소스 법령 {escape(str(nb['laws']))}"
+        )
+        console.print("""[dim]이후 흐름 (웹 화면이 부르는 순서, 여기서는 LLM 호출을 아끼려 생략):
   POST   /api/notebooks/{id}/chat       그 법령들 안에서만 검색해 SSE로 답 (이전 대화 참고)
   GET    /api/notebooks/{id}/messages   대화 기록 (답 + 근거 조문)
-  POST   /api/notebooks/{id}/notes      답을 근거 조문과 함께 노트로 저장""")
+  POST   /api/notebooks/{id}/notes      답을 근거 조문과 함께 노트로 저장[/]""")
         resp = client.delete(f"/api/notebooks/{nb['id']}")
-        print(
+        console.print(
             f"DELETE /api/notebooks/{{id}} → HTTP {resp.status_code} (대화·노트 함께 삭제)"
         )
 
-print("""
+console.print("""
 정리:
 - 모델 로딩(수 초)은 서버 시작 때 한 번, 요청은 수십 ms
 - 스키마 하나로 검증·문서(/docs)·클라이언트 계약이 함께 생긴다

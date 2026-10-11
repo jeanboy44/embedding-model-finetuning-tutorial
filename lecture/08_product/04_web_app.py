@@ -38,6 +38,12 @@ from pathlib import Path
 import cyclopts
 from cyclopts import Parameter
 from pydantic import BaseModel, Field
+from rich.console import Console
+from rich.markup import escape
+from rich.panel import Panel
+
+console = Console(emoji=False)
+err_console = Console(stderr=True, emoji=False)
 
 ROOT = Path(__file__).resolve().parents[2]
 WEB = ROOT / "apps" / "web-lite"
@@ -70,9 +76,13 @@ RUN = args.run
 
 
 def section(title: str) -> None:
-    print("\n" + "=" * 60)
-    print(title)
-    print("=" * 60)
+    console.print()
+    if len(title) + 6 > console.width:
+        # 명령 전체가 제목인 긴 줄은 줄 안에 넣으면 잘리므로 줄 아래에 따로 쓴다
+        console.rule(style="blue")
+        console.print(f"[bold]{escape(title)}[/]", soft_wrap=True)
+    else:
+        console.rule(f"[bold]{escape(title)}[/]", style="blue")
 
 
 def get(path: str) -> tuple[int, str]:
@@ -99,11 +109,18 @@ def post(path: str, body: dict) -> tuple[int, dict]:
 section("1. apps/web-lite/index.html (빌드 없음)")
 index_html = WEB / "index.html"
 if not index_html.exists():
-    sys.exit(f"화면 파일이 없습니다: {index_html}")
-print(
-    f"{index_html.relative_to(ROOT)}: {index_html.stat().st_size / 1e3:.0f} KB (이것이 사용자 브라우저로 가는 전부)"
+    err_console.print(
+        Panel(
+            escape(f"화면 파일이 없습니다: {index_html}"),
+            title="필요한 산출물이 없습니다",
+            border_style="red",
+        )
+    )
+    sys.exit(1)
+console.print(
+    f"{escape(str(index_html.relative_to(ROOT)))}: [bold]{index_html.stat().st_size / 1e3:.0f} KB[/] (이것이 사용자 브라우저로 가는 전부)"
 )
-print("모델 · 인덱스는 들어 있지 않다. 화면은 같은 주소의 /api/… 만 부른다")
+console.print("모델 · 인덱스는 들어 있지 않다. 화면은 같은 주소의 /api/… 만 부른다")
 
 # ============================================================
 # 2. API 서버가 화면도 함께 제공
@@ -114,10 +131,17 @@ print("모델 · 인덱스는 들어 있지 않다. 화면은 같은 주소의 /
 cmd = ["ragkit-api", "--port", str(PORT), "--web-dist", str(WEB)]
 if RUN:
     if not (FINETUNED / "model.safetensors").exists():
-        sys.exit(
-            f"파인튜닝 모델이 없습니다: {FINETUNED}\n"
-            "uv run python scripts/finetuned_drive.py download 002_hard_negatives"
+        err_console.print(
+            Panel(
+                escape(
+                    f"파인튜닝 모델이 없습니다: {FINETUNED}\n"
+                    "uv run python scripts/finetuned_drive.py download 002_hard_negatives"
+                ),
+                title="필요한 산출물이 없습니다",
+                border_style="red",
+            )
         )
+        sys.exit(1)
     cmd += ["--checkpoint", str(FINETUNED), "--backend", "torch"]
 section(f"2. {' '.join(cmd)}")
 # 서버 로그: 바로 죽었을 때 원인을 보여 주려고 모아 둔다. 서버가 사는 동안 열어 두고 finally에서 닫는다
@@ -130,8 +154,15 @@ server = subprocess.Popen(
 def fail(message: str) -> None:
     log.seek(0)
     tail = log.read().strip().splitlines()[-15:]
-    print(message)
-    print("서버 로그 마지막 줄:\n  " + "\n  ".join(tail or ["(없음)"]))
+    err_console.print(
+        Panel(
+            escape(message)
+            + "\n서버 로그 마지막 줄:\n  "
+            + escape("\n  ".join(tail or ["(없음)"])),
+            title="오류",
+            border_style="red",
+        )
+    )
     sys.exit(1)
 
 
@@ -150,13 +181,13 @@ try:
     else:
         fail("서버가 90초 안에 뜨지 않았습니다.")
     health = json.loads(body)
-    print(
-        f"GET /api/health → {status} 모델 {health['model_key']} · 조문 조각 {health['doc_count']:,}개"
+    console.print(
+        f"GET /api/health → [bold]{status}[/] 모델 {escape(health['model_key'])} · 조문 조각 [bold]{health['doc_count']:,}[/]개"
     )
     status, html = get("/")
     has_form = 'id="form"' in html
-    print(
-        f"GET /           → {status} (화면 index.html, 검색 폼 {'있음' if has_form else '없음'})"
+    console.print(
+        f"GET /           → [bold]{status}[/] (화면 index.html, 검색 폼 {'있음' if has_form else '없음'})"
     )
 
     # ============================================================
@@ -170,27 +201,36 @@ try:
     # laws=None: 법령 필터 없음 (화면에서 법령을 고르면 이름 목록이 들어간다)
     status, result = post("/api/search", {"query": QUERY, "k": 3, "laws": None})
     elapsed = (time.perf_counter() - start) * 1000
-    print(f"질문: {QUERY}")
-    print(f"HTTP {status}, {elapsed:.0f}ms, 결과 {len(result['hits'])}건")
+    console.print(f"질문: {escape(QUERY)}", highlight=False)
+    console.print(
+        f"HTTP [bold]{status}[/], [bold]{elapsed:.0f}ms[/], 결과 [bold]{len(result['hits'])}[/]건"
+    )
     for i, hit in enumerate(result["hits"], 1):
-        print(f"  {i}. {hit['title']}  (유사도 {hit['score']:.3f})")
+        console.print(
+            f"  {i}. {escape(hit['title'])}  (유사도 [bold]{hit['score']:.3f}[/])",
+            highlight=False,
+        )
 
     if CHECK:
-        print("\n확인 완료 (--check).")
+        console.print("\n[green]확인 완료 (--check).[/]")
     else:
         # ============================================================
         # 4. 브라우저로 접속: 서버를 열어 두고 해 볼 것을 안내한다
         # ============================================================
         # 화면의 모든 동작은 같은 서버의 /api/… 호출이다. 개발자 도구 Network 탭에서 그 요청을 본다
         section("4. 브라우저로 접속")
-        print(f"""http://127.0.0.1:{PORT}
-  1) 예시 질문 칩을 눌러 본다 → 3교시 오프라인 파일과 같은 질문, 같은 화면
+        console.print(f"[bold]http://127.0.0.1:{PORT}[/]")
+        console.print(
+            f"""  1) 예시 질문 칩을 눌러 본다 → 3교시 오프라인 파일과 같은 질문, 같은 화면
   2) 테마 · 법령 필터를 걸어 다시 검색한다 (laws 필터가 /api/search로 간다)
   3) 카드의 "같은 조 전체"로 조 전체를 본다 (/api/articles/…)
   4) 브라우저 개발자 도구 Network 탭에서 /api/search 요청과 응답 JSON을 본다
   5) http://127.0.0.1:{PORT}/docs — 같은 서버의 API 설명서
 {"파인튜닝 모델(002_hard_negatives)로 떠 있다. 기본 모드와 같은 질문의 순위를 비교해 본다." if RUN else "학습 전 e5로 떠 있다. --run으로 파인튜닝 모델을 띄워 같은 질문을 비교해 본다."}
-끝내려면 Ctrl+C""")
+끝내려면 Ctrl+C""",
+            markup=False,
+            highlight=False,
+        )
         server.wait()
 except KeyboardInterrupt:
     pass

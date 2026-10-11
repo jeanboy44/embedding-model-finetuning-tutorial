@@ -34,19 +34,23 @@ import shutil
 import subprocess
 import sys
 import time
-import unicodedata
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Annotated
 
 import cyclopts
 from cyclopts import Parameter
+from rich import box
+from rich.console import Console
+from rich.markup import escape
+from rich.table import Table
 
 from ragkit.config import get_settings
 from ragkit.retrieval import default_index_path, model_key
 from ragkit.training import data_version as dv
 
 ROOT = Path(__file__).resolve().parents[2]
+console = Console(emoji=False)
 settings = get_settings()
 DATA = settings.data_dir
 MODELS = settings.models_dir
@@ -119,15 +123,6 @@ def version_of(dist: str) -> str:
         return importlib.metadata.version(dist)
     except importlib.metadata.PackageNotFoundError:
         return ""
-
-
-def width(text: str) -> int:
-    """터미널에 보이는 폭. 한글은 두 칸이다."""
-    return sum(2 if unicodedata.east_asian_width(ch) in "WF" else 1 for ch in text)
-
-
-def pad(text: str, n: int) -> str:
-    return text + " " * max(n - width(text), 0)
 
 
 def size_mb(path: Path) -> str:
@@ -333,7 +328,7 @@ def collect(quick: bool) -> dict[str, list[Check]]:
         "데이터": data_checks(),
     }
     if not quick:  # --quick이면 파일 · 패키지 점검(몇 초)만 하고 모델은 열지 않는다
-        print("동작 확인 중: 모델과 인덱스를 열어 검색해 봅니다 (수십 초)...")
+        console.print("[dim]동작 확인 중: 모델과 인덱스를 열어 검색해 봅니다 (수십 초)...[/]")
         groups["동작 확인"] = smoke_checks()
     return groups
 
@@ -362,11 +357,11 @@ def fix_commands(missing: list[Check]) -> list[str]:
 
 def run_fixes(cmds: list[str]) -> None:
     for cmd in cmds:
-        print(f"\n$ {cmd}")
+        console.print(f"\n[dim]$ {escape(cmd)}[/]", soft_wrap=True)
         result = subprocess.run(cmd, shell=True, cwd=ROOT, check=False)
         if result.returncode != 0:
-            print(
-                f"  실패 (종료 코드 {result.returncode}). 이어서 다음 명령을 실행합니다."
+            console.print(
+                f"  [red]실패[/] (종료 코드 {result.returncode}). 이어서 다음 명령을 실행합니다."
             )
 
 
@@ -377,9 +372,10 @@ def run_fixes(cmds: list[str]) -> None:
 # 빠진 것이 있으면 표(이름 · 필요한 교시 · 설명)와 "받는 법"(--fix가 돌릴 명령, 손으로 할 일)을 덧붙인다.
 # --all이면 설치 · 모델 · 데이터 · 동작 확인 그룹별로 다 된 항목까지 보여 준다.
 def mark(check: Check) -> str:
+    """통과 ✓ 초록, 선택 항목 미비 △ 노랑, 필수 미비 ✗ 빨강."""
     if check.ok:
-        return "✓"
-    return "△" if check.optional else "✗"
+        return "[green]✓[/]"
+    return "[yellow]△[/]" if check.optional else "[red]✗[/]"
 
 
 def missing_rows(missing: list[Check]) -> list[tuple[str, str, str]]:
@@ -411,17 +407,20 @@ def periods_text(check: Check) -> str:
 def show_all(groups: dict[str, list[Check]]) -> None:
     """--all: 다 된 항목까지 전부."""
     for title, checks in groups.items():
-        print(f"\n[{title}]")
-        name_w = max(width(c.name) for c in checks)
-        detail_w = max(width(c.detail) for c in checks)
+        console.print(f"\n[bold]{escape(title)}[/]")
+        table = Table(box=box.SIMPLE_HEAD, show_edge=False, show_header=False)
+        table.add_column("", width=1)
+        table.add_column("항목", overflow="fold")
+        table.add_column("상세", overflow="fold")
+        table.add_column("교시", style="dim")
         for c in checks:
-            print(
-                f"  {mark(c)} {pad(c.name, name_w)}  {pad(c.detail, detail_w)}  {periods_text(c)}"
-            )
+            table.add_row(mark(c), escape(c.name), escape(c.detail), periods_text(c))
+        console.print(table)
 
 
 def rule(title: str) -> None:
-    print(f"\n── {title} " + "─" * max(56 - width(title), 4))
+    console.print()
+    console.rule(f"[bold]{escape(title)}[/]", align="left", style="dim")
 
 
 def report(groups: dict[str, list[Check]], show_everything: bool) -> list[Check]:
@@ -431,53 +430,61 @@ def report(groups: dict[str, list[Check]], show_everything: bool) -> list[Check]
     # 선택 항목은 따로 보여 주고 종료 코드에 넣지 않는다
     skipped = [c for c in checks if not c.ok and c.optional]
 
-    print("\n" + "=" * 60)
-    print("실습 0-1: doctor — 환경과 리소스 점검")
-    print("=" * 60)
+    console.print()
+    console.rule("[bold]실습 0-1: doctor — 환경과 리소스 점검[/]", style="blue")
     if show_everything:
         show_all(groups)
 
     rule("교시별 준비")
+    table = Table(box=box.SIMPLE_HEAD, show_edge=False, show_header=False)
+    table.add_column("", width=1)
+    table.add_column("교시")
+    table.add_column("실습")
+    table.add_column("내용")
+    table.add_column("상태")
     for period, (lab, title) in PERIODS.items():
         gaps = [c for c in missing if period in c.periods]
-        status = "준비됨" if not gaps else f"빠진 것 {len(gaps)}개"
-        print(
-            f"  {'✗' if gaps else '✓'} {period}교시  {pad(lab, 6)}  {pad(title, 32)}  {status}"
+        status = "준비됨" if not gaps else f"[bold]빠진 것 {len(gaps)}개[/]"
+        table.add_row(
+            "[red]✗[/]" if gaps else "[green]✓[/]", f"{period}교시", lab, title, status
         )
+    console.print(table)
 
     if missing:
         rule("빠진 것")
-        rows = missing_rows(missing)
-        name_w = max(width(name) for name, _, _ in rows)
-        periods_w = max(width(periods) for _, periods, _ in rows)
-        for name, periods, detail in rows:
-            line = f"  ✗ {pad(name, name_w)}  {pad(periods, periods_w)}  {detail}"
-            print(line.rstrip())
+        table = Table(box=box.SIMPLE_HEAD, show_edge=False, show_header=False)
+        table.add_column("", width=1)
+        table.add_column("항목", overflow="fold")
+        table.add_column("교시", style="dim")
+        table.add_column("상세", overflow="fold")
+        for name, periods, detail in missing_rows(missing):
+            table.add_row("[red]✗[/]", escape(name), periods, escape(detail))
+        console.print(table)
 
         rule("받는 법")
         cmds = fix_commands(missing)
         manual = sorted({c.fix for c in missing if not c.auto})
         if cmds:
-            print("  uv run python lecture/03_setup/01_doctor.py --fix")
-            print("  → 아래를 대신 돌린다 (로그인 필요 없음)")
+            console.print("  [bold]uv run python lecture/03_setup/01_doctor.py --fix[/]")
+            console.print("  → 아래를 대신 돌린다 (로그인 필요 없음)")
             for cmd in cmds:
-                print(f"      {cmd}")
+                console.print(f"      [dim]{escape(cmd)}[/]", soft_wrap=True)
         if manual:
-            print("  손으로 할 것:")
+            console.print("  손으로 할 것:")
             for text in manual:
-                print(f"      {text}")
+                console.print(f"      {escape(text)}")
     else:
-        print(
-            "\n✓ 모두 준비됐습니다. 다음: uv run python lecture/03_setup/02_try_product.py"
+        console.print(
+            "\n[green]✓[/] 모두 준비됐습니다. 다음: [dim]uv run python lecture/03_setup/02_try_product.py[/]"
         )
 
     if skipped:
         rule("선택 (없어도 실습은 된다)")
         for c in skipped:
-            print(f"  △ {c.name}: {c.detail}")
-            print(f"      {c.fix}")
+            console.print(f"  [yellow]△[/] {escape(c.name)}: {escape(c.detail)}")
+            console.print(f"      [dim]{escape(c.fix)}[/]", soft_wrap=True)
     if not show_everything:
-        print("\n다 된 항목까지 전부 보려면 --all")
+        console.print("\n[dim]다 된 항목까지 전부 보려면 --all[/]")
     return missing
 
 
@@ -506,9 +513,9 @@ def main(
             c for group in groups.values() for c in group if not c.ok and not c.optional
         ]
         if cmds := fix_commands(missing):
-            print(f"빠진 것 {len(missing)}개를 받습니다.")
+            console.print(f"빠진 것 [bold]{len(missing)}개[/]를 받습니다.")
             run_fixes(cmds)
-            print("\n다시 점검합니다.")
+            console.print("\n다시 점검합니다.")
     missing = report(collect(quick), show_all)
     # 빠진 것이 있으면 1 (셸 스크립트에서 조건으로 쓸 수 있다)
     sys.exit(1 if missing else 0)

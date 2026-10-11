@@ -48,6 +48,12 @@ from pathlib import Path
 import cyclopts
 from cyclopts import Parameter
 from pydantic import BaseModel, Field
+from rich.console import Console
+from rich.markup import escape
+from rich.panel import Panel
+
+console = Console(emoji=False)
+err_console = Console(stderr=True, emoji=False)
 
 ROOT = Path(__file__).resolve().parents[2]
 WEB = ROOT / "apps" / "web"
@@ -75,9 +81,8 @@ if args is None:  # --help
 
 
 def section(title: str) -> None:
-    print("\n" + "=" * 60)
-    print(title)
-    print("=" * 60)
+    console.print()
+    console.rule(f"[bold]{escape(title)}[/]", style="blue")
 
 
 def get(path: str) -> tuple[int, str]:
@@ -95,15 +100,20 @@ section("1. pnpm build → apps/web/dist")
 # dist가 없을 때만, 또는 --run이면 다시
 if args.run or not (WEB / "dist" / "index.html").exists():
     if not shutil.which("pnpm"):
-        sys.exit(
-            "pnpm이 없습니다: corepack enable (Node.js 20+). 또는 Drive에서 받은 apps/web/dist를 쓰세요."
+        err_console.print(
+            Panel(
+                "pnpm이 없습니다: corepack enable (Node.js 20+). 또는 Drive에서 받은 apps/web/dist를 쓰세요.",
+                title="필요한 산출물이 없습니다",
+                border_style="red",
+            )
         )
+        sys.exit(1)
     pnpm = shutil.which("pnpm")  # Windows에서는 pnpm.cmd라 전체 경로로 부른다
     subprocess.run([pnpm, "install", "--frozen-lockfile"], cwd=WEB, check=True)
     subprocess.run([pnpm, "build"], cwd=WEB, check=True)
 files = [p for p in (WEB / "dist").rglob("*") if p.is_file()]
-print(
-    f"dist: 파일 {len(files)}개, {sum(p.stat().st_size for p in files) / 1e3:.0f} KB (이것이 사용자 브라우저로 가는 전부)"
+console.print(
+    f"dist: 파일 [bold]{len(files)}[/]개, [bold]{sum(p.stat().st_size for p in files) / 1e3:.0f} KB[/] (이것이 사용자 브라우저로 가는 전부)"
 )
 
 # ============================================================
@@ -114,7 +124,7 @@ print(
 # 출력에서 볼 것: health JSON, /가 React 루트를 주는 것, /notebooks/… 같은 화면 경로도 index.html로 가는 것
 section("2. ragkit-api --web-dist apps/web/dist")
 cmd = ["ragkit-api", "--port", str(PORT), "--web-dist", str(WEB / "dist")]
-print("$ " + " ".join(cmd))
+console.print(f"[dim]$ {escape(' '.join(cmd))}[/]", soft_wrap=True)
 # 서버 로그: 바로 죽었을 때 원인을 보여 주려고 모아 둔다. 서버가 사는 동안 열어 두고 finally에서 닫는다
 log = tempfile.TemporaryFile(mode="w+")  # noqa: SIM115
 server = subprocess.Popen(
@@ -125,8 +135,15 @@ server = subprocess.Popen(
 def fail(message: str) -> None:
     log.seek(0)
     tail = log.read().strip().splitlines()[-15:]
-    print(message)
-    print("서버 로그 마지막 줄:\n  " + "\n  ".join(tail or ["(없음)"]))
+    err_console.print(
+        Panel(
+            escape(message)
+            + "\n서버 로그 마지막 줄:\n  "
+            + escape("\n  ".join(tail or ["(없음)"])),
+            title="오류",
+            border_style="red",
+        )
+    )
     sys.exit(1)
 
 
@@ -143,30 +160,34 @@ try:
             time.sleep(1)
     else:
         fail("서버가 60초 안에 뜨지 않았습니다.")
-    print(f"GET /api/health → {status} {body}")
+    console.print(f"GET /api/health → [bold]{status}[/] {escape(body)}")
     status, html = get("/")
     has_root = 'id="root"' in html
-    print(
-        f"GET /           → {status} (화면 index.html, React 루트 {'있음' if has_root else '없음'})"
+    console.print(
+        f"GET /           → [bold]{status}[/] (화면 index.html, React 루트 {'있음' if has_root else '없음'})"
     )
     status, _ = get("/notebooks/any-id")
-    print(
-        f"GET /notebooks/… → {status} (화면 경로도 index.html로 → React Router가 처리)"
+    console.print(
+        f"GET /notebooks/… → [bold]{status}[/] (화면 경로도 index.html로 → React Router가 처리)"
     )
 
     if args.check:
-        print("\n확인 완료 (--check).")
+        console.print("\n[green]확인 완료 (--check).[/]")
     else:
         # ============================================================
         # 3. 브라우저로 접속: 서버를 열어 두고 해 볼 것을 안내한다
         # ============================================================
         # 채팅은 근거 조문까지만 나온다 (LLM 답변은 이 강의에서 쓰지 않는다)
         section("3. 브라우저로 접속")
-        print(f"""http://127.0.0.1:{PORT}
-  1) 새 노트북 → 소스 추가(예: 주택임대차보호법, 근로기준법)
+        console.print(f"[bold]http://127.0.0.1:{PORT}[/]")
+        console.print(
+            """  1) 새 노트북 → 소스 추가(예: 주택임대차보호법, 근로기준법)
   2) "전세 보증금을 지키려면?" → 답의 [1]을 눌러 조문 원문 보기
   3) 답을 노트에 저장, 이어서 "확정일자는 어디서 받아요?" (이전 대화를 참고)
-끝내려면 Ctrl+C""")
+끝내려면 Ctrl+C""",
+            markup=False,
+            highlight=False,
+        )
         server.wait()
 except KeyboardInterrupt:
     pass

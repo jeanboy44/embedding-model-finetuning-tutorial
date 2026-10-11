@@ -36,6 +36,11 @@ import unicodedata
 
 import numpy as np
 import onnxruntime as ort
+from rich import box
+from rich.console import Console
+from rich.markup import escape
+from rich.panel import Panel
+from rich.table import Table
 
 from ragkit.config import get_settings
 from ragkit.data import doc_text, load_corpus
@@ -43,6 +48,7 @@ from ragkit.embeddings import create_embedding_fn, format_passages
 
 SAMPLE_SIZE = 1000  # 코퍼스에서 고르게 뽑을 문서 수
 BATCH_SIZE = 64  # 한 번에 임베딩할 문장 수. ragkit index --batch-size와 같은 뜻
+console = Console(emoji=False)  # 데이터 문장의 :...: 이 이모지로 바뀌지 않게
 
 # (이름, backend, device, sort_by_length, threads, onnx_providers)
 # 한 번에 하나씩만 바꿔 효과를 분리한다. 모두 create_embedding_fn 인자 그대로다
@@ -92,7 +98,7 @@ docs = load_corpus(settings.data_dir / "processed" / "law_docs.json")
 step = max(len(docs) // SAMPLE_SIZE, 1)
 texts = format_passages([doc_text(d) for d in docs[::step][:SAMPLE_SIZE]])
 lengths = np.array([len(t) for t in texts])
-print(
+console.print(
     f"문서 {len(texts):,}개 (전체 {len(docs):,}개에서 고르게), 길이 중앙값 {int(np.median(lengths))}자, "
     f"최대 {lengths.max():,}자, 배치 {BATCH_SIZE}"
 )
@@ -103,7 +109,7 @@ baseline = None  # 처음으로 성공한 설정의 임베딩 = 결과 비교 �
 rows = []
 for name, backend, device, sort, threads, providers in CONFIGS:
     if not available(device, providers):
-        print(f"{pad(name)}  (이 컴퓨터에서 사용 불가, 건너뜀)")
+        console.print(f"{pad(name)}  [dim](이 컴퓨터에서 사용 불가, 건너뜀)[/]")
         continue
     try:
         embed = create_embedding_fn(
@@ -120,7 +126,9 @@ for name, backend, device, sort, threads, providers in CONFIGS:
         vectors = embed(texts, batch_size=BATCH_SIZE)
         elapsed = time.perf_counter() - start
     except Exception as e:  # noqa: BLE001 - 설정별로 실패 이유만 보여 주고 다음 설정으로 넘어간다
-        print(f"{pad(name)}  실패: {type(e).__name__}: {str(e).splitlines()[0][:80]}")
+        console.print(
+            f"{pad(name)}  [red]실패: {type(e).__name__}: {escape(str(e).splitlines()[0][:80])}[/]"
+        )
         continue
     if baseline is None:
         baseline = vectors
@@ -129,23 +137,33 @@ for name, backend, device, sort, threads, providers in CONFIGS:
     same = float((vectors * baseline).sum(axis=1).min())
     full_min = elapsed / len(texts) * len(docs) / 60
     rows.append((name, elapsed, full_min, same))
-    print(
-        f"{pad(name)}  {elapsed:6.1f}초  전체 약 {full_min:5.1f}분  기준 대비 최소 코사인 {same:.4f}"
+    console.print(
+        f"{pad(name)}  [bold]{elapsed:6.1f}초[/]  전체 약 {full_min:5.1f}분  기준 대비 최소 코사인 {same:.4f}"
     )
 
 if not rows:
-    raise SystemExit(
-        "\n성공한 설정이 없습니다. 위 실패 이유를 확인하세요 (모델·onnxruntime·torch 설치)."
+    console.print(
+        Panel(
+            "성공한 설정이 없습니다. 위 실패 이유를 확인하세요 (모델·onnxruntime·torch 설치).",
+            border_style="red",
+        )
     )
+    raise SystemExit(1)
 
 # 2. 기준 대비 속도 배율: 첫 설정(보통 torch cpu 정렬 없음)이 x1.0
 base_name, base_time = rows[0][0], rows[0][1]
-print(f"\n코사인·속도의 기준 = 처음 성공한 설정: {base_name}")
-print("기준 대비 속도")
+console.print(f"\n코사인·속도의 기준 = 처음 성공한 설정: [bold]{escape(base_name)}[/]")
+console.print("기준 대비 속도")
+table = Table("설정", "속도", box=box.SIMPLE_HEAD, show_edge=False)
+table.columns[1].justify = "right"
 for name, elapsed, _, _ in rows:
-    print(f"  {pad(name)}  x{base_time / elapsed:.1f}")
+    speedup = base_time / elapsed
+    color = "green" if speedup >= 1.05 else "yellow" if speedup <= 0.95 else ""
+    cell = f"x{speedup:.1f}"
+    table.add_row(escape(name), f"[{color}]{cell}[/]" if color else cell)
+console.print(table)
 
-print("""
+console.print("""
 생각해 볼 것:
 - 가장 효과가 큰 옵션은 무엇인가? 길이 정렬은 왜 빨라지는가?
 - 코사인이 0.999 아래로 떨어진 설정이 있다면, 속도와 정확도 중 무엇을 택할까?

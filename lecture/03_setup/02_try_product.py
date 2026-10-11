@@ -39,11 +39,18 @@ os.environ.setdefault(
     "MLFLOW_DISABLE_AGENT_HINT", "1"
 )  # mlflow가 설치돼 있으면 나오는 안내 끄기
 
+from rich import box
+from rich.console import Console
+from rich.markup import escape
+from rich.panel import Panel
+from rich.table import Table
+
 from ragkit.config import get_settings
 from ragkit.retrieval import default_index_path
 from ragkit.service import Searcher
 
 ROOT = Path(__file__).resolve().parents[2]
+console = Console(emoji=False)
 settings = get_settings()
 FINETUNED = settings.models_dir / "finetuned" / "002_hard_negatives"
 SPLIT_META = settings.data_dir / "splits" / "split_meta.json"
@@ -79,9 +86,8 @@ QUESTIONS = [
 
 
 def section(title: str) -> None:
-    print("\n" + "=" * 60)
-    print(title)
-    print("=" * 60)
+    console.print()
+    console.rule(f"[bold]{escape(title)}[/]", style="blue")
 
 
 def rel(path: Path) -> str:
@@ -92,8 +98,14 @@ def rel(path: Path) -> str:
 
 
 def stop(message: str) -> None:
-    print(f"\n{message}")
-    print("준비 상태 점검: uv run python lecture/03_setup/01_doctor.py")
+    console.print()
+    console.print(
+        Panel(
+            f"{escape(message)}\n준비 상태 점검: [dim]uv run python lecture/03_setup/01_doctor.py[/]",
+            title="필요한 산출물이 없습니다",
+            border_style="red",
+        )
+    )
     sys.exit(1)
 
 
@@ -142,11 +154,17 @@ def test_laws() -> set[str]:
 section("1. 학습 전 e5 vs 파인튜닝 e5 (002_hard_negatives)")
 start = time.perf_counter()
 base, tuned, backend = open_searchers()
-print(f"학습 전  {base.model_key:28s} 인덱스 {base.doc_count:,}개 조각 (onnx)")
-print(f"파인튜닝 {tuned.model_key:28s} 인덱스 {tuned.doc_count:,}개 조각 ({backend})")
-print(f"  인덱스 파일: {rel(default_index_path(tuned.model_key))} 처럼")
-print("  모델마다 따로 있다 (같은 조문도 모델이 다르면 벡터가 다르다)")
-print(f"모델·인덱스 열기 {time.perf_counter() - start:.1f}초")
+console.print(
+    f"학습 전  {escape(f'{base.model_key:28s}')} 인덱스 [bold]{base.doc_count:,}개[/] 조각 (onnx)"
+)
+console.print(
+    f"파인튜닝 {escape(f'{tuned.model_key:28s}')} 인덱스 [bold]{tuned.doc_count:,}개[/] 조각 ({backend})"
+)
+console.print(
+    f"  [dim]인덱스 파일: {escape(rel(default_index_path(tuned.model_key)))} 처럼[/]"
+)
+console.print("  [dim]모델마다 따로 있다 (같은 조문도 모델이 다르면 벡터가 다르다)[/]")
+console.print(f"모델·인덱스 열기 [bold]{time.perf_counter() - start:.1f}초[/]")
 
 
 # ============================================================
@@ -156,20 +174,26 @@ print(f"모델·인덱스 열기 {time.perf_counter() - start:.1f}초")
 # 출력에서 볼 것: 키워드 질문은 둘 다 상위, 상황 질문은 학습 전 65위 → 파인튜닝 2위처럼 차이가 크다.
 # 방문판매법 질문은 파인튜닝해도 16위라 못 찾는다 (6교시 오답 분석으로 이어진다).
 section(f"2. 같은 질문을 두 모델로 검색 (top-{K})")
-print(
-    "점수 크기는 모델마다 달라 서로 비교하지 않는다. 순위만 본다. ★ = 정답으로 볼 조문"
+console.print(
+    "[dim]점수 크기는 모델마다 달라 서로 비교하지 않는다. 순위만 본다.[/] [green]★[/] = 정답으로 볼 조문"
 )
 unseen = test_laws()
 for query, qtype, answer in QUESTIONS:
     law = answer.split("_")[0]  # 조 id "근로기준법_법률_제56조"의 앞부분이 법령 이름
     note = " · 학습 때 보지 않은 법령" if law in unseen else ""
-    print(f'\n질문 [{qtype}] "{query}"')
-    print(f"  정답으로 볼 조문: {answer}{note}")
+    console.print(f'\n[bold]질문[/] {escape(f"[{qtype}]")} "{escape(query)}"')
+    console.print(f"  정답으로 볼 조문: {escape(answer)}[dim]{note}[/]")
     for label, searcher in (("학습 전", base), ("파인튜닝", tuned)):
-        print(f"  [{label}] 정답 순위 {rank_of(searcher, query, answer)}")
+        console.print(
+            f"  {escape(f'[{label}]')} 정답 순위 [bold]{rank_of(searcher, query, answer)}[/]"
+        )
         for hit in searcher.search(query, k=K):
-            mark = "★" if (hit.metadata.get("parent_id") or hit.id) == answer else " "
-            print(f"    {mark} {hit.score:.3f}  {hit.metadata['title']}")
+            is_answer = (hit.metadata.get("parent_id") or hit.id) == answer
+            mark = "[green]★[/]" if is_answer else " "
+            console.print(
+                f"    {mark} {hit.score:.3f}  {escape(hit.metadata['title'])}",
+                highlight=False,
+            )
 
 
 # ============================================================
@@ -180,7 +204,9 @@ for query, qtype, answer in QUESTIONS:
 # 출력에서 볼 것: R@5 0.513 → 0.723, situation 0.403 → 0.631로 상황 질문의 차이가 가장 크다.
 section("3. 질문 몇 개가 아니라 test 전체로 보면 (exp_010)")
 if not COMPARISON.exists():
-    print(f"결과 파일이 없습니다: {rel(COMPARISON)} (6교시 실습 2에서 다시 본다)")
+    console.print(
+        f"[yellow]결과 파일이 없습니다:[/] {escape(rel(COMPARISON))} (6교시 실습 2에서 다시 본다)"
+    )
 else:
     # comparison.md의 표(모델별 지표, 질문 유형별 R@5)에서 학습 전 e5와 002_hard_negatives 행만 읽는다
     rows: dict[str, dict[str, str]] = {}
@@ -197,15 +223,17 @@ else:
             # 같은 모델의 표 여럿을 한 줄로 합친다
             rows.setdefault(cells[0], {}).update(zip(header, cells))
     cols = ["R@5", "keyword", "question", "situation"]
-    print(
-        f"  test R@5 (전체 · 질문 유형별, n=질문 수)\n  {'모델':32s}"
-        + "".join(f"{c:>16s}" for c in cols)
-    )
+    console.print("  test R@5 (전체 · 질문 유형별, n=질문 수)")
+    table = Table(box=box.SIMPLE_HEAD, show_edge=False)
+    table.add_column("모델")
+    for c in cols:
+        table.add_column(c, justify="right")
     for name in (settings.embedding_model_name, FINETUNED.name):
         values = rows.get(name, {})
-        print(f"  {name:34s}" + "".join(f"{values.get(c, '-'):>16s}" for c in cols))
-    print(f"  출처: {rel(COMPARISON)}")
-print("  → 키워드 질문보다 상황 설명(situation) 질문에서 학습 전 모델이 더 약하다")
+        table.add_row(escape(name), *(escape(values.get(c, "-")) for c in cols))
+    console.print(table)
+    console.print(f"  [dim]출처: {escape(rel(COMPARISON))}[/]")
+console.print("  → 키워드 질문보다 상황 설명(situation) 질문에서 학습 전 모델이 더 약하다")
 
 
 # ============================================================
@@ -215,7 +243,8 @@ print("  → 키워드 질문보다 상황 설명(situation) 질문에서 학습
 # --checkpoint 와 --backend torch 를 붙이면 파인튜닝 모델로 바뀐다는 점을 본다.
 section("4. 완성품 세 가지: 웹 · CLI · MCP")
 ckpt = rel(FINETUNED)
-print(f"""모두 같은 Searcher를 쓰고, --checkpoint {ckpt} --backend torch 를 붙이면
+console.print(
+    f"""모두 같은 Searcher를 쓰고, --checkpoint {ckpt} --backend torch 를 붙이면
 파인튜닝 모델로 바뀐다. 이 스크립트는 서버를 띄우지 않는다.
 
 [CLI] 터미널에서 바로 검색
@@ -233,11 +262,18 @@ print(f"""모두 같은 Searcher를 쓰고, --checkpoint {ckpt} --backend torch 
   uv run --package ragkit-api ragkit-api --web-dist apps/web-lite   # http://127.0.0.1:8000
   → 실습 4: uv run python lecture/08_product/04_web_app.py
 
-답변 생성(LLM)은 이 강의에서 쓰지 않는다. 세 제품 모두 검색 결과(근거 조문)까지 본다.""")
+답변 생성(LLM)은 이 강의에서 쓰지 않는다. 세 제품 모두 검색 결과(근거 조문)까지 본다.""",
+    markup=False,
+    highlight=False,
+    soft_wrap=True,
+)
 
-print("""
+console.print(
+    """
 정리:
 - 같은 코퍼스, 같은 크기(e5-small)의 모델인데 학습한 모델이 일상 말투 질문에서 정답을 더 위로 올린다
 - 그래도 못 찾는 질문이 남는다 → 실습 1(평가)과 실습 2(오답 분석)에서 숫자로 본다
 - 다음: lecture/03_setup/README.md의 명령으로 CLI에서 직접 학습 전후를 비교한다
-""")
+""",
+    highlight=False,
+)

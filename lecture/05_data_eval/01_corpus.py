@@ -38,6 +38,11 @@ from pathlib import Path
 import cyclopts
 from cyclopts import Parameter
 from pydantic import BaseModel, Field
+from rich import box
+from rich.console import Console
+from rich.markup import escape
+from rich.panel import Panel
+from rich.table import Table
 
 os.environ.setdefault(
     "TRANSFORMERS_VERBOSITY", "error"
@@ -47,6 +52,7 @@ from ragkit.config import get_settings
 from ragkit.data import doc_text, load_corpus
 from ragkit.embeddings import format_passages
 
+console = Console(emoji=False)
 ROOT = Path(__file__).resolve().parents[2]
 settings = get_settings()
 CORPUS = settings.data_dir / "processed" / "law_docs.json"
@@ -60,9 +66,8 @@ SPLIT_EXAMPLE = "전기사업법_법률_제2조"  # 정의 조문: 호가 많아
 
 
 def section(title: str) -> None:
-    print("\n" + "=" * 60)
-    print(title)
-    print("=" * 60)
+    console.print()
+    console.rule(f"[bold]{escape(title)}[/]", style="blue")
 
 
 def percentiles(values: list[int]) -> str:
@@ -103,9 +108,15 @@ if args is None:  # --help
     sys.exit(0)
 
 if not CORPUS.exists():
-    print(f"코퍼스가 없습니다: {CORPUS}")
-    print("받기: uv run python scripts/data_version.py pull v1")
-    print("직접 만들기(전체, 수 분): uv run python scripts/prepare_law_data.py")
+    console.print(
+        Panel(
+            f"코퍼스가 없습니다: {escape(str(CORPUS))}\n"
+            "받기: [dim]uv run python scripts/data_version.py pull v1[/]\n"
+            "직접 만들기(전체, 수 분): [dim]uv run python scripts/prepare_law_data.py[/]",
+            title="필요한 산출물이 없습니다",
+            border_style="red",
+        )
+    )
     sys.exit(1)
 
 docs = load_corpus(CORPUS)
@@ -122,21 +133,30 @@ laws = {d["category"] for d in docs}
 # law_name(파일)마다 하나씩만 세어 법률 · 시행령 · 시행규칙 파일 수를 구한다
 law_files = Counter(d["law_type"] for d in {d["law_name"]: d for d in docs}.values())
 articles = {d["parent_id"] for d in docs}  # parent_id = 나누기 전 조문의 id
-print(
-    f"법령       {len(laws):>7,}개  (법률·시행령·시행규칙 파일 {sum(law_files.values())}개: "
-    + ", ".join(f"{t} {n}" for t, n in law_files.most_common())
-    + ")"
+console.print(
+    f"법령       [bold]{len(laws):>7,}[/]개  (법률·시행령·시행규칙 파일 {sum(law_files.values())}개: "
+    + ", ".join(f"{escape(t)} {n}" for t, n in law_files.most_common())
+    + ")",
+    highlight=False,
 )
-print(f"조문       {len(articles):>7,}개")
-print(f"검색 문서  {len(docs):>7,}개  ← 긴 조문을 항·호로 나눈 조각")
+console.print(f"조문       [bold]{len(articles):>7,}[/]개", highlight=False)
+console.print(
+    f"검색 문서  [bold]{len(docs):>7,}[/]개  ← 긴 조문을 항·호로 나눈 조각",
+    highlight=False,
+)
 
-print("\n테마별")
+console.print("\n테마별")
 by_theme: dict[str, list[dict]] = {}
 for d in docs:
     by_theme.setdefault(d["theme"], []).append(d)
+theme_table = Table(box=box.SIMPLE_HEAD, show_edge=False)
+theme_table.add_column("테마")
+theme_table.add_column("법령", justify="right")
+theme_table.add_column("검색 문서", justify="right")
 for theme, items in sorted(by_theme.items(), key=lambda x: -len(x[1])):  # 큰 테마부터
     n_laws = len({d["category"] for d in items})
-    print(f"  {theme:10s} 법령 {n_laws:3d}개  검색 문서 {len(items):6,}개")
+    theme_table.add_row(escape(theme), f"{n_laws}개", f"{len(items):,}개")
+console.print(theme_table)
 
 
 # ============================================================
@@ -158,9 +178,11 @@ for field in (
     "parent_id",
     "paragraph",
 ):
-    print(f"  {field:12s} {example[field]!r}")
-print(f"  {'text':12s} {example['text'][:160]}...")  # 본문은 앞 160자만
-print(
+    console.print(f"  {field:12s} {escape(repr(example[field]))}")
+console.print(
+    f"  {'text':12s} {example['text'][:160]}...", markup=False, highlight=False
+)  # 본문은 앞 160자만
+console.print(
     "\n임베딩하는 글: 제목 + 줄바꿈 + 본문 (ragkit.data.doc_text), 앞에 'passage: '를 붙인다"
 )
 
@@ -174,15 +196,20 @@ print(
 section("3. 긴 조문은 항·호 단위로 나눈다")
 pieces = Counter(d["parent_id"] for d in docs)  # 조문 id → 조각 수
 split_articles = [pid for pid, n in pieces.items() if n > 1]  # 2조각 이상 = 나뉜 조문
-print(
-    f"나뉜 조문 {len(split_articles):,}개 / {len(articles):,}개"
-    f"  → 조각 {sum(pieces[p] for p in split_articles):,}개"
+console.print(
+    f"나뉜 조문 [bold]{len(split_articles):,}[/]개 / {len(articles):,}개"
+    f"  → 조각 [bold]{sum(pieces[p] for p in split_articles):,}[/]개",
+    highlight=False,
 )
-print(f"조문 하나가 가장 많이 나뉜 경우: {max(pieces.values())}조각")
-print(f"\n예: {SPLIT_EXAMPLE}")
+console.print(f"조문 하나가 가장 많이 나뉜 경우: {max(pieces.values())}조각")
+console.print(f"\n예: {escape(SPLIT_EXAMPLE)}")
+piece_table = Table(box=box.SIMPLE_HEAD, show_edge=False)
+piece_table.add_column("조각 id")
+piece_table.add_column("글자 수", justify="right")
 for d in [d for d in docs if d["parent_id"] == SPLIT_EXAMPLE][:6]:  # 앞 6조각까지만
-    print(f"  {d['id']:40s} {len(doc_text(d)):5,}자")
-print(
+    piece_table.add_row(escape(d["id"]), f"{len(doc_text(d)):,}자")
+console.print(piece_table)
+console.print(
     '  조각마다 같은 조의 머리말("이 법에서 사용하는 용어의 뜻은...")을 앞에 붙여 문맥을 남긴다'
 )
 
@@ -195,27 +222,36 @@ print(
 # 512토큰 넘는 비율을 전후로 비교한다. 출력에서 볼 것: 18.6% → 1.0%, 가장 긴 문서.
 section(f"4. 길이 분포: 모델은 {MAX_TOKENS}토큰까지만 읽는다")
 chars = [len(doc_text(d)) for d in docs]
-print(f"글자 수   {percentiles(chars)}")
+console.print(f"글자 수   {percentiles(chars)}")
 start = time.perf_counter()
 tokens = token_lengths(docs)
 if tokens is None:
-    print("토큰 수는 extra [torch]가 있어야 잰다 (uv sync --all-packages --all-extras)")
+    console.print(
+        "[yellow]토큰 수는 extra \\[torch]가 있어야 잰다[/] (uv sync --all-packages --all-extras)"
+    )
 else:
     over = sum(t > MAX_TOKENS for t in tokens)  # 모델이 뒷부분을 못 읽는 문서 수
-    print(f"토큰 수   {percentiles(tokens)}  ({time.perf_counter() - start:.1f}초)")
-    print(f"  {MAX_TOKENS}토큰 넘는 검색 문서 {over:,}개 ({over / len(tokens):.1%})")
+    console.print(
+        f"토큰 수   {percentiles(tokens)}  [dim]({time.perf_counter() - start:.1f}초)[/]"
+    )
+    console.print(
+        f"  {MAX_TOKENS}토큰 넘는 검색 문서 [bold]{over:,}[/]개 ({over / len(tokens):.1%})",
+        highlight=False,
+    )
     longest = max(range(len(docs)), key=lambda i: tokens[i])
-    print(
-        f"  가장 긴 문서: {docs[longest]['title']} ({tokens[longest]:,}토큰)"
-        " — 표처럼 항·호로 더 나눌 수 없는 문서가 남는다"
+    console.print(
+        f"  가장 긴 문서: {escape(docs[longest]['title'])} ({tokens[longest]:,}토큰)"
+        " — 표처럼 항·호로 더 나눌 수 없는 문서가 남는다",
+        highlight=False,
     )
     if ARTICLE_LEVEL.exists():  # 나누기 전 코퍼스가 있을 때만 전후 비교
         before = load_corpus(ARTICLE_LEVEL)
         before_tokens = token_lengths(before) or []
         before_over = sum(t > MAX_TOKENS for t in before_tokens)
-        print(
-            f"  나누기 전(조 단위 {len(before):,}개)에는 {before_over:,}개"
-            f" ({before_over / max(len(before), 1):.1%})가 넘었다 → 뒷부분은 모델이 못 읽는다"
+        console.print(
+            f"  나누기 전(조 단위 {len(before):,}개)에는 [bold]{before_over:,}[/]개"
+            f" ({before_over / max(len(before), 1):.1%})가 넘었다 → 뒷부분은 모델이 못 읽는다",
+            highlight=False,
         )
 
 
@@ -239,17 +275,16 @@ if args.run:
             "--output",
             str(out),
         ]
-        print(
-            "$ uv run python scripts/prepare_law_data.py --themes",
-            RUN_THEME,
-            "--repo-dir <임시 폴더> --output <임시 폴더>/law_docs.json",
+        console.print(
+            "[dim]$ uv run python scripts/prepare_law_data.py --themes "
+            f"{escape(RUN_THEME)} --repo-dir <임시 폴더> --output <임시 폴더>/law_docs.json[/]"
         )
         start = time.perf_counter()
         sys.stdout.flush()  # 아래 명령의 출력과 순서가 섞이지 않게
         result = subprocess.run(cmd, cwd=ROOT, check=False)
         if result.returncode != 0 or not out.exists():
-            print(
-                "\n만들지 못했습니다. 인터넷(github.com) 연결을 확인하세요. 받은 코퍼스는 그대로다."
+            console.print(
+                "\n[red]만들지 못했습니다.[/] 인터넷(github.com) 연결을 확인하세요. 받은 코퍼스는 그대로다."
             )
         else:
             mine = load_corpus(out)
@@ -260,23 +295,24 @@ if args.run:
             same_text = sum(
                 given_by_id.get(d["id"], {}).get("text") == d["text"] for d in mine
             )
-            print(
-                f"\n{time.perf_counter() - start:.1f}초. 직접 만든 문서 {len(mine):,}개"
-                f" vs 받은 코퍼스의 {RUN_THEME} {len(given):,}개"
+            console.print(
+                f"\n[bold]{time.perf_counter() - start:.1f}초[/]. 직접 만든 문서 [bold]{len(mine):,}[/]개"
+                f" vs 받은 코퍼스의 {escape(RUN_THEME)} {len(given):,}개",
+                highlight=False,
             )
-            print(
+            console.print(
                 f"  id 집합 같음: {'예' if same_ids else '아니오'},"
                 f" 본문까지 같은 문서 {same_text:,}개"
             )
-            print(
+            console.print(
                 "  다르면 그 사이 법령이 개정된 것이다 (legalize-kr은 최신 법령을 받는다."
                 " 시점을 고정하려면 --as-of YYYY-MM-DD)"
             )
-    print("임시 폴더는 지웠다. data/processed/law_docs.json은 바뀌지 않았다.")
+    console.print("[dim]임시 폴더는 지웠다. data/processed/law_docs.json은 바뀌지 않았다.[/]")
 
-print("""
+console.print("""
 정리:
 - 검색 단위는 법령이 아니라 조문, 긴 조문은 다시 항·호로 나눈 조각이다 (숫자는 위 출력)
 - 긴 조문을 나누지 않으면 512토큰 뒤의 내용은 임베딩에 들어가지 않는다
-- 다음: uv run python lecture/05_data_eval/02_split.py (조 단위 분할)
+- 다음: [dim]uv run python lecture/05_data_eval/02_split.py[/] (조 단위 분할)
 """)

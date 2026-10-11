@@ -46,11 +46,17 @@ from pathlib import Path
 import cyclopts
 from cyclopts import Parameter
 from pydantic import BaseModel, Field
+from rich import box
+from rich.console import Console
+from rich.markup import escape
+from rich.panel import Panel
+from rich.table import Table
 
 from ragkit.config import get_settings
 from ragkit.data import load_corpus, load_questions
 
 ROOT = Path(__file__).resolve().parents[2]
+console = Console(emoji=False)
 settings = get_settings()
 CORPUS = settings.data_dir / "processed" / "law_docs.json"
 QUESTIONS = settings.data_dir / "questions"
@@ -62,9 +68,8 @@ TYPES = ("situation", "question", "keyword")  # 상황 설명 · 궁금한 점 �
 
 
 def section(title: str) -> None:
-    print("\n" + "=" * 60)
-    print(title)
-    print("=" * 60)
+    console.print()
+    console.rule(f"[bold]{escape(title)}[/]", style="blue")
 
 
 def rel(path: Path) -> str:
@@ -86,7 +91,10 @@ def validate(*files: Path, tail: int = 6) -> int:
         if len(files) == 1
         else f"{files[0].parent.name}/*.jsonl ({len(files)}개)"
     )
-    print(f"$ uv run python {rel(VALIDATE)} {shown}")
+    console.print(
+        f"[dim]$ uv run python {escape(rel(VALIDATE))} {escape(shown)}[/]",
+        soft_wrap=True,
+    )
     result = subprocess.run(
         [sys.executable, str(VALIDATE), *map(str, files)],
         cwd=ROOT,
@@ -98,7 +106,7 @@ def validate(*files: Path, tail: int = 6) -> int:
         line for line in (result.stdout + result.stderr).splitlines() if line.strip()
     ]
     for line in lines[-tail:]:
-        print(f"  {line}")
+        console.print(f"  {line}", markup=False)
     return result.returncode
 
 
@@ -124,8 +132,14 @@ if args is None:  # --help
 # 준비: 산출물이 없으면 스택트레이스 대신 받는 명령만 알려 주고 끝난다.
 files = sorted(QUESTIONS.glob("*.jsonl"))  # 파일 하나 = 법령 한 파트
 if not CORPUS.exists() or not files:
-    print(f"코퍼스 또는 질문이 없습니다: {rel(CORPUS)}, {rel(QUESTIONS)}/")
-    print("받기: uv run python scripts/data_version.py pull v1")
+    console.print(
+        Panel(
+            f"코퍼스 또는 질문이 없습니다: {escape(rel(CORPUS))}, {escape(rel(QUESTIONS))}/\n"
+            "받기: [dim]uv run python scripts/data_version.py pull v1[/]",
+            title="필요한 산출물이 없습니다",
+            border_style="red",
+        )
+    )
     sys.exit(1)
 
 corpus_by_id = {d["id"]: d for d in load_corpus(CORPUS)}  # id → 검색 문서(조문 조각)
@@ -142,15 +156,17 @@ questions = load_questions(QUESTIONS)  # 폴더를 주면 안의 jsonl을 모두
 section("1. 받은 질문: 규모")
 laws = {f.stem.split("__")[0] for f in files}  # "최저임금법__p01" → "최저임금법"
 positives = {q["positive_id"] for q in questions}  # 정답으로 쓰인 문서 id (중복 제거)
-print(
-    f"파일(파트)  {len(files):>7,}개  · 법령 {len(laws)}개 (파일 이름: <법령>__pNN.jsonl)"
+console.print(
+    f"파일(파트)  [bold]{len(files):>7,}개[/]  · 법령 {len(laws)}개 [dim](파일 이름: <법령>__pNN.jsonl)[/]",
+    highlight=False,
 )
-print(f"질문        {len(questions):>7,}개")
-print(
-    f"정답 문서   {len(positives):>7,}개  ← 정답으로 한 번 이상 쓰인 검색 문서"
-    f" (코퍼스 {len(corpus_by_id):,}개 중 {len(positives) / len(corpus_by_id):.0%})"
+console.print(f"질문        [bold]{len(questions):>7,}개[/]")
+console.print(
+    f"정답 문서   [bold]{len(positives):>7,}개[/]  ← 정답으로 한 번 이상 쓰인 검색 문서"
+    f" (코퍼스 {len(corpus_by_id):,}개 중 {len(positives) / len(corpus_by_id):.0%})",
+    highlight=False,
 )
-print(f"한 줄의 필드: {', '.join(questions[0])}")
+console.print(f"한 줄의 필드: {escape(', '.join(questions[0]))}")
 
 
 # ============================================================
@@ -163,30 +179,40 @@ print(f"한 줄의 필드: {', '.join(questions[0])}")
 # 2~3어절 9%. 장표의 실제 검색어(2~3어절 70%)와 벌어진 차이가 가이드를 고친 이유다.
 section("2. 질문 유형과 테마")
 types = Counter(q["query_type"] for q in questions)
+table = Table(box=box.SIMPLE_HEAD, show_edge=False)
+table.add_column("유형")
+table.add_column("질문 수", justify="right")
+table.add_column("비율", justify="right")
 for t in TYPES:
-    print(f"  {t:10s} {types[t]:6,}개  {types[t] / len(questions):5.0%}")
+    table.add_row(t, f"{types[t]:,}개", f"{types[t] / len(questions):.0%}")
+console.print(table)
 
-print("\n테마별 (정답 문서의 테마)")
+console.print("테마별 (정답 문서의 테마)")
 themes = Counter(
     corpus_by_id[q["positive_id"]]["theme"]  # tax · finance · traffic · youth …
     for q in questions
     if q["positive_id"] in corpus_by_id
 )
+table = Table(box=box.SIMPLE_HEAD, show_edge=False)
+table.add_column("테마")
+table.add_column("질문 수", justify="right")
 for theme, n in themes.most_common():
-    print(f"  {theme:10s} {n:6,}개")
+    table.add_row(escape(theme), f"{n:,}개")
+console.print(table)
 
 keywords = [q["query"] for q in questions if q["query_type"] == "keyword"]
 words = [len(k.split()) for k in keywords]  # 어절 수 = 공백으로 나눈 조각 수
 short = sum(2 <= w <= 3 for w in words)  # 실제 검색어 길이(2~3어절)에 드는 질문
-print(
-    f"\nkeyword 질문 {len(keywords):,}개: 평균 {sum(words) / max(len(words), 1):.1f}어절,"
-    f" 2~3어절 {short / max(len(words), 1):.0%}"
+console.print(
+    f"keyword 질문 {len(keywords):,}개: 평균 [bold]{sum(words) / max(len(words), 1):.1f}어절[/],"
+    f" 2~3어절 [bold]{short / max(len(words), 1):.0%}[/]",
+    highlight=False,
 )
-print(
-    "  장표: 실제 검색어(KoAIO)는 2~3어절이 70%. 이 차이를 보고 SKILL.md에 실제 검색어 형식을"
+console.print(
+    "  [dim]장표: 실제 검색어(KoAIO)는 2~3어절이 70%. 이 차이를 보고 SKILL.md에 실제 검색어 형식을[/]"
 )
-print(
-    "  few-shot으로 넣고 keyword 목표를 35%로 올렸다. 받은 질문(v1)은 그 전에 만든 것이라 위 숫자가 그대로다"
+console.print(
+    "  [dim]few-shot으로 넣고 keyword 목표를 35%로 올렸다. 받은 질문(v1)은 그 전에 만든 것이라 위 숫자가 그대로다[/]"
 )
 
 
@@ -203,22 +229,29 @@ example_rows = load_questions(EXAMPLE_FILE) if EXAMPLE_FILE.exists() else questi
 for t in TYPES:
     q = next((q for q in example_rows if q["query_type"] == t), None)  # 유형별 첫 질문
     if q:
-        print(f"  [{t}] {q['query']}")
+        console.print(f"  {escape(f'[{t}]')} {escape(q['query'])}", highlight=False)
 
 q = next((q for q in example_rows if EXAMPLE_WORD in q["query"]), example_rows[0])
 pos = corpus_by_id[q["positive_id"]]  # 정답 조문 조각 (title · text · theme …)
-print(f"\n질문      {q['query']}  ({q['query_type']})")
-print(f"정답      {pos['title']}")
-print(f"          {pos['text'][:120]}...")  # 조문 본문은 앞 120자만
+console.print(
+    f"\n[bold]질문[/]      {escape(q['query'])}  [dim]({escape(q['query_type'])})[/]",
+    highlight=False,
+)
+console.print(f"[bold]정답[/]      {escape(pos['title'])}", highlight=False)
+console.print(
+    f"          {pos['text'][:120]}...", markup=False, highlight=False
+)  # 조문 본문은 앞 120자만
 for neg_id in q["hard_negative_ids"]:
     neg = corpus_by_id[neg_id]
-    print(f"오답      {neg['title']}")
-    print(f"          {neg['text'][:80]}...")
-print(f"기준 답   {q['answer']}")  # 사람이 읽는 참고용. 학습 · 평가에는 쓰지 않는다
-print("→ 같은 주제(최저임금)지만 이 질문에는 답하지 않는 조문을 오답으로 고른다")
+    console.print(f"[bold]오답[/]      {escape(neg['title'])}", highlight=False)
+    console.print(f"          {neg['text'][:80]}...", markup=False, highlight=False)
+console.print(
+    f"[bold]기준 답[/]   {escape(q['answer'])}", highlight=False
+)  # 사람이 읽는 참고용. 학습 · 평가에는 쓰지 않는다
+console.print("→ 같은 주제(최저임금)지만 이 질문에는 답하지 않는 조문을 오답으로 고른다")
 
 n_neg = Counter(len(q["hard_negative_ids"]) for q in questions)  # 1~3개
-print(
+console.print(
     "\n질문당 hard negative 수: "
     + ", ".join(f"{k}개 {v:,}" for k, v in sorted(n_neg.items()))
 )
@@ -232,16 +265,16 @@ print(
 # 다른 정답을 가리키는 중복은 전체를 함께 넣어야 잡히기 때문이다.
 # 출력에서 볼 것: 한 파일은 질문 46개 통과, 전체는 WARN 1건(가치 낮은 조문)만 내고 통과
 section("4. 검증: 스킬이 파일을 쓴 뒤 반드시 돌리는 스크립트")
-print(
+console.print(
     "잡는 것: 필드 누락, 코퍼스에 없는 id, 다른 법령의 정답, 질문 속 조문 번호(정답 누설),"
 )
-print(
+console.print(
     "        파일 안·파일 사이의 중복 질문. 경고: 너무 짧거나 긴 질문, 가치 낮은 조문\n"
 )
 validate(EXAMPLE_FILE if EXAMPLE_FILE.exists() else files[0])  # 파일 하나
-print()
+console.print()
 validate(*files)  # 전체 230개 파일을 한 번에
-print(
+console.print(
     "  → 파일 사이 중복은 전체를 함께 검사해야 잡힌다 (같은 질문이 다른 정답을 가리키면 학습이 흔들린다)"
 )
 
@@ -257,9 +290,11 @@ if args.run:
     section("5. --run: 검증 직접 돌려 보기")
     if args.file:
         if not args.file.exists():
-            print(f"파일이 없습니다: {args.file}")
+            console.print(f"[red]파일이 없습니다:[/] {escape(str(args.file))}")
         else:
-            print("내가 만든 파일 (파일 이름이 <법령>__pNN.jsonl 이어야 법령을 읽는다)")
+            console.print(
+                "내가 만든 파일 (파일 이름이 <법령>__pNN.jsonl 이어야 법령을 읽는다)"
+            )
             validate(args.file, tail=30)
     else:
         rows = load_questions(EXAMPLE_FILE)[:3]  # 정상 질문 3건을 재료로 쓴다
@@ -278,14 +313,17 @@ if args.run:
                 "\n".join(json.dumps(r, ensure_ascii=False) for r in broken) + "\n",
                 encoding="utf-8",
             )
-            print(f"임시 파일 {path.name}에 일부러 틀린 줄 4개 + 정상 줄 1개를 썼다")
-            code = validate(path, tail=12)
-            print(
-                f"  종료 코드 {code} (1 = 실패). 스킬은 이 오류가 0개가 될 때까지 파일을 고친다"
+            console.print(
+                f"임시 파일 {escape(path.name)}에 일부러 틀린 줄 4개 + 정상 줄 1개를 썼다"
             )
-        print("임시 파일은 지웠다. data/questions/는 바뀌지 않았다.")
+            code = validate(path, tail=12)
+            console.print(
+                f"  종료 코드 [bold]{code}[/] (1 = 실패). 스킬은 이 오류가 0개가 될 때까지 파일을 고친다"
+            )
+        console.print("임시 파일은 지웠다. data/questions/는 바뀌지 않았다.")
 
-print(f"""
+console.print(
+    f"""
 직접 만들어 보기 (Claude Code를 저장소 루트에서 열고):
   uv run python {rel(SKILL / "scripts" / "law_parts.py")} list          # 법령·파트 목록
   "최저임금법 파트 1 질문 데이터 만들어줘. data/questions_mine/ 에 써 줘"
@@ -295,4 +333,8 @@ print(f"""
 - 질문 한 건 = 일상 말투 질문 + 정답 조문 + 같은 주제의 오답. 평가와 학습(5 · 6교시)이 모두 이것을 쓴다
 - 사람은 가이드(SKILL.md)와 표본을 고치고, 형식 오류는 검증 스크립트가 잡는다
 - 다음(5교시): uv run python lecture/05_data_eval/01_corpus.py (질문이 찾아야 할 코퍼스)
-""")
+""",
+    markup=False,
+    highlight=False,
+    soft_wrap=True,
+)

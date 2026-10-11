@@ -37,6 +37,12 @@ from pathlib import Path
 import cyclopts
 from cyclopts import Parameter
 from pydantic import BaseModel, Field
+from rich.console import Console
+from rich.markup import escape
+from rich.panel import Panel
+
+console = Console(emoji=False)
+err_console = Console(stderr=True, emoji=False)
 
 ROOT = Path(__file__).resolve().parents[2]
 ENV = {
@@ -64,9 +70,8 @@ if args is None:  # --help
 
 
 def section(title: str) -> None:
-    print("\n" + "=" * 60)
-    print(title)
-    print("=" * 60)
+    console.print()
+    console.rule(f"[bold]{escape(title)}[/]", style="blue")
 
 
 def run(*args: str, show: bool = True, required: bool = True) -> str:
@@ -74,7 +79,7 @@ def run(*args: str, show: bool = True, required: bool = True) -> str:
 
     실패하면 오류 출력(stderr)을 보여 주고, required면 스크립트를 끝낸다.
     """
-    print(f"$ ragkit-search {' '.join(args)}")
+    console.print(f"[dim]$ ragkit-search {escape(' '.join(args))}[/]", soft_wrap=True)
     proc = subprocess.run(
         ["ragkit-search", *args],
         capture_output=True,
@@ -88,10 +93,17 @@ def run(*args: str, show: bool = True, required: bool = True) -> str:
     if proc.returncode != 0:
         print(proc.stderr.rstrip())
         if required:
-            sys.exit(
-                f"ragkit-search가 실패했습니다 (종료 코드 {proc.returncode}). 위 오류를 확인하세요."
+            err_console.print(
+                Panel(
+                    f"ragkit-search가 실패했습니다 (종료 코드 {proc.returncode}). 위 오류를 확인하세요.",
+                    title="오류",
+                    border_style="red",
+                )
             )
-        print(f"(종료 코드 {proc.returncode}: 실패해도 다음 단계로 넘어간다)")
+            sys.exit(1)
+        console.print(
+            f"[yellow](종료 코드 {proc.returncode}: 실패해도 다음 단계로 넘어간다)[/]"
+        )
     return proc.stdout
 
 
@@ -103,10 +115,10 @@ def run(*args: str, show: bool = True, required: bool = True) -> str:
 # 출력에서 볼 것: laws의 법령 이름 · 조각 수, search의 [유사도]와 조각 id, show의 조 전체 원문과 출처 URL
 section("1. 법령 목록 → 검색 → 조문 보기")
 run("laws", "--theme", "youth")  # youth 테마 법령 32개 (법률 · 시행령 · 시행규칙)
-print()
+console.print()
 # 근로기준법으로 좁혀 상위 3개
 run("search", "야간 근로 수당", "-k", "3", "--law", "근로기준법")
-print()
+console.print()
 run("show", "근로기준법_법률_제56조", "--article")  # 조각 id → 같은 조의 항·호 전체
 
 # ============================================================
@@ -128,7 +140,9 @@ hits = json.loads(
         show=False,  # JSON 원문은 길어서 화면에 찍지 않고 파싱만 한다
     )
 )
-print(f"JSON 결과 {len(hits)}건, 필드: {sorted(hits[0]) if hits else '-'}")
+console.print(
+    f"JSON 결과 [bold]{len(hits)}[/]건, 필드: {escape(str(sorted(hits[0])) if hits else '-')}"
+)
 
 # ============================================================
 # 3. 배포: 설치 없이 실행 (uvx)
@@ -139,7 +153,7 @@ print(f"JSON 결과 {len(hits)}건, 필드: {sorted(hits[0]) if hits else '-'}")
 # 출력에서 볼 것: 휠 두 개의 크기(KB), "uvx 격리 환경에 torch 없음: True", 동료에게 줄 명령
 section("3. uvx로 배포 (torch 없는 가벼운 도구)")
 if not args.run:
-    print("휠 빌드와 uvx 격리 환경 확인은 --run에서 한다 (네트워크 필요).")
+    console.print("[dim]휠 빌드와 uvx 격리 환경 확인은 --run에서 한다 (네트워크 필요).[/]")
 else:
     with tempfile.TemporaryDirectory() as tmp:  # 휠은 임시 폴더에 두고 끝나면 지운다
         dist = Path(tmp)
@@ -151,7 +165,9 @@ else:
                 check=True,
             )
         for wheel in sorted(dist.glob("*.whl")):
-            print(f"  {wheel.name}  {wheel.stat().st_size / 1e3:.0f} KB")
+            console.print(
+                f"  {escape(wheel.name)}  [bold]{wheel.stat().st_size / 1e3:.0f} KB[/]"
+            )
         check = subprocess.run(
             [
                 "uvx",
@@ -169,17 +185,26 @@ else:
             check=False,
         )
         if check.returncode != 0:
-            print(
-                f"uvx 실행 실패 (종료 코드 {check.returncode}, 네트워크를 확인하세요):"
+            console.print(
+                f"[red]uvx 실행 실패 (종료 코드 {check.returncode}, 네트워크를 확인하세요):[/]"
             )
-            print("\n".join(check.stderr.strip().splitlines()[-5:]))
+            console.print(
+                "\n".join(check.stderr.strip().splitlines()[-5:]), markup=False
+            )
         else:
-            print(f"uvx 격리 환경에 torch 없음: {check.stdout.strip() == 'True'}")
+            console.print(
+                f"uvx 격리 환경에 torch 없음: [bold]{check.stdout.strip() == 'True'}[/]"
+            )
 
-print(f"""
-동료에게 줄 명령 (저장소 경로만 바꾸면 된다):
-  export RAGKIT_PROJECT_ROOT={ROOT}
-  uvx --from {ROOT}/apps/search-cli ragkit-search search "야간 근로 수당"
-또는 휠 두 개를 건네고:
-  uvx --with ragkit-0.1.0-py3-none-any.whl --from ragkit_search-0.1.0-py3-none-any.whl ragkit-search laws
-""")
+console.print()
+console.print("동료에게 줄 명령 (저장소 경로만 바꾸면 된다):")
+console.print(f"[dim]  export RAGKIT_PROJECT_ROOT={escape(str(ROOT))}[/]", soft_wrap=True)
+console.print(
+    f'[dim]  uvx --from {escape(str(ROOT))}/apps/search-cli ragkit-search search "야간 근로 수당"[/]',
+    soft_wrap=True,
+)
+console.print("또는 휠 두 개를 건네고:")
+console.print(
+    "[dim]  uvx --with ragkit-0.1.0-py3-none-any.whl --from ragkit_search-0.1.0-py3-none-any.whl ragkit-search laws[/]",
+    soft_wrap=True,
+)

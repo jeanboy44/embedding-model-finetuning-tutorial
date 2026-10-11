@@ -36,12 +36,16 @@ import subprocess
 import sys
 import tempfile
 import time
-import unicodedata
 from pathlib import Path
 
 import cyclopts
 from cyclopts import Parameter
 from pydantic import BaseModel, Field
+from rich import box
+from rich.console import Console
+from rich.markup import escape
+from rich.panel import Panel
+from rich.table import Table
 
 from ragkit.data import load_questions
 
@@ -117,9 +121,8 @@ SOUP_REASONS = [
 
 
 def section(title: str) -> None:
-    print("\n" + "=" * 64)
-    print(title)
-    print("=" * 64)
+    console.print()
+    console.rule(f"[bold]{escape(title)}[/]", style="blue")
 
 
 def rel(path: Path) -> str:
@@ -129,30 +132,23 @@ def rel(path: Path) -> str:
         return str(path)
 
 
-def pad(text: str, width: int) -> str:
-    """한글(전각)을 두 칸으로 세어 왼쪽 정렬한다."""
-    used = sum(2 if unicodedata.east_asian_width(ch) in "WF" else 1 for ch in text)
-    return text + " " * max(width - used, 1)
-
-
 def require(items: list[tuple[Path, str]]) -> None:
     """필요한 파일이 없으면 무엇이 없고 어떻게 받는지 알려 주고 끝낸다."""
     missing = [(path, how) for path, how in items if not path.exists()]
     if not missing:
         return
-    print("필요한 산출물이 없습니다.")
-    for path, how in missing:
-        print(f"  - {rel(path)}\n      받기: {how}")
-    print(
-        "준비 상태는 uv run python lecture/03_setup/01_doctor.py 로 한 번에 볼 수 있습니다."
+    lines = [f"  - {escape(rel(path))}\n      받기: [dim]{escape(how)}[/]" for path, how in missing]
+    lines.append(
+        "준비 상태는 [dim]uv run python lecture/03_setup/01_doctor.py[/] 로 한 번에 볼 수 있습니다."
     )
+    console.print(Panel("\n".join(lines), title="필요한 산출물이 없습니다", border_style="red"))
     raise SystemExit(1)
 
 
 def ragkit(*args: str) -> float:
     """ragkit CLI를 저장소 루트에서 실행하고 걸린 시간(초)을 돌려준다."""
     shown = [rel(Path(a)) if a.startswith(str(ROOT)) else a for a in args]
-    print(f"$ uv run ragkit {' '.join(shown)}")
+    console.print(f"[dim]$ uv run ragkit {escape(' '.join(shown))}[/]", soft_wrap=True)
     env = {**os.environ, "MLFLOW_DISABLE_AGENT_HINT": "1"}
     start = time.perf_counter()
     done = subprocess.run(
@@ -162,8 +158,8 @@ def ragkit(*args: str) -> float:
         check=False,
     )
     if done.returncode != 0:
-        print(
-            f"ragkit {args[0]}이 실패했습니다 (종료 코드 {done.returncode}). 위 메시지를 확인하세요."
+        console.print(
+            f"[red]ragkit {escape(args[0])}이 실패했습니다 (종료 코드 {done.returncode}). 위 메시지를 확인하세요.[/]"
         )
         raise SystemExit(done.returncode)
     return time.perf_counter() - start
@@ -206,7 +202,7 @@ def evaluate_both(splits: Path, out_dir: Path) -> dict[str, Path]:
             "--out",
             str(out),
         )
-        print(f"  ({seconds:.0f}초)\n")
+        console.print(f"  [dim]({seconds:.0f}초)[/]\n")
         paths[name] = out
     return paths
 
@@ -214,6 +210,7 @@ def evaluate_both(splits: Path, out_dir: Path) -> dict[str, Path]:
 sys.stdout.reconfigure(
     line_buffering=True
 )  # ragkit 하위 프로세스 출력과 순서가 섞이지 않게
+console = Console(emoji=False)  # 데이터 문장의 :...: 이 이모지로 바뀌지 않게
 
 
 @Parameter(name="*")
@@ -242,17 +239,18 @@ require([(CORPUS, GET_DATA), (TEST, GET_SPLITS)])
 # 계산 없이 HYPOTHESES 표를 그대로 출력한다. 001은 오늘 직접 판정하고, 002~005는 에이전트가
 # dev로만 판정한 기록이다. 판정 규칙(0.02 미만은 차이로 보지 않는다)은 experiments/README.md와 같다
 section("1. 우리가 세운 가설: 001 위에 하나씩 바꿔 쌓았다")
+table = Table("실험", "가설", "결과", "판정", box=box.SIMPLE_HEAD, show_edge=False)
 for name, hypothesis, result, verdict in HYPOTHESES:
-    print(f"  {pad(name, 24)}{hypothesis}")
-    print(f"  {pad('', 24)}→ {result} · {verdict}")
-print("\n  006 model soup을 뺀 이유 (돌리기 전에 비용과 방향을 따졌다)")
+    table.add_row(escape(name), escape(hypothesis), escape(result), escape(verdict))
+console.print(table)
+console.print("  006 model soup을 뺀 이유 (돌리기 전에 비용과 방향을 따졌다)")
 for reason in SOUP_REASONS:
-    print(f"    · {reason}")
-print(
+    console.print(f"    · {escape(reason)}")
+console.print(
     "\n  판정 규칙: 0.02 미만 차이는 차이로 보지 않는다 (dev 표준오차 약 ±0.012, 실험 002 대조군 seed SD 약 0.006)"
 )
-print("  002부터는 dev로만 고르고 test는 쓰지 않았다. 001만 test로 한 번 판정했다")
-print(
+console.print("  002부터는 dev로만 고르고 test는 쓰지 않았다. 001만 test로 한 번 판정했다")
+console.print(
     "  오늘은 001을 직접 판정하고 쪼개 본다. 002의 가설이 어디서 나왔는지는 02에서 찾는다"
 )
 
@@ -286,12 +284,12 @@ else:
         found = load_results(folder)
         if BASE_NAME in found and TUNED_NAME in found:
             paths, out_dir = found, folder
-            print(
-                f"이미 있는 결과를 읽는다: {rel(folder)} (새로 재려면 {rel(OUT)}를 지운다)"
+            console.print(
+                f"이미 있는 결과를 읽는다: [dim]{escape(rel(folder))}[/] (새로 재려면 [dim]{escape(rel(OUT))}[/]를 지운다)"
             )
             break
     if not paths:
-        print(
+        console.print(
             "두 모델을 test 1,863개로 평가한다. 받은 인덱스가 있으면 질문만 임베딩한다 (모델 하나에 1분 안팎)."
         )
         paths = evaluate_both(SPLITS, OUT)
@@ -299,17 +297,24 @@ else:
 
 base = json.loads(paths[BASE_NAME].read_text(encoding="utf-8"))
 tuned = json.loads(paths[TUNED_NAME].read_text(encoding="utf-8"))
-print(
+console.print(
     f"\n  질문 {base['n']:,}개 · 법령 {len(base['by_law'])}개 · 판정 doc (정답 문서 하나)"
 )
-print(f"\n  {pad('', 18)}R@1    R@5    R@10   MRR@10")
+table = Table("모델", "R@1", "R@5", "R@10", "MRR@10", box=box.SIMPLE_HEAD, show_edge=False)
+for column in table.columns[1:]:
+    column.justify = "right"
 for label, r in (("학습 전 e5-small", base), ("001 전체 학습", tuned)):
     d = r["doc"]
-    print(
-        f"  {pad(label, 18)}{d['recall@1']:.3f}  {d['recall@5']:.3f}  {d['recall@10']:.3f}  {d['mrr@10']:.3f}"
+    table.add_row(
+        label,
+        f"{d['recall@1']:.3f}",
+        f"[bold]{d['recall@5']:.3f}[/]",
+        f"{d['recall@10']:.3f}",
+        f"{d['mrr@10']:.3f}",
     )
-print(
-    f"\n  평균만 보면 {base['doc']['recall@5']:.3f} → {tuned['doc']['recall@5']:.3f}. 이게 우연이 아닌지는 질문 단위로 본다"
+console.print(table)
+console.print(
+    f"  평균만 보면 [bold]{base['doc']['recall@5']:.3f} → {tuned['doc']['recall@5']:.3f}[/]. 이게 우연이 아닌지는 질문 단위로 본다"
 )
 
 
@@ -320,20 +325,22 @@ print(
 # McNemar p · 고침/망침 수 · 법령별로 나빠진 수를 낸다. CI가 0을 걸치지 않으면 차이로 본다
 section("3. 차이가 우연인가: ragkit paired-test (같은 질문끼리 짝지어 비교)")
 ragkit("paired-test", str(paths[BASE_NAME]), str(paths[TUNED_NAME]), "--judge", "doc")
-print("\n  읽는 법")
-print("    · 95% CI가 0을 걸치지 않으면 차이가 있다고 말한다")
-print(
+console.print("\n  읽는 법")
+console.print("    · 95% CI가 0을 걸치지 않으면 차이가 있다고 말한다")
+console.print(
     "    · 고침 = 학습 전엔 틀리고 001이 맞힌 질문, 망침 = 그 반대. 평균이 올라도 망친 질문이 있다"
 )
-print(
+console.print(
     "    · 나빠진 법령 수: 특정 법령에서만 오른 것인지 본다 (54개 법령 모두 학습에 있다)"
 )
 if args.run:
-    print(
-        f"  표본 {RUN_SAMPLE}개라 신뢰구간이 전체 test보다 넓다. 같은 차이도 표본이 작으면 확신할 수 없다"
+    console.print(
+        f"  [yellow]표본 {RUN_SAMPLE}개라 신뢰구간이 전체 test보다 넓다. 같은 차이도 표본이 작으면 확신할 수 없다[/]"
     )
 
-print(f"\n결과 폴더: {rel(out_dir)} (모델별 JSON의 per_question = 질문별 순위·top-10)")
-print(
+console.print(
+    f"\n결과 폴더: [dim]{escape(rel(out_dir))}[/] (모델별 JSON의 per_question = 질문별 순위·top-10)"
+)
+console.print(
     "다음: 02_error_analysis.py — 어디서 올랐고, 무엇이 여전히 틀리고, 우리가 준 오답은 어땠나"
 )

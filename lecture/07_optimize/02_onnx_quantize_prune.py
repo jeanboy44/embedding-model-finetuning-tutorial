@@ -48,13 +48,17 @@ import json
 import os
 import sys
 import tempfile
-import unicodedata
 from pathlib import Path
 
 import cyclopts
 import numpy as np
 from cyclopts import Parameter
 from pydantic import BaseModel, Field
+from rich import box
+from rich.console import Console
+from rich.markup import escape
+from rich.panel import Panel
+from rich.table import Table
 from safetensors import safe_open
 from tokenizers import Tokenizer
 
@@ -88,6 +92,7 @@ GRANULARITY = (
 # 3번에서 토큰화 비교에 쓸 test 질문 2,526개
 TEST = SETTINGS.data_dir / "splits" / "test.jsonl"
 SAMPLE = 200  # 코사인 비교용 문서 수 (코퍼스 2.6만 개에서 고르게)
+console = Console(emoji=False)  # 데이터 문장의 :...: 이 이모지로 바뀌지 않게
 
 
 @Parameter(name="*")
@@ -109,19 +114,12 @@ RUN = args.run
 
 
 def section(title: str) -> None:
-    print("\n" + "=" * 60)
-    print(title)
-    print("=" * 60)
+    console.print()
+    console.rule(f"[bold]{escape(title)}[/]", style="blue")
 
 
 def mb(path: Path) -> float:
     return path.stat().st_size / 1e6
-
-
-def pad(text: str, width: int) -> str:
-    """화면 폭 기준으로 오른쪽을 채운다 (한글은 두 칸을 차지해 f-string 폭 지정으로는 열이 어긋난다)."""
-    used = sum(2 if unicodedata.east_asian_width(ch) in "WF" else 1 for ch in text)
-    return text + " " * max(width - used, 0)
 
 
 def onnx_file(model_dir: Path) -> Path:
@@ -144,12 +142,12 @@ need = [MODEL / "model.safetensors", TEST] + (
 )
 missing = [p for p in need if not p.exists()]
 if missing:
-    print("다음 파일이 없습니다:")
-    for p in missing:
-        print(f"  {p}")
-    sys.exit(
-        "Drive에서 models/ · data/splits/를 받거나, --run으로 임시 폴더에 직접 만들어 보세요."
+    lines = ["다음 파일이 없습니다:"] + [f"  {escape(str(p))}" for p in missing]
+    lines.append(
+        "Drive에서 models/ · data/splits/를 받거나, [dim]--run[/]으로 임시 폴더에 직접 만들어 보세요."
     )
+    console.print(Panel("\n".join(lines), title="필요한 산출물이 없습니다", border_style="red"))
+    sys.exit(1)
 
 # 비교용 문장: 코퍼스에서 고르게 뽑은 문서 200개(passage: 접두어) + 질문 3개(query: 접두어)
 docs = load_corpus(SETTINGS.data_dir / "processed" / "law_docs.json")
@@ -181,20 +179,20 @@ with tempfile.TemporaryDirectory() as tmp:
         from ragkit.models.onnx_export import export_onnx, quantize_onnx
         from ragkit.models.vocab_prune import prune_vocab, vocab_keep_ids
 
-        print("변환 중… (임시 폴더)")
+        console.print("[dim]변환 중… (임시 폴더)[/]")
         export_onnx(MODEL, work / "fp32")  # CLI `ragkit export-onnx`와 같은 함수
         paths["fp32"] = work / "fp32"
     fp32_onnx = onnx_file(paths["fp32"])
-    print(
-        f"onnx/model.onnx {mb(fp32_onnx):.0f} MB (가중치 model.safetensors {mb(MODEL / 'model.safetensors'):.0f} MB와 거의 같다)"
+    console.print(
+        f"onnx/model.onnx [bold]{mb(fp32_onnx):.0f} MB[/] (가중치 model.safetensors {mb(MODEL / 'model.safetensors'):.0f} MB와 거의 같다)"
     )
 
     torch_vec = create_embedding_fn(str(MODEL), backend="torch", device="cpu")(texts)
     # onnx_vec은 이후 모든 비교의 기준이다
     onnx_vec = create_embedding_fn(str(paths["fp32"]), backend="onnx")(texts)
     cos = (torch_vec * onnx_vec).sum(axis=1)  # 둘 다 정규화되어 있어 내적 = 코사인
-    print(
-        f"torch vs onnx 코사인 ({len(texts)}문장): 평균 {cos.mean():.5f}, 최소 {cos.min():.5f} → 사실상 같은 모델"
+    console.print(
+        f"torch vs onnx 코사인 ({len(texts)}문장): 평균 [bold]{cos.mean():.5f}[/], 최소 {cos.min():.5f} → 사실상 같은 모델"
     )
 
     # ============================================================
@@ -211,7 +209,7 @@ with tempfile.TemporaryDirectory() as tmp:
             ("INT8 텐서 단위", "int8-tensor", False),  # 행렬 하나에 스케일 하나
             ("INT8 채널별", "int8", True),  # 채널마다 스케일. quantize 기본값
         ]:
-            print(f"{name} 양자화 중…")
+            console.print(f"[dim]{name} 양자화 중…[/]")
             # CLI `ragkit quantize [--no-per-channel]`와 같은 함수
             quantize_onnx(paths["fp32"], work / key, per_channel=per_channel)
             paths[key] = work / key
@@ -221,19 +219,21 @@ with tempfile.TemporaryDirectory() as tmp:
         c = cosine_to(onnx_vec, paths["int8"], texts)
         rows.append(("INT8 채널별", mb(onnx_file(paths["int8"])), c.mean(), c.min()))
 
-    print(
-        f"\n{pad('방식', 16)}{pad('크기 MB', 9)}{pad('fp32 대비 코사인 평균', 24)}최소"
-    )
+    console.print()
+    table = Table("방식", "크기 MB", "fp32 대비 코사인 평균", "최소", box=box.SIMPLE_HEAD, show_edge=False)
+    for column in table.columns[1:]:
+        column.justify = "right"
     for name, size, mean, low in rows:
-        print(f"{pad(name, 16)}{size:<9.0f}{mean:<24.4f}{low:.4f}")
+        table.add_row(name, f"[bold]{size:.0f}[/]", f"{mean:.4f}", f"{low:.4f}")
+    console.print(table)
 
-    print(
+    console.print(
         """
 왜 방식에 따라 다른가:
 - 텐서 단위: 가중치 행렬 전체에 스케일 하나. 값 범위가 넓은 열 때문에 나머지 열의 정밀도가 뭉개진다
 - 채널별: 출력 채널(열)마다 스케일을 따로 둔다. 크기는 거의 같고 원본에 훨씬 가깝다
   → ragkit quantize는 채널별이 기본값이다"""
-        + ("" if RUN else " (텐서 단위와 직접 비교하려면 --run)")
+        + ("" if RUN else " (텐서 단위와 직접 비교하려면 [dim]--run[/])")
     )
     if BENCH.exists():
         # 실험 101: ragkit-bench가 test 질문 2,526개로 잰 변형별 R@5 (3-3에서 표 전체를 본다)
@@ -242,12 +242,12 @@ with tempfile.TemporaryDirectory() as tmp:
             for r in json.loads(BENCH.read_text(encoding="utf-8"))["rows"]
         }
         n = next(iter(bench.values()))["n_questions"]
-        print(
-            f"\n검색 정확도 R@5 (test 질문 {n:,}개, {BENCH.relative_to(SETTINGS.project_root)}):"
+        console.print(
+            f"\n검색 정확도 R@5 (test 질문 {n:,}개, [dim]{escape(str(BENCH.relative_to(SETTINGS.project_root)))}[/]):"
         )
         for variant in ("onnx-fp32", "onnx-int8", "onnx-int8-pruned"):
             if variant in bench:
-                print(f"  {variant:<18} {bench[variant]['recall@5']:.3f}")
+                console.print(f"  {variant:<18} [bold]{bench[variant]['recall@5']:.3f}[/]")
     if GRANULARITY.exists():
         # 실험 009: 같은 test로 텐서 단위 INT8까지 잰 비교표 (comparison.md의 R@5 열)
         r5 = {}
@@ -256,10 +256,10 @@ with tempfile.TemporaryDirectory() as tmp:
             if len(cells) > 2 and cells[1].startswith("**"):
                 r5[cells[0]] = float(cells[1].strip("*"))
         if "multilingual-e5-small-int8-tensor" in r5:
-            print(
-                f"\n텐서 단위 vs 채널별 R@5 ({GRANULARITY.relative_to(SETTINGS.project_root)}):"
+            console.print(
+                f"\n텐서 단위 vs 채널별 R@5 ([dim]{escape(str(GRANULARITY.relative_to(SETTINGS.project_root)))}[/]):"
             )
-            print(f"  fp32 {r5.get('intfloat/multilingual-e5-small', float('nan')):.3f} · "
+            console.print(f"  fp32 {r5.get('intfloat/multilingual-e5-small', float('nan')):.3f} · "
                   f"채널별 {r5.get('multilingual-e5-small-int8', float('nan')):.3f} · "
                   f"텐서 단위 {r5['multilingual-e5-small-int8-tensor']:.3f}  → 코사인 0.99의 작은 차이가 검색에서는 R@5 몇 점으로 커진다")  # fmt: skip
 
@@ -278,10 +278,10 @@ with tempfile.TemporaryDirectory() as tmp:
     # 단어 임베딩 표 = 어휘 수 × 384차원
     emb = sum(v for k, v in sizes.items() if "word_embeddings" in k)
     total = sum(sizes.values())
-    print(
-        f"전체 {total / 1e6:.1f}M 파라미터 중 단어 임베딩 표 {emb / 1e6:.1f}M ({emb / total:.0%})"
+    console.print(
+        f"전체 {total / 1e6:.1f}M 파라미터 중 단어 임베딩 표 [bold]{emb / 1e6:.1f}M ({emb / total:.0%})[/]"
     )
-    print(
+    console.print(
         "→ 다국어 모델이라 100개 언어의 어휘를 모두 들고 있다. 층을 줄이기 전에 어휘부터 보자"
     )
 
@@ -292,15 +292,15 @@ with tempfile.TemporaryDirectory() as tmp:
         for enc in tok.encode_batch(corpus_texts[i : i + 2000]):
             used.update(enc.ids)
     vocab = tok.get_vocab_size()
-    print(
-        f"법령 코퍼스가 실제로 쓰는 토큰: {len(used):,}개 / {vocab:,}개 ({len(used) / vocab:.1%})"
+    console.print(
+        f"법령 코퍼스가 실제로 쓰는 토큰: [bold]{len(used):,}개[/] / {vocab:,}개 ({len(used) / vocab:.1%})"
     )
 
     if RUN:
         # 코퍼스 토큰 + 질문 앞 문구 + 한글 조각 전체 + 짧은 ASCII(약어·숫자·기호) + 특수 토큰
         prefixes = [SETTINGS.query_prefix, SETTINGS.passage_prefix]
         keep = vocab_keep_ids(tok, corpus_texts, prefixes=prefixes, ascii_max_len=3)
-        print("가지치기 → 변환 → 양자화 중… (임시 폴더)")
+        console.print("[dim]가지치기 → 변환 → 양자화 중… (임시 폴더)[/]")
         # keep(남길 토큰 id)만 남긴다. CLI `ragkit prune-vocab`와 같은 함수
         paths["pruned"] = prune_vocab(MODEL, work / "pruned", keep)
         export_onnx(paths["pruned"])
@@ -314,34 +314,40 @@ with tempfile.TemporaryDirectory() as tmp:
     c = cosine_to(onnx_vec, paths["pruned-int8"], texts)
     int8_mb = next(size for name, size, _, _ in rows if name == "INT8 채널별")
 
-    print(f"\n어휘 {vocab:,} → {new_tok.get_vocab_size():,}개")
-    print(f"  {pad('fp32 원본', 18)}{mb(fp32_onnx):4.0f} MB")
-    print(f"  {pad('INT8 (채널별)', 18)}{int8_mb:4.0f} MB")
-    print(
-        f"  {pad('가지치기 + INT8', 18)}{mb(onnx_file(paths['pruned-int8'])):4.0f} MB  fp32 대비 코사인 평균 {c.mean():.4f}"
+    console.print(f"\n어휘 {vocab:,} → [bold]{new_tok.get_vocab_size():,}개[/]")
+    table = Table("모델", "크기 MB", "fp32 대비 코사인 평균", box=box.SIMPLE_HEAD, show_edge=False)
+    for column in table.columns[1:]:
+        column.justify = "right"
+    table.add_row("fp32 원본", f"{mb(fp32_onnx):.0f}", "")
+    table.add_row("INT8 (채널별)", f"{int8_mb:.0f}", "")
+    table.add_row(
+        "가지치기 + INT8", f"[bold]{mb(onnx_file(paths['pruned-int8'])):.0f}[/]", f"{c.mean():.4f}"
     )
-    print(
-        f"\ntest 질문 {len(questions):,}개 중 {same:,}개({same / len(questions):.1%})가 원본과 똑같이 토큰화"
+    console.print(table)
+    console.print(
+        f"test 질문 {len(questions):,}개 중 [bold]{same:,}개({same / len(questions):.1%})[/]가 원본과 똑같이 토큰화"
     )
     if same == len(questions):
-        print("→ 이 질문들에서는 가지치기로 바뀌는 것이 없다")
-        print(
+        console.print("→ 이 질문들에서는 가지치기로 바뀌는 것이 없다")
+        console.print(
             "  (위 코사인이 1보다 조금 작은 것은 가지치기가 아니라 INT8 양자화 때문이다)"
         )
     else:
-        print(
-            f"→ {len(questions) - same:,}개는 남기지 않은 토큰이 있어 더 잘게 쪼개졌다. 이 질문들은 결과가 달라질 수 있다"
+        console.print(
+            f"[yellow]→ {len(questions) - same:,}개는 남기지 않은 토큰이 있어 더 잘게 쪼개졌다. 이 질문들은 결과가 달라질 수 있다[/]"
         )
 
-print(f"""
+console.print(
+    f"""
 정리:
 - 양자화는 모든 가중치를 근사한다(정밀도를 줄인다). 가지치기는 쓰지 않는 행을 뺄 뿐, 남은 가중치는 그대로다
 - 그래서 남긴 어휘로 덮이는 입력은 원본과 결과가 같다. 대가는 범용성: 한국어 법령 전용 모델이 된다
   (남기지 않은 문자는 더 잘게 쪼개지거나 <unk>. 실제 사용자 질문으로 덮는 비율을 꼭 확인할 것)
-- CLI: uv run ragkit prune-vocab models/multilingual-e5-small → export-onnx → quantize
+- CLI: [dim]uv run ragkit prune-vocab models/multilingual-e5-small → export-onnx → quantize[/]
 {"- (--run) 임시 폴더에 만든 모델은 지웠다. 받은 models/는 그대로다" + chr(10) if RUN else ""}
 다음(실습 3-3): 원본 / ONNX / INT8 / 가지치기+INT8을 속도·메모리·크기·정확도로 한 표에 비교하고, API에 적용한다.
-""")
+"""
+)
 
 # torch와 onnxruntime을 한 프로세스에서 쓰면 macOS에서 종료 처리 중 가끔
 # "recursive_mutex lock failed"로 죽는다(출력은 이미 끝난 뒤). 정리 단계를 건너뛰고 끝낸다.
