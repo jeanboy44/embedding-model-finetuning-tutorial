@@ -99,7 +99,8 @@ work/<역할>/       서브에이전트 작업 폴더
 
 1. `experiments/README.md`의 실험 표와 **가설 대기 목록**, ledger, 직전 바퀴의 `05_retro.md`를 읽는다. 기각된 가설을 다시 시험하지 않는다.
 2. 새 폴더 `experiments/<번호>_<이름>/`와 `runs/<번호>_<이름>/`를 만들고 `manifest.json` · `timeline.md`를 시작한다. MLflow 설정(위 기록 절)을 잡는다. 번호는 README 표의 다음 빈 번호. 이름은 가설이 정해진 뒤 붙여도 되고, 그때 두 폴더 이름을 함께 바꾼다.
-3. dev-a/b가 없으면 만든다: dev를 조 단위로 seed 고정해 반씩, `data/splits_article/dev_a.jsonl` · `dev_b.jsonl`. 이미 있으면 그대로 쓴다(바퀴마다 바꾸지 않는다).
+3. dev-a/b가 없으면 만든다: dev를 조 단위로 seed 고정해 반씩, `data/splits_article/dev_a.jsonl` · `dev_b.jsonl` (`scripts/run_queue.py`가 처음 돌 때 `loop_lib.make_dev_ab()`로 만든다). 이미 있으면 그대로 쓴다(바퀴마다 바꾸지 않는다).
+   공용 대조군 `runs/<현재 최고 설정>_seeds/`(seed 3개와 학습 전 e5의 공식 dev 평가)가 있으면 다시 쓰고, 없으면 먼저 만든다(제약 3절).
 4. **재현 점검**: 학습 전 e5와 현재 최고 모델을 dev로 다시 재서(`runs/<실험>/baseline_check/`) 알려진 값과 맞는지 본다. 분할이 바뀐 뒤 첫 바퀴라면 이 값이 새 기준선이 된다.
 
 ### 0. 오답 분석 (오답 분석 에이전트)
@@ -128,7 +129,8 @@ work/<역할>/       서브에이전트 작업 폴더
 
 ### 3. 실행 (오케스트레이터)
 
-- 파일럿을 먼저 돌린다. 메모리 · step당 시간 · 손실 방향이 정상이면 본 학습.
+- run은 `runs/<실험>/queue.tsv`에 올리고 `scripts/run_queue.py <실험>`을 백그라운드로 띄운다. 이 스크립트가 run마다 학습 → 공식 dev 평가 → dev-a/b 부분 결과 → 대조군 대비 대응 검정 → `summary.tsv` · `timeline.md` · MLflow까지 처리한다(사용법은 스크립트 머리말).
+- 파일럿을 먼저 돌린다(대기열에 `--max-steps 30 --limit 300 --no-dev-eval` run). 메모리 · step당 시간 · 손실 방향이 정상이면 본 학습.
 - run마다 `runs/<실험>/<run>/config.yaml`과 `command.sh`를 쓰고, `uv run ragkit train <config> --splits data/splits_article`. 모델은 `models/finetuned/<번호>_<이름>[_<run>]`. 새로 만든 학습 데이터는 `runs/<실험>/data/`에.
 - run이 끝날 때마다 `summary.tsv`에 한 줄(run · 학습 행 · negative 0개 질문 · 시간 · step 수 · 최대 메모리 · best epoch · dev R@5 · dev-b R@5 · 대조군 대비 Δ), `timeline.md`에 한 줄, 그리고 `log_experiment.py`로 MLflow에 올린다.
 - 공식 dev 평가와 대응 검정(`references/tools.md`), 결과 JSON은 run 폴더에. `data_digest.json`에 해시 · 행 수 · git commit · uv.lock 해시 · 라이브러리 버전.
@@ -167,3 +169,6 @@ work/<역할>/       서브에이전트 작업 폴더
 - `references/tools.md` — 명령, 재사용 스크립트, 폴더 · 모델 이름, ledger 형식
 - `references/lessons.md` — 이전 바퀴의 실수와 막는 법 (계획 에이전트에게 준다)
 - `scripts/log_experiment.py` — `runs/` · 문서를 MLflow에 올린다 (다시 실행해도 중복 run 없음)
+- `scripts/run_queue.py` — 대기열의 run을 하나씩 학습 · 평가 · 검정 · 기록
+- `scripts/loop_lib.py` — dev-a/b 만들기, 평가 결과 부분집합, 법령별 McNemar(Holm), 합격선 계산에 쓰는 함수
+- `scripts/decide.py` — 대조군 seed들과 후보 run들의 dev 평가로 합격선(제약 3절) 자동 판정

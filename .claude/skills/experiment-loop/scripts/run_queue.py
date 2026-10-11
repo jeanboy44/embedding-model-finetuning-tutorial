@@ -3,6 +3,7 @@
 queue.tsv 열 (탭 구분, 첫 줄 머리글):
   run  status  start  end  control  model_dir  train_args
   - status: 대기 | 실행 중 | 완료 | 실패 | 평가만   ("평가만"은 학습 없이 model_dir을 평가한다: 이미 있는 모델)
+  - run 하나가 실패하면 대기열 전체를 멈춘다(파일럿이 실패했는데 본 학습이 도는 일을 막는다)
   - control: 대응 검정 기준 run 이름 (같은 실험 폴더 안, 비우면 검정 안 함)
   - model_dir: 학습 결과를 저장할(또는 평가할) 모델 폴더
   - train_args: ragkit train에 더 줄 인자 (예: --max-steps 30 --limit 300 --no-dev-eval)
@@ -16,7 +17,6 @@ import csv
 import json
 import os
 import resource
-import shlex
 import subprocess
 import sys
 import time
@@ -98,8 +98,8 @@ def main() -> None:
         if not ok:
             cur["status"] = "실패"
             save_queue(queue_path, rows)
-            append(timeline, f"- {now()} · 3 실행 · {name} 실패 · 로그 끝을 볼 것")
-            continue
+            append(timeline, f"- {now()} · 3 실행 · {name} 실패 · 로그 끝을 볼 것 · 대기열을 멈춘다(남은 run은 대기 그대로)")
+            break
 
         meta = {}
         meta_path = Path(ROOT / model_dir / "train_meta.json")
