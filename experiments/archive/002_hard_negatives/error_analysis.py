@@ -15,11 +15,12 @@ from ragkit.data import load_labels, question_key
 RUN = Path(__file__).parent
 sys.path.insert(0, str(RUN))
 ART = RUN / "artifacts" / "003_convergence"
-from common import by, pct, relation  # noqa: E402
+from common import pct, relation
 
 
-def rows(split):
-    return [json.loads(line) for line in open(ART / f"topk_{split}.jsonl", encoding="utf-8")]
+def rows(split: str) -> list[dict]:
+    with open(ART / f"topk_{split}.jsonl", encoding="utf-8") as f:
+        return [json.loads(line) for line in f]
 
 labels = load_labels(Path("data/labels/dev.jsonl"))
 dev = rows("dev")
