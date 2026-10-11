@@ -15,6 +15,8 @@ from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
 
+import numpy as np
+
 from ragkit import tracking
 from ragkit.config import get_settings
 from ragkit.embeddings import EmbedFn
