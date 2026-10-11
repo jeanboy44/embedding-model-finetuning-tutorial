@@ -21,8 +21,14 @@ from pathlib import Path
 
 import yaml
 from cyclopts import run
+from rich import box
+from rich.console import Console
+from rich.markup import escape
+from rich.table import Table
 
 from ragkit.config import get_settings
+
+console = Console(emoji=False, soft_wrap=True)  # 긴 경로·URL을 중간에서 끊지 않게
 
 REPO_URL = "https://github.com/legalize-kr/legalize-kr.git"
 
@@ -250,10 +256,10 @@ def sync_repo(repo_dir: Path, law_dirs: list[str], *, as_of: str | None = None) 
         repo_dir.parent.mkdir(parents=True, exist_ok=True)
         # 최신본만 필요하면 커밋 1개만, 과거 시점이 필요하면 전체 이력(트리·파일 내용은 필요할 때만)을 받는다.
         history = ["--filter=tree:0"] if as_of else ["--depth=1", "--filter=blob:none"]
-        print(f"클론 중: {REPO_URL} → {repo_dir}")
+        console.print(f"[dim]클론 중: {escape(REPO_URL)} → {escape(str(repo_dir))}[/]")
         _git("clone", *history, "--no-checkout", "--sparse", REPO_URL, str(repo_dir))
     elif as_of and _git("rev-parse", "--is-shallow-repository", cwd=repo_dir) == "true":
-        print("과거 시점을 찾기 위해 전체 커밋 이력을 받는 중...")
+        console.print("[dim]과거 시점을 찾기 위해 전체 커밋 이력을 받는 중...[/]")
         _git("fetch", "--unshallow", "--filter=tree:0", "origin", "main", cwd=repo_dir)
     else:
         _git(
@@ -349,8 +355,8 @@ def build_corpus(repo_dir: Path, themes: dict[str, list[str]]) -> list[LawArticl
         for law_dir_name in law_dirs:
             law_dir = repo_dir / "kr" / law_dir_name
             if not law_dir.exists():
-                print(
-                    f"경고: {law_dir} 가 없습니다 (이 시점에 없던 법령일 수 있음). 건너뜁니다."
+                console.print(
+                    f"[yellow]경고: {escape(str(law_dir))} 가 없습니다 (이 시점에 없던 법령일 수 있음). 건너뜁니다.[/]"
                 )
                 continue
             for path in latest_law_files(law_dir):
@@ -417,7 +423,7 @@ def main(
     law_dirs = [d for dirs in selected.values() for d in dirs]
     commit = sync_repo(repo_dir, law_dirs, as_of=as_of)
     commit_date = _git("log", "-1", "--format=%cs", commit, cwd=repo_dir)
-    print(f"checkout: {commit[:10]} ({commit_date})")
+    console.print(f"checkout: {escape(commit[:10])} ({escape(commit_date)})")
 
     corpus = build_corpus(repo_dir, selected)
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -426,11 +432,18 @@ def main(
             [asdict(article) for article in corpus], f, ensure_ascii=False, indent=2
         )
 
+    table = Table(box=box.SIMPLE_HEAD, show_edge=False)
+    table.add_column("테마")
+    table.add_column("문서", justify="right")
     for theme in selected:
         count = sum(article.theme == theme for article in corpus)
-        print(f"  {theme}: 문서 {count}개")
+        table.add_row(theme, f"{count}")
+    console.print(table)
     articles = len({article.parent_id for article in corpus})
-    print(f"완료: 조문 {articles}개 → 문서 {len(corpus)}개 (긴 조문은 항·호 단위로 나눔) → {output}")
+    console.print(
+        f"완료: 조문 [bold]{articles}[/]개 → 문서 [bold]{len(corpus)}[/]개 (긴 조문은 항·호 단위로 나눔) "
+        f"→ [dim]{escape(str(output))}[/]"
+    )
 
 
 if __name__ == "__main__":

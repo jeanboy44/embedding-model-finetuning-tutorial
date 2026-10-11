@@ -6,8 +6,10 @@
 from pathlib import Path
 
 import cyclopts
+from rich.markup import escape
 
 from ragkit.cli import train_cli
+from ragkit.cli.console import console
 from ragkit.config import get_settings
 from ragkit.embeddings import create_embedding_fn
 
@@ -75,7 +77,9 @@ def index_command(
     index = build_index(
         docs, embed_fn, out, model_key=key, format_doc=profile.format_doc, batch_size=batch_size
     )
-    print(f"인덱스: {out} (문서 {len(index):,}개, 모델 {index.model_key})")
+    console.print(
+        f"인덱스: [dim]{escape(str(out))}[/] (문서 [bold]{len(index):,}[/]개, 모델 {escape(index.model_key)})"
+    )
 
 
 @app.command(name="export-onnx")
@@ -93,7 +97,7 @@ def export_onnx_command(
 
     onnx_path = export_onnx(model_dir, out_dir)
     size_mb = onnx_path.stat().st_size / 1e6
-    print(f"ONNX 변환 완료: {onnx_path} ({size_mb:.1f} MB)")
+    console.print(f"ONNX 변환 완료: [dim]{escape(str(onnx_path))}[/] ([bold]{size_mb:.1f} MB[/])")
 
 
 @app.command(name="quantize")
@@ -114,8 +118,14 @@ def quantize_command(
     out_dir = out_dir or model_dir.with_name(f"{model_dir.name}-int8")
     src = model_dir / "onnx" / "model.onnx"
     dst = quantize_onnx(model_dir, out_dir, per_channel=per_channel)
-    print(f"INT8 양자화 완료: {dst} ({dst.stat().st_size / 1e6:.1f} MB, 원본 {src.stat().st_size / 1e6:.1f} MB)")
-    print(f"사용: create_embedding_fn('{out_dir}', backend='onnx') / uv run ragkit index --model {out_dir}")
+    console.print(
+        f"INT8 양자화 완료: [dim]{escape(str(dst))}[/] "
+        f"([bold]{dst.stat().st_size / 1e6:.1f} MB[/], 원본 {src.stat().st_size / 1e6:.1f} MB)"
+    )
+    console.print(
+        f"[dim]사용: create_embedding_fn('{escape(str(out_dir))}', backend='onnx') "
+        f"/ uv run ragkit index --model {escape(str(out_dir))}[/]"
+    )
 
 
 @app.command(name="prune-vocab")
@@ -157,8 +167,13 @@ def prune_vocab_command(
     prune_vocab(model_dir, out_dir, keep)
     before = (model_dir / "model.safetensors").stat().st_size / 1e6
     after = (out_dir / "model.safetensors").stat().st_size / 1e6
-    print(f"어휘 {tok.get_vocab_size():,} → {len(keep):,}개, 가중치 {before:.0f} → {after:.0f} MB: {out_dir}")
-    print(f"다음: uv run ragkit export-onnx {out_dir} && uv run ragkit quantize {out_dir}")
+    console.print(
+        f"어휘 {tok.get_vocab_size():,} → [bold]{len(keep):,}[/]개, 가중치 {before:.0f} → [bold]{after:.0f} MB[/]: "
+        f"[dim]{escape(str(out_dir))}[/]"
+    )
+    console.print(
+        f"[dim]다음: uv run ragkit export-onnx {escape(str(out_dir))} && uv run ragkit quantize {escape(str(out_dir))}[/]"
+    )
 
 
 @app.command(name="register")
@@ -202,9 +217,11 @@ def register_command(
         model_dir, name=name, alias=alias or None, index_key=index_key, metrics=metrics
     )
     target = f"models:/{name}@{alias}" if alias else f"models:/{name}/{version}"
-    print(f"등록: {name} v{version} (인덱스 키 {index_key}) → {target}")
+    console.print(f"등록: [bold]{escape(name)} v{version}[/] (인덱스 키 {escape(index_key)}) → {escape(target)}")
     if not default_index_path(index_key).exists():
-        print(f"참고: 인덱스가 아직 없습니다. 먼저 실행: uv run ragkit index --model {model_dir}")
+        console.print(
+            f"[yellow]참고: 인덱스가 아직 없습니다.[/] [dim]먼저 실행: uv run ragkit index --model {escape(str(model_dir))}[/]"
+        )
 
 
 if __name__ == "__main__":

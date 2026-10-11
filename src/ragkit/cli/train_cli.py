@@ -8,7 +8,12 @@ import time
 from pathlib import Path
 from typing import Literal
 
+from rich import box
+from rich.markup import escape
+from rich.table import Table
+
 from ragkit import tracking
+from ragkit.cli.console import console
 from ragkit.config import get_settings
 from ragkit.data import (
     attach_labels,
@@ -47,7 +52,7 @@ def _paths(corpus: Path | None, splits: Path | None) -> tuple[Path, Path]:
 
 
 def _fail(message: str) -> None:
-    print(f"오류: {message}")
+    console.print(f"[red]오류:[/] {escape(message)}")
     raise SystemExit(1)
 
 
@@ -94,8 +99,8 @@ def split(
     corpus_by_id = {doc["id"]: doc for doc in docs}
 
     kept, stats = filter_questions(load_questions(questions), corpus_by_id)
-    print(
-        f"질문 {len(kept)}개 사용 (코퍼스에 없어 뺀 질문 {stats['missing_positive']}개, "
+    console.print(
+        f"질문 [bold]{len(kept)}[/]개 사용 (코퍼스에 없어 뺀 질문 {stats['missing_positive']}개, "
         f"지운 negative {stats['dropped_negatives']}개)"
     )
     if strict and stats["missing_positive"]:
@@ -108,9 +113,9 @@ def split(
     negative_stats = None
     if unit == "article":
         splits, negative_stats = drop_heldout_negatives(splits, corpus_by_id)
-        print(
+        console.print(
             f"train hard negative {negative_stats['train_negatives']}개 중 dev · test 조 문서 "
-            f"{negative_stats['dropped_negatives']}개를 뺐습니다 "
+            f"[bold]{negative_stats['dropped_negatives']}[/]개를 뺐습니다 "
             f"(negative가 없어진 질문 {negative_stats['no_negative_questions']}개)"
         )
     summary = split_summary(splits, corpus_by_id)
@@ -126,11 +131,18 @@ def split(
         **summary,
     }
     write_splits(splits, out, meta)
+    table = Table(box=box.SIMPLE_HEAD, show_edge=False)
+    table.add_column("분할")
+    table.add_column("질문", justify="right")
+    table.add_column("조", justify="right")
+    table.add_column("법령", justify="right")
     for name, info in summary.items():
-        print(f"  {name}: 질문 {info['questions']}개, 조 {info['articles']}개, 법령 {len(info['laws'])}개")
+        table.add_row(name, f"{info['questions']}", f"{info['articles']}", f"{len(info['laws'])}")
+    console.print(table)
+    for name, info in summary.items():
         if not info["questions"]:
-            print(f"  경고: {name}이 비었습니다 (법령이 적은 테마).")
-    print(f"완료 → {out}")
+            console.print(f"  [yellow]경고: {name}이 비었습니다 (법령이 적은 테마).[/]")
+    console.print(f"완료 → [dim]{escape(str(out))}[/]")
 
 
 def train(
@@ -185,7 +197,7 @@ def train(
         dev_questions = attach_labels(dev_questions, load_labels(train_config.dev_labels))
     missing = train_stats["missing_positive"] + dev_stats["missing_positive"]
     if missing:
-        print(f"경고: 코퍼스에 없는 질문 {missing}개를 뺐습니다 (split 때와 코퍼스가 다름).")
+        console.print(f"[yellow]경고: 코퍼스에 없는 질문 {missing}개를 뺐습니다 (split 때와 코퍼스가 다름).[/]")
     if not train_questions:
         _fail("이 코퍼스에 맞는 train 질문이 없습니다. 같은 코퍼스로 ragkit split을 다시 실행하세요.")
 
@@ -203,13 +215,13 @@ def train(
             passage_prefix=settings.passage_prefix,
         )
         _log_train(run, meta, Path(train_config.output_dir))
-    print(
-        f"완료: {meta['train_examples']}개 예시, {meta['seconds']:.0f}초, "
+    console.print(
+        f"완료: [bold]{meta['train_examples']}[/]개 예시, [bold]{meta['seconds']:.0f}초[/], "
         f"학습 파라미터 {meta['trainable_params']:,} / {meta['total_params']:,}"
-        f" → {train_config.output_dir}"
+        f" → [dim]{escape(str(train_config.output_dir))}[/]"
     )
     if meta.get("best_epoch"):
-        print(f"  dev R@5 기준 best epoch: {meta['best_epoch']}")
+        console.print(f"  dev R@5 기준 best epoch: [bold]{meta['best_epoch']}[/]")
 
 
 def _replace_negatives(questions: list[dict], path: Path) -> list[dict]:
@@ -303,9 +315,9 @@ def evaluate(
         run.log_data({"corpus": corpus_path, split: splits_dir / f"{split}.jsonl"})
         _log_eval(run, result, out)
 
-    print(f"{model}{' + 쿼리 확장' if expand else ''} · {split} ({result['n']}개 질문)")
+    console.print(f"[bold]{escape(model)}{' + 쿼리 확장' if expand else ''}[/] · {split} ({result['n']}개 질문)")
     _print_metrics(result)
-    print(f"결과 → {out}")
+    console.print(f"결과 → [dim]{escape(str(out))}[/]")
 
 
 def expand(
@@ -330,14 +342,14 @@ def expand(
     queries = [q["query"] for q in load_questions(Path(questions))]
     llm = llm or get_settings().gemini_model_name
     cache = cache or default_cache_path(llm)
-    print(f"질문 {len(queries)}개 확장 ({llm}) → {cache}")
+    console.print(f"질문 [bold]{len(queries)}[/]개 확장 ({escape(llm)}) → [dim]{escape(str(cache))}[/]")
     _expansions(queries, cache, rpm, llm)
-    print("완료")
+    console.print("완료")
 
 
 def _print_progress(done: int, total: int) -> None:
     if done == total or done % 20 == 0:
-        print(f"  {done}/{total}")
+        console.print(f"  [dim]{done}/{total}[/]")
 
 
 def _expansions(
@@ -370,11 +382,26 @@ def _expansions(
 
 
 def _print_metrics(result: dict) -> None:
-    for judge in ("doc", "article", "multi"):
-        if judge not in result:
-            continue
-        metrics = "  ".join(f"{k} {v:.3f}" for k, v in result[judge].items())
-        print(f"  [{judge}] {metrics}")
+    """판정(doc · article · multi)별 지표 표. R@5가 주요 지표라 굵게."""
+    judges = [judge for judge in ("doc", "article", "multi") if judge in result]
+    if not judges:
+        return
+    keys = list(dict.fromkeys(k for judge in judges for k in result[judge]))
+    table = Table(box=box.SIMPLE_HEAD, show_edge=False)
+    table.add_column("판정")
+    for key in keys:
+        table.add_column(key, justify="right")
+    for judge in judges:
+        cells = []
+        for key in keys:
+            if key not in result[judge]:
+                cells.append("-")
+            elif key == "recall@5":
+                cells.append(f"[bold]{result[judge][key]:.3f}[/]")
+            else:
+                cells.append(f"{result[judge][key]:.3f}")
+        table.add_row(judge, *cells)
+    console.print(table)
 
 
 def _evaluate_model(
@@ -405,7 +432,10 @@ def _evaluate_model(
     onnx_file = model_path / "onnx" / "model.onnx"
     weights = model_path / "model.safetensors"
     if backend == "onnx" and checkpoint and not onnx_file.exists() and "torch" in profile.backends:
-        print(f"참고: {onnx_file}가 없어 torch 백엔드로 평가합니다 (ragkit export-onnx로 만들 수 있음).")
+        console.print(
+            f"[yellow]참고:[/] {escape(str(onnx_file))}가 없어 torch 백엔드로 평가합니다 "
+            "[dim](ragkit export-onnx로 만들 수 있음)[/]"
+        )
         backend = "torch"
     if (
         backend == "onnx"
@@ -497,7 +527,10 @@ def compare(
     if settings.get("labels"):
         kept = attach_labels(kept, load_labels(Path(settings["labels"])))
         labels_info = {"path": str(settings["labels"]), "questions": sum("alt_positive_ids" in q for q in kept)}
-    print(f"질문 {len(kept)}개 × 모델 {len(models)}개 (코퍼스에 없어 뺀 질문 {stats['missing_positive']}개)")
+    console.print(
+        f"질문 [bold]{len(kept)}[/]개 × 모델 [bold]{len(models)}[/]개 "
+        f"(코퍼스에 없어 뺀 질문 {stats['missing_positive']}개)"
+    )
 
     out_dir = out_dir or Path(config).parent / "results"
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -525,7 +558,8 @@ def compare(
         (out_dir / "comparison.md").write_text(_comparison_markdown(table), encoding="utf-8")
         parent_run.log_artifact(out_dir / "comparison.md")
         parent_run.log_artifact(out_dir / "comparison.json")
-    print(f"비교표 → {out_dir / 'comparison.md'}")
+    _print_comparison(table)
+    console.print(f"비교표 → [dim]{escape(str(out_dir / 'comparison.md'))}[/]")
 
 
 def _compare_models(
@@ -545,7 +579,7 @@ def _compare_models(
     expansions = None
     for entry in models:
         model, expand = (entry["model"], bool(entry.get("expand"))) if isinstance(entry, dict) else (entry, False)
-        print(f"=== {model}{' + 쿼리 확장' if expand else ''}")
+        console.rule(f"[bold]{escape(model)}{' + 쿼리 확장' if expand else ''}[/]", style="blue")
         if expand and expansions is None:
             expansions = _expansions([q["query"] for q in kept], expansion_cache, rpm)
 
@@ -702,6 +736,30 @@ def _comparison_markdown(table: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _print_comparison(table: dict) -> None:
+    """비교표 요약을 터미널에 그린다 (comparison.md와 같은 숫자).
+
+    열이 17개인 Markdown 표는 80열 터미널에 들어가지 않아 R@5 중심 다섯 열만 싣는다.
+    R@1 · nDCG · article 판정은 위의 모델별 표에, 백엔드 · 확장 비용 · 학습 정보는 comparison.md에 있다.
+    """
+    rich_table = Table(box=box.SIMPLE_HEAD, show_edge=False)
+    rich_table.add_column("모델", overflow="fold")
+    for name in ("R@5", "multi R@5", "법령 평균", "R@10", "MRR@10"):
+        rich_table.add_column(name, justify="right", no_wrap=True)
+    for row in table["models"]:
+        doc = row["doc"]
+        label = _row_label(row).split("/")[-1]  # 허브 모델은 조직 이름을 빼고 좁게
+        rich_table.add_row(
+            escape(label),
+            f"[bold]{doc.get('recall@5', 0):.3f}[/]",
+            f"{row.get('multi', doc).get('recall@5', 0):.3f}",
+            f"{_law_macro(row):.3f}",
+            f"{doc.get('recall@10', 0):.3f}",
+            f"{doc['mrr@10']:.3f}",
+        )
+    console.print(rich_table)
+
+
 def paired_test(
     base: Path,
     other: Path,
@@ -728,13 +786,31 @@ def paired_test(
         result = run_paired_test(load(base), load(other), judge=judge, k=k)
     except ValueError as e:
         _fail(str(e))
-    print(
-        f"{judge} R@{k}: {result['base']:.3f} → {result['other']:.3f} (Δ {result['delta']:+.3f}, "
-        f"95% CI [{result['ci95'][0]:+.3f}, {result['ci95'][1]:+.3f}], 고침 {result['fixed']} / 망침 {result['broken']}, "
-        f"McNemar p {result['mcnemar_p']:.4f})"
+    delta_style = "green" if result["delta"] > 0 else "yellow" if result["delta"] < 0 else "bold"
+    console.print(
+        f"{judge} R@{k}: {result['base']:.3f} → [bold]{result['other']:.3f}[/] "
+        f"([{delta_style}]Δ {result['delta']:+.3f}[/], "
+        f"95% CI \\[{result['ci95'][0]:+.3f}, {result['ci95'][1]:+.3f}], 고침 {result['fixed']} / 망침 {result['broken']}, "
+        f"McNemar p {result['mcnemar_p']:.4f})",
+        highlight=False,
     )
+    table = Table(box=box.SIMPLE_HEAD, show_edge=False)
+    table.add_column("법령")
+    table.add_column("n", justify="right")
+    table.add_column(f"기준 R@{k}", justify="right")
+    table.add_column(f"비교 R@{k}", justify="right")
+    table.add_column("Δ", justify="right")
+    for law, v in result["by_law"].items():
+        style = "green" if v["delta"] > 0 else "yellow" if v["delta"] < 0 else ""
+        table.add_row(
+            escape(law), f"{v['n']}", f"{v['base']:.3f}", f"{v['other']:.3f}",
+            f"[{style}]{v['delta']:+.3f}[/]" if style else f"{v['delta']:+.3f}",
+        )
+    console.print(table)
     worse = [law for law, v in result["by_law"].items() if v["delta"] < 0]
-    print(f"  법령 {len(result['by_law'])}개 중 나빠진 법령 {len(worse)}개: {', '.join(worse) or '-'}")
+    console.print(
+        f"  법령 {len(result['by_law'])}개 중 나빠진 법령 [bold]{len(worse)}[/]개: {escape(', '.join(worse) or '-')}"
+    )
     if out:
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")

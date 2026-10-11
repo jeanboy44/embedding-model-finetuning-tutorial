@@ -15,6 +15,10 @@ import re
 from pathlib import Path
 
 from cyclopts import run
+from rich.console import Console
+from rich.markup import escape
+
+console = Console(emoji=False, soft_wrap=True)  # 긴 경로·URL을 중간에서 끊지 않게
 
 VIEWER_CSS = """
   * { box-sizing: border-box; }
@@ -199,7 +203,7 @@ def main(deck_dir: Path, out: Path) -> None:
     """
     out.write_text(build(deck_dir), encoding="utf-8")
     order = json.loads((deck_dir / "deck.json").read_text(encoding="utf-8"))["order"]
-    print(f"{out} ({len(order)}장)")
+    console.print(f"[dim]{escape(str(out))}[/] ([bold]{len(order)}[/]장)")
 
 
 if __name__ == "__main__":

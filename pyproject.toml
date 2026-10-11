@@ -13,6 +13,7 @@ dependencies = [
     "pydantic-settings>=2.0.0",
     "google-genai>=1.0.0",
     "cyclopts>=3.0.0",
+    "rich>=13.0",
     "loguru>=0.7.0",
     "sqlite-vec>=0.1.9",
 ]

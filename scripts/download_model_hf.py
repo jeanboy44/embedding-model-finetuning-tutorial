@@ -11,8 +11,12 @@ from pathlib import Path
 
 from cyclopts import run
 from huggingface_hub import snapshot_download
+from rich.console import Console
+from rich.markup import escape
 
 from ragkit.config import get_settings
+
+console = Console(emoji=False, soft_wrap=True)  # 긴 경로·URL을 중간에서 끊지 않게
 
 # 추론에 필요한 파일만 받는다 (pytorch_model.bin, onnx/, openvino/ 등 중복 가중치 제외).
 MODEL_FILES = [
@@ -48,17 +52,17 @@ def download_from_hf(
         모델이 저장된 디렉토리 경로.
     """
     if (output_dir / "config.json").exists() and not force:
-        print(f"이미 존재합니다: {output_dir} (다시 받으려면 --force)")
+        console.print(f"이미 존재합니다: [dim]{escape(str(output_dir))}[/] (다시 받으려면 --force)")
         return output_dir
 
-    print(f"다운로드 중: {repo_id} → {output_dir}")
+    console.print(f"[dim]다운로드 중: {escape(repo_id)} → {escape(str(output_dir))}[/]")
     snapshot_download(
         repo_id=repo_id,
         revision=revision,
         local_dir=output_dir,
         allow_patterns=MODEL_FILES,
     )
-    print(f"완료: {output_dir}")
+    console.print(f"완료: [dim]{escape(str(output_dir))}[/]")
     return output_dir
 
 

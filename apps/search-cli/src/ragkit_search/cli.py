@@ -1,14 +1,20 @@
-"""ragkit-search 명령: 법령 검색·답변·법령 목록·조문 보기 (표준 라이브러리 출력만)."""
+"""ragkit-search 명령: 법령 검색·답변·법령 목록·조문 보기.
+
+사람이 읽는 출력은 rich(console), 다른 프로그램이 읽는 --json·스트리밍 답변·stderr 오류는 print 그대로.
+"""
 
 import json
-import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Annotated, Literal
 
 import cyclopts
 from cyclopts import Parameter
+from rich import box
+from rich.markup import escape
+from rich.table import Table
 
+from ragkit.cli.console import console, fail
 from ragkit.retrieval import SearchHit
 from ragkit.service import DeltaEvent, DoneEvent, HitsEvent, Searcher
 
@@ -47,8 +53,7 @@ def _open_searcher(options: SearcherOptions) -> Searcher:
 
 
 def _fail(message: str) -> int:
-    print(f"오류: {message}", file=sys.stderr)
-    return 1
+    return fail(message)  # stderr에 "오류: ..." 그대로 (테스트가 문자열을 비교한다)
 
 
 def _snippet(text: str) -> str:
@@ -65,9 +70,9 @@ def _print_json(data: object) -> None:
 
 
 def _print_sources(hits: list[SearchHit]) -> None:
-    print("\n근거 조문:")
+    console.print("\n[bold]근거 조문:[/]")
     for n, hit in enumerate(hits, 1):
-        print(f"  [{n}] {_title(hit)} ({hit.id})")
+        console.print(f"  {escape(f'[{n}]')} {escape(_title(hit))} [dim]({escape(hit.id)})[/]")
 
 
 @app.command
@@ -96,10 +101,15 @@ def search(
         _print_json([hit.to_dict() for hit in hits])
         return 0
     if not hits:
-        print("검색 결과가 없습니다.")
+        console.print("[yellow]검색 결과가 없습니다.[/]")
     for rank, hit in enumerate(hits, 1):
-        print(f"{rank:>2}. [{hit.score:.3f}] {_title(hit)} ({hit.id})")
-        print(f"    {_snippet(hit.text)}")
+        # " 1. [0.812] 제목 (id)" 꼴은 그대로 두고 스타일만 입힌다 (tests/apps/test_search_cli.py)
+        console.print(
+            f"[bold]{rank:>2}.[/] [cyan]{escape(f'[{hit.score:.3f}]')}[/] "
+            f"[bold]{escape(_title(hit))}[/] [dim]({escape(hit.id)})[/]",
+            highlight=False,
+        )
+        console.print(f"    {_snippet(hit.text)}", markup=False, highlight=False)
     return 0
 
 
@@ -159,9 +169,16 @@ def laws(
         _print_json([vars(info) for info in infos])
         return 0
     if not infos:
-        print("법령이 없습니다.")
+        console.print("[yellow]법령이 없습니다.[/]")
+        return 0
+    table = Table(box=box.SIMPLE_HEAD, show_edge=False)
+    table.add_column("법령")
+    table.add_column("종류")
+    table.add_column("테마")
+    table.add_column("조각", justify="right")
     for info in infos:
-        print(f"{info.law_name}  ({info.law_type} · {info.theme} · 조각 {info.doc_count}개)")
+        table.add_row(escape(info.law_name), escape(info.law_type), escape(info.theme), f"{info.doc_count}")
+    console.print(table)
     return 0
 
 
@@ -189,11 +206,11 @@ def show(
     pieces = searcher.get_article(hit.metadata.get("parent_id") or hit.id) if article else [hit]
     for i, piece in enumerate(pieces):
         if i:
-            print()
-        print(f"{_title(piece)} ({piece.id})")
-        print(piece.text)
+            console.print()
+        console.print(f"[bold]{escape(_title(piece))}[/] [dim]({escape(piece.id)})[/]")
+        console.print(piece.text, markup=False, highlight=False)
     if url := hit.metadata.get("source_url"):
-        print(f"\n출처: {url}")
+        console.print(f"\n출처: [dim]{escape(url)}[/]", highlight=False)
     return 0
 
 
@@ -254,6 +271,6 @@ def skill_install(
     base = Path.home() if user else (project_dir or Path.cwd())
     text = _render_skill(options or SearcherOptions(), command)
     path = agent_skill.install(agent, base, text, name or agent_skill.SKILL_NAME)
-    print(f"설치: {path}")
-    print("에이전트를 새로 열면 스킬 목록에 보인다. 법령 질문을 하면 이 스킬로 조문을 찾는다.")
+    console.print(f"설치: [dim]{escape(str(path))}[/]", highlight=False)
+    console.print("에이전트를 새로 열면 스킬 목록에 보인다. 법령 질문을 하면 이 스킬로 조문을 찾는다.")
     return 0

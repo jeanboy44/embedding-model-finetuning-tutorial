@@ -17,12 +17,15 @@ from pathlib import Path
 
 import gdown
 from cyclopts import run
+from rich.console import Console
+from rich.markup import escape
 
 from ragkit.config import get_settings
 
 # 강사가 Drive에 올린 dist/multilingual-e5-small.zip ("링크가 있는 모든 사용자" 공유)
 DEFAULT_FILE_ID = "1q0q5-5g_hpVqUrTzy3-ccX22UjqI5K6c"
 DEFAULT_SHA256 = "8930c2ec9527c734d5afa10c77ef31a2ed5aac74c16387613a952994cb9d7281"
+console = Console(emoji=False, soft_wrap=True)  # 긴 경로·URL을 중간에서 끊지 않게
 
 
 def sha256sum(path: Path) -> str:
@@ -98,7 +101,7 @@ def download_from_gdrive(
         RuntimeError: 다운로드에 실패했을 때.
     """
     if (output_dir / "config.json").exists() and not force:
-        print(f"이미 존재합니다: {output_dir} (다시 받으려면 --force)")
+        console.print(f"이미 존재합니다: [dim]{escape(str(output_dir))}[/] (다시 받으려면 --force)")
         return output_dir
 
     if not file_id:
@@ -109,7 +112,7 @@ def download_from_gdrive(
     output_dir.parent.mkdir(parents=True, exist_ok=True)
     zip_path = output_dir.parent / f"{output_dir.name}.zip"
     try:
-        print(f"다운로드 중: Google Drive → {zip_path}")
+        console.print(f"[dim]다운로드 중: Google Drive → {escape(str(zip_path))}[/]")
         if file_id.startswith("http"):
             result = gdown.download(url=file_id, output=str(zip_path))
         else:
@@ -126,14 +129,14 @@ def download_from_gdrive(
                     f"sha256 불일치 (기대: {expected_sha256}, 실제: {actual}). "
                     "파일이 손상되었거나 다른 파일입니다."
                 )
-            print("sha256 확인 완료")
+            console.print("[green]sha256 확인 완료[/]")
 
-        print(f"압축 해제 중: {output_dir}")
+        console.print(f"[dim]압축 해제 중: {escape(str(output_dir))}[/]")
         extract_zip(zip_path, output_dir)
     finally:
         zip_path.unlink(missing_ok=True)
 
-    print(f"완료: {output_dir}")
+    console.print(f"완료: [dim]{escape(str(output_dir))}[/]")
     return output_dir
 
 

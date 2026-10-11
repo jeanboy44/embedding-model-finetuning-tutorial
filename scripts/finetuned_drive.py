@@ -37,6 +37,10 @@ from pathlib import Path
 
 import gdown
 from cyclopts import App
+from rich import box
+from rich.console import Console
+from rich.markup import escape
+from rich.table import Table
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from ragkit.config import get_settings
@@ -51,6 +55,7 @@ MANIFEST = Path(__file__).resolve().parent / "finetuned_models.json"
 DEFAULT_MODEL = "002_hard_negatives"  # test R@5가 가장 높은 모델(0.723, 실험 002) (3교시 · 실습 0)
 DEFAULT_INDEX = "multilingual-e5-small"  # 학습 전 e5의 인덱스. 직접 만들면 7~13분
 WEIGHTS = "model.safetensors"
+console = Console(emoji=False, soft_wrap=True)  # 긴 경로·URL을 중간에서 끊지 않게
 
 app = App(help="파인튜닝한 모델과 인덱스를 Google Drive에 올리고 내려받는다.")
 
@@ -199,9 +204,9 @@ def _upload_zip(
             raise SystemExit(
                 f"Drive 폴더에 {zip_path.name}이 없습니다. 먼저 브라우저로 올리세요."
             )
-        print(f"  Drive에 있는 파일 사용: file_id={found['ID']}")
+        console.print(f"  Drive에 있는 파일 사용: file_id={escape(found['ID'])}")
         return found["ID"]
-    print(f"업로드 중: {zip_path.name} → {remote}: (폴더 {folder})")
+    console.print(f"[dim]업로드 중: {escape(zip_path.name)} → {escape(remote)}: (폴더 {escape(folder)})[/]")
     subprocess.run(
         [
             "rclone",
@@ -218,7 +223,7 @@ def _upload_zip(
     uploaded = _drive_file(remote, folder, zip_path.name)
     if uploaded is None:
         raise SystemExit(f"업로드한 파일을 Drive에서 찾지 못했습니다: {zip_path.name}")
-    print(f"  완료: file_id={uploaded['ID']}")
+    console.print(f"  완료: file_id={escape(uploaded['ID'])}")
     return uploaded["ID"]
 
 
@@ -252,15 +257,15 @@ def upload(
     folder = folder_id(folder_url)
     for name in names or (DEFAULT_MODEL,):
         zip_path = root / "dist" / f"finetuned-{name}.zip"
-        print(f"묶는 중: models/finetuned/{name} → {zip_path.relative_to(root)}")
+        console.print(f"묶는 중: models/finetuned/{escape(name)} → [dim]{escape(str(zip_path.relative_to(root)))}[/]")
         entry = bundle(name, root, zip_path, with_index=with_index)
-        print(f"  {entry['size_mb']} MB, 인덱스 {'포함' if entry['index'] else '없음'}")
+        console.print(f"  [bold]{entry['size_mb']} MB[/], 인덱스 {'포함' if entry['index'] else '없음'}")
         entry["file_id"] = _upload_zip(zip_path, remote, folder, transfer=transfer)
         manifest = load_manifest()
         manifest["drive_folder"] = folder_url
         manifest["models"][name] = entry
         save_manifest(manifest)
-    print(f"\n목록 갱신: {MANIFEST.relative_to(MANIFEST.parents[1])} (커밋하세요)")
+    console.print(f"\n목록 갱신: [dim]{escape(str(MANIFEST.relative_to(MANIFEST.parents[1])))}[/] (커밋하세요)")
 
 
 @app.command(name="upload-index")
@@ -283,15 +288,15 @@ def upload_index(
     folder = folder_id(folder_url)
     for key in keys or (DEFAULT_INDEX,):
         zip_path = root / "dist" / f"index-{key}.zip"
-        print(
-            f"묶는 중: data/processed/index/{key}.sqlite → {zip_path.relative_to(root)}"
+        console.print(
+            f"묶는 중: data/processed/index/{escape(key)}.sqlite → [dim]{escape(str(zip_path.relative_to(root)))}[/]"
         )
         entry = bundle_index(key, root, zip_path)
         entry["file_id"] = _upload_zip(zip_path, remote, folder, transfer=transfer)
         manifest = load_manifest()
         manifest["indexes"][key] = entry
         save_manifest(manifest)
-    print(f"\n목록 갱신: {MANIFEST.relative_to(MANIFEST.parents[1])} (커밋하세요)")
+    console.print(f"\n목록 갱신: [dim]{escape(str(MANIFEST.relative_to(MANIFEST.parents[1])))}[/] (커밋하세요)")
 
 
 @app.command(name="upload-files")
@@ -314,14 +319,14 @@ def upload_files(
     _require_rclone()
     root = get_settings().project_root
     zip_path = root / "dist" / f"files-{name}.zip"
-    print(f"묶는 중: {', '.join(paths)} → {zip_path.relative_to(root)}")
+    console.print(f"묶는 중: {escape(', '.join(paths))} → [dim]{escape(str(zip_path.relative_to(root)))}[/]")
     entry = bundle_files(list(paths), root, zip_path)
-    print(f"  {entry['size_mb']} MB")
+    console.print(f"  [bold]{entry['size_mb']} MB[/]")
     entry["file_id"] = _upload_zip(zip_path, remote, folder_id(folder_url), transfer=transfer)
     manifest = load_manifest()
     manifest["files"][name] = entry
     save_manifest(manifest)
-    print(f"\n목록 갱신: {MANIFEST.relative_to(MANIFEST.parents[1])} (커밋하세요)")
+    console.print(f"\n목록 갱신: [dim]{escape(str(MANIFEST.relative_to(MANIFEST.parents[1])))}[/] (커밋하세요)")
 
 
 def _have_files(entry: dict, root: Path) -> bool:
@@ -333,7 +338,7 @@ def _fetch(entry: dict, root: Path) -> None:
     """zip 하나를 받아 sha256을 확인하고 저장소에 푼다."""
     with tempfile.TemporaryDirectory() as tmp:
         zip_path = Path(tmp) / entry["file"]
-        print(f"다운로드 중: {entry['file']} ({entry['size_mb']} MB)")
+        console.print(f"[dim]다운로드 중: {escape(entry['file'])} ({entry['size_mb']} MB)[/]")
         if gdown.download(id=entry["file_id"], output=str(zip_path)) is None:
             raise SystemExit(
                 "다운로드 실패. Drive 폴더 공유가 '링크가 있는 모든 사용자'인지 확인하세요."
@@ -385,25 +390,25 @@ def download(*names: str, all: bool = False, force: bool = False) -> None:
         have_index = index is None or index.exists()
         have_files = _have_files(entry, root)
         if have_model and have_index and have_files and not force:
-            print(f"이미 있습니다: {name} (다시 받으려면 --force)")
+            console.print(f"이미 있습니다: {escape(name)} [dim](다시 받으려면 --force)[/]")
             continue
         if entry.get("pending_reupload"):
-            print(f"건너뜀: {name}. {entry['pending_reupload']}")
+            console.print(f"[yellow]건너뜀: {escape(name)}. {escape(entry['pending_reupload'])}[/]")
             continue
         _fetch(entry, root)
         if model_dir is not None:
-            print(f"  모델: {entry['model_dir']}")
+            console.print(f"  모델: [dim]{escape(entry['model_dir'])}[/]")
         if index is not None:
-            print(f"  인덱스: {entry['index']}")
+            console.print(f"  인덱스: [dim]{escape(entry['index'])}[/]")
         for path in entry.get("paths", []):
-            print(f"  파일: {path}")
+            console.print(f"  파일: [dim]{escape(path)}[/]")
         if (
             model_dir is not None
             and index is not None
             and model_key(name, model_dir) != entry["model_key"]
         ):
-            print(
-                "  경고: 모델 키가 인덱스 이름과 다릅니다. --index로 인덱스를 직접 지정하세요."
+            console.print(
+                "  [yellow]경고: 모델 키가 인덱스 이름과 다릅니다. --index로 인덱스를 직접 지정하세요.[/]"
             )
 
 
@@ -412,24 +417,26 @@ def list_models() -> None:
     """Drive에 올라간 모델 · 인덱스 목록과 로컬에 받았는지 보여 준다."""
     manifest = load_manifest()
     root = get_settings().project_root
-    print(f"Drive 폴더: {manifest['drive_folder']}")
+    console.print(f"Drive 폴더: [dim]{escape(manifest['drive_folder'])}[/]")
+    table = Table(box=box.SIMPLE_HEAD, show_edge=False)
+    table.add_column("종류")
+    table.add_column("이름")
+    table.add_column("크기 MB", justify="right")
+    table.add_column("인덱스")
+    table.add_column("로컬")
+    table.add_column("비고")
     for name, entry in manifest["models"].items():
         have = (root / entry["model_dir"] / WEIGHTS).exists()
-        index = "인덱스 포함" if entry.get("index") else "인덱스 없음"
-        pending = "  (재업로드 대기)" if entry.get("pending_reupload") else ""
-        print(
-            f"  모델   {name:22s} {entry['size_mb']:7.1f} MB  {index}  [{'받음' if have else '-'}]{pending}"
-        )
+        index = "포함" if entry.get("index") else "없음"
+        pending = "[yellow]재업로드 대기[/]" if entry.get("pending_reupload") else ""
+        table.add_row("모델", escape(name), f"{entry['size_mb']:.1f}", index, "받음" if have else "-", pending)
     for key, entry in manifest["indexes"].items():
         have = (root / entry["index"]).exists()
-        print(
-            f"  인덱스 {key:22s} {entry['size_mb']:7.1f} MB  [{'받음' if have else '-'}]"
-        )
+        table.add_row("인덱스", escape(key), f"{entry['size_mb']:.1f}", "", "받음" if have else "-", "")
     for name, entry in manifest["files"].items():
         have = _have_files(entry, root)
-        print(
-            f"  파일   {name:22s} {entry['size_mb']:7.1f} MB  [{'받음' if have else '-'}]"
-        )
+        table.add_row("파일", escape(name), f"{entry['size_mb']:.1f}", "", "받음" if have else "-", "")
+    console.print(table)
 
 
 if __name__ == "__main__":

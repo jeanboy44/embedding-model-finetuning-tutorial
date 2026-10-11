@@ -11,9 +11,15 @@ from dataclasses import asdict
 from pathlib import Path
 
 import cyclopts
+from rich import box
+from rich.markup import escape
+from rich.panel import Panel
+from rich.table import Table
+
+from ragkit.cli.console import console, err_console
 
 from .measure import install_size, measure, model_size
-from .report import to_markdown
+from .report import COLUMNS, to_markdown
 from .variants import DEFAULT_VARIANTS, Variant
 
 app = cyclopts.App(name="ragkit-bench", help="원본 / ONNX / INT8 모델의 속도·메모리·크기·정확도 비교")
@@ -95,26 +101,32 @@ def run(
     missing = [v for v in chosen if not (Path(v.model) / ("onnx/model.onnx" if v.backend == "onnx" else "config.json")).exists()]
     if missing:
         names = ", ".join(v.name for v in missing)
-        raise SystemExit(
-            f"모델 폴더가 없습니다: {names}\n먼저 준비하세요:\n"
+        err_console.print(Panel(
+            f"모델 폴더가 없습니다: {escape(names)}\n먼저 준비하세요:\n"
             "  uv run ragkit export-onnx models/multilingual-e5-small\n"
             "  uv run ragkit quantize models/multilingual-e5-small\n"
             "  uv run ragkit prune-vocab models/multilingual-e5-small\n"
             "  uv run ragkit export-onnx models/multilingual-e5-small-pruned\n"
-            "  uv run ragkit quantize models/multilingual-e5-small-pruned"
-        )
+            "  uv run ragkit quantize models/multilingual-e5-small-pruned",
+            title="필요한 산출물이 없습니다", border_style="red",
+        ))
+        raise SystemExit(1)
 
     rows = []
     ctx = mp.get_context("spawn")
     for variant in chosen:
-        print(f"[{variant.name}] 인덱스 준비 (없으면 만든다)…", flush=True)
+        label = escape(f"[{variant.name}]")  # 변형 이름이 rich 마크업 태그로 읽히지 않게
+        console.print(f"[dim]{label} 인덱스 준비 (없으면 만든다)…[/]")
         with ctx.Pool(1) as pool:
             index_path = pool.apply(prepare_index, (variant, str(corpus)))
-        print(f"[{variant.name}] 측정 중…", flush=True)
+        console.print(f"[dim]{label} 측정 중…[/]")
         with ctx.Pool(1) as pool:
             row = pool.apply(run_variant, (variant, str(corpus), str(questions), index_path, n_latency))
         rows.append(row)
-        print(f"  지연 p50 {row['latency_ms_p50']:.1f}ms · R@5 {row['recall@5']:.3f} · 메모리 {row['peak_rss_mb']:.0f}MB")
+        console.print(
+            f"  지연 p50 [bold]{row['latency_ms_p50']:.1f}ms[/] · R@5 [bold]{row['recall@5']:.3f}[/] "
+            f"· 메모리 [bold]{row['peak_rss_mb']:.0f}MB[/]"
+        )
 
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "results.json").write_text(
@@ -122,9 +134,22 @@ def run(
     )
     table = to_markdown(rows)
     (out_dir / "comparison.md").write_text(f"# 배포 최적화 비교 (질문 {rows[0]['n_questions']}개, CPU)\n\n{table}\n", encoding="utf-8")
-    print("\n" + table)
-    print(f"\n결과 → {out_dir}/comparison.md")
+    console.print()
+    console.print(_rich_table(rows))
+    console.print(f"결과 → [dim]{escape(str(out_dir))}/comparison.md[/]")
     log_to_mlflow(rows, out_dir, n_latency=n_latency)
+
+
+def _rich_table(rows: list[dict]) -> Table:
+    """comparison.md와 같은 열·같은 숫자 형식의 터미널 표."""
+    table = Table(box=box.SIMPLE_HEAD, show_edge=False)
+    for key, title, _ in COLUMNS:
+        table.add_column(title, justify="left" if key in ("variant", "backend") else "right")
+    for row in rows:
+        table.add_row(*[
+            escape(fmt.format(row[key])) if row.get(key) is not None else "-" for key, _, fmt in COLUMNS
+        ])
+    return table
 
 
 def log_to_mlflow(rows: list[dict], out_dir: Path, *, n_latency: int) -> None:

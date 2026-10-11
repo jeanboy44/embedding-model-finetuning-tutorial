@@ -69,7 +69,8 @@ def test_ask_without_llm_prints_sources_and_error(run, searcher_without_llm) -> 
 
 def test_laws_theme_and_json(run, searcher) -> None:
     code, out, _ = run(["laws", "--theme", "tax"], searcher)
-    assert code == 0 and out.strip() == "최저임금법  (법률 · tax · 조각 1개)"
+    rows = [line.split() for line in out.splitlines() if "최저임금법" in line or "근로기준법" in line]
+    assert code == 0 and rows == [["최저임금법", "법률", "tax", "1"]]  # 표 한 행: 법령 · 종류 · 테마 · 조각
     code, out, _ = run(["laws", "--json"], searcher)
     names = {law["law_name"]: law["doc_count"] for law in json.loads(out)}
     assert names == {"근로기준법": 3, "주택임대차보호법": 1, "최저임금법": 1}

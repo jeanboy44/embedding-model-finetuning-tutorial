@@ -25,6 +25,10 @@ from pathlib import Path
 
 import gdown
 from cyclopts import App
+from rich import box
+from rich.console import Console
+from rich.markup import escape
+from rich.table import Table
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from ragkit.config import get_settings
@@ -45,6 +49,7 @@ WORKSPACE = PROJECT_ROOT / ".claude" / "skills" / "law-question-gen-workspace"
 ITERATION_CORPUS = {1: "law_docs_article_level.json", 2: "law_docs.json"}
 # 원본 레코드에서 그대로 옮기는 선택 필드. 없으면 null(리스트는 빈 리스트)로 채운다.
 OPTIONAL_FIELDS = {"query_type": None, "answer": None, "related_ids": []}
+console = Console(emoji=False, soft_wrap=True)  # 긴 경로·URL을 중간에서 끊지 않게
 
 app = App(help="법령 질문 데이터를 묶어 Google Drive에 올리고 내려받는다.")
 
@@ -119,9 +124,15 @@ def collect(workspace: Path = WORKSPACE, output: Path | None = None) -> None:
     for r in records:
         key = (r["source"]["iteration"], r["source"]["eval"], r["source"]["config"])
         counts[key] = counts.get(key, 0) + 1
+    table = Table(box=box.SIMPLE_HEAD, show_edge=False)
+    table.add_column("차수")
+    table.add_column("평가")
+    table.add_column("설정")
+    table.add_column("질문", justify="right")
     for (iteration, eval_name, config), n in sorted(counts.items()):
-        print(f"  iteration-{iteration} {eval_name:22s} {config:14s} {n:4d}")
-    print(f"완료: 질문 {len(records)}개 → {output / 'questions.jsonl'}")
+        table.add_row(f"iteration-{iteration}", escape(eval_name), escape(config), f"{n}")
+    console.print(table)
+    console.print(f"완료: 질문 [bold]{len(records)}[/]개 → [dim]{escape(str(output / 'questions.jsonl'))}[/]")
 
 
 @app.command
@@ -168,8 +179,10 @@ def bundle(
             zf.write(path, f"{BUNDLE_NAME}/corpus/{path.name}")
 
     digest = write_sha256(output)
-    print(f"생성 질문 파일 {len(generated)}개 포함")
-    print(f"완료: {output} ({output.stat().st_size / 1e6:.1f}MB, sha256 {digest[:12]}…)")
+    console.print(f"생성 질문 파일 [bold]{len(generated)}[/]개 포함")
+    console.print(
+        f"완료: [dim]{escape(str(output))}[/] ([bold]{output.stat().st_size / 1e6:.1f}MB[/], sha256 {digest[:12]}…)"
+    )
 
 
 def write_sha256(path: Path) -> str:
@@ -205,7 +218,10 @@ def bundle_skill(skills_dir: Path | None = None, output: Path | None = None) -> 
                 zf.write(path, f"{SKILL_BUNDLE_NAME}/{path.relative_to(skills_dir)}")
                 count += 1
     digest = write_sha256(output)
-    print(f"완료: {output} (파일 {count}개, {output.stat().st_size / 1e6:.1f}MB, sha256 {digest[:12]}…)")
+    console.print(
+        f"완료: [dim]{escape(str(output))}[/] (파일 [bold]{count}[/]개, "
+        f"[bold]{output.stat().st_size / 1e6:.1f}MB[/], sha256 {digest[:12]}…)"
+    )
 
 
 @app.command
@@ -229,13 +245,13 @@ def upload(
         raise SystemExit("rclone이 없습니다. `brew install rclone` 후 `rclone config`로 로그인하세요.")
 
     for path in files:
-        print(f"업로드 중: {path.name} → {remote}: (폴더 {folder_id(folder_url)})")
+        console.print(f"[dim]업로드 중: {escape(path.name)} → {escape(remote)}: (폴더 {escape(folder_id(folder_url))})[/]")
         subprocess.run(
             ["rclone", "copyto", str(path), f"{remote}:{path.name}",
              f"--drive-root-folder-id={folder_id(folder_url)}", "--progress"],
             check=True,
         )
-    print("완료")
+    console.print("완료")
 
 
 @app.command
@@ -253,7 +269,7 @@ def download(
     """
     output_dir = output_dir or get_settings().data_dir / BUNDLE_NAME
     if (output_dir / "questions" / "questions.jsonl").exists() and not force:
-        print(f"이미 존재합니다: {output_dir} (다시 받으려면 --force)")
+        console.print(f"이미 존재합니다: [dim]{escape(str(output_dir))}[/] (다시 받으려면 --force)")
         return
 
     with tempfile.TemporaryDirectory() as tmp:
@@ -268,9 +284,9 @@ def download(
             expected = sha_path.read_text(encoding="utf-8").split()[0]
             if (actual := sha256sum(zip_path)) != expected:
                 raise SystemExit(f"sha256 불일치 (기대: {expected}, 실제: {actual}).")
-            print("sha256 확인 완료")
+            console.print("[green]sha256 확인 완료[/]")
         extract_zip(zip_path, output_dir)
-    print(f"완료: {output_dir}")
+    console.print(f"완료: [dim]{escape(str(output_dir))}[/]")
 
 
 if __name__ == "__main__":

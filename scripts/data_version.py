@@ -24,6 +24,10 @@ from pathlib import Path
 
 import gdown
 from cyclopts import App
+from rich import box
+from rich.console import Console
+from rich.markup import escape
+from rich.table import Table
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from ragkit import tracking
@@ -33,6 +37,7 @@ from scripts.download_model_gdrive import extract_zip
 from scripts.law_questions_drive import DEFAULT_FOLDER_URL, folder_id
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+console = Console(emoji=False, soft_wrap=True)  # 긴 경로·URL을 중간에서 끊지 않게
 
 app = App(help="데이터 버전(코퍼스 + 분할 + 원본 질문)을 만들고 Drive·MLflow에 올린다.")
 
@@ -90,10 +95,19 @@ def create(version: str, *, description: str = "", force: bool = False) -> None:
     manifest["drive_folder"] = DEFAULT_FOLDER_URL
     dv.write_manifest(manifest, path)
 
+    table = Table(box=box.SIMPLE_HEAD, show_edge=False)
+    table.add_column("역할")
+    table.add_column("경로")
+    table.add_column("행", justify="right")
+    table.add_column("sha256")
     for role, entry in manifest["files"].items():
-        rows = f"{entry['rows']:>6}행" if "rows" in entry else ""
-        print(f"  {role:10s} {entry['path']:28s} {rows}  {entry['sha256'][:12]}…")
-    print(f"완료: {path}, {output} ({output.stat().st_size / 1e6:.1f}MB)")
+        rows = f"{entry['rows']}" if "rows" in entry else ""
+        table.add_row(role, escape(entry["path"]), rows, f"[dim]{entry['sha256'][:12]}…[/]")
+    console.print(table)
+    console.print(
+        f"완료: [dim]{escape(str(path))}[/], [dim]{escape(str(output))}[/] "
+        f"([bold]{output.stat().st_size / 1e6:.1f}MB[/])"
+    )
 
 
 def _drive_file(remote: str, folder: str, name: str) -> dict | None:
@@ -127,7 +141,7 @@ def upload(version: str, *, folder_url: str = DEFAULT_FOLDER_URL, remote: str = 
     folder = folder_id(folder_url)
     if existing := _drive_file(remote, folder, zip_path.name):
         raise SystemExit(f"Drive에 이미 {zip_path.name}이 있습니다 (id {existing['ID']}). 새 버전을 만드세요.")
-    print(f"업로드 중: {zip_path.name} → {remote}: (폴더 {folder})")
+    console.print(f"[dim]업로드 중: {escape(zip_path.name)} → {escape(remote)}: (폴더 {escape(folder)})[/]")
     # 한 번에 보내는 업로드는 마지막 응답에서 멈추곤 해서, 1MB 청크로 이어 올리기(resumable)를 쓴다.
     subprocess.run(
         ["rclone", "copyto", str(zip_path), f"{remote}:{zip_path.name}",
@@ -141,7 +155,7 @@ def upload(version: str, *, folder_url: str = DEFAULT_FOLDER_URL, remote: str = 
     manifest["zip"]["drive_file_id"] = uploaded["ID"]
     manifest["drive_folder"] = folder_url
     dv.write_manifest(manifest, path)
-    print(f"완료: {dv.source_url(manifest)} → {path} (커밋하세요)")
+    console.print(f"완료: {escape(dv.source_url(manifest))} → [dim]{escape(str(path))}[/] (커밋하세요)")
 
 
 @app.command
@@ -156,12 +170,14 @@ def register(version: str, *, force: bool = False) -> None:
         raise SystemExit("MLFLOW_TRACKING_URI가 없습니다 (.env). 예: MLFLOW_TRACKING_URI=http://127.0.0.1:5050")
     manifest, path = _load(version)
     if not manifest["zip"].get("drive_file_id"):
-        print(f"경고: {version}을 아직 Drive에 올리지 않았습니다. 데이터셋 주소가 Drive 폴더가 됩니다.")
+        console.print(
+            f"[yellow]경고: {escape(version)}을 아직 Drive에 올리지 않았습니다. 데이터셋 주소가 Drive 폴더가 됩니다.[/]"
+        )
     if (run_id := tracking.find_data_run(version)) and not force:
-        print(f"이미 등록했습니다: run {run_id} (다시 남기려면 --force)")
+        console.print(f"이미 등록했습니다: run {escape(run_id)} [dim](다시 남기려면 --force)[/]")
         return
     run_id = tracking.register_dataset(manifest, path)
-    print(f"완료: {tracking.DATA_EXPERIMENT} 실험 run data/{version} ({run_id})")
+    console.print(f"완료: {escape(tracking.DATA_EXPERIMENT)} 실험 run data/{escape(version)} ({escape(run_id)})")
 
 
 def install(extracted: Path, manifest: dict, data_dir: Path, *, force: bool = False) -> None:
@@ -198,7 +214,7 @@ def pull(version: str, *, force: bool = False) -> None:
     manifest, _ = _load(version)
     data_dir = get_settings().data_dir
     if not dv.local_diff(manifest, data_dir):
-        print(f"이미 {version}과 같습니다: {data_dir}")
+        console.print(f"이미 {escape(version)}과 같습니다: [dim]{escape(str(data_dir))}[/]")
         return
     file_id = manifest["zip"].get("drive_file_id")
     if not file_id:
@@ -211,7 +227,7 @@ def pull(version: str, *, force: bool = False) -> None:
             raise SystemExit(f"sha256 불일치 (기대: {manifest['zip']['sha256']}, 실제: {actual}).")
         extracted = extract_zip(zip_path, Path(tmp) / "extracted")
         install(extracted, manifest, data_dir, force=force)
-    print(f"완료: {version} → {data_dir}")
+    console.print(f"완료: [bold]{escape(version)}[/] → [dim]{escape(str(data_dir))}[/]")
 
 
 @app.command
@@ -220,14 +236,23 @@ def status() -> None:
     data_dir = get_settings().data_dir
     manifests = dv.load_manifests(dv.versions_dir(data_dir))
     if not manifests:
-        print(f"버전이 없습니다: {dv.versions_dir(data_dir)}")
+        console.print(f"[yellow]버전이 없습니다:[/] [dim]{escape(str(dv.versions_dir(data_dir)))}[/]")
         return
+    table = Table(box=box.SIMPLE_HEAD, show_edge=False)
+    table.add_column("버전")
+    table.add_column("만든 때")
+    table.add_column("위치")
+    table.add_column("상태")
+    table.add_column("다른 파일 (최대 10개)")
     for manifest in manifests:
         diffs = dv.local_diff(manifest, data_dir)
         uploaded = "Drive" if manifest["zip"].get("drive_file_id") else "로컬만"
-        print(f"{manifest['version']} ({manifest['created']}, {uploaded}): {'일치' if not diffs else f'다름 {len(diffs)}건'}")
-        for d in diffs[:10]:
-            print(f"    {d}")
+        state = "[green]일치[/]" if not diffs else f"[yellow]다름 {len(diffs)}건[/]"
+        table.add_row(
+            escape(manifest["version"]), escape(str(manifest["created"])), uploaded, state,
+            escape("\n".join(diffs[:10])),
+        )
+    console.print(table)
 
 
 if __name__ == "__main__":

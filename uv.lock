@@ -4551,6 +4551,7 @@ dependencies = [
     { name = "onnxruntime", version = "1.30.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
+    { name = "rich" },
     { name = "sqlite-vec" },
     { name = "tokenizers" },
 ]
@@ -4607,6 +4608,7 @@ requires-dist = [
     { name = "pydantic-settings", specifier = ">=2.0.0" },
     { name = "pyyaml", marker = "extra == 'train'", specifier = ">=6.0" },
     { name = "ragkit", extras = ["torch"], marker = "extra == 'train'" },
+    { name = "rich", specifier = ">=13.0" },
     { name = "sentence-transformers", marker = "extra == 'train'", specifier = ">=6.0" },
     { name = "sqlite-vec", specifier = ">=0.1.9" },
     { name = "tokenizers", specifier = ">=0.19" },
@@ -4666,6 +4668,7 @@ dependencies = [
     { name = "packaging" },
     { name = "psutil" },
     { name = "ragkit", extra = ["torch"] },
+    { name = "rich" },
 ]
 
 [package.optional-dependencies]
@@ -4680,6 +4683,7 @@ requires-dist = [
     { name = "psutil", specifier = ">=5.9" },
     { name = "ragkit", extras = ["mlflow"], marker = "extra == 'mlflow'", editable = "." },
     { name = "ragkit", extras = ["torch"], editable = "." },
+    { name = "rich", specifier = ">=13.0" },
 ]
 provides-extras = ["mlflow"]
 
@@ -4711,6 +4715,7 @@ version = "0.1.0"
 source = { editable = "apps/search-cli" }
 dependencies = [
     { name = "ragkit" },
+    { name = "rich" },
 ]
 
 [package.optional-dependencies]
@@ -4722,6 +4727,7 @@ tracing = [
 requires-dist = [
     { name = "ragkit", editable = "." },
     { name = "ragkit", extras = ["tracing"], marker = "extra == 'tracing'", editable = "." },
+    { name = "rich", specifier = ">=13.0" },
 ]
 provides-extras = ["tracing"]
 

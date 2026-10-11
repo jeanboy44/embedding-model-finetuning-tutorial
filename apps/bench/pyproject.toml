@@ -8,6 +8,7 @@ dependencies = [
     "cyclopts>=3.0.0",
     "packaging>=23",
     "psutil>=5.9",  # Windows 최대 메모리 측정
+    "rich>=13.0",
 ]
 
 [project.optional-dependencies]
