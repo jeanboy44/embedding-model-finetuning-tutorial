@@ -46,7 +46,7 @@ LLM 단계(답변 생성)는 `.env`에 `GEMINI_API_KEY`가 필요합니다. [Goo
 
 ## 실습 스크립트
 
-실습 스크립트는 모두 저장소 루트에서 실행합니다(파이썬 스크립트는 `uv run python <파일>`, 에이전트 스킬은 `SKILL.md` 확인/설치, 데스크톱은 HTML 파일 열기). 기본은 받은 산출물로 확인하고, `--run`을 주면 작은 부분집합으로 직접 실행합니다.
+실습 스크립트는 모두 저장소 루트에서 실행합니다(파이썬 스크립트는 `uv run python <파일>`, 에이전트 스킬은 Gemini CLI 접속 후 `SKILL.md` 파일 경로를 던져주고 "스킬로 등록해" 요청, 데스크톱은 HTML 파일 열기). 기본은 받은 산출물로 확인하고, `--run`을 주면 작은 부분집합으로 직접 실행합니다.
 
 | 실습 (교시) | 파일 | 내용 |
 |---|---|---|
@@ -66,7 +66,7 @@ LLM 단계(답변 생성)는 `.env`에 `GEMINI_API_KEY`가 필요합니다. [Goo
 | 3 (7) | `lecture/07_optimize/02_onnx_quantize_prune.py` | ONNX 변환, INT8 텐서 단위 vs 채널별, 어휘 가지치기 |
 | 3 (7) | `lecture/07_optimize/03_bench_and_serve.py` | 원본/ONNX/INT8/가지치기 비교표, API 백엔드 교체 |
 | 4 (8) | `lecture/08_product/01_search_cli.py` | 검색 CLI, `--json`, uvx 배포 |
-| 4 (8) | `lecture/08_product/SKILL.md` | 에이전트 스킬: SKILL.md 하나로 Antigravity·Gemini·Claude에 CLI 붙이기 |
+| 4 (8) | `lecture/08_product/SKILL.md` | 에이전트 스킬: Gemini CLI 접속 후 SKILL.md 파일 경로 던져주고 "스킬로 등록해" 요청 |
 | 4 (8) | `lecture/08_product/03_mcp_server.py` | MCP: 연결 → 도구 목록 → 호출, Antigravity·Claude 등록 |
 | 4 (8) | `lecture/08_product/04_web_app.py` | 웹앱 빌드와 API 서버 한 주소 배포 |
 | 선택 | `lecture/03_setup/extra_gemini_basics.py` · `07_optimize/extra_embedding_speed.py` · `08_product/extra_monitoring.py` | Gemini 기초, 임베딩 속도 옵션, MLflow 모니터링(실험 run 비교 → 모델 레지스트리 → 서비스 트레이스) |
@@ -87,7 +87,7 @@ uv run --package ragkit-api ragkit-api --web-dist apps/web/dist                 
 
 # 제품 (4단계)
 uv run --package ragkit-search ragkit-search search "야간 근로 수당" --law 근로기준법
-uv run --package ragkit-search ragkit-search skill install --agent antigravity --user       # 에이전트 스킬 등록 (Gemini/Claude도 지원)
+# 에이전트 스킬: Gemini CLI 접속 후 "lecture/08_product/SKILL.md 스킬로 등록해" 요청 (Antigravity·Claude도 동일)
 uv run --package ragkit-mcp ragkit-mcp                                                      # MCP 서버 (Antigravity·Claude 등록은 apps/mcp/README.md)
 cd apps/web && pnpm install && pnpm dev                                                     # 개발 모드 (api를 먼저 띄운다)
 
@@ -114,7 +114,7 @@ train·evaluate·compare run에는 입력 파일과 내용이 같은 버전이 �
 | [`apps/api`](apps/api) | `/api/search`, `/api/answer(/stream)`, `/api/notebooks/...` |
 | [`apps/bench`](apps/bench) | `ragkit-bench run`: 지연·처리량·메모리·모델/설치 크기·Recall |
 | [`apps/web`](apps/web/README.md) | 노트북 = 법령 묶음, 인용 달린 답, 조문 보기, 노트 |
-| [`apps/search-cli`](apps/search-cli/README.md) | `search` · `ask` · `laws` · `show` · `skill`(에이전트 스킬: Antigravity · Gemini · Claude) |
+| [`apps/search-cli`](apps/search-cli/README.md) | `search` · `ask` · `laws` · `show` · `SKILL.md`(Gemini CLI 접속 후 파일 경로 던져주고 스킬 등록) |
 | [`apps/mcp`](apps/mcp/README.md) | `search_laws` · `get_article` · `list_laws` · `ask` (MCP 서버: Antigravity · Claude) |
 | [`apps/offline-search`](apps/offline-search/README.md) | 설치·서버·인터넷 없이 여는 HTML 한 파일: 30MB 파인튜닝 모델 + 조문 벡터 + 원문 (3교시에 최종 목표로 소개) |
 

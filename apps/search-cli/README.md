@@ -47,17 +47,21 @@ ragkit-search search "주휴수당" --model google/embeddinggemma-300m
 ragkit-search search "주휴수당" --checkpoint models/my-finetuned --index data/processed/index/my.sqlite
 ```
 
-## 에이전트 스킬 (Antigravity · Gemini · Claude Code)
+## 에이전트 스킬 (Gemini CLI · Antigravity · Claude Code)
 
 `SKILL.md` 하나로 셸을 쓰는 에이전트가 이 CLI를 도구로 쓴다. 에이전트들은 같은 형식을 읽는다.
 스킬은 "질문 → search(필요하면 법률 용어로 다시) → show --article로 원문 읽기 → 조문 id를 붙여 답하기" 순서를 안내한다.
 
+스킬 추가는 간단합니다. Gemini CLI(또는 agy)에 접속한 뒤 `lecture/08_product/SKILL.md` 파일 경로를 던져주고 **"스킬로 등록해"**라고 요청하면 에이전트가 자동으로 스킬 디렉터리에 등록합니다.
+
+CLI 명령어로 직접 설치할 수도 있습니다:
+
 ```bash
 ragkit-search skill show                                   # 설치될 내용 보기
-ragkit-search skill install --agent antigravity            # ./.agents/skills/korean-law-search/SKILL.md
 ragkit-search skill install --agent gemini --user          # ~/.gemini/skills/korean-law-search/SKILL.md
+ragkit-search skill install --agent antigravity            # ./.agents/skills/korean-law-search/SKILL.md
 ragkit-search skill install --agent claude                 # ./.claude/skills/korean-law-search/SKILL.md
-ragkit-search skill install --agent antigravity --checkpoint models/finetuned/002_hard_negatives --backend torch   # 파인튜닝 모델로
+ragkit-search skill install --agent gemini --user --checkpoint models/finetuned/002_hard_negatives --backend torch   # 파인튜닝 모델로
 ```
 
 설치한 SKILL.md에는 이 저장소 환경으로 CLI를 부르는 명령(`uv run --directory <저장소> --package ragkit-search ragkit-search`)과

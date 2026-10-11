@@ -37,34 +37,27 @@ uv run python lecture/08_product/01_search_cli.py --run
 
 ## 2. 에이전트 스킬: CLI에 SKILL.md 하나를 붙인다
 
-스킬은 별도의 서버 프로그램이나 실행 스크립트 없이, **`SKILL.md` 마크다운 파일 하나**만 에이전트 스킬 폴더에 두면 끝납니다.
-Antigravity(agy), Gemini CLI, Claude Code는 이 파일을 읽고, 법령 질문이 오면 우리 CLI(`ragkit-search`)로 조문을 찾아 근거와 함께 답합니다.
+스킬 추가는 별도의 복잡한 설치 과정 없이, **Gemini CLI에 접속한 뒤 `SKILL.md` 파일 경로를 던져주고 "스킬로 등록해"라고 말하면 끝납니다.**
 
 스킬 파일: [`lecture/08_product/SKILL.md`](SKILL.md)
 
-### 스킬 내용 확인 및 설치
+### 스킬 등록 및 사용 방법
 
-스킬 내용을 확인하고, 내 에이전트 스킬 폴더에 설치합니다. 모든 프로젝트에서 쓰려면 `--user`(홈 폴더의 `.agents/skills/` · `.gemini/skills/` · `.claude/skills/`).
+1. **Gemini CLI** (또는 Antigravity `agy`)를 실행합니다:
+   ```shell
+   gemini
+   # 또는
+   agy
+   ```
 
-```shell
-# 1. 스킬 내용 보기
-cat lecture/08_product/SKILL.md
-# 또는
-uv run --package ragkit-search ragkit-search skill show
+2. 에이전트에게 파일 경로와 함께 스킬 등록을 요청합니다:
+   > "`lecture/08_product/SKILL.md` 파일 보고 스킬로 등록해"
 
-# 2. 내 에이전트에 설치 (Antigravity / Gemini / Claude)
-uv run --package ragkit-search ragkit-search skill install --agent antigravity --user
-uv run --package ragkit-search ragkit-search skill install --agent gemini --user
-```
+   에이전트가 마크다운을 확인하고 자신의 스킬 디렉터리(`~/.gemini/skills/` 또는 `.agents/skills/`)에 자동으로 등록합니다.
+   *(참고: CLI 명령어 `uv run --package ragkit-search ragkit-search skill install --agent gemini --user`로도 등록 가능)*
 
-파인튜닝 모델로 검색하게 하려면 설치할 때 모델을 줍니다 (명령어에 모델 옵션이 박힙니다).
-
-```shell
-uv run --package ragkit-search ragkit-search skill install --agent antigravity --user --checkpoint models/finetuned/002_hard_negatives --backend torch
-```
-
-그다음 `agy`, `gemini` 또는 `claude`를 새로 열고 묻습니다:
-> "편의점 알바도 주휴수당 받을 수 있는지 조문 근거로 알려줘"
+3. 등록 후 에이전트에게 법령 질문을 던집니다:
+   > "편의점 알바도 주휴수당 받을 수 있는지 조문 근거로 알려줘"
 
 에이전트가 `SKILL.md`에 적힌 순서대로 우리 CLI(`ragkit-search search` → `show --article`)를 호출하여 근거 조문을 찾아 답변하는 것을 확인할 수 있습니다.
 
