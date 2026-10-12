@@ -557,7 +557,7 @@
     else if (e.key === 'n' || e.key === 'N') document.body.classList.toggle('show-notes');
     else if (e.key === 'f' || e.key === 'F') document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
   });
-  stage.addEventListener('click', (e) => show(cur + (e.clientX > innerWidth / 3 ? 1 : -1)));
+  stage.addEventListener('click', (e) => { if (e.target.closest('a')) return; show(cur + (e.clientX > innerWidth / 3 ? 1 : -1)); });
   const fromHash = () => {
     const i = slides.findIndex((s) => '#' + s.id === location.hash);
     if (i >= 0 && i !== cur) show(i);
