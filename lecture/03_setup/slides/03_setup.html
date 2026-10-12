@@ -183,8 +183,13 @@
 <tr><td><b>모델 · 인덱스</b></td><td style="color:#4a5361">학습 전 e5 · 파인튜닝 002 · 001과 각각의 인덱스</td><td style="color:#4a5361">download_model_hf · finetuned_drive</td></tr>
 <tr><td><b>동작 확인</b></td><td style="color:#4a5361">두 모델을 실제로 열어 검색, 문서 수가 코퍼스와 같은가</td><td style="color:#6b7480">— (위를 채우면 통과)</td></tr>
 </table>
+<div style="display:flex;flex-direction:column;gap:8px;border-left:6px solid #d97706;background:#fdf6ec;border-radius:0 14px 14px 0;padding:20px 32px">
+<p style="font-size:26px;font-weight:700;color:#1f2a37">다운로드가 실패하면: Drive에서 직접 받아 resources/ 에 넣고 --fix를 다시 돌린다</p>
+<p style="font-family:'JetBrains Mono', 'Noto Sans KR', monospace;font-size:22px;line-height:1.6;color:#4a5361">모델 · 인덱스  <a href="https://drive.google.com/drive/folders/1vpGtkFmS5kPfRlu5f7pcGKf_gZ2AWHXK" target="_blank" style="color:#1d4ed8">drive.google.com/drive/folders/1vpGtkFmS5kPfRlu5f7pcGKf_gZ2AWHXK</a><br>데이터 v1      <a href="https://drive.google.com/drive/folders/1y30fzc21thrATVzwBa9vzBWbOSTJt-U1" target="_blank" style="color:#1d4ed8">drive.google.com/drive/folders/1y30fzc21thrATVzwBa9vzBWbOSTJt-U1</a></p>
+<p style="font-size:22px;color:#6b7480">zip을 풀지 말고 이름 그대로 저장소의 resources/ 에 둔다 · --fix가 sha256을 확인하고 제자리에 푼다</p>
+</div>
 <p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6b7480">교시별로 준비됐는지 ✓/✗로 나온다 · --quick이면 동작 확인을 건너뛴다 · --all이면 다 된 항목까지</p>
-<aside>점검은 01_doctor.py 하나로 합니다. 설치, 데이터, 모델과 인덱스가 있는지 보고, 받은 두 모델을 실제로 열어 검색까지 해 봅니다. 파일이 있어도 깨졌거나 버전이 안 맞으면 여기서 걸립니다. 빠진 게 있으면 --fix를 붙여 다시 돌리세요. 받을 수 있는 것은 순서대로 받고 다시 점검합니다. 결과는 3교시부터 8교시까지 교시별로 준비됐는지 체크 표시로 보여 줍니다. 쉬는 시간 전에 전부 체크가 되도록 채워 두세요. 4교시부터는 이 환경을 계속 씁니다.</aside>
+<aside>점검은 01_doctor.py 하나로 합니다. 설치, 데이터, 모델과 인덱스가 있는지 보고, 받은 두 모델을 실제로 열어 검색까지 해 봅니다. 파일이 있어도 깨졌거나 버전이 안 맞으면 여기서 걸립니다. 빠진 게 있으면 --fix를 붙여 다시 돌리세요. 받을 수 있는 것은 순서대로 받고 다시 점검합니다. 결과는 3교시부터 8교시까지 교시별로 준비됐는지 체크 표시로 보여 줍니다. 사내망 등으로 다운로드가 실패하면, 장표의 Drive 폴더 주소로 브라우저에서 직접 zip을 받아 압축을 풀지 말고 이름 그대로 저장소의 resources 폴더에 넣은 뒤 --fix를 다시 돌리세요. 받지 않고 거기 있는 파일을 확인해서 풀어 줍니다. 쉬는 시간 전에 전부 체크가 되도록 채워 두세요. 4교시부터는 이 환경을 계속 씁니다.</aside>
 </section>
 <section data-section="완성품 써 보기: CLI로 학습 전 모델에 질문 넷을 직접 던진다" id="quiz" data-transition="fade" style="background:#fcfcfb;color:#1f2a37;font-family:'Noto Sans KR', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;justify-content:center;gap:48px">
 <div style="display:flex;flex-direction:column;gap:20px">
@@ -370,7 +375,7 @@
     else if (e.key === 'n' || e.key === 'N') document.body.classList.toggle('show-notes');
     else if (e.key === 'f' || e.key === 'F') document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
   });
-  stage.addEventListener('click', (e) => show(cur + (e.clientX > innerWidth / 3 ? 1 : -1)));
+  stage.addEventListener('click', (e) => { if (e.target.closest('a')) return; show(cur + (e.clientX > innerWidth / 3 ? 1 : -1)); });
   const fromHash = () => {
     const i = slides.findIndex((s) => '#' + s.id === location.hash);
     if (i >= 0 && i !== cur) show(i);
