@@ -16,9 +16,11 @@ import zipfile
 from pathlib import Path
 
 import gdown
+import requests
 from cyclopts import run
 from rich.console import Console
 from rich.markup import escape
+from rich.progress import DownloadColumn, Progress, TransferSpeedColumn
 
 from ragkit.config import get_settings
 
@@ -78,6 +80,42 @@ def extract_zip(zip_path: Path, output_dir: Path) -> Path:
     return output_dir
 
 
+# 큰 파일은 drive.google.com/uc 가 "바이러스 검사 경고" 페이지를 주고, gdown은 그 페이지의
+# 확인 링크(drive.google.com/uc?...&confirm=t&uuid=...)를 따라간다. 이 링크가 Google의
+# "자동화된 요청" 차단 페이지를 받는 일이 있어, 확인 없이 바로 주는 주소로 먼저 받는다.
+DIRECT_URL = "https://drive.usercontent.google.com/download"
+
+
+def drive_download(file_id: str, output: Path) -> bool:
+    """공개 Drive 파일을 output에 받는다. 직접 주소가 안 되면 gdown으로 다시 시도한다.
+
+    Args:
+        file_id: Drive 파일 ID.
+        output: 저장할 파일 경로.
+
+    Returns:
+        받았으면 True.
+    """
+    params = {"id": file_id, "export": "download", "confirm": "t"}
+    columns = (*Progress.get_default_columns(), DownloadColumn(), TransferSpeedColumn())
+    try:
+        with requests.get(DIRECT_URL, params=params, stream=True, timeout=60) as res:
+            res.raise_for_status()
+            if "attachment" not in res.headers.get("Content-Disposition", ""):
+                raise RuntimeError("파일 대신 HTML 페이지를 받았습니다")
+            total = int(res.headers.get("Content-Length", 0)) or None
+            with output.open("wb") as f, Progress(*columns, console=console) as progress:
+                task = progress.add_task(output.name, total=total)
+                for chunk in res.iter_content(chunk_size=1024 * 1024):
+                    f.write(chunk)
+                    progress.update(task, advance=len(chunk))
+        return True
+    except (requests.RequestException, RuntimeError) as e:
+        console.print(f"[yellow]직접 받기 실패 ({escape(str(e))}). gdown으로 다시 시도합니다.[/]")
+        output.unlink(missing_ok=True)
+    return gdown.download(id=file_id, output=str(output)) is not None
+
+
 def download_from_gdrive(
     file_id: str,
     output_dir: Path,
@@ -116,7 +154,7 @@ def download_from_gdrive(
         if file_id.startswith("http"):
             result = gdown.download(url=file_id, output=str(zip_path))
         else:
-            result = gdown.download(id=file_id, output=str(zip_path))
+            result = str(zip_path) if drive_download(file_id, zip_path) else None
         if result is None or not zip_path.exists():
             raise RuntimeError(
                 "다운로드 실패. 공유 설정이 '링크가 있는 모든 사용자'인지 확인하세요."
