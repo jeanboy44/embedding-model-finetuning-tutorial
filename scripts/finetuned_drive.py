@@ -18,6 +18,7 @@ data/processed/index/<모델 키>.sqlite 가 저장소 루트 기준 경로로 �
     rclone config   # n → 이름 gdrive → Storage: drive → 나머지는 기본값, 브라우저에서 로그인
 
 다운로드는 로그인이 필요 없다. Drive 폴더가 "링크가 있는 모든 사용자"로 공유되어 있어야 한다.
+Drive에서 손으로 받은 zip을 resources/ 에 넣어 두면 받지 않고 그것을 푼다(scripts/resources.py).
 
 모델 이름은 실험 번호를 따른다(experiments/README.md의 대응표). 목록에 pending_reupload가 적힌 모델은
 Drive에 옛 이름으로 묶인 zip만 있어 받지 않는다. 강사가 upload로 다시 올리면 그 항목이 새 값으로 바뀐다.
@@ -35,7 +36,6 @@ import tempfile
 import zipfile
 from pathlib import Path
 
-import gdown
 from cyclopts import App
 from rich import box
 from rich.console import Console
@@ -46,6 +46,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from ragkit.config import get_settings
 from ragkit.retrieval import model_key
 from scripts.download_model_gdrive import sha256sum
+from scripts.resources import fetch_zip
 
 # 강사의 Drive 폴더 ("링크가 있는 모든 사용자" 공유)
 DEFAULT_FOLDER_URL = (
@@ -338,8 +339,8 @@ def _fetch(entry: dict, root: Path) -> None:
     """zip 하나를 받아 sha256을 확인하고 저장소에 푼다."""
     with tempfile.TemporaryDirectory() as tmp:
         zip_path = Path(tmp) / entry["file"]
-        console.print(f"[dim]다운로드 중: {escape(entry['file'])} ({entry['size_mb']} MB)[/]")
-        if gdown.download(id=entry["file_id"], output=str(zip_path)) is None:
+        console.print(f"[dim]{escape(entry['file'])} ({entry['size_mb']} MB)[/]")
+        if not fetch_zip(entry["file"], entry["file_id"], entry["sha256"], zip_path):
             raise SystemExit(
                 "다운로드 실패. Drive 폴더 공유가 '링크가 있는 모든 사용자'인지 확인하세요."
             )

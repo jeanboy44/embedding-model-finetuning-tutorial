@@ -9,6 +9,7 @@
     uv run python scripts/data_version.py upload v1      # zip을 Drive에 올리고 manifest에 파일 id를 적음 (rclone)
     uv run python scripts/data_version.py register v1    # MLflow law-data 실험에 data/v1 run (MLFLOW_TRACKING_URI)
     uv run python scripts/data_version.py pull v1        # Drive에서 받아 data/에 풂 (로그인 불필요)
+                                                         # resources/law-data-v1.zip 이 있으면 받지 않고 그것을 푼다
     uv run python scripts/data_version.py status         # 지금 data/가 어느 버전과 같은지
 
 이후 ragkit train·evaluate·compare는 입력 파일이 어느 버전인지 찾아 run에 데이터셋과 data_version 태그를 남긴다.
@@ -22,7 +23,6 @@ import tempfile
 import zipfile
 from pathlib import Path
 
-import gdown
 from cyclopts import App
 from rich import box
 from rich.console import Console
@@ -35,6 +35,7 @@ from ragkit.config import get_settings
 from ragkit.training import data_version as dv
 from scripts.download_model_gdrive import extract_zip
 from scripts.law_questions_drive import DEFAULT_FOLDER_URL, folder_id
+from scripts.resources import fetch_zip
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 console = Console(emoji=False, soft_wrap=True)  # 긴 경로·URL을 중간에서 끊지 않게
@@ -221,7 +222,7 @@ def pull(version: str, *, force: bool = False) -> None:
         raise SystemExit(f"{version}은 아직 Drive에 올리지 않았습니다 (upload {version}).")
     with tempfile.TemporaryDirectory() as tmp:
         zip_path = Path(tmp) / manifest["zip"]["name"]
-        if not gdown.download(id=file_id, output=str(zip_path), quiet=False):
+        if not fetch_zip(manifest["zip"]["name"], file_id, manifest["zip"]["sha256"], zip_path):
             raise SystemExit("다운로드 실패. 파일 공유가 '링크가 있는 모든 사용자'인지 확인하세요.")
         if (actual := dv.sha256sum(zip_path)) != manifest["zip"]["sha256"]:
             raise SystemExit(f"sha256 불일치 (기대: {manifest['zip']['sha256']}, 실제: {actual}).")

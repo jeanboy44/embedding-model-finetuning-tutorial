@@ -63,6 +63,15 @@ uv run ragkit export-onnx models/multilingual-e5-small # ONNX 추론용 변환
 uv run python scripts/finetuned_drive.py download multilingual-e5-small 002_hard_negatives 001_baseline results_001_baseline optimize   # 학습 전 e5 인덱스 · 파인튜닝 모델 2개 · 6교시 결과 JSON · 7교시 INT8 · 가지치기 모델 (각 인덱스 포함)
 ```
 
+### Drive에서 손으로 받았다면: `resources/`
+
+사내망 등으로 `--fix`의 다운로드가 막히면, Drive 공유 폴더에서 zip을 브라우저로 받아 **압축을 풀지 말고 이름 그대로** 저장소의 `resources/` 폴더에 넣는다. `data_version.py pull`과 `finetuned_drive.py download`는 zip을 `resources/`에서 먼저 찾아 sha256을 확인하고 그대로 풀며, 없거나 sha256이 맞지 않으면 Drive에서 받는다. 그러니 넣어 둔 뒤 `--fix`를 한 번 돌리면 된다. 파인튜닝 모델의 가중치 수정 시각(인덱스 파일 이름을 정한다)도 이때 맞춰 준다.
+
+```bash
+uv run python scripts/resources.py                  # resources/의 zip 중 알아본 것(✓)과 빠진 것
+uv run python lecture/03_setup/01_doctor.py --fix   # resources/에 있는 것은 받지 않고 푼다
+```
+
 ## 2. 완성품 써 보기 (한 번에 보기)
 
 같은 질문 넷을 학습 전 모델과 파인튜닝 모델에 한 번에 던져 비교하고, test 전체 지표와 완성품(웹 · CLI · MCP) 띄우는 안내를 본다. 받은 모델과 인덱스로 검색만 하므로 `--run` 모드는 없다(강사 PC 약 20초, 처음 실행은 40초 남짓).

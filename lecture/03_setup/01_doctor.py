@@ -16,6 +16,7 @@
     4. 동작 확인     학습 전 e5와 002_hard_negatives를 ragkit.service.Searcher.open으로 열어 "야간 근로 수당"을 검색 (--quick이면 생략)
     출력           교시별 준비(✓/✗) → 빠진 것 표 → 받는 법(--fix가 대신 돌릴 명령). 빠진 것이 있으면 종료 코드 1
     --fix          빠진 것만 모아 설치 → 데이터 → 학습 전 모델 → ONNX → Drive 순서로 받고, 끝나면 다시 점검한다
+                   Drive zip은 resources/ 에 손으로 받아 둔 것이 있으면 받지 않고 그것을 푼다 (scripts/resources.py)
 
 사전 준비:
     uv sync --all-packages --all-extras        # ragkit + 모든 앱 + 학습 도구
@@ -491,6 +492,7 @@ def report(groups: dict[str, list[Check]], show_everything: bool) -> list[Check]
         if cmds:
             console.print("  [bold]uv run python lecture/03_setup/01_doctor.py --fix[/]")
             console.print("  → 아래를 대신 돌린다 (로그인 필요 없음)")
+            console.print("    [dim]Drive zip을 손으로 받았으면 이름 그대로 resources/ 에 넣는다. 거기 있는 것은 받지 않고 푼다[/]")
             for cmd in cmds:
                 console.print(f"      [dim]{escape(cmd)}[/]", soft_wrap=True)
         if manual:

@@ -109,3 +109,6 @@ experiments/*/artifacts/
 
 # 장표 세션의 덱 작업 사본 (게시본 소스는 lecture/0N_*/slides/)
 /.deck-tmp/
+
+# Drive에서 손으로 받은 zip (scripts/resources.py)
+/resources/
